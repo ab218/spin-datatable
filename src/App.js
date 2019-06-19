@@ -29,25 +29,28 @@ function App() {
     ['xnnul', 'ohl7r', 'y8ol9', 'lkaq0', 'apq6f'],
     ['isd8w', 'd7uj1', 'npdt9', 'tae9a', 'aj9fm']
   ]);
+  const [activeCell, setActiveCell] = useState(undefined);
 
   const formulaParser = new Parser();
   formulaParser.on('callCellValue', function(cellCoordinates, done) {
     done(cells[cellPositions[cellCoordinates.row.index][cellCoordinates.column.index]].value);
   });
 
-
-
   const rows = cellPositions.map((row, index) => {
     return (<tr key={'row' + index}>{row.map((cell) => {
       let cellValue = cells[cell].value;
-      if (isFormula(cellValue)) {
-        const {error, result} = formulaParser.parse(cellValue.slice(1));
-        cellValue = result;
+      if (activeCell === cell) {
+        return (
+          <td key={cell} style={{color: 'red'}}><input type="text" defaultValue={cellValue} onBlur={(event) => setCells({...cells, [cell]: {value: event.target.value}})}></input></td>
+        )
+      } else {
+        if (isFormula(cellValue)) {
+          console.log('formula is true');
+          const {error, result} = formulaParser.parse(cellValue.slice(1));
+          cellValue = result;
+        }
+        return (<td key={cell} onClick={() => setActiveCell(cell) }>{cellValue}</td>);
       }
-    return (<td contentEditable="true" key={cell} onBlur={(event) => {
-      console.log("hello i'm being changed" , event.target.textContent);
-      setCells({...cells, [cell]: {value: Number(event.target.textContent)}})
-    }}>{cellValue}</td>);
     })}</tr>);
   });
   return (
