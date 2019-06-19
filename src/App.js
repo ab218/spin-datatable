@@ -6,12 +6,6 @@ function isFormula(value) {
   return typeof value === 'string' && value.charAt(0) === '=';
 }
 
-function translateRowColToPosition(coordinates) {
-  const col = coordinates.charCodeAt(0) - 'A'.charCodeAt(0);
-  const row = Number(coordinates.slice(1)) - 1;
-  return [row, col];
-}
-
 function App() {
   const [cells, setCells] = useState({
     xgi6v: {value: 1},
@@ -38,26 +32,22 @@ function App() {
 
   const formulaParser = new Parser();
   formulaParser.on('callCellValue', function(cellCoordinates, done) {
-    console.log('cellCoordinates:', cellCoordinates, cellPositions[cellCoordinates.row.index][cellCoordinates.column.index]);
-    // const [row, col] = translateRowColToPosition(cellCoordinates);
-    // console.log('row:', row, 'col:', col);
     done(cells[cellPositions[cellCoordinates.row.index][cellCoordinates.column.index]].value);
   });
 
-  console.log('inside App function');
+
+
   const rows = cellPositions.map((row, index) => {
     return (<tr key={'row' + index}>{row.map((cell) => {
       let cellValue = cells[cell].value;
       if (isFormula(cellValue)) {
-        console.log('formula:', cellValue);
         const {error, result} = formulaParser.parse(cellValue.slice(1));
-        console.log('error:', error);
         cellValue = result;
       }
-      console.log('cell', cell, 'cellValue:', cellValue);
-    return (<td key={cell}>{cell} - {cellValue} <button onClick={() => setCells({...cells, [cell]: {value: cellValue + 1}})}>
-    Add 1
-  </button></td>);
+    return (<td contentEditable="true" key={cell} onBlur={(event) => {
+      console.log("hello i'm being changed" , event.target.textContent);
+      setCells({...cells, [cell]: {value: Number(event.target.textContent)}})
+    }}>{cellValue}</td>);
     })}</tr>);
   });
   return (
