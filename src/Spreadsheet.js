@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {Parser} from 'hot-formula-parser';
 import './App.css';
 import Row from './Row'
@@ -22,16 +22,10 @@ function createCell() {
 }
 
 function Spreadsheet({eventBus}) {
-  // const test = useSpreadsheetState();
-
-  const [cells, setCells] = useState({});
-
   const initialArray = Array(26).fill(undefined);
   const initialModel = Array(40).fill(undefined).map(() => initialArray.slice());
   console.log('initialModel:', initialModel);
-  // const [cellPositions, setCellPositions] = useState(initialModel);
-  // const [activeCell, setActiveCell] = useState(undefined);
-  const {activeCell, cellPositions} = useSpreadsheetState();
+  const {cells, activeCell, cellPositions} = useSpreadsheetState();
   console.log('activeCell', activeCell);
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   useEffect(() => {
@@ -67,14 +61,10 @@ function Spreadsheet({eventBus}) {
       const newCell = createCell();
       const cellID = Object.keys(newCell)[0];
       // Add new cell to cell container
-      setCells({...cells, ...newCell});
+      dispatchSpreadsheetAction({type: 'createCell', cellID});
       dispatchSpreadsheetAction({type: 'setCellPosition', row, column, cellID});
       dispatchSpreadsheetAction({type: 'activateCell', activeCell: cellID});
     }
-  }
-
-  function updateCell(id, value) {
-    setCells({...cells, [id]: {value}});
   }
 
   const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
@@ -83,7 +73,7 @@ function Spreadsheet({eventBus}) {
   const rows = cellPositions.map((row, index) => {
     const emptyCellCount = columnCount - row.length;
     return (<Row row={row} rowIndex={index} emptyCellCount={emptyCellCount} cells={cells}
-       activeCell={activeCell} setActiveCell={changeActiveCell} updateCell={updateCell} formulaParser={formulaParser}/>)
+       activeCell={activeCell} setActiveCell={changeActiveCell} formulaParser={formulaParser}/>)
   });
   return (
     <div>

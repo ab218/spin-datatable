@@ -5,7 +5,7 @@ const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
 
 function spreadsheetReducer(state, action) {
-  const {type, activeCell, row, column, cellID} = action;
+  const {type, activeCell, row, column, cellID, cellValue} = action;
   switch (type) {
     case 'activateCell': {
       return {...state, activeCell};
@@ -15,6 +15,12 @@ function spreadsheetReducer(state, action) {
       const changedRow = rowArray.slice(0, column).concat(cellID).concat(rowArray.slice(column +  1));
       const newPositions = state.cellPositions.slice(0, row).concat([changedRow]).concat(state.cellPositions.slice(row + 1));
       return {...state, cellPositions: newPositions};
+    }
+    case 'createCell': {
+      return {...state, cells: {...state.cells, [cellID]: {value: null}}};
+    }
+    case 'updateCell': {
+      return  {...state, cells: {...state.cells, [cellID]: {value: cellValue}}};
     }
     default: {
       throw new Error(`Unhandled action type: ${type}`);
@@ -38,11 +44,9 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children, rowCount, colCount}) {
-
   const initialArray = Array(colCount).fill(undefined);
   const initialModel = Array(rowCount).fill(undefined).map(() => initialArray.slice());
-
-  const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {activeCell: null, cellPositions: initialModel})
+  const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {cells: {}, activeCell: null, cellPositions: initialModel})
   return (
     <SpreadsheetStateContext.Provider value={state}>
       <SpreadsheetDispatchContext.Provider value={changeSpreadsheet}>
