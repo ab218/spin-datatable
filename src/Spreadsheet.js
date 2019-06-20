@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {Parser} from 'hot-formula-parser';
 import './App.css';
 import Row from './Row'
-import { SpreadsheetProvider, useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 
 function isFormula(value) {
   return typeof value === 'string' && value.charAt(0) === '=';
@@ -29,11 +29,11 @@ function Spreadsheet({eventBus}) {
   const initialArray = Array(26).fill(undefined);
   const initialModel = Array(40).fill(undefined).map(() => initialArray.slice());
   console.log('initialModel:', initialModel);
-  const [cellPositions, setCellPositions] = useState(initialModel);
+  // const [cellPositions, setCellPositions] = useState(initialModel);
   // const [activeCell, setActiveCell] = useState(undefined);
-  const {activeCell} = useSpreadsheetState();
+  const {activeCell, cellPositions} = useSpreadsheetState();
   console.log('activeCell', activeCell);
-  const setActiveCell = useSpreadsheetDispatch();
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   useEffect(() => {
     if (activeCell) {
       eventBus.fire('select-cell', activeCell);
@@ -61,18 +61,15 @@ function Spreadsheet({eventBus}) {
     const cell = cellPositions[row][column];
     console.log('changeActiveCell', arguments, 'cell:', cell);
     if (cell) {
-      setActiveCell({type: 'activateCell', activeCell: cell});
+      dispatchSpreadsheetAction({type: 'activateCell', activeCell: cell});
     } else {
       // If there is no cell at the current location, create one and add its position and then activate it
       const newCell = createCell();
-      const id = Object.keys(newCell)[0];
+      const cellID = Object.keys(newCell)[0];
       // Add new cell to cell container
       setCells({...cells, ...newCell});
-      const rowArray = cellPositions[row];
-      const changedRow = rowArray.slice(0, column).concat(id).concat(rowArray.slice(column +  1));
-      const newPositions = cellPositions.slice(0, row).concat([changedRow]).concat(cellPositions.slice(row + 1));
-      setCellPositions(newPositions);
-      setActiveCell({type: 'activateCell', activeCell: id});
+      dispatchSpreadsheetAction({type: 'setCellPosition', row, column, cellID});
+      dispatchSpreadsheetAction({type: 'activateCell', activeCell: cellID});
     }
   }
 
