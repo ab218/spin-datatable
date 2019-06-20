@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {Parser} from 'hot-formula-parser';
 import './App.css';
 import Row from './Row'
+import { SpreadsheetProvider, useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 
 function isFormula(value) {
   return typeof value === 'string' && value.charAt(0) === '=';
@@ -21,13 +22,18 @@ function createCell() {
 }
 
 function Spreadsheet({eventBus}) {
+  // const test = useSpreadsheetState();
+
   const [cells, setCells] = useState({});
 
   const initialArray = Array(26).fill(undefined);
   const initialModel = Array(40).fill(undefined).map(() => initialArray.slice());
   console.log('initialModel:', initialModel);
   const [cellPositions, setCellPositions] = useState(initialModel);
-  const [activeCell, setActiveCell] = useState(undefined);
+  // const [activeCell, setActiveCell] = useState(undefined);
+  const {activeCell} = useSpreadsheetState();
+  console.log('activeCell', activeCell);
+  const setActiveCell = useSpreadsheetDispatch();
   useEffect(() => {
     if (activeCell) {
       eventBus.fire('select-cell', activeCell);
@@ -55,7 +61,7 @@ function Spreadsheet({eventBus}) {
     const cell = cellPositions[row][column];
     console.log('changeActiveCell', arguments, 'cell:', cell);
     if (cell) {
-      setActiveCell(cell);
+      setActiveCell({type: 'activateCell', activeCell: cell});
     } else {
       // If there is no cell at the current location, create one and add its position and then activate it
       const newCell = createCell();
@@ -66,7 +72,7 @@ function Spreadsheet({eventBus}) {
       const changedRow = rowArray.slice(0, column).concat(id).concat(rowArray.slice(column +  1));
       const newPositions = cellPositions.slice(0, row).concat([changedRow]).concat(cellPositions.slice(row + 1));
       setCellPositions(newPositions);
-      setActiveCell(id);
+      setActiveCell({type: 'activateCell', activeCell: id});
     }
   }
 
