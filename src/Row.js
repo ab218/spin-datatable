@@ -7,7 +7,8 @@ import './App.css';
 function Row({row, rowIndex, emptyCellCount, cells, activeCell, setActiveCell, updateCell, formulaParser}) {
     // In case we have a shorter row of cells, create some padding to match the longest row
     const padding = Array(emptyCellCount).fill(null);
-    return (<tr key={'row' + rowIndex}>{row.map((cell, cellIndex) => {
+    const rowHeader = (<td>{rowIndex + 1}</td>);
+    return (<tr key={'row' + rowIndex}>{[rowHeader].concat(row.map((cell, cellIndex) => {
       let cellValue = cells[cell] && cells[cell].value;
       if (activeCell && activeCell === cell) {
         // Show a text field only in the active cell
@@ -19,7 +20,7 @@ function Row({row, rowIndex, emptyCellCount, cells, activeCell, setActiveCell, u
       const key = 'rowIndex' + rowIndex + '_extra' + emptyIndex;
       console.log('key:', key);
       return (<td key={key}>@</td>);
-    }))}</tr>);
+    })))}</tr>);
 }
 
 export default Row;

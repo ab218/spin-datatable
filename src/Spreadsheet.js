@@ -75,7 +75,8 @@ function Spreadsheet({eventBus}) {
   }
 
   const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
-  const headers = Array(columnCount).fill(undefined).map((_, index) => (<th>{String.fromCharCode(index + 'A'.charCodeAt(0))}</th>))
+  // We add one more column header as the capstone for the column of row headers
+  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<th>{String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}</th>))
   const rows = cellPositions.map((row, index) => {
     const emptyCellCount = columnCount - row.length;
     return (<Row row={row} rowIndex={index} emptyCellCount={emptyCellCount} cells={cells}
