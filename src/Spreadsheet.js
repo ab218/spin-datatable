@@ -1,8 +1,9 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Parser} from 'hot-formula-parser';
 import './App.css';
 import Row from './Row'
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import ColResizer from './ColResizer'
 
 function isFormula(value) {
   return typeof value === 'string' && value.charAt(0) === '=';
@@ -24,6 +25,7 @@ function createCell() {
 function Spreadsheet({eventBus}) {
   const {cells, activeCell, cellPositions} = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
   useEffect(() => {
     if (activeCell) {
       eventBus.fire('select-cell', activeCell);
@@ -49,7 +51,6 @@ function Spreadsheet({eventBus}) {
 
   function changeActiveCell(row, column)  {
     const cell = cellPositions[row][column];
-    console.log('changeActiveCell', arguments, 'cell:', cell);
     if (cell) {
       dispatchSpreadsheetAction({type: 'activateCell', activeCell: cell});
     } else {
@@ -65,8 +66,9 @@ function Spreadsheet({eventBus}) {
 
   const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
 
+
   // We add one more column header as the capstone for the column of row headers
-  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<th key={index}><div className="cell">{String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}</div></th>))
+  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}/>))
   const rows = cellPositions.map((row, index) => {
     const emptyCellCount = columnCount - row.length;
     return (<Row key={index} row={row} rowIndex={index} emptyCellCount={emptyCellCount} cells={cells}

@@ -20,6 +20,14 @@ th {
   top: -1px;
   z-index: 2;
 }
+/*
+.drag  {
+  width: 5px;
+  height: 100%;
+  position: absolute;
+  margin: -20px -5px;
+  cursor: col-resize;
+} */
 
 /* .cell {
   resize: horizontal;
