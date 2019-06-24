@@ -55,5 +55,3 @@ export function SpreadsheetProvider({children, rowCount, colCount}) {
     </SpreadsheetStateContext.Provider>
   )
 }
-
-// export { SpreadsheetProvider, useSpreadsheetState, useSpreadsheetDispatch };

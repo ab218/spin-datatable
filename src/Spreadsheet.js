@@ -22,11 +22,7 @@ function createCell() {
 }
 
 function Spreadsheet({eventBus}) {
-  const initialArray = Array(26).fill(undefined);
-  const initialModel = Array(40).fill(undefined).map(() => initialArray.slice());
-  console.log('initialModel:', initialModel);
   const {cells, activeCell, cellPositions} = useSpreadsheetState();
-  console.log('activeCell', activeCell);
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   useEffect(() => {
     if (activeCell) {
@@ -68,17 +64,18 @@ function Spreadsheet({eventBus}) {
   }
 
   const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
+
   // We add one more column header as the capstone for the column of row headers
-  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<th>{String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}</th>))
+  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<th key={index}><div className="cell">{String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}</div></th>))
   const rows = cellPositions.map((row, index) => {
     const emptyCellCount = columnCount - row.length;
-    return (<Row row={row} rowIndex={index} emptyCellCount={emptyCellCount} cells={cells}
+    return (<Row key={index} row={row} rowIndex={index} emptyCellCount={emptyCellCount} cells={cells}
        activeCell={activeCell} setActiveCell={changeActiveCell} formulaParser={formulaParser}/>)
   });
   return (
     <div>
         <table>
-          <thead>{headers}</thead>
+          <thead><tr>{headers}</tr></thead>
           <tbody>{rows}</tbody>
         </table>
     </div>

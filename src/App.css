@@ -21,11 +21,30 @@ th {
   z-index: 2;
 }
 
+/* .cell {
+  resize: horizontal;
+  overflow: auto;
+  margin: 0px;
+  padding: 0px;
+  display:block;
+}
+
+th .cell {
+  border: 0;
+  width: auto;
+  height: auto;
+  min-height: 20px;
+  min-width: 20px;
+  cursor: w-resize;
+} */
+
 tbody tr td:first-of-type {
   background-color: #eee;
   position: sticky;
   left: -1px;
   z-index: 1;
+  /* resize: vertical;
+  overflow: auto; */
 }
 
 input {

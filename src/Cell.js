@@ -10,7 +10,7 @@ function Cell({value, formulaParser, row, col, setActiveCell}) {
     const {error, result} = formulaParser.parse(cellValue.slice(1));
     cellValue = error || result;
   }
-  return (<td onClick={(event) => setActiveCell(row, col)}>{cellValue}</td>);
+  return (<td onClick={() => setActiveCell(row, col)}>{cellValue}</td>);
 }
 
 export default Cell;
