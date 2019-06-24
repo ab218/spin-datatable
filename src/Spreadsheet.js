@@ -3,7 +3,7 @@ import {Parser} from 'hot-formula-parser';
 import './App.css';
 import Row from './Row'
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import ColResizer from './ColResizer'
+// import ColResizer from './ColResizer'
 
 function isFormula(value) {
   return typeof value === 'string' && value.charAt(0) === '=';
@@ -68,7 +68,7 @@ function Spreadsheet({eventBus}) {
 
 
   // We add one more column header as the capstone for the column of row headers
-  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}/>))
+  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<td key={index}>{String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}</td>))
   const rows = cellPositions.map((row, index) => {
     const emptyCellCount = columnCount - row.length;
     return (<Row key={index} row={row} rowIndex={index} emptyCellCount={emptyCellCount} cells={cells}
