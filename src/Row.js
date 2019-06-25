@@ -4,7 +4,7 @@ import Cell from './Cell';
 import './App.css';
 
 
-function Row({row, rowIndex, cells, activeCell, setActiveCell, formulaParser}) {
+function Row({row, rowIndex, cells, activeCell, setActiveCell, isSelectedCell, formulaParser}) {
     // In case we have a shorter row of cells, create some padding to match the longest row
     // const padding = Array(emptyCellCount).fill(null);
     const rowHeader = (<td key={rowIndex}>{rowIndex + 1}</td>);
@@ -14,7 +14,7 @@ function Row({row, rowIndex, cells, activeCell, setActiveCell, formulaParser}) {
         // Show a text field only in the active cell
         return (<ActiveCell key={cell} cell={cell} setActiveCell={setActiveCell} row={rowIndex} col={cellIndex} value={cellValue}/>);
       } else {
-        return (<Cell key={rowIndex + '_' + cellIndex} setActiveCell={setActiveCell} row={rowIndex} col={cellIndex} value={cellValue} formulaParser={formulaParser}/>);
+        return (<Cell key={rowIndex + '_' + cellIndex} setActiveCell={setActiveCell} selected={isSelectedCell(rowIndex, cellIndex)} row={rowIndex} col={cellIndex} value={cellValue} formulaParser={formulaParser}/>);
       }
     })
     )}</tr>);

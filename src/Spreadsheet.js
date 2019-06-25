@@ -23,8 +23,17 @@ function createCell() {
 }
 
 function Spreadsheet({eventBus}) {
-  const {cells, activeCell, cellPositions} = useSpreadsheetState();
+  const {cells, activeCell, cellPositions, multiCellSelectionIDs, cellSelectionRanges} = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  function isSelectedCell(row, column) {
+    const cell = cellPositions[row] && cellPositions[row][column];
+    const cellIDFoundinSelection = cell && multiCellSelectionIDs.includes(cell);
+    const withinASelectedRange = cellSelectionRanges.some(function ({top, right, bottom, left}) {
+      return row >= top && row <= bottom && column >= left && column <= right;
+    });
+    return cellIDFoundinSelection || withinASelectedRange;
+  }
 
   useEffect(() => {
     if (activeCell) {
@@ -69,9 +78,8 @@ function Spreadsheet({eventBus}) {
   // We add one more column header as the capstone for the column of row headers
   const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}/>))
   const rows = cellPositions.map((row, index) => {
-    const emptyCellCount = columnCount - row.length;
-    return (<Row key={index} row={row} rowIndex={index} emptyCellCount={emptyCellCount} cells={cells}
-       activeCell={activeCell} setActiveCell={changeActiveCell} formulaParser={formulaParser}/>)
+    return (<Row key={index} row={row} rowIndex={index} cells={cells}
+       activeCell={activeCell} setActiveCell={changeActiveCell} isSelectedCell={isSelectedCell} formulaParser={formulaParser}/>)
   });
   return (
     <table>

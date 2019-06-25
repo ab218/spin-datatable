@@ -4,8 +4,17 @@ import './App.css';
 const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
 
+function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRangeColumn}) {
+  const top = Math.min(startRangeRow, endRangeRow);
+  const bottom = Math.max(startRangeRow, endRangeRow);
+  const left = Math.min(startRangeColumn, endRangeColumn);
+  const right = Math.max(startRangeColumn, endRangeColumn);
+  return {top, left, bottom, right};
+}
+
 function spreadsheetReducer(state, action) {
-  const {type, activeCell, row, column, cellID, cellValue} = action;
+  const {type, activeCell, row, column, cellID, cellValue, startRangeRow, startRangeColumn, endRangeRow, endRangeColumn} = action;
+  console.log('action:', action);
   switch (type) {
     case 'activateCell': {
       return {...state, activeCell};
@@ -21,6 +30,18 @@ function spreadsheetReducer(state, action) {
     }
     case 'updateCell': {
       return  {...state, cells: {...state.cells, [cellID]: {value: cellValue}}};
+    }
+    case 'multi-cell-selection-started': {
+      return {...state, multiCellSelectionIDs: [cellID]};
+    }
+    case 'add-cellID-to-cell-selection': {
+      const {multiCellSelectionIDs} = state;
+      const newCell = state.cellPositions[row][column];
+      return {...state, multiCellSelectionIDs: multiCellSelectionIDs.concat(multiCellSelectionIDs.includes(newCell) ? [] : newCell)};
+    }
+    case 'add-cellRange-to-cell-selection': {
+      const {cellSelectionRanges} = state;
+      return {...state, cellSelectionRanges: cellSelectionRanges.concat(getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRangeColumn}))};
     }
     default: {
       throw new Error(`Unhandled action type: ${type}`);
@@ -46,7 +67,11 @@ export function useSpreadsheetDispatch() {
 export function SpreadsheetProvider({children, rowCount, colCount}) {
   const initialArray = Array(colCount).fill(undefined);
   const initialModel = Array(rowCount).fill(undefined).map(() => initialArray.slice());
-  const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {cells: {}, activeCell: null, cellPositions: initialModel})
+  const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {
+    cells: {}, activeCell: null, cellPositions: initialModel, multiCellSelectionIDs: [], cellSelectionRanges: [{
+      top: 5, bottom: 10, left: 3, right: 6
+    }]
+  });
   return (
     <SpreadsheetStateContext.Provider value={state}>
       <SpreadsheetDispatchContext.Provider value={changeSpreadsheet}>
