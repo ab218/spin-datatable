@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export default function ColumnResizer({content}) {
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
-  const [width, setWidth] = useState();
-
-  const ref = useRef(null);
+  const [offset, setOffset] = useState(0);
+  const [originalCellWidth, setOriginalCellWidth] = useState();
 
   useEffect(() => {
     document.addEventListener('mousemove', onMouseMove);
@@ -19,8 +18,10 @@ export default function ColumnResizer({content}) {
   });
 
   const startDrag = (e) => {
+    setStartX(e.clientX);
+    const  {width: originalWidth} = e.target.getBoundingClientRect();
+    setOriginalCellWidth(originalWidth);
     setIsDragging(true);
-    setStartX(e.clientX)
   }
 
   const endDrag = () => {
@@ -28,23 +29,24 @@ export default function ColumnResizer({content}) {
       return;
     }
     setIsDragging(false);
+    setOriginalCellWidth(originalCellWidth + offset);
+    setOffset(0);
   }
 
   const onMouseMove = (e) => {
     if (!isDragging) {
       return;
     }
-    setWidth(e.clientX - startX)
+    setOffset(e.clientX - startX);
   }
-
   const style = {
     userSelect: 'none',
-    cursor: 'col-resize',
-    width: 80 + width,
+    cursor: 'e-resize',
+    width: (originalCellWidth || 80) + offset,
   };
 
   return (
-      <td ref={ref} style={style} onMouseDown={startDrag}>
+      <td style={style} onMouseDown={startDrag}>
           {content}
       </td>
   );

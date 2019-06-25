@@ -66,7 +66,6 @@ function Spreadsheet({eventBus}) {
 
   const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
 
-
   // We add one more column header as the capstone for the column of row headers
   const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}/>))
   const rows = cellPositions.map((row, index) => {
