@@ -49,11 +49,13 @@ function Spreadsheet({eventBus}) {
     }
   });
 
+  const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
+
   function changeActiveCell(row, column)  {
-    const cell = cellPositions[row][column];
-    if (cell) {
-      dispatchSpreadsheetAction({type: 'activateCell', activeCell: cell});
-    } else {
+    const activeCell = cellPositions[row] && cellPositions[row][column];
+    if (activeCell) {
+      dispatchSpreadsheetAction({type: 'activateCell', activeCell});
+    } else if (row >= 0 && row < cellPositions.length && column >= 0 && column < columnCount) {
       // If there is no cell at the current location, create one and add its position and then activate it
       const newCell = createCell();
       const cellID = Object.keys(newCell)[0];
@@ -63,8 +65,6 @@ function Spreadsheet({eventBus}) {
       dispatchSpreadsheetAction({type: 'activateCell', activeCell: cellID});
     }
   }
-
-  const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
 
   // We add one more column header as the capstone for the column of row headers
   const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}/>))
