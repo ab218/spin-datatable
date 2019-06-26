@@ -34,7 +34,7 @@ function Spreadsheet({eventBus}) {
     const cell = cellPositions[row] && cellPositions[row][column];
     const cellIDFoundinSelection = cell && multiCellSelectionIDs.includes(cell);
     const withinASelectedRange = cellSelectionRanges.some(withinRange);
-    return cellIDFoundinSelection || withinASelectedRange || withinRange(currentCellSelectionRange);
+    return cellIDFoundinSelection || withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
   }
 
   useEffect(() => {
