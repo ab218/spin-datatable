@@ -49,6 +49,15 @@ function Spreadsheet({eventBus}) {
     }
   });
 
+  formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
+    const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
+      return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
+        return cells[cellID].value;
+      });
+    });
+    done(data);
+  });
+
   function changeActiveCell(row, column)  {
     const cell = cellPositions[row][column];
     if (cell) {
