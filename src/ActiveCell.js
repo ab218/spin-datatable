@@ -40,7 +40,7 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
     case 'ArrowLeft':
     case 'ArrowRight':
       const {row, column} = cursorKeyToRowColMapper[event.key](someRow, someColumn);
-      setActiveCell(row, column);
+      setActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
       if (multiCellSelectionIDs && multiCellSelectionIDs.length) {
         dispatchSpreadsheetAction({type: 'add-cellID-to-cell-selection', row, column});
       } else {

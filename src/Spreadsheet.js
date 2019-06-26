@@ -23,16 +23,18 @@ function createCell() {
 }
 
 function Spreadsheet({eventBus}) {
-  const {cells, activeCell, cellPositions, multiCellSelectionIDs, cellSelectionRanges} = useSpreadsheetState();
+  const {cells, activeCell, cellPositions, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange} = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   function isSelectedCell(row, column) {
+    function withinRange({top, right, bottom, left}) {
+      return row >= top && row <= bottom && column >= left && column <= right;
+    }
+
     const cell = cellPositions[row] && cellPositions[row][column];
     const cellIDFoundinSelection = cell && multiCellSelectionIDs.includes(cell);
-    const withinASelectedRange = cellSelectionRanges.some(function ({top, right, bottom, left}) {
-      return row >= top && row <= bottom && column >= left && column <= right;
-    });
-    return cellIDFoundinSelection || withinASelectedRange;
+    const withinASelectedRange = cellSelectionRanges.some(withinRange);
+    return cellIDFoundinSelection || withinASelectedRange || withinRange(currentCellSelectionRange);
   }
 
   useEffect(() => {
@@ -60,10 +62,10 @@ function Spreadsheet({eventBus}) {
 
   const columnCount = Math.max(...(cellPositions.map((row) => row.length)));
 
-  function changeActiveCell(row, column)  {
+  function changeActiveCell(row, column, selectionActive) {
     const activeCell = cellPositions[row] && cellPositions[row][column];
     if (activeCell) {
-      dispatchSpreadsheetAction({type: 'activateCell', activeCell});
+      dispatchSpreadsheetAction({type: 'activateCell', activeCell, row, column});
     } else if (row >= 0 && row < cellPositions.length && column >= 0 && column < columnCount) {
       // If there is no cell at the current location, create one and add its position and then activate it
       const newCell = createCell();
@@ -71,14 +73,22 @@ function Spreadsheet({eventBus}) {
       // Add new cell to cell container
       dispatchSpreadsheetAction({type: 'createCell', cellID});
       dispatchSpreadsheetAction({type: 'setCellPosition', row, column, cellID});
-      dispatchSpreadsheetAction({type: 'activateCell', activeCell: cellID});
+      dispatchSpreadsheetAction({type: 'activateCell', activeCell: cellID, row, column, selectionActive});
     }
+  }
+
+  function modifyCellSelectionRange(row, col) {
+    dispatchSpreadsheetAction({type: 'modify-current-selection-cell-range', endRangeRow: row, endRangeColumn: col});
+  }
+
+  function finishCurrentSelectionRange() {
+    dispatchSpreadsheetAction({type: 'add-current-selection-to-cell-selections'});
   }
 
   // We add one more column header as the capstone for the column of row headers
   const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}/>))
   const rows = cellPositions.map((row, index) => {
-    return (<Row key={index} row={row} rowIndex={index} cells={cells}
+    return (<Row key={index} row={row} rowIndex={index} cells={cells} finishCurrentSelectionRange={finishCurrentSelectionRange} modifyCellSelectionRange={modifyCellSelectionRange}
        activeCell={activeCell} setActiveCell={changeActiveCell} isSelectedCell={isSelectedCell} formulaParser={formulaParser}/>)
   });
   return (

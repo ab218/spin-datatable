@@ -5,10 +5,10 @@ const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
 
 function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRangeColumn}) {
-  const top = Math.min(startRangeRow, endRangeRow);
-  const bottom = Math.max(startRangeRow, endRangeRow);
-  const left = Math.min(startRangeColumn, endRangeColumn);
-  const right = Math.max(startRangeColumn, endRangeColumn);
+  const top = Math.min(startRangeRow === undefined ? endRangeRow : startRangeRow, endRangeRow === undefined ? startRangeRow : endRangeRow);
+  const bottom = Math.max(startRangeRow === undefined ? endRangeRow : startRangeRow, endRangeRow === undefined ? startRangeRow : endRangeRow);
+  const left = Math.min(startRangeColumn === undefined ? endRangeColumn : startRangeColumn, endRangeColumn === undefined ? startRangeColumn : endRangeColumn);
+  const right = Math.max(startRangeColumn === undefined ? endRangeColumn : startRangeColumn, endRangeColumn === undefined ? startRangeColumn : endRangeColumn);
   return {top, left, bottom, right};
 }
 
@@ -17,7 +17,7 @@ function spreadsheetReducer(state, action) {
   console.log('action:', action);
   switch (type) {
     case 'activateCell': {
-      return {...state, activeCell};
+      return {...state, activeCell, currentCellSelectionRange: {top: row, left: column}};
     }
     case 'setCellPosition': {
       const rowArray = state.cellPositions[row];
@@ -39,9 +39,21 @@ function spreadsheetReducer(state, action) {
       const newCell = state.cellPositions[row][column];
       return {...state, multiCellSelectionIDs: multiCellSelectionIDs.concat(multiCellSelectionIDs.includes(newCell) ? [] : newCell)};
     }
-    case 'add-cellRange-to-cell-selection': {
-      const {cellSelectionRanges} = state;
-      return {...state, cellSelectionRanges: cellSelectionRanges.concat(getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRangeColumn}))};
+    case 'add-current-selection-to-cell-selections': {
+      const {currentCellSelectionRange, cellSelectionRanges} = state;
+      return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: {}};
+    }
+    case 'modify-current-selection-cell-range': {
+      const {currentCellSelectionRange} = state;
+
+      return Object.keys(currentCellSelectionRange).length > 0 ? {...state,
+        currentCellSelectionRange: getRangeBoundaries({
+          startRangeRow: startRangeRow || currentCellSelectionRange.top,
+          startRangeColumn: startRangeColumn || currentCellSelectionRange.left,
+          endRangeRow: endRangeRow || currentCellSelectionRange.bottom,
+          endRangeColumn: endRangeColumn || currentCellSelectionRange.right
+        })
+      } : state;
     }
     default: {
       throw new Error(`Unhandled action type: ${type}`);
@@ -70,7 +82,7 @@ export function SpreadsheetProvider({children, rowCount, colCount}) {
   const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {
     cells: {}, activeCell: null, cellPositions: initialModel, multiCellSelectionIDs: [], cellSelectionRanges: [{
       top: 5, bottom: 10, left: 3, right: 6
-    }]
+    }], currentCellSelectionRange: {}
   });
   return (
     <SpreadsheetStateContext.Provider value={state}>
