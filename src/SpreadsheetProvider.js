@@ -13,11 +13,17 @@ function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRa
 }
 
 function spreadsheetReducer(state, action) {
-  const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn} = action;
+  const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn, selectionActive} = action;
   // console.log('action:', action);
+  console.log(state.currentCellSelectionRange)
   switch (type) {
     case 'activateCell': {
-      return {...state, activeCell, activeCellCoords: {row, column}, currentCellSelectionRange: {top: row, left: column}};
+      const {activeCell: oldActiveCell, multiCellSelectionIDs: oldCellSelectionIDs, cellSelectionRanges: oldCellSelectionRanges} = state;
+      // If there is a current selection (accumulated by the arrow keys), add to it; otherwise reset the selection
+      const multiCellSelectionIDs = selectionActive ? oldCellSelectionIDs.concat(!oldCellSelectionIDs.includes(oldActiveCell) ? oldActiveCell : []).concat(activeCell) : [];
+      // Ditto for the current selection (accumulated by mouse movements)
+      const cellSelectionRanges = selectionActive ? oldCellSelectionRanges : [];
+      return {...state, activeCell, activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}};
     }
     case 'setCellPosition': {
       const rowArray = state.cellPositions[row];
@@ -31,16 +37,14 @@ function spreadsheetReducer(state, action) {
     case 'updateCell': {
       return  {...state, cells: {...state.cells, [cellID]: {value: cellValue}}};
     }
-    case 'multi-cell-selection-started': {
-      return {...state, multiCellSelectionIDs: [cellID]};
-    }
     case 'add-cellID-to-cell-selection': {
-      const {multiCellSelectionIDs} = state;
-      const newCell = state.cellPositions[row][column];
+      const {multiCellSelectionIDs = [], cellPositions} = state;
+      const newCell = cellPositions[row][column];
       return {...state, multiCellSelectionIDs: multiCellSelectionIDs.concat(multiCellSelectionIDs.includes(newCell) ? [] : newCell)};
     }
     case 'add-current-selection-to-cell-selections': {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
+      console.log('for action add-current-selection-to-cell-selections - currentCellSelectionRange:', currentCellSelectionRange);
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
     }
     case 'modify-current-selection-cell-range': {

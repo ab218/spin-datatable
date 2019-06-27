@@ -27,7 +27,8 @@ function Spreadsheet({eventBus}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   function isSelectedCell(row, column) {
-    function withinRange({top, right, bottom, left}) {
+    function withinRange(value) {
+      const {top, right, bottom, left} = value;
       return row >= top && row <= bottom && column >= left && column <= right;
     }
 
@@ -74,7 +75,7 @@ function Spreadsheet({eventBus}) {
   function changeActiveCell(row, column, selectionActive) {
     const activeCell = cellPositions[row] && cellPositions[row][column];
     if (activeCell) {
-      dispatchSpreadsheetAction({type: 'activateCell', activeCell, row, column});
+      dispatchSpreadsheetAction({type: 'activateCell', activeCell, row, column, selectionActive});
     } else if (row >= 0 && row < cellPositions.length && column >= 0 && column < columnCount) {
       // If there is no cell at the current location, create one and add its position and then activate it
       const newCell = createCell();
