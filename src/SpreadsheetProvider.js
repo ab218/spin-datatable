@@ -14,16 +14,39 @@ function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRa
 
 function spreadsheetReducer(state, action) {
   const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn, selectionActive} = action;
-  // console.log('action:', action);
-  console.log(state.currentCellSelectionRange)
   switch (type) {
     case 'activateCell': {
-      const {activeCell: oldActiveCell, multiCellSelectionIDs: oldCellSelectionIDs, cellSelectionRanges: oldCellSelectionRanges} = state;
+      const {activeCell: oldActiveCell, multiCellSelectionIDs: oldCellSelectionIDs, cellSelectionRanges: oldCellSelectionRanges, deselectedCells} = state;
       // If there is a current selection (accumulated by the arrow keys), add to it; otherwise reset the selection
       const multiCellSelectionIDs = selectionActive ? oldCellSelectionIDs.concat(!oldCellSelectionIDs.includes(oldActiveCell) ? oldActiveCell : []).concat(activeCell) : [];
       // Ditto for the current selection (accumulated by mouse movements)
       const cellSelectionRanges = selectionActive ? oldCellSelectionRanges : [];
-      return {...state, activeCell, activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}};
+      const currentActiveCellValue = state.cells[activeCell];
+      return {...state, activeCell, deselectedCells: selectionActive ? deselectedCells : [], currentActiveCellValue, activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}};
+    }
+    case 'add-cell-to-deselect-list': {
+      const { activeCell, deselectedCells: oldDeselectedCells = [] } = state;
+      const deselectedCells = [...new Set(oldDeselectedCells.concat(activeCell))];
+      return {...state, deselectedCells };
+    }
+    case 'clear-deselect-list': {
+      return {...state, deselectedCells: []}
+    }
+    case 'delete-values': {
+      const { cells, cellPositions, cellSelectionRanges, multiCellSelectionIDs, deselectedCells } = state;
+
+      function clearCellValue(acc, selectedCellID) {
+        return {...acc, [selectedCellID]: {value: null}};
+      }
+
+      const selectedRangeIDs = cellSelectionRanges.flatMap(({top, bottom, left, right}) => {
+        // slice the ranges that were selected and filter out the undefined values
+        return cellPositions.slice(top, bottom + 1).flatMap((row) => row.slice(left, right + 1).filter(Boolean));
+      });
+      const clearedCellValues = multiCellSelectionIDs.concat(selectedRangeIDs).filter((cellID) => !deselectedCells.includes(cellID)).reduce(clearCellValue, {});
+      const newCells = Object.assign({}, cells, clearedCellValues);
+
+      return {...state, cells: newCells }
     }
     case 'setCellPosition': {
       const rowArray = state.cellPositions[row];
@@ -44,7 +67,6 @@ function spreadsheetReducer(state, action) {
     }
     case 'add-current-selection-to-cell-selections': {
       const {currentCellSelectionRange, cellSelectionRanges} = state;
-      console.log('for action add-current-selection-to-cell-selections - currentCellSelectionRange:', currentCellSelectionRange);
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange), currentCellSelectionRange: null};
     }
     case 'modify-current-selection-cell-range': {
@@ -71,14 +93,14 @@ export function useSpreadsheetState() {
   if (context === undefined) {
     throw new Error('useCountState must be used within a CountProvider')
   }
-  return context
+  return context;
 }
 export function useSpreadsheetDispatch() {
   const context = React.useContext(SpreadsheetDispatchContext)
   if (context === undefined) {
     throw new Error('useCountDispatch must be used within a CountProvider')
   }
-  return context
+  return context;
 }
 
 export function SpreadsheetProvider({children, rowCount, colCount}) {
@@ -86,7 +108,7 @@ export function SpreadsheetProvider({children, rowCount, colCount}) {
   const initialModel = Array(rowCount).fill(undefined).map(() => initialArray.slice());
   const [state, changeSpreadsheet] = useReducer(spreadsheetReducer, {
     cells: {}, activeCell: null, cellPositions: initialModel, multiCellSelectionIDs: [], cellSelectionRanges: [{
-      top: 5, bottom: 10, left: 3, right: 6
+      top: 1, bottom: 1, left: 1, right: 1
     }], currentCellSelectionRange: null
   });
   return (

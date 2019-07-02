@@ -23,7 +23,7 @@ function createCell() {
 }
 
 function Spreadsheet({eventBus}) {
-  const {cells, activeCell, cellPositions, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange} = useSpreadsheetState();
+  const {cells, activeCell, cellPositions, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   function isSelectedCell(row, column) {
@@ -46,9 +46,14 @@ function Spreadsheet({eventBus}) {
   useEffect(() => {
     console.log('cells updated:', cells);
   }, [cells]);
-  useEffect(()  => {
+  useEffect(() => {
     console.log('cell positions:', cellPositions);
   }, [cellPositions]);
+  // set active cell to A1 on first load
+  useEffect(() => {
+    changeActiveCell(0, 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const formulaParser = new Parser();
   formulaParser.on('callCellValue', function(cellCoordinates, done) {
@@ -95,17 +100,29 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: 'add-current-selection-to-cell-selections'});
   }
 
+  function FormulaBar() {
+    return (
+      <div style={{display: 'flex', height: '30px'}}>
+        <div style={{minWidth: '82px', margin: 'auto', fontStyle: 'italic'}}>Fx</div>
+        <input style={{width: '100%', fontSize: '1.2em'}} />
+      </div>
+    )
+  }
+
   // We add one more column header as the capstone for the column of row headers
-  const headers = Array(columnCount + 1).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index - 1 + 'A'.charCodeAt(0))}/>))
+  const headers = Array(columnCount).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
   const rows = cellPositions.map((row, index) => {
     return (<Row key={index} row={row} rowIndex={index} cells={cells} finishCurrentSelectionRange={finishCurrentSelectionRange} modifyCellSelectionRange={modifyCellSelectionRange}
        activeCell={activeCell} setActiveCell={changeActiveCell} isSelectedCell={isSelectedCell} formulaParser={formulaParser}/>)
   });
   return (
-    <table>
-      <thead><tr>{headers}</tr></thead>
-      <tbody>{rows}</tbody>
-    </table>
+    <div>
+      <FormulaBar />
+      <table>
+        <thead><tr><td></td>{headers}</tr></thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </div>
   );
 }
 
