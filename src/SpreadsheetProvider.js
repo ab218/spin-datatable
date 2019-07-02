@@ -13,7 +13,7 @@ function getRangeBoundaries({startRangeRow, startRangeColumn, endRangeRow, endRa
 }
 
 function spreadsheetReducer(state, action) {
-  const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn, selectionActive} = action;
+  const {type, activeCell, row, column, cellID, cellValue, endRangeRow, endRangeColumn, selectionActive } = action;
   switch (type) {
     case 'activateCell': {
       const {activeCell: oldActiveCell, multiCellSelectionIDs: oldCellSelectionIDs, cellSelectionRanges: oldCellSelectionRanges, deselectedCells} = state;
@@ -21,8 +21,7 @@ function spreadsheetReducer(state, action) {
       const multiCellSelectionIDs = selectionActive ? oldCellSelectionIDs.concat(!oldCellSelectionIDs.includes(oldActiveCell) ? oldActiveCell : []).concat(activeCell) : [];
       // Ditto for the current selection (accumulated by mouse movements)
       const cellSelectionRanges = selectionActive ? oldCellSelectionRanges : [];
-      const currentActiveCellValue = state.cells[activeCell];
-      return {...state, activeCell, deselectedCells: selectionActive ? deselectedCells : [], currentActiveCellValue, activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}};
+      return {...state, activeCell, deselectedCells: selectionActive ? deselectedCells : [], activeCellCoords: {row, column}, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange: {top: row, left: column}};
     }
     case 'add-cell-to-deselect-list': {
       const { activeCell, deselectedCells: oldDeselectedCells = [] } = state;

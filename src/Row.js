@@ -9,6 +9,7 @@ function Row({row, rowIndex, cells, activeCell, setActiveCell, isSelectedCell, f
     // In case we have a shorter row of cells, create some padding to match the longest row
     // const padding = Array(emptyCellCount).fill(null);
     const { deselectedCells } = useSpreadsheetState();
+
     const rowHeader = (<td key={rowIndex}>{rowIndex + 1}</td>);
     return (<tr key={'row' + rowIndex}>{[rowHeader].concat(row.map((cell, cellIndex) => {
       let cellValue = cells[cell] && cells[cell].value;

@@ -17,6 +17,7 @@ const cursorKeyToRowColMapper = {
 };
 
 function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn}) {
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onKeyDown = (event) => {
     console.log('event key:', event.key);
@@ -46,13 +47,13 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
   const inputEl = useRef(null);
   useEffect(() => {
     inputEl.current.focus();
-  })
-  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  }, [])
+
   function updateCell(event) {
     dispatchSpreadsheetAction({type: 'updateCell', cellID: cell, cellValue: event.target.value});
   }
 
-  return (<td style={{color: 'red'}}><input ref={inputEl} type="text" defaultValue={value} onInput={updateCell} onKeyDown={onKeyDown}/></td>);
+  return (<td style={{color: 'red'}}><input ref={inputEl} type="text" value={value} onChange={updateCell} onKeyDown={onKeyDown}/></td>);
 }
 
 export default ActiveCell;

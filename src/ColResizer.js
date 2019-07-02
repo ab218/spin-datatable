@@ -8,14 +8,29 @@ export default function ColumnResizer({content}) {
   const [originalCellWidth, setOriginalCellWidth] = useState();
 
   useEffect(() => {
+    const endDrag = () => {
+      if (!isDragging) {
+        return;
+      }
+      setIsDragging(false);
+      setOriginalCellWidth(originalCellWidth + offset);
+      setOffset(0);
+    }
+
+    const onMouseMove = (e) => {
+      if (!isDragging) {
+        return;
+      }
+      setOffset(e.clientX - startX);
+    }
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', endDrag);
-
     return () => {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', endDrag);
     };
-  });
+  }, [isDragging, offset, originalCellWidth, startX]);
 
   const startDrag = (e) => {
     setStartX(e.clientX);
@@ -24,21 +39,6 @@ export default function ColumnResizer({content}) {
     setIsDragging(true);
   }
 
-  const endDrag = () => {
-    if (!isDragging) {
-      return;
-    }
-    setIsDragging(false);
-    setOriginalCellWidth(originalCellWidth + offset);
-    setOffset(0);
-  }
-
-  const onMouseMove = (e) => {
-    if (!isDragging) {
-      return;
-    }
-    setOffset(e.clientX - startX);
-  }
   const style = {
     userSelect: 'none',
     cursor: 'e-resize',

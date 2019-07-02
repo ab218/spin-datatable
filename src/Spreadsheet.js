@@ -22,8 +22,25 @@ function createCell() {
   return {[createRandomID()]: {value: null}};
 }
 
+function FormulaBar() {
+  const {activeCell, cells } = useSpreadsheetState();
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  function updateCell(event) {
+    console.log('formula bar -  update cell:', event.target.value, 'activeCell:', activeCell);
+    dispatchSpreadsheetAction({type: 'updateCell', cellID: activeCell, cellValue: event.target.value});
+  }
+  return (
+    <div style={{display: 'flex', height: '30px'}}>
+      <div style={{minWidth: '82px', margin: 'auto', fontStyle: 'italic'}}>Fx</div>
+      <input style={{width: '100%', fontSize: '1.2em'}} value={activeCell ? cells[activeCell].value : ''} onChange={updateCell} />
+    </div>
+  )
+}
+
 function Spreadsheet({eventBus}) {
   const {cells, activeCell, cellPositions, multiCellSelectionIDs, cellSelectionRanges, currentCellSelectionRange } = useSpreadsheetState();
+  console.log('active cell is now:', activeCell);
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   function isSelectedCell(row, column) {
@@ -98,15 +115,6 @@ function Spreadsheet({eventBus}) {
 
   function finishCurrentSelectionRange() {
     dispatchSpreadsheetAction({type: 'add-current-selection-to-cell-selections'});
-  }
-
-  function FormulaBar() {
-    return (
-      <div style={{display: 'flex', height: '30px'}}>
-        <div style={{minWidth: '82px', margin: 'auto', fontStyle: 'italic'}}>Fx</div>
-        <input style={{width: '100%', fontSize: '1.2em'}} />
-      </div>
-    )
   }
 
   // We add one more column header as the capstone for the column of row headers
