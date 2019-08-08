@@ -36,3 +36,7 @@ td input {
   height: 95%;
   font-size: 1em;
 }
+
+.selected-cell {
+  background-color: '#f0f0f0';
+}

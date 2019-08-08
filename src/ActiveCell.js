@@ -1,22 +1,34 @@
 import React, { useRef, useEffect } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import {
+  ADD_CELL_TO_SELECTIONS,
+} from './constants'
 
 const cursorKeyToRowColMapper = {
   ArrowUp: function (row, column) {
-    return {row: row - 1, column};
+    // rows should never go less than index 0 (top row header)
+    return {row: Math.max(row - 1, 0), column};
   },
-  ArrowDown: function (row, column) {
-    return {row: row + 1, column};
+  ArrowDown: function (row, column, numberOfRows) {
+    return {row: Math.min(row + 1, numberOfRows), column};
   },
-  ArrowLeft: function (row, column) {
-    return {row, column: column - 1};
-  },
-  ArrowRight: function (row, column) {
-    return {row, column: column + 1};
-  }
+  // ArrowLeft: function (row, column) {
+  //   // Column should be minimum of 1 due to side row header
+  //   return {row, column: Math.max(column - 1, 1)};
+  // },
+  // ArrowRight: function (row, column) {
+  //   return {row, column: column + 1};
+  // }
 };
 
-function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn}) {
+function ActiveCell({
+  changeActiveCell,
+  columnIndex,
+  numberOfRows,
+  rowIndex,
+  updateCell,
+  value,
+}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onKeyDown = (event) => {
@@ -25,19 +37,12 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
       // TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
       case 'ArrowDown':
       case 'ArrowUp':
-      case 'ArrowLeft':
-      case 'ArrowRight':
         event.preventDefault();
-        const {row, column} = cursorKeyToRowColMapper[event.key](someRow, someColumn);
-        setActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
+        const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
         if (event.shiftKey) {
-          dispatchSpreadsheetAction({type: 'add-cellID-to-cell-selection', row, column});
-        } else {
-          updateCell(event);
+          dispatchSpreadsheetAction({type: ADD_CELL_TO_SELECTIONS, row, column});
         }
-        break;
-      case 'Backspace':
-        dispatchSpreadsheetAction({type: 'delete-values'})
+        changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
         break;
       default:
         break;
@@ -47,13 +52,19 @@ function ActiveCell({cell, value, setActiveCell, row: someRow, col: someColumn})
   const inputEl = useRef(null);
   useEffect(() => {
     inputEl.current.focus();
-  }, [])
+  })
 
-  function updateCell(event) {
-    dispatchSpreadsheetAction({type: 'updateCell', cellID: cell, cellValue: event.target.value});
-  }
-
-  return (<td style={{color: 'red'}}><input ref={inputEl} type="text" value={value} onChange={updateCell} onKeyDown={onKeyDown}/></td>);
+  return (
+  <td>
+    <input
+      ref={inputEl}
+      type="text"
+      value={value}
+      onKeyDown={onKeyDown}
+      onInput={updateCell}
+    />
+  </td>
+  );
 }
 
 export default ActiveCell;

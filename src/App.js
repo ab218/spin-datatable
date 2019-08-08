@@ -9,10 +9,11 @@ eventBus.subscribe('select-cell', function handlingCellSelection() {
   console.log('handling cell selection:', arguments);
 });
 
+
 function App() {
   return (
     <div className="App">
-      <SpreadsheetProvider rowCount={40} colCount={26}>
+      <SpreadsheetProvider>
         <Spreadsheet eventBus={eventBus}/>
       </SpreadsheetProvider>
     </div>
