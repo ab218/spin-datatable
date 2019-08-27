@@ -1,15 +1,12 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
-  "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "manifest_version": 2,
+  "name": "nStudy Data Table",
+  "author": "Aaron Black",
+  "version": "1.0.1",
+  "description": "Replace new tab screen with GitHub trending projects.",
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "content_security_policy": "script-src 'self' 'sha256-5As4+3YpY62+l38PsxCEkjB1R4YtyktBtRScTJ3fyLU='; object-src 'self'",
+  "permissions": ["storage", "tabs"]
 }

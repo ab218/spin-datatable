@@ -21,7 +21,7 @@ thead td {
   background-color: #eee;
   position: sticky;
   top: -1px;
-  z-index: 2;
+  z-index: 1;
 }
 
 tbody tr td:first-of-type {
@@ -39,4 +39,49 @@ td input {
 
 .selected-cell {
   background-color: '#f0f0f0';
+}
+
+.menu {
+  text-align: left;
+  width: 120px;
+  box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  display: none;
+  background: rgb(255, 250, 250);
+}
+
+.menu-options {
+  list-style: none;
+  padding: 10px 0;
+}
+
+
+.menu-option {
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 40px 10px 20px;
+  cursor: pointer;
+}
+
+.menu-option:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+
+.modal-span {
+  display: flex;
+  justify-content: space-between;
+  /* margin: 1em; */
+}
+
+.display-block {
+  display: block;
+}
+
+.display-none {
+  display: none;
+}
+
+.display-flex {
+  display: flex;
 }

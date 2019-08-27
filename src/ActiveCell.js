@@ -12,6 +12,9 @@ const cursorKeyToRowColMapper = {
   ArrowDown: function (row, column, numberOfRows) {
     return {row: Math.min(row + 1, numberOfRows), column};
   },
+  Enter: function (row, column, numberOfRows) {
+    return {row: Math.min(row + 1, numberOfRows), column};
+  },
   // ArrowLeft: function (row, column) {
   //   // Column should be minimum of 1 due to side row header
   //   return {row, column: Math.max(column - 1, 1)};
@@ -37,6 +40,7 @@ function ActiveCell({
       // TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
       case 'ArrowDown':
       case 'ArrowUp':
+      case 'Enter':
         event.preventDefault();
         const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
         if (event.shiftKey) {
@@ -44,6 +48,7 @@ function ActiveCell({
         }
         changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
         break;
+
       default:
         break;
     }
@@ -61,7 +66,7 @@ function ActiveCell({
       type="text"
       value={value}
       onKeyDown={onKeyDown}
-      onInput={updateCell}
+      onChange={updateCell}
     />
   </td>
   );

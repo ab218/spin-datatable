@@ -1,9 +1,8 @@
 import React from 'react';
 import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
-import { UPDATE_CELL } from './constants';
-import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { Parser } from 'hot-formula-parser';
+import { TOGGLE_CONTEXT_MENU, UPDATE_CELL } from './constants';
+import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 
 export default function Row({
   activeCell,
@@ -26,15 +25,17 @@ export default function Row({
     return columnPositions[colA.id] - columnPositions[colB.id];
   });
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const { contextMenuOpen } = useSpreadsheetState();
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
         const column = columns[columnIndex - 1];
-        const isFormulaColumn = column && column.formula;
+        const isFormulaColumn = column && column.type === 'Formula' && column.formula;
         if (columnIndex === 0) {
           // The row # on the left side
           return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex}/>
         }
+
         function updateCell(event, clear) {
           if (rows === 1 ) {
             createNewRows(rows);
@@ -42,20 +43,9 @@ export default function Row({
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-          console.log('updating cell from active cell');
           dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
         }
 
-        const formulaParser = new Parser();
-        formulaParser.on('callVariable', function(name, done) {
-          // console.log('callVariable callback:', arguments);
-          const selectedColumn = columns.find((column) => column.id === name);
-          // console.log('selectedColumn:', selectedColumn);
-          if (selectedColumn) {
-            done(row ? row[selectedColumn.id] : 'column not found');
-          }
-        });
-        const formulaResult = column && column.formula ? formulaParser.parse(column.formula).result : '';
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
             <ActiveCell
@@ -81,7 +71,6 @@ export default function Row({
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}
-              formulaResult={formulaResult}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               isFormulaColumn={isFormulaColumn}
               modifyCellSelectionRange={modifyCellSelectionRange}
@@ -99,7 +88,6 @@ export default function Row({
               column={column}
               columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
-              formulaResult={formulaResult}
               modifyCellSelectionRange={modifyCellSelectionRange}
               row={row}
               rowIndex={rowIndex}
@@ -108,7 +96,13 @@ export default function Row({
           )
         } else {
           // The rest of the cells in the row that aren't in a defined column
-          return (<td key={`row${rowIndex}col${columnIndex}`} onClick={() => selectCell(rowIndex, columnIndex)}>.</td>)
+          return (<td key={`row${rowIndex}col${columnIndex}`} onMouseDown={(e) => {
+            e.preventDefault();
+            if (contextMenuOpen) {
+              dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+            }
+            selectCell(rowIndex, columnIndex)
+          }}></td>)
         }
       })}
     </tr>

@@ -1,9 +1,11 @@
 import React from 'react';
-// import { Parser } from 'hot-formula-parser';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import ColResizer from './ColResizer';
+import AnalysisModal from './ModalAnalysis';
 import ActiveCell from './ActiveCell';
+import ColResizer from './ColResizer';
+import ContextMenu from './ContextMenu';
+import ColumnTypeModal from './ModalColumnType';
 import Row from './Row';
 import { SelectedCell } from './Cell';
 import {
@@ -13,12 +15,10 @@ import {
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
+  TOGGLE_CONTEXT_MENU,
   UPDATE_CELL,
 } from './constants'
-
-// function isFormula(value) {
-//   return typeof value === 'string' && value.charAt(0) === '=';
-// }
+import HighchartsDemo from './HighchartsDemo';
 
 function FormulaBar() {
   return (
@@ -47,6 +47,7 @@ function BlankClickableRow({
   selectCell,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const { contextMenuOpen } = useSpreadsheetState();
   return (
     <tr>
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
@@ -98,6 +99,9 @@ function BlankClickableRow({
           <td
             onMouseDown={(event) => {
               event.preventDefault();
+              if (contextMenuOpen) {
+                dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+              }
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
             onMouseEnter={(event) => {
@@ -105,7 +109,7 @@ function BlankClickableRow({
               modifyCellSelectionRange(rowIndex, columnIndex, true);
             }
             }}
-            onMouseUp={() => {finishCurrentSelectionRange()}}
+            onMouseUp={finishCurrentSelectionRange}
             key={`blank_cell${rowIndex}_${columnIndex}`}
             ></td>
         )
@@ -123,35 +127,11 @@ function Spreadsheet({eventBus}) {
     currentCellSelectionRange,
     rowPositions,
     rows,
+    selectedColumn
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
-
-  // const formulaParser = new Parser();
-  // formulaParser.on('callCellValue', function(cellValue, done) {
-  //   console.log('inside callCellValue:', arguments);
-  //   const {column: {index: cellColumnIndex}, row: {index: cellRowIndex}} = cellValue;
-  //   // const whichColumn = columns.find(
-  //   // Resolve the cell reference
-  //   const {error, result} = formulaParser.parse(cellValue);
-  //   done(error || result);
-  // });
-  // formulaParser.on('callVariable', function(name, done) {
-  //   console.log('on call variable:', arguments);
-  //   const selectedColumn = columns.find((column) => column.id === name);
-  //   if (selectedColumn) {
-
-  //   }
-  // });
-
-  // formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
-  //   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
-  //     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
-  //       return cells[cellID].value;
-  //     });
-  //   });
-  //   done(data);
-  // });
+  // const [analysisWindow, setAnalysisWindow] = useState(false);
 
   function isSelectedCell(row, column) {
     function withinRange(value) {
@@ -173,7 +153,15 @@ function Spreadsheet({eventBus}) {
 
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
-  const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (<ColResizer key={index} minWidth={60} content={String.fromCharCode(index + 'A'.charCodeAt(0))}/>))
+  const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (
+    <ColResizer
+      columnIndex={index}
+      key={index}
+      minWidth={60}
+      column={columns[index]}
+      content={String.fromCharCode(index + 'A'.charCodeAt(0))}
+    />
+  ))
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
       if (rowIDs[index]) {
         return (
@@ -245,6 +233,10 @@ function Spreadsheet({eventBus}) {
 
   return (
     <div>
+      <ContextMenu />
+      <HighchartsDemo />
+      {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
+      <AnalysisModal />
       <FormulaBar />
       <table>
         <thead><tr><td></td>{headers}</tr></thead>
@@ -255,24 +247,3 @@ function Spreadsheet({eventBus}) {
 }
 
 export default Spreadsheet;
-
-// formulaParser.on('callCellValue', function(cellCoordinates, done) {
-//   const cellValue = cells[cellPositions[cellCoordinates.row.index][cellCoordinates.column.index]].value;
-//   if (isFormula(cellValue)) {
-//     const {error, result} = formulaParser.parse(cellValue.slice(1));
-//     done(error || result);
-//   } else {
-//     done(cellValue);
-//   }
-// });
-
-// formulaParser.on('callRangeValue', function(startCellCoord, endCellCoord, done) {
-//   const data = cellPositions.slice(startCellCoord.row.index, endCellCoord.row.index + 1).map((row) => {
-//     return row.slice(startCellCoord.column.index, endCellCoord.column.index + 1).map((cellID) => {
-//       return cells[cellID].value;
-//     });
-//   });
-//   done(data);
-// });
-
-
