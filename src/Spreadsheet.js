@@ -5,29 +5,31 @@ import AnalysisModal from './ModalAnalysis';
 import ActiveCell from './ActiveCell';
 import ColResizer from './ColResizer';
 import ContextMenu from './ContextMenu';
+import DistributionModal from './ModalDistribution';
+import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import Row from './Row';
 import { SelectedCell } from './Cell';
 import {
   ACTIVATE_CELL,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+  CLOSE_CONTEXT_MENU,
   CREATE_COLUMNS,
   CREATE_ROWS,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
-  TOGGLE_CONTEXT_MENU,
+  OPEN_CONTEXT_MENU,
   UPDATE_CELL,
 } from './constants'
-import HighchartsDemo from './HighchartsDemo';
 
-function FormulaBar() {
-  return (
-    <div style={{display: 'flex', height: '30px'}}>
-      <div style={{minWidth: '82px', margin: 'auto', fontStyle: 'italic'}}>Fx</div>
-      <input style={{width: '100%', fontSize: '1.2em'}} />
-    </div>
-  )
-}
+// function FormulaBar() {
+//   return (
+//     <div style={{display: 'flex', height: '30px'}}>
+//       <div style={{minWidth: '80px', margin: 'auto', fontStyle: 'italic'}}>Fx</div>
+//       <input style={{width: '100%', fontSize: '1.2em', borderLeft: '0.1px solid lightgray', borderBottom: 'none', borderTop: 'none', borderRight: 'none'}} />
+//     </div>
+//   )
+// }
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#f9f9f9'}} key={'blankcol' + columnIndex}></td>)}</tr> }
 
@@ -39,6 +41,7 @@ function BlankClickableRow({
   createNewColumns,
   createNewRows,
   finishCurrentSelectionRange,
+  handleContextMenu,
   isSelectedCell,
   modifyCellSelectionRange,
   numberOfRows,
@@ -73,6 +76,7 @@ function BlankClickableRow({
               columns={columns}
               createNewColumns={createNewColumns}
               createNewRows={createNewRows}
+              handleContextMenu={handleContextMenu}
               numberOfRows={numberOfRows}
               rowIndex={rowIndex}
               rows={rows}
@@ -88,6 +92,7 @@ function BlankClickableRow({
               column={column}
               columnIndex={columnIndex}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
+              handleContextMenu={handleContextMenu}
               modifyCellSelectionRange={modifyCellSelectionRange}
               numberOfRows={numberOfRows}
               rowIndex={rowIndex}
@@ -100,7 +105,7 @@ function BlankClickableRow({
             onMouseDown={(event) => {
               event.preventDefault();
               if (contextMenuOpen) {
-                dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+                dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
               }
               selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
             }}
@@ -121,17 +126,26 @@ function BlankClickableRow({
 function Spreadsheet({eventBus}) {
   const {
     activeCell,
+    allPhysicalColumns,
+    analysisModalOpen,
     columnPositions,
     columns,
     cellSelectionRanges,
+    distributionModalOpen,
     currentCellSelectionRange,
+    filterModalOpen,
+    groupByColumnID,
+    groupedColumns,
+    layout,
+    physicalRows,
+    physicalRowPositions,
     rowPositions,
     rows,
-    selectedColumn
+    selectedColumn,
+    selectedRowIDs,
+    tableView
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-
-  // const [analysisWindow, setAnalysisWindow] = useState(false);
 
   function isSelectedCell(row, column) {
     function withinRange(value) {
@@ -146,26 +160,47 @@ function Spreadsheet({eventBus}) {
     return {...acc, [position]: id};
   }, {});
   const rowCount = rowMap ? Math.max(...Object.keys(rowMap)) + 1 : 0;
-  const visibleRowCount = Math.max(rowCount, 20); // 50 rows should be enough to fill the screen
+  const visibleRowCount = Math.max(rowCount, 35); // 50 rows should be enough to fill the screen
   const rowIDs = Array(rowCount).fill(undefined).map((_, index) => {
     return rowMap[index];
   });
+  const groupedRowMap = groupedColumns && Object.entries(physicalRowPositions).reduce((acc, [id, position]) => {
+    return {...acc, [position]: id};
+  }, {});
+  const groupedRowCount = groupedRowMap ? Math.max(...Object.keys(groupedRowMap)) + 1 : 0;
+  const groupedVisibleRowCount = Math.max(groupedRowCount, 20);
+  const groupedRowIDs = groupedRowCount !== -Infinity && Array(groupedRowCount).fill(undefined).map((_, index) => {
+    return groupedRowMap[index];
+  });
+
+  // console.log('rowIDs: ', rowIDs, 'groupedRowIDs: ', groupedRowIDs)
 
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
   const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (
     <ColResizer
+      borderRight={tableView && (index === 0 || index === 5) && true}
       columnIndex={index}
       key={index}
-      minWidth={60}
       column={columns[index]}
       content={String.fromCharCode(index + 'A'.charCodeAt(0))}
     />
   ))
+  const spreadsheetHeaders = Array(26).fill(undefined).map((_, index) => (
+    <ColResizer
+      borderRight={tableView && (index === 0 || index === 5) && true}
+      columnIndex={index}
+      key={index}
+      column={allPhysicalColumns && allPhysicalColumns[index]}
+      content={String.fromCharCode(index + 'A'.charCodeAt(0))}
+    />
+  ))
+
   const visibleRows = Array(visibleRowCount).fill(undefined).map((_, index) => {
       if (rowIDs[index]) {
         return (
           <Row
+            selectedRow={selectedRowIDs && selectedRowIDs.includes(rowIDs[index])}
             key={'Row' + index}
             activeCell={activeCell}
             cellCount={visibleColumnCount + 1}
@@ -175,6 +210,7 @@ function Spreadsheet({eventBus}) {
             createNewColumns={createNewColumns}
             createNewRows={createNewRows}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
+            handleContextMenu={handleContextMenu}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             numberOfRows={rowCount}
@@ -191,6 +227,7 @@ function Spreadsheet({eventBus}) {
             key={'Row' + index}
             cellCount={visibleColumnCount + 1}
             activeCell={activeCell}
+            handleContextMenu={handleContextMenu}
             changeActiveCell={changeActiveCell}
             columns={columns}
             createNewRows={createNewRows}
@@ -231,17 +268,94 @@ function Spreadsheet({eventBus}) {
     dispatchSpreadsheetAction({type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS});
   }
 
+  const visibleSpreadsheetRows = Array(groupedVisibleRowCount).fill(undefined).map((_, index) => {
+    if (groupedRowIDs[index]) {
+      return (
+        <Row
+          key={'Row' + index}
+          activeCell={activeCell}
+          cellCount={26 + 1}
+          changeActiveCell={changeActiveCell}
+          columns={allPhysicalColumns}
+          createNewColumns={createNewColumns}
+          createNewRows={createNewRows}
+          finishCurrentSelectionRange={finishCurrentSelectionRange}
+          handleContextMenu={handleContextMenu}
+          isSelectedCell={isSelectedCell}
+          modifyCellSelectionRange={modifyCellSelectionRange}
+          numberOfRows={groupedRowCount}
+          row={physicalRows.find(({id}) => id === groupedRowIDs[index])}
+          rowIDs={groupedRowIDs}
+          rowIndex={index}
+          rows={index - groupedRowCount + 1}
+          selectCell={selectCell}
+        />
+      )
+    } else if (groupedRowIDs[index-1]) {
+      return (
+        <BlankClickableRow
+          key={'Row' + index}
+          cellCount={26 + 1}
+          activeCell={activeCell}
+          changeActiveCell={changeActiveCell}
+          columns={allPhysicalColumns}
+          createNewRows={createNewRows}
+          createNewColumns={createNewColumns}
+          finishCurrentSelectionRange={finishCurrentSelectionRange}
+          handleContextMenu={handleContextMenu}
+          isSelectedCell={isSelectedCell}
+          modifyCellSelectionRange={modifyCellSelectionRange}
+          numberOfRows={groupedRowCount}
+          rowIndex={index}
+          rows={index - groupedRowCount + 1}
+          selectCell={selectCell}
+        />
+      )
+    } else { return <BlankRow key={'BlankRow' + index} cellCount={26 + 1} />}
+});
+
+function handleContextMenu(e) {
+  e.preventDefault();
+  dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, contextMenuPosition: {left: e.pageX, top: e.pageY}});
+}
+
+function getGroupedByColumnIDLabel(id) {
+  const found = columns.find(col => col.id === id);
+  return found.label
+}
+
   return (
     <div>
       <ContextMenu />
-      <HighchartsDemo />
       {selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn}/>}
-      <AnalysisModal />
-      <FormulaBar />
-      <table>
-        <thead><tr><td></td>{headers}</tr></thead>
-        <tbody>{visibleRows}</tbody>
-      </table>
+      {distributionModalOpen && <DistributionModal />}
+      {analysisModalOpen && <AnalysisModal />}
+      {filterModalOpen && <FilterModal selectedColumn={selectedColumn}/>}
+      {/* <FormulaBar /> */}
+      {layout
+        ? <table>
+          <thead>
+            <tr><th></th>{headers}</tr>
+          </thead>
+          <tbody>{visibleRows}</tbody>
+        </table>
+        : <table>
+          <thead>
+            <tr className={'move-row-down'}>
+              <th></th>{spreadsheetHeaders}
+            </tr>
+            <tr className={'move-row-up'}><th></th>
+              {groupedColumns && Object.entries(groupedColumns).map(col => {
+                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{getGroupedByColumnIDLabel(groupByColumnID)} {col[0]}</th>
+              })}
+              <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+          {visibleSpreadsheetRows}
+          </tbody>
+        </table>
+      }
     </div>
   );
 }

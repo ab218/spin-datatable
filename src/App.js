@@ -6,7 +6,6 @@ import EventBus from './eventbus.js';
 
 const eventBus = new EventBus('spreadsheet-events', console.debug);
 eventBus.subscribe('select-cell', function handlingCellSelection() {
-  console.log('handling cell selection:', arguments);
 });
 
 

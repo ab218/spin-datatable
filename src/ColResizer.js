@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_COLUMN_TYPE_MODAL, REMOVE_SELECTED_CELLS } from './constants'
+import { TOGGLE_COLUMN_TYPE_MODAL, OPEN_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants'
 
-export default function ColumnResizer({column, content}) {
+export default function ColumnResizer({borderRight, column, content}) {
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -41,20 +41,26 @@ export default function ColumnResizer({column, content}) {
 
   const startDrag = (e) => {
     setStartX(e.clientX);
-    const  {width: originalWidth} = e.target.getBoundingClientRect();
+    const { width: originalWidth } = e.target.getBoundingClientRect();
     setOriginalCellWidth(originalWidth);
     setIsDragging(true);
   }
 
   const style = {
+    borderRight: borderRight && '1px solid black',
     userSelect: 'none',
     cursor: 'e-resize',
     width: (originalCellWidth || 80) + offset,
   };
 
+  const onContextMenu = (e) => {
+    e.preventDefault();
+    dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, colName: e.target.innerHTML, colHeaderContext: true, contextMenuPosition: {left: e.pageX, top: e.pageY}});
+  }
+
   return (
-      <td style={style} onMouseDown={startDrag} onDoubleClick={openModal}>
+      <th style={style} onMouseDown={startDrag} onDoubleClick={openModal} onContextMenu={e => onContextMenu(e)}>
           {(column && column.label) || content}
-      </td>
+      </th>
   );
 }

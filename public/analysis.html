@@ -1,0 +1,264 @@
+<!--
+  Analyses that should be done together..
+  Exploratory data analysis:
+    - Distributional properties (depends on kind of data, (eg: nominal, ordinal))
+      - Mean/Median/Mode/Shape, etc
+      - Goodness of fit
+      - Normality - Skew/Kurtosis
+      - Box and whisker/(preferably Violin)
+      - Histogram
+      - Between 10-12 bins is ideal for normal distribution
+ -->
+
+<html>
+  <head>
+      <!-- jQuery needed for annotations -->
+    <!-- <script src="http://code.highcharts.com/modules/exporting.js"></script> -->
+    <!-- <script src="//rawgithub.com/phpepe/highcharts-regression/master/highcharts-regression.js"></script> -->
+      <script
+        src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous">
+      </script>
+      <script src="./highcharts.js"></script>
+      <script src="https://code.highcharts.com/highcharts-more.js"></script>
+      <script src="./annotations.js"></script>
+    <title>Data Analysis</title>
+  </head>
+  <body>
+    <div style="width:450px;" id="container">Loading</div>
+    <script>
+      function evaluatePValue(pValue) {
+        if (pValue < 0.0001) {
+          return `<td><0.0001</td>`
+        } else if (pValue < 0.001) {
+          return `<td>${pValue}</td>`
+        } else if (pValue < 0.01) {
+          return `<td>${pValue}</td>`
+        }
+        return `<td style=color:green;>${pValue}</td>`
+      }
+      window.opener.postMessage('ready', '*');
+      const container = document.getElementById('container');
+      function receiveMessage(event) {
+        console.log('TARGET', event);
+        const {
+          upperBand,
+          lowerBand,
+          colXLabel,
+          colYLabel,
+          tempABVals,
+          corrcoef,
+          covariance,
+          colAMean,
+          colAStdev,
+          colBMean,
+          colBStdev,
+          pValue,
+          linearRegressionLinePoints,
+          linearRegressionLineEquation,
+          linearRegressionLineSlope,
+          linearRegressionLineR2,
+          linearRegressionLineYIntercept } = event.data;
+        const options = {
+          chart: {
+            marginTop: 100,
+            height: 400,
+            width: 400
+          },
+          credits: false,
+          title: {
+            text: `${colYLabel} by ${colXLabel}`
+          },
+          xAxis: {
+            title: { text: colXLabel },
+            min: 0
+          },
+          yAxis: {
+            title: { text: colYLabel },
+            min: 0
+          },
+          legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+          },
+
+          plotOptions: {
+            series: {
+              jitter: {
+                x: 0.3,
+                y: 0.3
+              },
+              label: {
+                connectorAllowed: false
+              },
+              stickyTracking: false,
+              events: {
+                legendItemClick: function () {
+                  if (this.visible) {
+                    return false;
+                  } else {
+                    let series = this.chart.series,
+                    i = series.length,
+                    otherSeries;
+                    while (i--) {
+                      otherSeries = series[i]
+                      if (otherSeries !== this && otherSeries.visible) {
+                        otherSeries.hide();
+                      }
+                    }
+                  }
+                }
+              },
+            }
+          },
+          series: [
+          {
+              name: 'Points',
+              type: 'scatter',
+              id: 's1',
+              data: tempABVals,
+              visible: true,
+            },
+            {
+              name: 'Points with Linear Regression Line',
+              type: 'scatter',
+              id: 's2',
+              data: tempABVals,
+              visible: false,
+            },
+            {
+              name: 'Linear Regression Line',
+              type: 'line',
+              linkedTo: 's2',
+              data: linearRegressionLinePoints,
+              visible: false,
+            },
+            {
+              name: 'Points with Linear Regression Line and Confidence bands',
+              type: 'scatter',
+              id: 's3',
+              data: tempABVals,
+              visible: false,
+            },
+            {
+              name: 'Linear Regression Line',
+              type: 'line',
+              linkedTo: 's3',
+              data: linearRegressionLinePoints,
+              visible: false,
+            },
+            {
+              name: 'Confidence Band Lower',
+              type: 'line',
+              linkedTo: 's3',
+              stroke: 'red',
+              dashStyle: 'dot',
+              data: lowerBand,
+              visible: false,
+            },
+            {
+              name: 'Confidence Band Upper',
+              type: 'line',
+              linkedTo: 's3',
+              stroke: 'red',
+              dashStyle: 'dot',
+              data: upperBand,
+              visible: false,
+            },
+            {
+              name: 'Histogram',
+              type: 'column',
+              visible: false,
+              data: tempABVals,
+              borderWidth: 0,
+            },
+          ],
+
+          responsive: {
+            rules: [{
+              condition: {
+                maxWidth: 500
+              },
+              chartOptions: {
+                legend: {
+                  layout: 'horizontal',
+                  align: 'center',
+                  verticalAlign: 'bottom'
+                }
+              }
+            }]
+          }
+        }
+        const chart = Highcharts.chart(container, options);
+        // Hack to fix the ticks not appearing correctly on first render
+        chart.series[0].hide();
+        chart.series[0].show();
+        const template = `<div style="text-align: center; margin: 0 3em;">
+            <h4>Summary Statistics</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td>Pearson's Correlation:</td>
+                  <td>${corrcoef}</td>
+                </tr>
+                <tr>
+                  <td>P-Value:</td>
+                  ${evaluatePValue(pValue)}
+                </tr>
+                <tr>
+                  <td>Covariance:</td>
+                  <td>${covariance}</td>
+                </tr>
+                <tr>
+                  <td>Count:</td>
+                  <td>${tempABVals.length}</td>
+                </tr>
+              </table>
+              <br>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="font-weight: bold;">Variable</td>
+                  <td style="font-weight: bold;">Mean</td>
+                  <td style="font-weight: bold;">Std Dev</td>
+                </tr>
+                <tr>
+                  <td>${colXLabel}</td>
+                  <td>${colAMean}</td>
+                  <td>${colAStdev}</td>
+                </tr>
+                <tr>
+                  <td>${colYLabel}</td>
+                  <td>${colBMean}</td>
+                  <td>${colBStdev}</td>
+                </tr>
+              </table>
+            <h4>Linear Fit</h4>
+            <table style="width: 100%;">
+              <tr>
+                <td>r²:</td>
+                <td>${linearRegressionLineR2}</td>
+              </tr>
+              <tr>
+                <td>slope:</td>
+                <td>${linearRegressionLineSlope}</td>
+              </tr>
+              <tr>
+                <td>y-intercept:</td>
+                <td>${linearRegressionLineYIntercept}</td>
+              </tr>
+              <tr>
+                <td>equation:</td>
+                <td>${linearRegressionLineEquation}</td>
+              </tr>
+            </table>
+          </div>`
+        const doc = new DOMParser().parseFromString(template, 'text/html');
+        container.appendChild(doc.body.firstChild);
+        window.removeEventListener("message", receiveMessage);
+      }
+
+      window.addEventListener("message", receiveMessage, false);
+    </script>
+  </body>
+</html>

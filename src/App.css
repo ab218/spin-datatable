@@ -17,7 +17,7 @@ td, th {
   overflow: hidden;
 }
 
-thead td {
+ thead th {
   background-color: #eee;
   position: sticky;
   top: -1px;
@@ -42,8 +42,9 @@ td input {
 }
 
 .menu {
+  z-index: 2;
   text-align: left;
-  width: 120px;
+  width: 220px;
   box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
   position: absolute;
   display: none;
@@ -67,7 +68,6 @@ td input {
   background: rgba(0, 0, 0, 0.2);
 }
 
-
 .modal-span {
   display: flex;
   justify-content: space-between;
@@ -84,4 +84,16 @@ td input {
 
 .display-flex {
   display: flex;
+}
+
+.move-row-up {
+  transform: translateY(-30px);
+}
+
+.move-row-down {
+  transform: translateY(30px);
+}
+
+.border-right {
+  border-right: 1px solid black;
 }

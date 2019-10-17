@@ -8,7 +8,7 @@ export default function AntModal({selectedColumn}) {
 
   const [columnName, setColumnName] = useState(selectedColumn.label);
   const [columnType, setColumnType] = useState(selectedColumn.type);
-  const [columnDataType, setColumnDataType] = useState("Continuous");
+  const [columnModelingType, setColumnModelingType] = useState(selectedColumn.modelingType);
   const [columnFormula, setColumnFormula] = useState(selectedColumn.formula);
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const { columns, columnTypeModalOpen } = useSpreadsheetState();
@@ -18,6 +18,7 @@ export default function AntModal({selectedColumn}) {
       type: UPDATE_COLUMN,
       updatedColumn: {
         label: columnName,
+        modelingType: columnModelingType,
         type: columnType,
         formula: columnFormula,
         id: selectedColumn.id
@@ -53,7 +54,7 @@ export default function AntModal({selectedColumn}) {
         </span>
         <span className="modal-span">
           <h4>Modeling Type</h4>
-          <Dropdown menuItems={['Continous', 'Ordinal', 'Nominal']} disabled setColumnType={setColumnDataType} columnType={columnDataType} />
+          <Dropdown menuItems={['Continuous', 'Ordinal', 'Nominal']} setColumnType={setColumnModelingType} columnType={columnModelingType} />
         </span>
         {columnType === 'Formula' &&
         <span className="modal-span">

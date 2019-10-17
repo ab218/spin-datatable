@@ -27,6 +27,7 @@ const cursorKeyToRowColMapper = {
 function ActiveCell({
   changeActiveCell,
   columnIndex,
+  handleContextMenu,
   numberOfRows,
   rowIndex,
   updateCell,
@@ -35,7 +36,6 @@ function ActiveCell({
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onKeyDown = (event) => {
-    console.log('event key:', event.key);
     switch (event.key) {
       // TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
       case 'ArrowDown':
@@ -60,7 +60,7 @@ function ActiveCell({
   })
 
   return (
-  <td>
+  <td onContextMenu={e => handleContextMenu(e)}>
     <input
       ref={inputEl}
       type="text"

@@ -1,25 +1,44 @@
 import React, { useReducer } from 'react';
 import { Parser } from 'hot-formula-parser';
+import { performLinearRegressionAnalysis, performDistributionAnalysis } from './Analyses';
 import './App.css';
 import {
   ACTIVATE_CELL,
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+  CLOSE_CONTEXT_MENU,
   CREATE_COLUMNS,
   CREATE_ROWS,
   DELETE_VALUES,
+  FILTER_COLUMN,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
-  OPEN_ANALYSIS_WINDOW,
-  TOGGLE_CONTEXT_MENU,
-  TOGGLE_COLUMN_TYPE_MODAL,
-  TOGGLE_ANALYSIS_MODAL,
+  PERFORM_ANALYSIS,
+  PERFORM_DISTRIBUTION_ANALYSIS,
   REMOVE_SELECTED_CELLS,
+  SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
+  SET_SELECTED_COLUMN,
   SELECT_CELL,
+  SORT_COLUMN,
+  OPEN_CONTEXT_MENU,
+  TOGGLE_ANALYSIS_MODAL,
+  TOGGLE_COLUMN_TYPE_MODAL,
+  TOGGLE_DISTRIBUTION_MODAL,
+  TOGGLE_FILTER_MODAL,
+  TOGGLE_LAYOUT,
   TRANSLATE_SELECTED_CELL,
   UPDATE_CELL,
   UPDATE_COLUMN
 } from './constants'
+
+function rowValueWithinTheseColumnRanges(row) {
+  const columns = this;
+  return columns.every(column => row[column.id] >= (column.min || column.colMin) && row[column.id] <= (column.max || column.colMax));
+}
+
+function filterRowsByColumnRange(selectedColumns, rows) {
+  return rows.filter(rowValueWithinTheseColumnRanges, selectedColumns);
+}
 
 function translateLabelToID(columns, formula) {
   return columns.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
@@ -56,30 +75,38 @@ function createRandomLetterString() {
 function spreadsheetReducer(state, action) {
   const {
     analysisModalOpen,
-    analysisWindowOpen,
     cellValue,
+    contextMenuPosition,
+    colHeaderContext,
+    colName,
     column,
     columnCount,
     columnIndex,
-    contextMenuOpen,
+    columnTypeModalOpen,
+    distributionModalOpen,
     endRangeRow,
     endRangeColumn,
-    columnTypeModalOpen,
+    filterModalOpen,
+    layout,
     row,
     rowIndex,
     rowCount,
     selectionActive,
+    setColName,
     type,
     updatedColumn,
     xColData,
-    yColData
+    yColData,
    } = action;
+   function getCol(colName) {
+    return state.columns.find(col => col.label === colName)
+  }
   console.log('dispatched:', type, 'with action:', action);
   switch (type) {
     // On text input of a selected cell, value is cleared, cell gets new value and cell is activated
     case ACTIVATE_CELL: {
       const activeCell = {row, column};
-      return {...state, activeCell, cellSelectionRanges: [] }
+      return {...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] }
     }
     case ADD_CELL_TO_SELECTIONS: {
       const {cellSelectionRanges = []} = state;
@@ -112,8 +139,6 @@ function spreadsheetReducer(state, action) {
     }
     case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
-      console.log(state)
-
       function removeKeyReducer(container, key) {
         const {[key]: value, ...rest} = container;
         return rest;
@@ -151,11 +176,22 @@ function spreadsheetReducer(state, action) {
         })
       } : state;
     }
-    case OPEN_ANALYSIS_WINDOW: {
-      return {...state, xColData, yColData, analysisWindowOpen};
+    case PERFORM_ANALYSIS: {
+      const { columns, rows } = state;
+      const colX = xColData || columns[0];
+      const colY = yColData || columns[2];
+      performLinearRegressionAnalysis(colX, colY, rows)
+      return {...state };
+    }
+    case PERFORM_DISTRIBUTION_ANALYSIS: {
+      const { columns, rows } = state;
+      const colX = xColData || columns[0];
+      const colY = yColData || columns[2];
+      performDistributionAnalysis(colX, colY, rows)
+      return {...state }
     }
     case REMOVE_SELECTED_CELLS: {
-      return {...state, cellSelectionRanges: [] }
+      return {...state, cellSelectionRanges: [], selectedRowIDs: [] }
     }
     case SELECT_CELL: {
       const {cellSelectionRanges = []} = state;
@@ -163,20 +199,79 @@ function spreadsheetReducer(state, action) {
       const lastSelection = {row, column};
       const selectedCell = {top: row, bottom: row, left: column, right: column};
       const addSelectedCellToSelectionArray = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
-      return {...state, activeCell: null, lastSelection, cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
+      return {...state, activeCell: null, lastSelection, selectedRowIDs: selectionActive ? addSelectedCellToSelectionArray : [], cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
     }
     case SET_ROW_POSITION: {
       return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
     }
-    case TOGGLE_CONTEXT_MENU: {
-      function showOrHideContextMenu(command) { return command === 'show' ? true : false }
-      return {...state, contextMenuOpen: showOrHideContextMenu(contextMenuOpen) };
+    case TOGGLE_LAYOUT: {
+      return {...state, layout};
+    }
+    case SET_GROUPED_COLUMNS: {
+      const matchColNameWithID = state.columns.find(col => {
+        return col.label === setColName;
+      })
+
+      const groupByColumnID = (matchColNameWithID && matchColNameWithID.id) || '_abc123_';
+      // Maybe we can make groupedColumns keep track of column properties such as label, etc
+      const groupedColumns = state.rows.reduce((acc, row) => {
+        const {[groupByColumnID]: _, ...restRow} = row;
+        return {...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow)}
+      }, {});
+
+      const groupCount = Object.keys(groupedColumns).length;
+      const sortedNonGroupedColumns = state.columns.filter(({id}) => id !== groupByColumnID).sort((colA, colB) => {
+        return state.columnPositions[colA.id] - state.columnPositions[colB.id];
+      });
+
+      // Given m logical columns and n different values in our group by column,
+      // we should have (m - 1) * n number of physical columns
+      const allPhysicalColumns = Array.from({length: groupCount}).flatMap(_ => {
+            return sortedNonGroupedColumns.map((logicalColumn) => {
+              return {...logicalColumn, id: createRandomID(), logicalColumn: logicalColumn.id};
+            });
+          });
+      const logicalRowGroups = Object.values(groupedColumns);
+      // the size of the largest group is the maximum number of physical rows
+      const physicalRowTotal = Math.max(...logicalRowGroups.map(group => group.length));
+      // We have to translate the logical rows into physical rows
+      const physicalRows = state.rows.slice(0, physicalRowTotal).reduce((acc, _, index) => {
+        return acc.concat(logicalRowGroups.reduce((physicalRow, group, groupIndex) => {
+          const logicalRow = group[index];
+          // If we have a valid logical row from our group, we then map the row values
+          // for all its logical column ids to refer to physical column ids
+          return logicalRow ? sortedNonGroupedColumns.reduce((acc, column, columnIndex, array) => {
+            // We compute the offset bvecause allPhysicalColumns is a flat list
+            const physicalColumn = allPhysicalColumns[columnIndex + (groupIndex * array.length)];
+            const result = {...acc, [physicalColumn.id]: logicalRow[column.id]};
+            return result;
+          }, physicalRow) : physicalRow;
+        }, {id: createRandomID()}));
+      }, []);
+
+      const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({...acc, [row.id]: index}), {});
+      return {...state, setColName, physicalRowPositions, physicalRows, groupedColumns, groupByColumnID, allPhysicalColumns }
+    }
+    case OPEN_CONTEXT_MENU: {
+      return {...state, colName, contextMenuOpen: true, contextMenuPosition, colHeaderContext };
+    }
+    case CLOSE_CONTEXT_MENU: {
+      return {...state, contextMenuOpen: false };
     }
     case TOGGLE_ANALYSIS_MODAL: {
-      return {...state, analysisModalOpen}
+      return {...state, analysisModalOpen, activeCell: null}
     }
     case TOGGLE_COLUMN_TYPE_MODAL: {
-      return {...state, columnTypeModalOpen, selectedColumn: column}
+      return {...state, activeCell: null, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
+    }
+    case TOGGLE_DISTRIBUTION_MODAL: {
+      return {...state, distributionModalOpen, activeCell: null }
+    }
+    case TOGGLE_FILTER_MODAL: {
+      return {...state, filterModalOpen, selectedColumn: null, activeCell: null }
+    }
+    case SET_SELECTED_COLUMN: {
+      return {...state, selectedColumns: action.selectedColumns}
     }
     case TRANSLATE_SELECTED_CELL: {
       const newCellSelectionRanges = [{top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex}];
@@ -205,8 +300,17 @@ function spreadsheetReducer(state, action) {
         }, rowCopy);
       }
       const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
-
       return  {...state, rows: changedRows };
+    }
+    case SORT_COLUMN: {
+      const columnID = getCol(action.colName).id;
+      const sortedRows = state.rows.sort((a,b) => action.descending ? [b[columnID]] - [a[columnID]] : [a[columnID]] - [b[columnID]])
+      const sortedPositions = sortedRows.reduce((obj, item, i) => Object.assign(obj, { [item.id]: i }), {});
+      return { ...state, rowPositions: sortedPositions }
+    }
+    case FILTER_COLUMN: {
+      const selectedRowIDs = filterRowsByColumnRange(action.selectedColumns, state.rows).map(({id}) => id);
+      return { ...state, selectedRowIDs, selectedColumns: action.selectedColumns }
     }
     case UPDATE_COLUMN: {
       // TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
@@ -229,8 +333,10 @@ function spreadsheetReducer(state, action) {
           });
           return formulaColumnsToUpdate.reduce((acc, column) => {
             row = acc;
-            const {result, error} = formulaParser.parse(column.formula);
-            console.log('formula parsed result:', result, 'error:', error, 'formula:', column.formula);
+            const {
+              result,
+              // error
+            } = formulaParser.parse(column.formula);
             return {...acc, [column.id]: result};
           }, row);
         });
@@ -259,17 +365,14 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children}) {
-  const jovitaColumns = [
-    {type: 'Number', label: 'A'},
-    {type: 'Number', label: 'B'},
-    {type: 'Number', label: 'C'},
-    {type: 'Number', label: 'D'},
-    {type: 'Number', label: 'E'},
-    {type: 'Number', label: 'F'},
-    {type: 'Formula', label: 'G', formula: '(B + C + D + E + F) / 5'}
+  const statsColumns = [
+    {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
+    {modelingType: 'Nominal', type: 'Number', label: 'Trial', id: '_abc123_'},
+    {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
+    // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   ]
 
-  const columns = jovitaColumns.map((metadata) => ({id: createRandomLetterString(), ...metadata}))
+  const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
@@ -281,17 +384,37 @@ export function SpreadsheetProvider({children}) {
     return column;
   })
 
-  const jovitaRows = [
-    [10, 12, 10, 12, 11, 11],
-    [20, 10, 9, 9, 8, 10],
-    [30, 7, 6, 8, 7, 7],
-    [40, 6, 4, 5, 6, 5],
-    [50, 2, 4, 3, 2, 3]
+  const statsRows = [
+    [10, 1, 12],
+    [20, 1, 10],
+    [30, 1, 7],
+    [40, 1, 6],
+    [50, 1, 2],
+    [10, 2, 10],
+    [20, 2, 9],
+    [30, 2, 6],
+    [40, 2, 4],
+    [50, 2, 4],
+    [10, 3, 12],
+    [20, 3, 9],
+    [30, 3, 8],
+    [40, 3, 5],
+    [50, 3, 3],
+    [10, 4, 11],
+    [20, 4, 8],
+    [30, 4, 7],
+    [40, 4, 6],
+    [50, 4, 2],
+    [10, 5, 11],
+    [20, 5, 10],
+    [30, 5, 7],
+    [40, 5, 5],
+    [50, 5, 3],
   ]
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
 
-  const rows = jovitaRows.map((tuple) => ({
+  const rows = statsRows.map((tuple) => ({
     id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
   })).map((originalRow) => {
     const formulaColumns = columns.filter(({type}) => type === 'Formula');
@@ -315,14 +438,23 @@ export function SpreadsheetProvider({children}) {
 
   const initialState = {
     analysisModalOpen: false,
+    analysisWindowOpen: false,
     columnTypeModalOpen: false,
     activeCell: null,
     cellSelectionRanges: [{
       top: 1, bottom: 1, left: 1, right: 1
     }],
+    contextMenuPosition: null,
     currentCellSelectionRange: null,
+    colHeaderContext: false,
     columns,
     columnPositions,
+    colName: null,
+    contextMenuOpen: false,
+    distributionModalOpen: false,
+    filterModalOpen: false,
+    layout: true,
+    selectedColumns: [],
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

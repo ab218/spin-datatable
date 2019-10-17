@@ -1,7 +1,7 @@
 import React from 'react';
 import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
-import { TOGGLE_CONTEXT_MENU, UPDATE_CELL } from './constants';
+import { CLOSE_CONTEXT_MENU, UPDATE_CELL } from './constants';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 
 export default function Row({
@@ -16,14 +16,17 @@ export default function Row({
   isSelectedCell,
   modifyCellSelectionRange,
   numberOfRows,
+  handleContextMenu,
   row,
   rows,
   rowIndex,
   selectCell,
+  selectedRow
 }) {
-  columns.sort((colA, colB) => {
+  columnPositions && columns.sort((colA, colB) => {
     return columnPositions[colA.id] - columnPositions[colB.id];
   });
+
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const { contextMenuOpen } = useSpreadsheetState();
   return (
@@ -49,6 +52,7 @@ export default function Row({
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
             <ActiveCell
+              handleContextMenu={handleContextMenu}
               key={`row${rowIndex}col${columnIndex}`}
               changeActiveCell={changeActiveCell}
               column={column}
@@ -64,9 +68,10 @@ export default function Row({
               value={column && row ? row[column.id] : ''}
             />
           )
-        } else if (isSelectedCell(rowIndex, columnIndex)) {
+        } else if ((selectedRow && column) || isSelectedCell(rowIndex, columnIndex)) {
           return (
             <SelectedCell
+              handleContextMenu={handleContextMenu}
               key={`Row${rowIndex}Col${columnIndex}`}
               changeActiveCell={changeActiveCell}
               column={column}
@@ -84,6 +89,7 @@ export default function Row({
           return (
             <NormalCell
               key={`Row${rowIndex}Col${columnIndex}`}
+              borderRight={(columnIndex === 1 || columnIndex === 6) && true}
               changeActiveCell={changeActiveCell}
               column={column}
               columnIndex={columnIndex}
@@ -99,7 +105,7 @@ export default function Row({
           return (<td key={`row${rowIndex}col${columnIndex}`} onMouseDown={(e) => {
             e.preventDefault();
             if (contextMenuOpen) {
-              dispatchSpreadsheetAction({type: TOGGLE_CONTEXT_MENU, contextMenuOpen: 'hide' })
+              dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
             }
             selectCell(rowIndex, columnIndex)
           }}></td>)

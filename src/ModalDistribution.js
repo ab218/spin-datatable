@@ -1,7 +1,8 @@
+// TODO: Combine this component with Analysis Modal
 import React, { useState } from 'react';
 import { Button, Card, Modal, Radio } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_ANALYSIS_MODAL, PERFORM_ANALYSIS } from './constants';
+import { TOGGLE_DISTRIBUTION_MODAL, PERFORM_DISTRIBUTION_ANALYSIS } from './constants';
 
 const styles = {
   cardWithBorder: {
@@ -47,16 +48,16 @@ export function SelectColumn({columns, setSelectedColumn}) {
   </Card>
   }
 
-export default function AnalysisModal() {
+export default function DistributionModal() {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedRightColumn, setSelectedRightColumn] = useState(null);
-  const [xColData, setXColData] = useState([]);
+  // const [xColData, setXColData] = useState([]);
   const [yColData, setYColData] = useState([]);
-  const { analysisModalOpen, columns } = useSpreadsheetState();
+  const { distributionModalOpen, columns } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   function handleModalClose() {
-    dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+    dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
   }
 
   function addColumnToList(col, setCol) {
@@ -71,9 +72,9 @@ export default function AnalysisModal() {
     setCol(prevState => prevState.filter(col => col !== selectedRightColumn));
   }
 
-  function openAnalysisWindow() {
-    dispatchSpreadsheetAction({type: PERFORM_ANALYSIS, xColData: xColData[0], yColData: yColData[0] })
-    dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+  function performDistributionAnalysis() {
+    dispatchSpreadsheetAction({type: PERFORM_DISTRIBUTION_ANALYSIS, yColData: yColData[0] })
+    dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
   }
 
   function RadioGroup({data, setData, styleProps}) {
@@ -104,11 +105,10 @@ export default function AnalysisModal() {
     <div>
       <Modal
         className="ant-modal"
-        // destroyOnClose
         onCancel={handleModalClose}
-        onOk={openAnalysisWindow}
-        title="Fit Y by X"
-        visible={analysisModalOpen}
+        onOk={performDistributionAnalysis}
+        title="Distribution"
+        visible={distributionModalOpen}
         width={600}
         bodyStyle={{background: '#ECECEC'}}
       >
@@ -118,16 +118,11 @@ export default function AnalysisModal() {
               columns={columns}
               setSelectedColumn={setSelectedColumn}
             />
-            {/* <RadioGroup data={columns} setData={setSelectedColumn} /> */}
           </div>
           <div style={{width: 310}}>Cast Selected Columns into Roles
             <div style={{marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
               <CaratButtons data={yColData} setData={setYColData} axis='Y' />
               <RadioGroup data={yColData} setData={setSelectedRightColumn} />
-            </div>
-            <div style={styles.flexSpaced}>
-              <CaratButtons data={xColData} setData={setXColData} axis='X' />
-              <RadioGroup data={xColData} setData={setSelectedRightColumn} />
             </div>
           </div>
         </div>

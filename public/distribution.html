@@ -1,0 +1,249 @@
+<!--
+  Analyses that should be done together..
+  Exploratory data analysis:
+    - Distributional properties (depends on kind of data, (eg: nominal, ordinal))
+      - Mean/Median/Mode/Shape, etc
+      - Goodness of fit
+      - Normality - Skew/Kurtosis
+      - Box and whisker/(preferably Violin)
+      - Histogram
+      - Between 10-12 bins is ideal for normal distribution
+ -->
+
+<html>
+  <head>
+      <!-- jQuery needed for annotations -->
+    <!-- <script src="http://code.highcharts.com/modules/exporting.js"></script> -->
+    <!-- <script src="//rawgithub.com/phpepe/highcharts-regression/master/highcharts-regression.js"></script> -->
+      <script
+        src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous">
+      </script>
+      <script src="./highcharts.js"></script>
+      <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
+      <script src="https://code.highcharts.com/highcharts-more.js"></script>
+      <script src="./annotations.js"></script>
+    <title>Distribution Analysis</title>
+  </head>
+  <body>
+    <div style="width:450px;" id="container">Loading</div>
+    <script>
+      window.opener.postMessage('ready', '*');
+      const container = document.getElementById('container');
+      function receiveMessage(event) {
+        console.log('TARGET', event);
+        const {
+          colA,
+          colB,
+          colYLabel,
+          count,
+          colAMean,
+          colAStdev,
+          colBMean,
+          colBStdev,
+          boxPlotData, } = event.data;
+          console.log(boxPlotData[8])
+        const options = {
+          chart: {
+            marginTop: 100,
+            height: 400,
+            width: 400,
+            inverted: true,
+          },
+          credits: false,
+          title: {
+            text: `Distribution of ${colYLabel}`
+          },
+          xAxis: [{
+            title: { text: 'Data' },
+          }, {
+              title: { text: 'Histogram' },
+              opposite: true
+          }],
+
+          yAxis: [{
+              title: { text: 'Data' }
+          }, {
+              title: { text: 'Histogram' },
+              opposite: true
+          }],
+          legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'middle'
+          },
+
+          plotOptions: {
+            series: {
+              jitter: {
+                x: 0.3,
+                y: 0.3
+              },
+              label: {
+                connectorAllowed: false
+              },
+              stickyTracking: false,
+              events: {
+                legendItemClick: function () {
+                  if (this.visible) {
+                    return false;
+                  } else {
+                    let series = this.chart.series,
+                    i = series.length,
+                    otherSeries;
+                    while (i--) {
+                      otherSeries = series[i]
+                      if (otherSeries !== this && otherSeries.visible) {
+                        otherSeries.hide();
+                      }
+                    }
+                  }
+                }
+              },
+            }
+          },
+          series: [
+            {
+              name: 'Histogram',
+              type: 'histogram',
+              xAxis: 1,
+              yAxis: 1,
+              baseSeries: 's1',
+              borderWidth: 0,
+              // binsNumber: 10,
+            },
+            {
+              name: 'Scatter',
+              type: 'scatter',
+              id: 's1',
+              data: colB,
+              visible: false,
+              borderWidth: 0,
+            },
+            {
+              id: 'boxplot',
+              name: 'Boxplot',
+              type: 'boxplot',
+              visible: false,
+              medianColor: 'red',
+              // data: [boxPlotData.values]
+              data: [
+              {
+                high: boxPlotData[8],
+                q3: boxPlotData[5],
+                median: boxPlotData[4],
+                q1: boxPlotData[3],
+                low: boxPlotData[0],
+              },
+              ]
+            },
+            {
+              id: 'outliers',
+              name: 'Outliers',
+              type: 'scatter',
+              linkedTo: 'boxplot',
+              color: Highcharts.getOptions().colors[2],
+              marker: {
+                enabled: true,
+                radius: 2,
+                fillColor: 'transparent',
+                lineColor: 'rgba(40,40,56,0.5)',
+                lineWidth: 1
+              },
+              // data: [boxPlotData.outliers]
+            }
+          ],
+
+          responsive: {
+            rules: [{
+              condition: {
+                maxWidth: 500
+              },
+              chartOptions: {
+                legend: {
+                  layout: 'horizontal',
+                  align: 'center',
+                  verticalAlign: 'bottom'
+                }
+              }
+            }]
+          }
+        }
+        const chart = Highcharts.chart(container, options);
+        // Hack to fix the ticks not appearing correctly on first render
+        chart.series[0].hide();
+        chart.series[0].show();
+        const template = `<div style="text-align: center; margin: 0 3em;">
+            <h4>Quantiles</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td>100.0%:</td>
+                  <td>${boxPlotData[8]}</td>
+                </tr>
+                <tr>
+                  <td>99.5%:</td>
+                  <td>${boxPlotData[8]}</td>
+                </tr>
+                <tr>
+                  <td>97.5%:</td>
+                  <td>${boxPlotData[7]}</td>
+                </tr>
+                <tr>
+                  <td>90.0%:</td>
+                  <td>${boxPlotData[6]}</td>
+                </tr>
+                <tr>
+                  <td>75.0%:</td>
+                  <td>${boxPlotData[5]}</td>
+                </tr>
+                <tr>
+                  <td>50.0%:</td>
+                  <td>${boxPlotData[4]}</td>
+                </tr>
+                <tr>
+                  <td>25.0%:</td>
+                  <td>${boxPlotData[3]}</td>
+                </tr>
+                <tr>
+                  <td>10.0%:</td>
+                  <td>${boxPlotData[2]}</td>
+                </tr>
+                <tr>
+                  <td>2.5%:</td>
+                  <td>${boxPlotData[1]}</td>
+                </tr>
+                <tr>
+                  <td>0.5%:</td>
+                  <td>${boxPlotData[0]}</td>
+                </tr>
+                <tr>
+                  <td>0.0%:</td>
+                  <td>${boxPlotData[0]}</td>
+                </tr>
+              </table>
+            <h4>Summary Statistics</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td>Mean:</td>
+                  <td>${colBMean}</td>
+                </tr>
+                <tr>
+                  <td>Std Dev:</td>
+                  <td>${colBStdev}</td>
+                </tr>
+                <tr>
+                  <td>Count:</td>
+                  <td>${count}</td>
+                </tr>
+              </table>
+          </div>`
+        const doc = new DOMParser().parseFromString(template, 'text/html');
+        container.appendChild(doc.body.firstChild);
+        window.removeEventListener("message", receiveMessage);
+      }
+
+      window.addEventListener("message", receiveMessage, false);
+    </script>
+  </body>
+</html>
