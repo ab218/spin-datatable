@@ -34,7 +34,7 @@ export async function performLinearRegressionAnalysis(colX, colY, rows) {
       window.removeEventListener("message", receiveMessage);
     }
   }
-  const popup = window.open(window.location.href + "analysis.html", "", "left=9999,top=100,width=450,height=850");
+  const popup = window.open(window.location.href + "linear_regression.html", "", "left=9999,top=100,width=450,height=850");
   // set event listener and wait for target to be ready
   window.addEventListener("message", receiveMessage, false);
 
@@ -64,9 +64,6 @@ export async function performDistributionAnalysis(colX, colY, rows) {
   function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
   const colA = mapColumnValues(colX.id);
   const colB = mapColumnValues(colY.id);
-  // const tempABVals = colA.map((_, i) => {
-  //   return [(colA[i]), (colB[i])]
-  // }).sort();
   // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
   const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
   const result = await axios.post(gcloud, {
@@ -79,8 +76,6 @@ export async function performDistributionAnalysis(colX, colY, rows) {
   // console.log(result.data.body); // Lambda
 
   function receiveMessage(event) {
-    // console.log('ORIGIN', event);
-    // target window is ready, time to send data.
     if (event.data === 'ready') {
       popup.postMessage(outputData, '*');
       window.removeEventListener("message", receiveMessage);
@@ -90,7 +85,7 @@ export async function performDistributionAnalysis(colX, colY, rows) {
   // set event listener and wait for target to be ready
   window.addEventListener("message", receiveMessage, false);
 
-  const { mean_y, std_y, count, quantiles } = result.data
+  const { mean_y, std_y, count, quantiles, histogram } = result.data
   const outputData = {
       count,
       colYLabel,
@@ -98,7 +93,8 @@ export async function performDistributionAnalysis(colX, colY, rows) {
       colBStdev: std_y,
       colA,
       colB,
-      boxPlotData: quantiles
+      boxPlotData: quantiles,
+      histogram
 }}
 
   // const outliers = [];
