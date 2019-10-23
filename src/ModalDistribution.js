@@ -91,7 +91,7 @@ export default function DistributionModal() {
 
     function targetClickEvent(event) {
       if (event.data.message === "clicked") {
-        const columnIndex = columns.findIndex((col) => col.id === yColData[0].id)
+        const columnIndex = columns.findIndex((col) => col.id === yColData[0].id);
         // This gets the row IDs for all (clicked) values that match the column being analyzed
         const mappedRowIDs = rows.map((row, rowIndex) => {
           return {
@@ -100,9 +100,11 @@ export default function DistributionModal() {
           }}).filter(row => {
             return row.val === event.data.val
           })
-          dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS});
+          if (!event.data.metaKeyPressed) {
+            dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS});
+          }
           mappedRowIDs.forEach(row => {
-            dispatchSpreadsheetAction({type: SELECT_CELL, row: row.rowIndex, column: columnIndex + 1, selectionActive: true});
+            dispatchSpreadsheetAction({type: SELECT_CELL, row: row.rowIndex, column: columnIndex + 1, selectionActive: true });
           })
       }
     }

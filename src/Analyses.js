@@ -71,7 +71,7 @@ export async function performDistributionAnalysis(colY, rows) {
   })
   console.log(result.data) // gcloud
   // console.log(result.data.body); // Lambda
-  const { mean_y, std_y, count, quantiles, histogram } = result.data
+  const { mean_y, std_y, count, quantiles, histogram, skew, kurtosis } = result.data
   return {
       count,
       colYLabel,
@@ -79,6 +79,8 @@ export async function performDistributionAnalysis(colY, rows) {
       colBStdev: std_y,
       colB,
       boxPlotData: quantiles,
-      histogram
+      histogram,
+      skew,
+      kurtosis,
   }
 }

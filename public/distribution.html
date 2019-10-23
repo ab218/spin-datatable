@@ -12,22 +12,12 @@
 
 <html>
   <head>
-      <!-- jQuery needed for annotations -->
-    <script
-      src="https://code.jquery.com/jquery-3.4.1.min.js"
-      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-      crossorigin="anonymous">
-    </script>
-    <script src="./highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/histogram-bellcurve.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-    <script src="./annotations.js"></script>
     <script src="https://d3js.org/d3.v4.js"></script>
 
     <title>Distribution Analysis</title>
   </head>
   <body>
-    <span style="display: flex;"><div id="histogramVis"></div><div id="boxplotVis"></div></span>
+    <span id="charts" style="display: flex;"><div id="histogramVis"></div><div id="boxplotVis"></div></span>
     <div style="width:450px;" id="container"></div>
     <script>
 
@@ -48,17 +38,27 @@
           count,
           colBMean,
           colBStdev,
-          boxPlotData, } = event.data;
+          boxPlotData,
+          kurtosis,
+          skew,} = event.data;
+
+          const titleEl = document.createElement('div');
+          titleEl.style.textAlign = 'center';
+          titleEl.style.fontSize = 20;
+          const titleText = document.createTextNode(`Distribution of ${colYLabel}`);
+          titleEl.appendChild(titleText);
+          const chartsSpan = document.getElementById('charts')
+          document.body.insertBefore(titleEl, chartsSpan);
           // set the dimensions and margins of the graph
           const margin = {top: 20, right: 30, bottom: 40, left: 50};
           const width = 260 - margin.left - margin.right;
           const height = 400 - margin.top - margin.bottom;
 
-          function makeSvg(id) {
+          function makeSvg(id, customWidth) {
             return (
               d3.select(`#${id}`)
               .append("svg")
-              .attr("width", width + margin.left + margin.right)
+              .attr("width", (customWidth || width) + margin.left + margin.right)
               .attr("height", height + margin.top + margin.bottom)
               .append("g")
               .attr("transform", `translate(${margin.left}, ${margin.top})`)
@@ -67,7 +67,7 @@
 
           // append the histogram svg object to the body of the page
           const histSvg = makeSvg('histogramVis');
-          const boxSvg = makeSvg('boxplotVis');
+          const boxSvg = makeSvg('boxplotVis', 100);
 
           // Parse the Data
           // const boxData = [12, 10, 7, 6, 2, 10, 9, 6, 4, 4, 12, 9, 8, 3, 11, 8, 7, 6, 2, 11, 10, 7, 5, 3, 5];
@@ -85,7 +85,7 @@
           const boxWidth = 40;
 
           // Note they are different. Scipy's value is correct.
-          console.log(colBStdev, d3.deviation(boxDataSorted));
+          console.log(colBStdev, d3.deviation(colB));
 
           // Add X axis
           const x = d3.scaleLinear()
@@ -100,7 +100,6 @@
 
           // set the parameters for the histogram
           const histogram = d3.histogram()
-            // .value(function(d) { return d; })   // I need to give the vector of value
             .domain(y.domain())  // then the domain of the graphic
             .thresholds(y.ticks(nBins)); // then the numbers of bins
 
@@ -153,10 +152,17 @@
             .on('click', onClick)
 
             function onClick(bar) {
-              d3.selectAll('rect').style("fill", "#69b3a2")
+              let metaKeyPressed = false;
+              if (d3.event.metaKey) {
+                metaKeyPressed = true;
+              } else {
+                // If meta key is not held down, remove other highlighted bars
+                d3.selectAll('rect').style("fill", "#69b3a2")
+              }
               d3.select(this).style("fill", "red")
               window.opener.postMessage({
                 message: 'clicked',
+                metaKeyPressed,
                 val: bar[0],
                 occurences: bar.length
               }, '*');
@@ -278,11 +284,19 @@
                 </tr>
                 <tr>
                   <td>Std Dev:</td>
-                  <td>${colBStdev}</td>
+                  <td>${d3.deviation(colB)}</td>
                 </tr>
                 <tr>
                   <td>Count:</td>
                   <td>${boxDataSorted.length}</td>
+                </tr>
+                <tr>
+                  <td>Skew:</td>
+                  <td>${skew}</td>
+                </tr>
+                <tr>
+                  <td>Kurtosis:</td>
+                  <td>${kurtosis}</td>
                 </tr>
               </table>
           </div>`
