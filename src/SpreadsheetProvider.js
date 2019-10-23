@@ -1,6 +1,6 @@
 import React, { useReducer } from 'react';
 import { Parser } from 'hot-formula-parser';
-import { performLinearRegressionAnalysis, performDistributionAnalysis } from './Analyses';
+import { performLinearRegressionAnalysis } from './Analyses';
 import './App.css';
 import {
   ACTIVATE_CELL,
@@ -13,7 +13,6 @@ import {
   FILTER_COLUMN,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   PERFORM_ANALYSIS,
-  PERFORM_DISTRIBUTION_ANALYSIS,
   REMOVE_SELECTED_CELLS,
   SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
@@ -139,6 +138,7 @@ function spreadsheetReducer(state, action) {
     }
     case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
+      console.log(state)
       function removeKeyReducer(container, key) {
         const {[key]: value, ...rest} = container;
         return rest;
@@ -182,13 +182,6 @@ function spreadsheetReducer(state, action) {
       const colY = yColData || columns[2];
       performLinearRegressionAnalysis(colX, colY, rows)
       return {...state };
-    }
-    case PERFORM_DISTRIBUTION_ANALYSIS: {
-      const { columns, rows } = state;
-      const colX = xColData || columns[0];
-      const colY = yColData || columns[2];
-      performDistributionAnalysis(colX, colY, rows)
-      return {...state }
     }
     case REMOVE_SELECTED_CELLS: {
       return {...state, cellSelectionRanges: [], selectedRowIDs: [] }

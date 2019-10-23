@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { Button, Card, Modal, Radio } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_DISTRIBUTION_MODAL, PERFORM_DISTRIBUTION_ANALYSIS } from './constants';
+import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELL, REMOVE_SELECTED_CELLS } from './constants';
+import { performDistributionAnalysis } from './Analyses';
 
 const styles = {
   cardWithBorder: {
@@ -51,9 +52,9 @@ export function SelectColumn({columns, setSelectedColumn}) {
 export default function DistributionModal() {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedRightColumn, setSelectedRightColumn] = useState(null);
-  // const [xColData, setXColData] = useState([]);
+  // const [performDistributionAnalysis, setPerformDistributionAnalysis] = useState(false);
   const [yColData, setYColData] = useState([]);
-  const { distributionModalOpen, columns } = useSpreadsheetState();
+  const { distributionModalOpen, columns, rows } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   function handleModalClose() {
@@ -72,8 +73,47 @@ export default function DistributionModal() {
     setCol(prevState => prevState.filter(col => col !== selectedRightColumn));
   }
 
-  function performDistributionAnalysis() {
-    dispatchSpreadsheetAction({type: PERFORM_DISTRIBUTION_ANALYSIS, yColData: yColData[0] })
+  async function performAnalysis() {
+    const results = await performDistributionAnalysis(yColData[0], rows);
+    function receiveMessage(event) {
+      if (event.data === 'ready') {
+        popup.postMessage(results, '*');
+        window.removeEventListener("message", receiveMessage);
+      }
+    }
+
+    function removeTargetClickEvent(event) {
+      if (event.data === 'closed') {
+        console.log('target closed')
+        window.removeEventListener("message", targetClickEvent);
+      }
+    }
+
+    function targetClickEvent(event) {
+      if (event.data.message === "clicked") {
+        const columnIndex = columns.findIndex((col) => col.id === yColData[0].id)
+        // This gets the row IDs for all (clicked) values that match the column being analyzed
+        const mappedRowIDs = rows.map((row, rowIndex) => {
+          return {
+            rowIndex,
+            val: row[yColData[0].id]
+          }}).filter(row => {
+            return row.val === event.data.val
+          })
+          dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS});
+          mappedRowIDs.forEach(row => {
+            dispatchSpreadsheetAction({type: SELECT_CELL, row: row.rowIndex, column: columnIndex + 1, selectionActive: true});
+          })
+      }
+    }
+
+    const popup = window.open(window.location.href + "distribution.html", "", "left=9999,top=100,width=450,height=850");
+    // set event listener and wait for target to be ready
+    window.addEventListener("message", receiveMessage, false);
+    window.addEventListener("message", targetClickEvent);
+    window.addEventListener("message", removeTargetClickEvent);
+    // setPerformDistributionAnalysis(true);
+    // dispatchSpreadsheetAction({type: PERFORM_DISTRIBUTION_ANALYSIS, yColData: yColData[0] })
     dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
   }
 
@@ -103,10 +143,11 @@ export default function DistributionModal() {
 
   return (
     <div>
+      {/* {performDistributionAnalysis && <DistributionAnalysis colY={yColData[0]} setPerformDistributionAnalysis={setPerformDistributionAnalysis}/>} */}
       <Modal
         className="ant-modal"
         onCancel={handleModalClose}
-        onOk={performDistributionAnalysis}
+        onOk={performAnalysis}
         title="Distribution"
         visible={distributionModalOpen}
         width={600}

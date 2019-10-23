@@ -1,5 +1,4 @@
 import axios from 'axios';
-import jStat from 'jstat';
 
 export async function performLinearRegressionAnalysis(colX, colY, rows) {
   const colXLabel = colX.label;
@@ -59,71 +58,27 @@ export async function performLinearRegressionAnalysis(colX, colY, rows) {
       linearRegressionLineEquation: `${colYLabel} = ${slope.toFixed(4)}*(${colXLabel}) + ${intercept}`,
 }}
 
-export async function performDistributionAnalysis(colX, colY, rows) {
+export async function performDistributionAnalysis(colY, rows) {
   const colYLabel = colY.label;
   function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
-  const colA = mapColumnValues(colX.id);
   const colB = mapColumnValues(colY.id);
   // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
   const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
   const result = await axios.post(gcloud, {
-    x: colA,
     y: colB
   }, {
     crossDomain: true,
   })
   console.log(result.data) // gcloud
   // console.log(result.data.body); // Lambda
-
-  function receiveMessage(event) {
-    if (event.data === 'ready') {
-      popup.postMessage(outputData, '*');
-      window.removeEventListener("message", receiveMessage);
-    }
-  }
-  const popup = window.open(window.location.href + "distribution.html", "", "left=9999,top=100,width=450,height=850");
-  // set event listener and wait for target to be ready
-  window.addEventListener("message", receiveMessage, false);
-
   const { mean_y, std_y, count, quantiles, histogram } = result.data
-  const outputData = {
+  return {
       count,
       colYLabel,
       colBMean: mean_y,
       colBStdev: std_y,
-      colA,
       colB,
       boxPlotData: quantiles,
       histogram
-}}
-
-  // const outliers = [];
-  // function getBoxValues(data, x) {
-  //   x = typeof x === 'undefined' ? 0 : x;
-  //   const quantiles = jStat.quantiles(data, [.005, .025, .1, .25, .5, .75, .9, .975, .995])
-  //   const boxData = {},
-  //     min = Math.min.apply(Math, data),
-  //     max = Math.max.apply(Math, data),
-  //     q1 = quantiles[3],
-  //     median = quantiles[4],
-  //     q3 = quantiles[5],
-  //     iqr = q3 - q1,
-  //     lowerFence = q1 - (iqr * 1.5),
-  //     upperFence = q3 + (iqr * 1.5);
-
-  //     for (var i = 0; i < data.length; i++) {
-  //       if (data[i] < lowerFence || data[i] > upperFence) {
-  //         outliers.push(data[i]);
-  //       }
-  //     }
-  //       boxData.values = {};
-  //       boxData.values.x = x;
-  //       boxData.values.low = min;
-  //       boxData.values.q1 = q1;
-  //       boxData.values.median = median;
-  //       boxData.values.q3 = q3;
-  //       boxData.values.high = max;
-  //       boxData.outliers = outliers;
-  //       boxData.quantiles = quantiles;
-  //       return boxData;
-  //    }
+  }
+}

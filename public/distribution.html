@@ -30,22 +30,25 @@
     <span style="display: flex;"><div id="histogramVis"></div><div id="boxplotVis"></div></span>
     <div style="width:450px;" id="container"></div>
     <script>
+
+      window.addEventListener('unload', function (e) {
+        e.preventDefault();
+        // Chrome requires returnValue to be set
+        e.returnValue = '';
+        window.opener.postMessage('closed', '*');
+      });
+
       window.opener.postMessage('ready', '*');
       const container = document.getElementById('container');
       function receiveMessage(event) {
         console.log('TARGET', event);
         const {
-          colA,
           colB,
           colYLabel,
           count,
-          colAMean,
-          colAStdev,
           colBMean,
           colBStdev,
-          // histogram,
           boxPlotData, } = event.data;
-
           // set the dimensions and margins of the graph
           const margin = {top: 20, right: 30, bottom: 40, left: 50};
           const width = 260 - margin.left - margin.right;
@@ -68,7 +71,7 @@
 
           // Parse the Data
           // const boxData = [12, 10, 7, 6, 2, 10, 9, 6, 4, 4, 12, 9, 8, 3, 11, 8, 7, 6, 2, 11, 10, 7, 5, 3, 5];
-          const nBins = 12;
+          const nBins = 10;
 
           // Compute summary statistics used for the box:
           const boxDataSorted = colB.sort(d3.ascending);
@@ -81,6 +84,9 @@
           const center = 1;
           const boxWidth = 40;
 
+          // Note they are different. Scipy's value is correct.
+          console.log(colBStdev, d3.deviation(boxDataSorted));
+
           // Add X axis
           const x = d3.scaleLinear()
             .range([ 0, width])
@@ -88,7 +94,7 @@
           // Y axis
           const y = d3.scaleLinear()
             .range([ height, 0 ])
-            .domain([Math.min(...boxDataSorted) - 1, Math.max(...boxDataSorted) + 2])
+            .domain([Math.min(...boxDataSorted) - 1, Math.max(...boxDataSorted) + 1])
           histSvg.append("g")
             .call(d3.axisLeft(y))
 
@@ -117,7 +123,7 @@
             .call(d3.axisBottom(x).ticks(5))
 
           // Histogram Bars
-          histSvg.selectAll("myRect")
+          histSvg.selectAll("histBars")
             .data(bins)
             .enter()
             .append("rect")
@@ -128,13 +134,33 @@
             .attr("width", function(d) {
               return x(d.length);
             })
-            .attr("height", function(d){
-              console.log(d)
-              return y(d.x0) - y(d.x1)
+            .attr("height", function(d) {
+              return y(d.x0) - y(d.x1) - 1
             })
             .attr("fill", "#69b3a2")
+            .on(`mouseenter`, function () {
+              d3.select(this)
+                  .transition()
+                  .duration(50)
+                  .attr('opacity', 0.6)
+            })
+            .on(`mouseleave`, function () {
+              d3.select(this)
+                  .transition()
+                  .duration(50)
+                  .attr('opacity', 1)
+            })
+            .on('click', onClick)
 
-
+            function onClick(bar) {
+              d3.selectAll('rect').style("fill", "#69b3a2")
+              d3.select(this).style("fill", "red")
+              window.opener.postMessage({
+                message: 'clicked',
+                val: bar[0],
+                occurences: bar.length
+              }, '*');
+            }
           // Boxplot
           // Show the main vertical line
           boxSvg
@@ -184,59 +210,71 @@
             .style("fill", "white")
             .attr("stroke", "black")
 
+
         const template = `<div style="text-align: center; margin: 0 3em;">
             <h4>Quantiles</h4>
               <table style="width: 100%;">
                 <tr>
                   <td>100.0%:</td>
-                  <td>${boxPlotData[8]}</td>
+                  <td>Maximum</td>
+                  <td>${boxDataSorted[boxDataSorted.length - 1]}</td>
                 </tr>
                 <tr>
                   <td>99.5%:</td>
-                  <td>${boxPlotData[8]}</td>
+                  <td></td>
+                  <td>${d3.quantile(boxDataSorted, .995)}</td>
                 </tr>
                 <tr>
                   <td>97.5%:</td>
-                  <td>${boxPlotData[7]}</td>
+                  <td></td>
+                  <td>${d3.quantile(boxDataSorted, .975)}</td>
                 </tr>
                 <tr>
                   <td>90.0%:</td>
-                  <td>${boxPlotData[6]}</td>
+                  <td></td>
+                  <td>${d3.quantile(boxDataSorted, .9)}</td>
                 </tr>
                 <tr>
                   <td>75.0%:</td>
-                  <td>${boxPlotData[5]}</td>
+                  <td>Quartile 3</td>
+                  <td>${q3}</td>
                 </tr>
                 <tr>
                   <td>50.0%:</td>
-                  <td>${boxPlotData[4]}</td>
+                  <td>Median</td>
+                  <td>${median}</td>
                 </tr>
                 <tr>
                   <td>25.0%:</td>
-                  <td>${boxPlotData[3]}</td>
+                  <td>Quartile 1</td>
+                  <td>${q1}</td>
                 </tr>
                 <tr>
                   <td>10.0%:</td>
-                  <td>${boxPlotData[2]}</td>
+                  <td></td>
+                  <td>${d3.quantile(boxDataSorted, .1)}</td>
                 </tr>
                 <tr>
                   <td>2.5%:</td>
-                  <td>${boxPlotData[1]}</td>
+                  <td></td>
+                  <td>${d3.quantile(boxDataSorted, .025)}</td>
                 </tr>
                 <tr>
                   <td>0.5%:</td>
-                  <td>${boxPlotData[0]}</td>
+                  <td></td>
+                  <td>${d3.quantile(boxDataSorted, .005)}</td>
                 </tr>
                 <tr>
                   <td>0.0%:</td>
-                  <td>${boxPlotData[0]}</td>
+                  <td>Minimum</td>
+                  <td>${boxDataSorted[0]}</td>
                 </tr>
               </table>
             <h4>Summary Statistics</h4>
               <table style="width: 100%;">
                 <tr>
                   <td>Mean:</td>
-                  <td>${colBMean}</td>
+                  <td>${d3.mean(boxDataSorted)}</td>
                 </tr>
                 <tr>
                   <td>Std Dev:</td>
@@ -244,7 +282,7 @@
                 </tr>
                 <tr>
                   <td>Count:</td>
-                  <td>${count}</td>
+                  <td>${boxDataSorted.length}</td>
                 </tr>
               </table>
           </div>`
