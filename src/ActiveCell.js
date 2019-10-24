@@ -27,6 +27,7 @@ const cursorKeyToRowColMapper = {
 function ActiveCell({
   changeActiveCell,
   columnIndex,
+  column,
   handleContextMenu,
   numberOfRows,
   rowIndex,
@@ -66,7 +67,7 @@ function ActiveCell({
       type="text"
       value={value}
       onKeyDown={onKeyDown}
-      onChange={updateCell}
+      onChange={(e) => updateCell(e, false, column.type)}
     />
   </td>
   );

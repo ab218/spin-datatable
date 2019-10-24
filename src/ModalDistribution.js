@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button, Card, Modal, Radio } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELL, REMOVE_SELECTED_CELLS } from './constants';
+import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELLS, REMOVE_SELECTED_CELLS } from './constants';
 import { performDistributionAnalysis } from './Analyses';
 
 const styles = {
@@ -91,21 +91,19 @@ export default function DistributionModal() {
 
     function targetClickEvent(event) {
       if (event.data.message === "clicked") {
-        const columnIndex = columns.findIndex((col) => col.id === yColData[0].id);
-        // This gets the row IDs for all (clicked) values that match the column being analyzed
-        const mappedRowIDs = rows.map((row, rowIndex) => {
-          return {
-            rowIndex,
-            val: row[yColData[0].id]
-          }}).filter(row => {
-            return row.val === event.data.val
-          })
-          if (!event.data.metaKeyPressed) {
-            dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS});
-          }
-          mappedRowIDs.forEach(row => {
-            dispatchSpreadsheetAction({type: SELECT_CELL, row: row.rowIndex, column: columnIndex + 1, selectionActive: true });
-          })
+        const selectedColumn = yColData[0];
+        const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
+        if (!event.data.metaKeyPressed) {
+          dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS});
+        }
+
+        const rowIndices = rows.reduce((acc, row, rowIndex) => {
+          // TODO: We use double equals until we take into account column data type when comparing values
+          // TODO: At that point, we will revert back to using triple equals
+          return row[selectedColumn.id] == event.data.val ? acc.concat(rowIndex) : acc;
+        }, []);
+        console.log(rows,rowIndices)
+        dispatchSpreadsheetAction({type: SELECT_CELLS, rows: rowIndices, column: columnIndex});
       }
     }
 

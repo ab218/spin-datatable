@@ -18,6 +18,7 @@ import {
   SET_ROW_POSITION,
   SET_SELECTED_COLUMN,
   SELECT_CELL,
+  SELECT_CELLS,
   SORT_COLUMN,
   OPEN_CONTEXT_MENU,
   TOGGLE_ANALYSIS_MODAL,
@@ -88,6 +89,7 @@ function spreadsheetReducer(state, action) {
     filterModalOpen,
     layout,
     row,
+    rows,
     rowIndex,
     rowCount,
     selectionActive,
@@ -194,6 +196,15 @@ function spreadsheetReducer(state, action) {
       const addSelectedCellToSelectionArray = cellSelectionRanges.concat(cellSelectionRanges.some(cell => (cell.top === selectedCell.top) && (cell.right === selectedCell.right)) ? [] : selectedCell);
       return {...state, activeCell: null, lastSelection, selectedRowIDs: selectionActive ? addSelectedCellToSelectionArray : [], cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [], currentCellSelectionRange: selectedCell }
     }
+    // TODO: Rename this action to be REPLACE_CELL_SELECTION??
+    case SELECT_CELLS: {
+      const {cellSelectionRanges = []} = state;
+      const columnIndexOffset = 1;
+      const computedColumnIndex = column + columnIndexOffset;
+      const newSelectedCells = rows.map(rowIndex => ({top: rowIndex, bottom: rowIndex, left: computedColumnIndex, right: computedColumnIndex}));
+      const newCellSelectionRanges = cellSelectionRanges.concat(newSelectedCells);
+      return {...state, activeCell: null, selectedRowIDs: newCellSelectionRanges, cellSelectionRanges: newCellSelectionRanges};
+    }
     case SET_ROW_POSITION: {
       return {...state, rowPositions: {...state.rowPositions, [action.rowID]: action.row} };
     }
@@ -292,7 +303,8 @@ function spreadsheetReducer(state, action) {
           return {...acc, [column.id]: formulaParser.parse(column.formula).result};
         }, rowCopy);
       }
-      const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
+      // const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
+      const changedRows = newRows.map(newRow => newRow.id !== rowCopy.id ? newRow : rowCopy);
       return  {...state, rows: changedRows };
     }
     case SORT_COLUMN: {
