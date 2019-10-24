@@ -47,7 +47,7 @@ export default function Row({
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-          dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : isNumberColumn(column.type, event.target.value)});
+          dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : isNumberColumn(column && column.type, event.target.value)});
         }
 
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {

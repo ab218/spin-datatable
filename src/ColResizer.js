@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_COLUMN_TYPE_MODAL, OPEN_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants'
 
-export default function ColumnResizer({borderRight, column, content}) {
+export default function ColumnResizer({borderRight, column}) {
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -37,7 +37,7 @@ export default function ColumnResizer({borderRight, column, content}) {
       document.removeEventListener('mouseup', endDrag);
 
     };
-  }, [content, isDragging, offset, originalCellWidth, startX]);
+  }, [isDragging, offset, originalCellWidth, startX]);
 
   const startDrag = (e) => {
     setStartX(e.clientX);
@@ -60,7 +60,7 @@ export default function ColumnResizer({borderRight, column, content}) {
 
   return (
       <th style={style} onMouseDown={startDrag} onDoubleClick={openModal} onContextMenu={e => onContextMenu(e)}>
-          {(column && column.label) || content}
+          {(column && column.label)}
       </th>
   );
 }

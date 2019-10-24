@@ -63,14 +63,14 @@ function BlankClickableRow({
         const column = columns[columnIndex - 1];
         const isFormulaColumn = column && column.formula;
         // REPEATED FUNCTION DECLARATION BELOW
-        function updateCell(event, clear, columnType) {
+        function updateCell(event) {
           if (rows === 1 ) {
             createNewRows(rows);
           }
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-          dispatchSpreadsheetAction({type: UPDATE_CELL, row: null, column, cellValue: isNumberColumn(columnType, event.target.value)});
+          dispatchSpreadsheetAction({type: UPDATE_CELL, row: null, column, cellValue: isNumberColumn(column && column.type, event.target.value)});
         }
         if (activeCell && activeCell.column > 0 && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
@@ -165,7 +165,8 @@ function Spreadsheet({eventBus}) {
   const rowMap = Object.entries(rowPositions).reduce((acc, [id, position]) => {
     return {...acc, [position]: id};
   }, {});
-  const rowCount = rowMap ? Math.max(...Object.keys(rowMap)) + 1 : 0;
+  // Check if object is empty
+  const rowCount = Object.keys(rowMap).length !== 0 ? Math.max(...Object.keys(rowMap)) + 1 : 0;
   const visibleRowCount = Math.max(rowCount, 35); // 50 rows should be enough to fill the screen
   const rowIDs = Array(rowCount).fill(undefined).map((_, index) => {
     return rowMap[index];
@@ -189,7 +190,6 @@ function Spreadsheet({eventBus}) {
       columnIndex={index}
       key={index}
       column={columns[index]}
-      content={String.fromCharCode(index + 'A'.charCodeAt(0))}
     />
   ))
   const spreadsheetHeaders = Array(26).fill(undefined).map((_, index) => (
@@ -198,7 +198,6 @@ function Spreadsheet({eventBus}) {
       columnIndex={index}
       key={index}
       column={allPhysicalColumns && allPhysicalColumns[index]}
-      content={String.fromCharCode(index + 'A'.charCodeAt(0))}
     />
   ))
 

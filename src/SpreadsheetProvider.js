@@ -119,9 +119,9 @@ function spreadsheetReducer(state, action) {
       return {...state, cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []), currentCellSelectionRange: null};
     }
     case CREATE_COLUMNS: {
-      const newColumns = Array(columnCount).fill(undefined).map(_ => {
+      const newColumns = Array(columnCount).fill(undefined).map((_, i)=> {
         const id = createRandomID();
-        return {id, type: 'String'};
+        return {id, type: 'String', label: `Column ${state.columns.length + i + 1}`};
       });
       const columns = state.columns.concat(newColumns);
       const columnPositions = newColumns.reduce((acc, {id}, offset) => {
@@ -370,12 +370,16 @@ export function useSpreadsheetDispatch() {
 }
 
 export function SpreadsheetProvider({children}) {
+  // dummy data
   const statsColumns = [
     {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
     {modelingType: 'Nominal', type: 'Number', label: 'Trial', id: '_abc123_'},
     {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
     // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   ]
+
+  // normal starting conditions
+  const startingColumn = [{modelingType: 'Continuous', type: 'Number', label: 'Column 1'}]
 
   const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
@@ -389,7 +393,8 @@ export function SpreadsheetProvider({children}) {
     return column;
   })
 
-  const statsRows = [
+  // dummy data
+  const pondEcologyRows = [
     [10, 1, 12],
     [20, 1, 10],
     [30, 1, 7],
@@ -417,9 +422,12 @@ export function SpreadsheetProvider({children}) {
     [50, 5, 3],
   ]
 
+  // normal starting condition
+  const startingRow = [[]];
+
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
 
-  const rows = statsRows.map((tuple) => ({
+  const rows = pondEcologyRows.map((tuple) => ({
     id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
   })).map((originalRow) => {
     const formulaColumns = columns.filter(({type}) => type === 'Formula');
@@ -447,7 +455,7 @@ export function SpreadsheetProvider({children}) {
     columnTypeModalOpen: false,
     activeCell: null,
     cellSelectionRanges: [{
-      top: 1, bottom: 1, left: 1, right: 1
+      top: 0, bottom: 0, left: 1, right: 1
     }],
     contextMenuPosition: null,
     currentCellSelectionRange: null,

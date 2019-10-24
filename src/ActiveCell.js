@@ -67,7 +67,7 @@ function ActiveCell({
       type="text"
       value={value}
       onKeyDown={onKeyDown}
-      onChange={(e) => updateCell(e, false, column.type)}
+      onChange={(e) => updateCell(e, false, column && column.type)}
     />
   </td>
   );
