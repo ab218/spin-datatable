@@ -31,6 +31,12 @@ import {
 //   )
 // }
 
+function isNumberColumn(columnType, val) {
+  let numberized = Number(val);
+  if (isNaN(numberized)) numberized = 0;
+  return columnType === 'Number' ? numberized : val;
+}
+
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#f9f9f9'}} key={'blankcol' + columnIndex}></td>)}</tr> }
 
 function BlankClickableRow({
@@ -57,14 +63,14 @@ function BlankClickableRow({
         const column = columns[columnIndex - 1];
         const isFormulaColumn = column && column.formula;
         // REPEATED FUNCTION DECLARATION BELOW
-        function updateCell(event) {
+        function updateCell(event, clear, columnType) {
           if (rows === 1 ) {
             createNewRows(rows);
           }
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-          dispatchSpreadsheetAction({type: UPDATE_CELL, row: null, column, cellValue: event.target.value});
+          dispatchSpreadsheetAction({type: UPDATE_CELL, row: null, column, cellValue: isNumberColumn(columnType, event.target.value)});
         }
         if (activeCell && activeCell.column > 0 && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
@@ -211,6 +217,7 @@ function Spreadsheet({eventBus}) {
             createNewRows={createNewRows}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
             handleContextMenu={handleContextMenu}
+            isNumberColumn={isNumberColumn}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             numberOfRows={rowCount}
@@ -282,6 +289,7 @@ function Spreadsheet({eventBus}) {
           finishCurrentSelectionRange={finishCurrentSelectionRange}
           handleContextMenu={handleContextMenu}
           isSelectedCell={isSelectedCell}
+          isNumberColumn={isNumberColumn}
           modifyCellSelectionRange={modifyCellSelectionRange}
           numberOfRows={groupedRowCount}
           row={physicalRows.find(({id}) => id === groupedRowIDs[index])}
