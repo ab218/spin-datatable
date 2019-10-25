@@ -1,19 +1,31 @@
 import axios from 'axios';
 
 export async function performLinearRegressionAnalysis(colX, colY, rows) {
+  // refactor this function please
   const colXLabel = colX.label;
   const colYLabel = colY.label;
-  function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
+  function mapColumnValues(colID) { return rows.map(row => Number(row[colID]))}
   const colA = mapColumnValues(colX.id);
   const colB = mapColumnValues(colY.id);
-  const tempABVals = colA.map((_, i) => {
-    return [(colA[i]), (colB[i])]
-  }).sort();
+
+  const maxColLength = Math.max(colA.length, colB.length);
+  function makeXYCols(colA, colB) {
+    const arr = [];
+    for (let i = 0; i < maxColLength; i++) {
+      if (colA[i] && colB[i]) {
+        arr.push([colA[i], colB[i]])
+      }
+    }
+    return arr.sort();
+  }
+  const XYCols = makeXYCols(colA, colB)
+  const colXArr = XYCols.map(a => a[0]);
+  const colYArr = XYCols.map(a => a[1]);
   // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
   const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
   const result = await axios.post(gcloud, {
-    x: colA,
-    y: colB
+    x: colXArr,
+    y: colYArr
   }, {
     crossDomain: true,
   })
@@ -50,7 +62,7 @@ export async function performLinearRegressionAnalysis(colX, colY, rows) {
       colBMean: mean_y,
       colBStdev: std_y,
       pValue: pvalues[1],
-      tempABVals,
+      tempABVals: makeXYCols(colA, colB),
       linearRegressionLinePoints: fitted_values,
       linearRegressionLineR2: rsquared,
       linearRegressionLineSlope: slope,
@@ -60,7 +72,7 @@ export async function performLinearRegressionAnalysis(colX, colY, rows) {
 
 export async function performDistributionAnalysis(colY, rows) {
   const colYLabel = colY.label;
-  function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x=>x) }
+  function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x => Number(x)) }
   const colB = mapColumnValues(colY.id);
   // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
   const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';

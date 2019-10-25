@@ -379,7 +379,7 @@ export function SpreadsheetProvider({children}) {
   ]
 
   // normal starting conditions
-  const startingColumn = [{modelingType: 'Continuous', type: 'Number', label: 'Column 1'}]
+  // const startingColumn = [{modelingType: 'Continuous', type: 'Number', label: 'Column 1'}]
 
   const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
@@ -423,7 +423,7 @@ export function SpreadsheetProvider({children}) {
   ]
 
   // normal starting condition
-  const startingRow = [[]];
+  // const startingRow = [[]];
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
 
