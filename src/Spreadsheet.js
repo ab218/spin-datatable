@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import AnalysisModal from './ModalAnalysis';
+import AnalysisModal from './ModalFitXY';
 import ActiveCell from './ActiveCell';
 import ColResizer from './ColResizer';
 import ContextMenu from './ContextMenu';

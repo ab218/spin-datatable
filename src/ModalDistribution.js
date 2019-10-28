@@ -53,6 +53,7 @@ export default function DistributionModal() {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedRightColumn, setSelectedRightColumn] = useState(null);
   const [yColData, setYColData] = useState([]);
+  const [error, setError] = useState(false);
   const [numberOfBins, setNumberOfBins] = useState(10);
   const { distributionModalOpen, columns, rows } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -74,7 +75,10 @@ export default function DistributionModal() {
   }
 
   async function performAnalysis() {
-    if (!yColData[0]) return;
+    if (!yColData[0]) {
+      setError(true);
+      return;
+    }
     const results = await performDistributionAnalysis(yColData[0], rows, numberOfBins);
     function receiveMessage(event) {
       if (event.data === 'ready') {
@@ -175,6 +179,7 @@ export default function DistributionModal() {
             </div>
           </div>
         </div>
+        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>Please add required column and try again</h5>
       </Modal>
     </div>
   )

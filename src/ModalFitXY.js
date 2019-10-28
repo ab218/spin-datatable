@@ -52,6 +52,7 @@ export default function AnalysisModal() {
   const [selectedRightColumn, setSelectedRightColumn] = useState(null);
   const [xColData, setXColData] = useState([]);
   const [yColData, setYColData] = useState([]);
+  const [error, setError] = useState(false);
   const { analysisModalOpen, columns } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -71,7 +72,11 @@ export default function AnalysisModal() {
     setCol(prevState => prevState.filter(col => col !== selectedRightColumn));
   }
 
-  function openAnalysisWindow() {
+  function performAnalysis() {
+    if (!yColData[0] || !xColData[0]) {
+      setError(true);
+      return;
+    };
     dispatchSpreadsheetAction({type: PERFORM_ANALYSIS, xColData: xColData[0], yColData: yColData[0] })
     dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
   }
@@ -106,7 +111,7 @@ export default function AnalysisModal() {
         className="ant-modal"
         // destroyOnClose
         onCancel={handleModalClose}
-        onOk={openAnalysisWindow}
+        onOk={performAnalysis}
         title="Fit Y by X"
         visible={analysisModalOpen}
         width={600}
@@ -131,6 +136,7 @@ export default function AnalysisModal() {
             </div>
           </div>
         </div>
+        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>Please add all required columns and try again</h5>
       </Modal>
     </div>
   )
