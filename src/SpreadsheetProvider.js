@@ -269,7 +269,8 @@ function spreadsheetReducer(state, action) {
       return {...state, activeCell: null, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
     }
     case TOGGLE_DISTRIBUTION_MODAL: {
-      return {...state, distributionModalOpen, activeCell: null }
+      console.log(state)
+      return {...state, distributionModalOpen, activeCell: null, cellSelectionRanges: [], selectedRowIDs: [], currentCellSelectionRange: [], }
     }
     case TOGGLE_FILTER_MODAL: {
       return {...state, filterModalOpen, selectedColumn: null, activeCell: null }

@@ -1,6 +1,6 @@
 // TODO: Combine this component with Analysis Modal
 import React, { useState } from 'react';
-import { Button, Card, Modal, Radio } from 'antd';
+import { Button, Card, Modal, Radio, Input } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELLS, REMOVE_SELECTED_CELLS } from './constants';
 import { performDistributionAnalysis } from './Analyses';
@@ -52,8 +52,8 @@ export function SelectColumn({columns, setSelectedColumn}) {
 export default function DistributionModal() {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedRightColumn, setSelectedRightColumn] = useState(null);
-  // const [performDistributionAnalysis, setPerformDistributionAnalysis] = useState(false);
   const [yColData, setYColData] = useState([]);
+  const [numberOfBins, setNumberOfBins] = useState(10);
   const { distributionModalOpen, columns, rows } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -74,7 +74,8 @@ export default function DistributionModal() {
   }
 
   async function performAnalysis() {
-    const results = await performDistributionAnalysis(yColData[0], rows);
+    if (!yColData[0]) return;
+    const results = await performDistributionAnalysis(yColData[0], rows, numberOfBins);
     function receiveMessage(event) {
       if (event.data === 'ready') {
         popup.postMessage(results, '*');
@@ -98,9 +99,7 @@ export default function DistributionModal() {
         }
 
         const rowIndices = rows.reduce((acc, row, rowIndex) => {
-          // TODO: We use double equals until we take into account column data type when comparing values
-          // TODO: At that point, we will revert back to using triple equals
-          return row[selectedColumn.id] == event.data.val ? acc.concat(rowIndex) : acc;
+          return event.data.vals.includes(row[selectedColumn.id]) ? acc.concat(rowIndex) : acc;
         }, []);
         console.log(rows,rowIndices)
         dispatchSpreadsheetAction({type: SELECT_CELLS, rows: rowIndices, column: columnIndex});
@@ -112,8 +111,6 @@ export default function DistributionModal() {
     window.addEventListener("message", receiveMessage, false);
     window.addEventListener("message", targetClickEvent);
     window.addEventListener("message", removeTargetClickEvent);
-    // setPerformDistributionAnalysis(true);
-    // dispatchSpreadsheetAction({type: PERFORM_DISTRIBUTION_ANALYSIS, yColData: yColData[0] })
     dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
   }
 
@@ -141,9 +138,16 @@ export default function DistributionModal() {
     )
   }
 
+  function onChangeBinInput(e) {
+    e.preventDefault();
+    if (isNaN(e.target.value)) {
+      return setNumberOfBins(0);
+    }
+    return setNumberOfBins(e.target.value);
+  }
+
   return (
     <div>
-      {/* {performDistributionAnalysis && <DistributionAnalysis colY={yColData[0]} setPerformDistributionAnalysis={setPerformDistributionAnalysis}/>} */}
       <Modal
         className="ant-modal"
         onCancel={handleModalClose}
@@ -164,6 +168,10 @@ export default function DistributionModal() {
             <div style={{marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
               <CaratButtons data={yColData} setData={setYColData} axis='Y' />
               <RadioGroup data={yColData} setData={setSelectedRightColumn} />
+            </div>
+            <div style={{marginBottom: 20, marginTop: 20, display: 'flex'}}>
+              <div style={{width: 100}}>Number of Bins</div>
+              <Input onChange={(e) => onChangeBinInput(e)} value={numberOfBins} style={{ marginLeft: 10, width: '20%' }} />
             </div>
           </div>
         </div>

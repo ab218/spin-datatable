@@ -70,7 +70,7 @@ export async function performLinearRegressionAnalysis(colX, colY, rows) {
       linearRegressionLineEquation: `${colYLabel} = ${slope.toFixed(4)}*(${colXLabel}) + ${intercept}`,
 }}
 
-export async function performDistributionAnalysis(colY, rows) {
+export async function performDistributionAnalysis(colY, rows, numberOfBins) {
   const colYLabel = colY.label;
   function mapColumnValues(colID) { return rows.map(row => Number(row[colID])).filter(x => Number(x)) }
   const colB = mapColumnValues(colY.id);
@@ -94,5 +94,6 @@ export async function performDistributionAnalysis(colY, rows) {
       histogram,
       skew,
       kurtosis,
+      numberOfBins,
   }
 }

@@ -40,7 +40,9 @@
           colBStdev,
           boxPlotData,
           kurtosis,
-          skew,} = event.data;
+          skew,
+          numberOfBins,
+        } = event.data;
 
           const titleEl = document.createElement('div');
           titleEl.style.textAlign = 'center';
@@ -71,7 +73,6 @@
 
           // Parse the Data
           // const boxData = [12, 10, 7, 6, 2, 10, 9, 6, 4, 4, 12, 9, 8, 3, 11, 8, 7, 6, 2, 11, 10, 7, 5, 3, 5];
-          const nBins = 10;
 
           // Compute summary statistics used for the box:
           const boxDataSorted = colB.sort(d3.ascending);
@@ -84,24 +85,22 @@
           const center = 1;
           const boxWidth = 40;
 
-          // Note they are different. Scipy's value is correct.
-          console.log(colBStdev, d3.deviation(colB));
-
           // Add X axis
           const x = d3.scaleLinear()
             .range([ 0, width])
 
           // Y axis
           const y = d3.scaleLinear()
-            .range([ height, 0 ])
-            .domain([Math.min(...boxDataSorted) - 1, Math.max(...boxDataSorted) + 1])
+            // .nice() rounds the tick values to nice numbers
+            .domain([min - min*.1, max + max*.1]).nice()
+            .range([height, 0])
           histSvg.append("g")
             .call(d3.axisLeft(y))
 
           // set the parameters for the histogram
           const histogram = d3.histogram()
             .domain(y.domain())  // then the domain of the graphic
-            .thresholds(y.ticks(nBins)); // then the numbers of bins
+            .thresholds(y.ticks(numberOfBins)); // then the numbers of bins
 
           // And apply this function to data to get the bins
           const bins = histogram(boxDataSorted);
@@ -134,6 +133,7 @@
               return x(d.length);
             })
             .attr("height", function(d) {
+              // The -1 adds a little bit of padding between bars
               return y(d.x0) - y(d.x1) - 1
             })
             .attr("fill", "#69b3a2")
@@ -163,7 +163,7 @@
               window.opener.postMessage({
                 message: 'clicked',
                 metaKeyPressed,
-                val: bar[0],
+                vals: bar,
                 occurences: bar.length
               }, '*');
             }
