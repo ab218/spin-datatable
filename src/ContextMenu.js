@@ -47,7 +47,7 @@ export default function ContextMenu() {
           <Menu selectable={false} style={{ width: 256 }} mode="vertical">
             <Menu.Item key="1" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, colName})}>Column Info...</Menu.Item>
             <Menu.Item key="2" onClick={setGroupedColumns}>Split by <span style={{fontWeight: 'bold'}}>{colName}</span><span style={{fontStyle: 'italic'}}> (experimental)</span></Menu.Item>
-            <Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_LAYOUT, layout: !layout })}>Change Layout</Menu.Item>
+            {layout || <Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_LAYOUT, layout: true })}>Return to normal view</Menu.Item>}
             <SubMenu key="sub1" title="Sort">
               <Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: true })}>Descending</Menu.Item>
               <Menu.Item key="5" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: false })}>Ascending</Menu.Item>
@@ -56,14 +56,14 @@ export default function ContextMenu() {
         </div>
       : <div onClick={onClick} className="menu">
           <Menu selectable={false} style={{ width: 256 }} mode="vertical">
-              <SubMenu key="sub3" title="Fill">
+              {/* <SubMenu key="sub3" title="Fill">
                 <Menu.Item disabled key="12">Option 1</Menu.Item>
                 <Menu.Item disabled key="13">Option 2</Menu.Item>
               </SubMenu>
               <SubMenu key="sub4" title="Color">
                 <Menu.Item disabled key="14">Option 1</Menu.Item>
                 <Menu.Item disabled key="15">Option 2</Menu.Item>
-              </SubMenu>
+              </SubMenu> */}
               <Menu.Item disabled key="16">Select Matching Cells</Menu.Item>
               <Menu.Item disabled key="17">Cut</Menu.Item>
               <Menu.Item disabled key="18">Copy</Menu.Item>

@@ -216,7 +216,7 @@ function spreadsheetReducer(state, action) {
         return col.label === setColName;
       })
 
-      const groupByColumnID = (matchColNameWithID && matchColNameWithID.id) || '_abc123_';
+      const groupByColumnID = (matchColNameWithID && matchColNameWithID.id);
       // Maybe we can make groupedColumns keep track of column properties such as label, etc
       const groupedColumns = state.rows.reduce((acc, row) => {
         const {[groupByColumnID]: _, ...restRow} = row;
@@ -269,7 +269,6 @@ function spreadsheetReducer(state, action) {
       return {...state, activeCell: null, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
     }
     case TOGGLE_DISTRIBUTION_MODAL: {
-      console.log(state)
       return {...state, distributionModalOpen, activeCell: null, cellSelectionRanges: [], selectedRowIDs: [], currentCellSelectionRange: [], }
     }
     case TOGGLE_FILTER_MODAL: {
@@ -374,7 +373,7 @@ export function SpreadsheetProvider({children}) {
   // dummy data
   const statsColumns = [
     {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
-    {modelingType: 'Nominal', type: 'Number', label: 'Trial', id: '_abc123_'},
+    {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
     {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
     // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   ]

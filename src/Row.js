@@ -14,7 +14,6 @@ export default function Row({
   createNewRows,
   finishCurrentSelectionRange,
   isSelectedCell,
-  isNumberColumn,
   modifyCellSelectionRange,
   numberOfRows,
   handleContextMenu,
@@ -40,14 +39,21 @@ export default function Row({
           return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex}/>
         }
 
+        const checkIfValidNumber = (str) => str.match(/^-?\d+\.?\d*$/) ? str : false;
+
         function updateCell(event, clear) {
+          if (column.type === 'Number') {
+            if (event.target.value && event.target.value !== '-' && !checkIfValidNumber(event.target.value)) {
+              return;
+            }
+          }
           if (rows === 1 ) {
             createNewRows(rows);
           }
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-          dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : isNumberColumn(column && column.type, event.target.value)});
+          dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
         }
 
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
