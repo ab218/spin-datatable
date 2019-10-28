@@ -35,7 +35,6 @@ export default function ColumnResizer({borderRight, column}) {
     return () => {
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', endDrag);
-
     };
   }, [isDragging, offset, originalCellWidth, startX]);
 

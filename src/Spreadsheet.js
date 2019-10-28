@@ -319,17 +319,17 @@ function Spreadsheet({eventBus}) {
         />
       )
     } else { return <BlankRow key={'BlankRow' + index} cellCount={26 + 1} />}
-});
+  });
 
-function handleContextMenu(e) {
-  e.preventDefault();
-  dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, contextMenuPosition: {left: e.pageX, top: e.pageY}});
-}
+  function handleContextMenu(e) {
+    e.preventDefault();
+    dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, contextMenuPosition: {left: e.pageX, top: e.pageY}});
+  }
 
-function getGroupedByColumnIDLabel(id) {
-  const found = columns.find(col => col.id === id);
-  return found.label
-}
+  function getGroupedByColumnIDLabel(id) {
+    const found = columns.find(col => col.id === id);
+    return found.label
+  }
 
   return (
     <div>

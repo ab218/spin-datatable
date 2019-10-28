@@ -92,7 +92,7 @@
           // Y axis
           const y = d3.scaleLinear()
             // .nice() rounds the tick values to nice numbers
-            .domain([min - min*.1, max + max*.1]).nice()
+            .domain([min - min*.05, max + max*.05]).nice()
             .range([height, 0])
           histSvg.append("g")
             .call(d3.axisLeft(y))
@@ -134,6 +134,7 @@
             })
             .attr("height", function(d) {
               // The -1 adds a little bit of padding between bars
+              console.log(y(d.x0), y(d.x1))
               return y(d.x0) - y(d.x1) - 1
             })
             .attr("fill", "#69b3a2")
@@ -152,6 +153,7 @@
             .on('click', onClick)
 
             function onClick(bar) {
+              const thisBar = d3.select(this);
               let metaKeyPressed = false;
               if (d3.event.metaKey) {
                 metaKeyPressed = true;
@@ -159,12 +161,21 @@
                 // If meta key is not held down, remove other highlighted bars
                 d3.selectAll('rect').style("fill", "#69b3a2")
               }
-              d3.select(this).style("fill", "red")
+              // TODO: If holding meta key and click on bar again, deselect cells
+              // if (metaKeyPressed && thisBar.style("fill") === 'red') {
+              //   thisBar.style("fill", "#69b3a2");
+              //   window.opener.postMessage({
+              //     message: 'unclicked',
+              //     metaKeyPressed,
+              //     vals: bar,
+              //   }, '*');
+              //   return;
+              // }
+              thisBar.style("fill", "red")
               window.opener.postMessage({
                 message: 'clicked',
                 metaKeyPressed,
                 vals: bar,
-                occurences: bar.length
               }, '*');
             }
           // Boxplot
@@ -191,7 +202,6 @@
             .attr("width", boxWidth )
             .attr("stroke", "black")
             .style("fill", "#69b3a2")
-
           // show median, min and max horizontal lines
           boxSvg
             .selectAll("toto")
@@ -204,7 +214,7 @@
             .attr("y2", function(d){ return(y(d))} )
             .attr("stroke", "black")
 
-          var jitterWidth = 10
+          const jitterWidth = 10
           boxSvg
             .selectAll("indPoints")
             .data(boxDataSorted)
@@ -215,7 +225,6 @@
             .attr("r", 4)
             .style("fill", "white")
             .attr("stroke", "black")
-
 
         const template = `<div style="text-align: center; margin: 0 3em;">
             <h4>Quantiles</h4>
@@ -228,22 +237,22 @@
                 <tr>
                   <td>99.5%:</td>
                   <td></td>
-                  <td>${d3.quantile(boxDataSorted, .995)}</td>
+                  <td>${d3.quantile(boxDataSorted, .995).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>97.5%:</td>
                   <td></td>
-                  <td>${d3.quantile(boxDataSorted, .975)}</td>
+                  <td>${d3.quantile(boxDataSorted, .975).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>90.0%:</td>
                   <td></td>
-                  <td>${d3.quantile(boxDataSorted, .9)}</td>
+                  <td>${d3.quantile(boxDataSorted, .9).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>75.0%:</td>
                   <td>Quartile 3</td>
-                  <td>${q3}</td>
+                  <td>${q3.toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>50.0%:</td>
@@ -253,22 +262,22 @@
                 <tr>
                   <td>25.0%:</td>
                   <td>Quartile 1</td>
-                  <td>${q1}</td>
+                  <td>${q1.toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>10.0%:</td>
                   <td></td>
-                  <td>${d3.quantile(boxDataSorted, .1)}</td>
+                  <td>${d3.quantile(boxDataSorted, .1).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>2.5%:</td>
                   <td></td>
-                  <td>${d3.quantile(boxDataSorted, .025)}</td>
+                  <td>${d3.quantile(boxDataSorted, .025).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>0.5%:</td>
                   <td></td>
-                  <td>${d3.quantile(boxDataSorted, .005)}</td>
+                  <td>${d3.quantile(boxDataSorted, .005).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>0.0%:</td>
@@ -280,11 +289,11 @@
               <table style="width: 100%;">
                 <tr>
                   <td>Mean:</td>
-                  <td>${d3.mean(boxDataSorted)}</td>
+                  <td>${d3.mean(boxDataSorted).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>Std Dev:</td>
-                  <td>${d3.deviation(colB)}</td>
+                  <td>${d3.deviation(colB).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>Count:</td>
@@ -292,11 +301,11 @@
                 </tr>
                 <tr>
                   <td>Skew:</td>
-                  <td>${skew}</td>
+                  <td>${skew.toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>Kurtosis:</td>
-                  <td>${kurtosis}</td>
+                  <td>${kurtosis.toFixed(6) / 1}</td>
                 </tr>
               </table>
           </div>`
