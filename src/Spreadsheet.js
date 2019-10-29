@@ -19,7 +19,6 @@ import {
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
   OPEN_CONTEXT_MENU,
-  UPDATE_CELL,
 } from './constants'
 
 // function FormulaBar() {
@@ -31,11 +30,19 @@ import {
 //   )
 // }
 
-// function isNumberColumn(columnType, val) {
-//   let numberized = Number(val);
-//   if (isNaN(numberized)) numberized = 0;
-//   return columnType === 'Number' ? numberized : val;
-// }
+export const checkIfValidNumber = (str) => {
+  if (str.match(/^-?\d*\.?\d*$/)) {
+    return false;
+  }
+  return str;
+}
+
+export function formatForNumberColumn(val, column) {
+  if (val && column.type === 'Number') {
+    return Number(val);
+  }
+  return val;
+}
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#f9f9f9'}} key={'blankcol' + columnIndex}></td>)}</tr> }
 
@@ -63,14 +70,13 @@ function BlankClickableRow({
         const column = columns[columnIndex - 1];
         const isFormulaColumn = column && column.formula;
         // REPEATED FUNCTION DECLARATION BELOW
-        function updateCell(event) {
+        function updateCell() {
           if (rows === 1 ) {
             createNewRows(rows);
           }
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-          dispatchSpreadsheetAction({type: UPDATE_CELL, row: null, column, cellValue: event.target.value});
         }
         if (activeCell && activeCell.column > 0 && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (

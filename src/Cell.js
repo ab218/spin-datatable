@@ -1,6 +1,7 @@
 import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL } from './constants'
+import { CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL  } from './constants'
+import { formatForNumberColumn } from './Spreadsheet';
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 
@@ -82,7 +83,7 @@ export function SelectedCell({
         }
       }}
       onMouseUp={() => {finishCurrentSelectionRange()}}
-    >{(row && column ? row[column.id] : '')}</td>
+    >{(row && column ? formatForNumberColumn(row[column.id], column) : '')}</td>
   )
 }
 
@@ -117,5 +118,5 @@ export function NormalCell({
     }}
     onMouseUp={finishCurrentSelectionRange}
     >
-  {cellValue}</td>
+  {formatForNumberColumn(cellValue, column)}</td>
   )}

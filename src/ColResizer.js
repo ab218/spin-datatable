@@ -18,31 +18,28 @@ export default function ColumnResizer({borderRight, column}) {
   }
 
   useEffect(() => {
-    const endDrag = () => {
-      if (!isDragging) return;
-      setIsDragging(false);
-      setOriginalCellWidth(originalCellWidth + offset);
-      setOffset(0);
-    }
-
     const onMouseMove = (e) => {
       if (!isDragging) return;
       setOffset(e.clientX - startX);
     }
-
     document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', endDrag);
     return () => {
       document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', endDrag);
     };
-  }, [isDragging, offset, originalCellWidth, startX]);
+  }, [isDragging, startX]);
+
+  const endDrag = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    setOriginalCellWidth(originalCellWidth + offset);
+    setOffset(0);
+  }
 
   const startDrag = (e) => {
+    setIsDragging(true);
     setStartX(e.clientX);
     const { width: originalWidth } = e.target.getBoundingClientRect();
     setOriginalCellWidth(originalWidth);
-    setIsDragging(true);
   }
 
   const style = {
@@ -58,7 +55,7 @@ export default function ColumnResizer({borderRight, column}) {
   }
 
   return (
-      <th style={style} onMouseDown={startDrag} onDoubleClick={openModal} onContextMenu={e => onContextMenu(e)}>
+      <th style={style} onMouseDown={startDrag} onMouseUp={endDrag} onMouseLeave={endDrag} onDoubleClick={openModal} onContextMenu={e => onContextMenu(e)}>
           {(column && column.label)}
       </th>
   );

@@ -1,8 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import {
-  ADD_CELL_TO_SELECTIONS,
-} from './constants'
+import { ADD_CELL_TO_SELECTIONS } from './constants'
 
 const cursorKeyToRowColMapper = {
   ArrowUp: function (row, column) {

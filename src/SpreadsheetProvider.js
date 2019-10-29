@@ -303,7 +303,6 @@ function spreadsheetReducer(state, action) {
           return {...acc, [column.id]: formulaParser.parse(column.formula).result};
         }, rowCopy);
       }
-      // const changedRows = newRows.filter(newRow => newRow.id !== rowCopy.id).concat(rowCopy);
       const changedRows = newRows.map(newRow => newRow.id !== rowCopy.id ? newRow : rowCopy);
       return  {...state, rows: changedRows };
     }

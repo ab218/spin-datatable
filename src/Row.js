@@ -3,6 +3,7 @@ import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
 import { CLOSE_CONTEXT_MENU, UPDATE_CELL } from './constants';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
+import { checkIfValidNumber } from './Spreadsheet';
 
 export default function Row({
   activeCell,
@@ -39,13 +40,14 @@ export default function Row({
           return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex}/>
         }
 
-        const checkIfValidNumber = (str) => str.match(/^-?\d+\.?\d*$/) ? str : false;
-
         function updateCell(event, clear) {
-          if (column.type === 'Number') {
-            if (event.target.value && event.target.value !== '-' && !checkIfValidNumber(event.target.value)) {
-              return;
-            }
+          if (column &&column.type === 'Number'
+            && event.target.value
+            // negative number
+            && event.target.value !== '-'
+            // must be negative or positive int or float
+            && checkIfValidNumber(event.target.value)) {
+            return;
           }
           if (rows === 1 ) {
             createNewRows(rows);
