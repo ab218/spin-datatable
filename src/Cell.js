@@ -73,7 +73,7 @@ export function SelectedCell({
         if (contextMenuOpen) {
           dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
         }
-        if (!isFormulaColumn) {
+        if (!isFormulaColumn && event.button === 0) {
           changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
         }
       }}

@@ -1,6 +1,6 @@
 // TODO: Combine this component with Analysis Modal
 import React, { useState } from 'react';
-import { Button, Card, Modal, Radio, Input } from 'antd';
+import { Card, Modal, Radio, Input } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELLS, REMOVE_SELECTED_CELLS } from './constants';
 import { performDistributionAnalysis } from './Analyses';
@@ -50,36 +50,28 @@ export function SelectColumn({columns, setSelectedColumn}) {
   }
 
 export default function DistributionModal() {
-  const [selectedColumn, setSelectedColumn] = useState(null);
-  const [selectedRightColumn, setSelectedRightColumn] = useState(null);
-  const [yColData, setYColData] = useState([]);
-  const [error, setError] = useState(false);
-  const [numberOfBins, setNumberOfBins] = useState(10);
   const { distributionModalOpen, columns, rows } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const [error, setError] = useState(false);
+  const [numberOfBins, setNumberOfBins] = useState(10);
+  const [yColData, setYColData] = useState([]);
 
   function handleModalClose() {
     dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
   }
 
-  function addColumnToList(col, setCol) {
-    if (!selectedColumn || col.length > 0) return;
-    setSelectedRightColumn(selectedColumn);
-    setCol(prevState => prevState.concat(selectedColumn));
-  }
-
-  function removeColumnFromList(setCol) {
-    if (!selectedRightColumn) return;
-    setSelectedRightColumn(null);
-    setCol(prevState => prevState.filter(col => col !== selectedRightColumn));
-  }
-
   async function performAnalysis() {
-    if (!yColData[0]) {
+    if (!yColData) {
       setError(true);
       return;
     }
-    const results = await performDistributionAnalysis(yColData[0], rows, numberOfBins);
+    // TODO: Better error handling here
+    const colVals = rows.map(row => row[yColData.id]).filter(x=>x);
+    if (colVals.length === 0) {
+      setError(true);
+      return;
+    };
+    const results = await performDistributionAnalysis(yColData, rows, numberOfBins);
     function receiveMessage(event) {
       if (event.data === 'ready') {
         popup.postMessage(results, '*');
@@ -96,14 +88,15 @@ export default function DistributionModal() {
 
     function targetClickEvent(event) {
       if (event.data.message === "clicked") {
-        const selectedColumn = yColData[0];
+        const selectedColumn = yColData;
         const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
         if (!event.data.metaKeyPressed) {
           dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS});
         }
 
         const rowIndices = rows.reduce((acc, row, rowIndex) => {
-          return event.data.vals.includes(row[selectedColumn.id]) ? acc.concat(rowIndex) : acc;
+          // TODO Shouldn't be using Number here?
+          return event.data.vals.includes(Number(row[selectedColumn.id])) ? acc.concat(rowIndex) : acc;
         }, []);
         console.log(rows,rowIndices)
         dispatchSpreadsheetAction({type: SELECT_CELLS, rows: rowIndices, column: columnIndex});
@@ -116,30 +109,6 @@ export default function DistributionModal() {
     window.addEventListener("message", targetClickEvent);
     window.addEventListener("message", removeTargetClickEvent);
     dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
-  }
-
-  function RadioGroup({data, setData, styleProps}) {
-    return (
-      <Card bordered style={{...styles.cardWithBorder, ...styleProps}}>
-        <Radio.Group style={styles.radioGroup} buttonStyle='solid'>
-          {data.length === 0 ? <em>Required</em> : <></>}
-          {data.map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setData(column)} value={column}>{column.label}</Radio.Button>)}
-        </Radio.Group>
-      </Card>
-    )
-  }
-
-  function CaratButtons({data, setData, axis}) {
-    return (
-      <div style={styles.flexColumn}>
-        <Button disabled={data.length !== 0} style={{marginBottom: 5}}onClick={() => addColumnToList(data, setData)}>Add {axis}
-        </Button>
-        {data.length !== 0 &&
-          <Button onClick={() => removeColumnFromList(setData)}>Remove {axis}
-          </Button>
-        }
-      </div>
-    )
   }
 
   function onChangeBinInput(e) {
@@ -158,28 +127,22 @@ export default function DistributionModal() {
         onOk={performAnalysis}
         title="Distribution"
         visible={distributionModalOpen}
-        width={600}
+        width={450}
         bodyStyle={{background: '#ECECEC'}}
       >
-        <div style={styles.flexSpaced}>
+        <div style={{...styles.flexSpaced}}>
           <div>Select Column
             <SelectColumn
               columns={columns}
-              setSelectedColumn={setSelectedColumn}
+              setSelectedColumn={setYColData}
             />
           </div>
-          <div style={{width: 310}}>Cast Selected Columns into Roles
-            <div style={{marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
-              <CaratButtons data={yColData} setData={setYColData} axis='Y' />
-              <RadioGroup data={yColData} setData={setSelectedRightColumn} />
-            </div>
-            <div style={{marginBottom: 20, marginTop: 20, display: 'flex'}}>
+          <div style={{display: 'flex'}}>
               <div style={{width: 100}}>Number of Bins</div>
-              <Input onChange={(e) => onChangeBinInput(e)} value={numberOfBins} style={{ marginLeft: 10, width: '20%' }} />
-            </div>
+              <Input onChange={(e) => onChangeBinInput(e)} value={numberOfBins} style={{ marginLeft: 10, width: '40%' }} />
           </div>
         </div>
-        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>Please add required column and try again</h5>
+        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>Please add a valid column</h5>
       </Modal>
     </div>
   )

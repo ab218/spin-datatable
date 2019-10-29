@@ -1,6 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { ADD_CELL_TO_SELECTIONS } from './constants'
+import { UPDATE_CELL } from './constants';
 
 const cursorKeyToRowColMapper = {
   ArrowUp: function (row, column) {
@@ -25,26 +25,29 @@ const cursorKeyToRowColMapper = {
 function ActiveCell({
   changeActiveCell,
   columnIndex,
+  row,
+  rows,
   column,
+  columns,
+  createNewColumns,
+  createNewRows,
   handleContextMenu,
   numberOfRows,
   rowIndex,
-  updateCell,
   value,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  const [inputVal, setInputVal] = useState(value);
 
   const onKeyDown = (event) => {
     switch (event.key) {
       // TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
       case 'ArrowDown':
-      case 'ArrowUp':
-      case 'Enter':
+        case 'ArrowUp':
+        case 'Enter':
         event.preventDefault();
         const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
-        if (event.shiftKey) {
-          dispatchSpreadsheetAction({type: ADD_CELL_TO_SELECTIONS, row, column});
-        }
         changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
         break;
 
@@ -55,17 +58,30 @@ function ActiveCell({
 
   const inputEl = useRef(null);
   useEffect(() => {
-    inputEl.current.focus();
-  })
+    const oldInputElCurrent = inputEl.current;
+    // Sometimes focus wasn't firing so I added a short setTimeout here
+    setTimeout(() => {oldInputElCurrent.focus();}, 30);
+    if (rows === 1 ) {
+      createNewRows(rows);
+    }
+    if (columnIndex > columns.length) {
+      createNewColumns(columnIndex - columns.length);
+    }
+    return (() => {
+      if (oldInputElCurrent.value !== value) {
+        dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: oldInputElCurrent.value});
+      }
+    })
+  }, [column, columnIndex, columns.length, createNewColumns, createNewRows, dispatchSpreadsheetAction, row, rows, value])
 
   return (
   <td onContextMenu={e => handleContextMenu(e)}>
     <input
       ref={inputEl}
       type="text"
-      value={value}
+      value={inputVal}
       onKeyDown={onKeyDown}
-      onChange={(e) => updateCell(e, false, column && column.type)}
+      onChange={(e) => setInputVal(e.target.value)}
     />
   </td>
   );

@@ -154,6 +154,7 @@
 
             function onClick(bar) {
               const thisBar = d3.select(this);
+              console.log(bar, thisBar)
               let metaKeyPressed = false;
               if (d3.event.metaKey) {
                 metaKeyPressed = true;

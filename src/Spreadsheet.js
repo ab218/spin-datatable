@@ -44,7 +44,7 @@ export function formatForNumberColumn(val, column) {
   return val;
 }
 
-function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#f9f9f9'}} key={'blankcol' + columnIndex}></td>)}</tr> }
+function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#eee'}} key={'blankcol' + columnIndex}></td>)}</tr> }
 
 function BlankClickableRow({
   activeCell,
@@ -110,6 +110,13 @@ function BlankClickableRow({
               rowIndex={rowIndex}
               updateCell={updateCell}
             />
+          )
+        } else if (!column) {
+          return (
+            <td
+              style={{backgroundColor: '#eee'}}
+              key={`blank_cell${rowIndex}_${columnIndex}`}
+              ></td>
           )
         }
         return (

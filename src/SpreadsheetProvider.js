@@ -182,7 +182,12 @@ function spreadsheetReducer(state, action) {
       const { columns, rows } = state;
       const colX = xColData || columns[0];
       const colY = yColData || columns[2];
-      performLinearRegressionAnalysis(colX, colY, rows)
+      if (colX.length > 0 && colY.length > 0) {
+        performLinearRegressionAnalysis(colX, colY, rows)
+      } else {
+        // TODO show some error here
+        console.log('empty array present')
+      }
       return {...state };
     }
     case REMOVE_SELECTED_CELLS: {

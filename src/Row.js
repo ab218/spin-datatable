@@ -41,6 +41,7 @@ export default function Row({
         }
 
         function updateCell(event, clear) {
+          console.log('row updateCell:', arguments);
           if (column &&column.type === 'Number'
             && event.target.value
             // negative number
@@ -49,12 +50,12 @@ export default function Row({
             && checkIfValidNumber(event.target.value)) {
             return;
           }
-          if (rows === 1 ) {
-            createNewRows(rows);
-          }
-          if (columnIndex > columns.length) {
-            createNewColumns(columnIndex - columns.length);
-          }
+          // if (rows === 1 ) {
+          //   createNewRows(rows);
+          // }
+          // if (columnIndex > columns.length) {
+          //   createNewColumns(columnIndex - columns.length);
+          // }
           dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
         }
 
@@ -111,7 +112,10 @@ export default function Row({
           )
         } else {
           // The rest of the cells in the row that aren't in a defined column
-          return (<td key={`row${rowIndex}col${columnIndex}`} onMouseDown={(e) => {
+          return (<td
+            style={{backgroundColor: '#eee'}}
+            key={`row${rowIndex}col${columnIndex}`}
+            onMouseDown={(e) => {
             e.preventDefault();
             if (contextMenuOpen) {
               dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
