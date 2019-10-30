@@ -55,7 +55,7 @@ function ActiveCell({
     setTimeout(() => {
       oldInputElCurrent.focus();
       oldInputElCurrent.select();
-    }, 30);
+    }, 5);
   }, [])
 
   useEffect(() => {

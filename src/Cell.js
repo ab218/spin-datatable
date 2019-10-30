@@ -76,7 +76,7 @@ export function SelectedCell({
   return (
     <td
       key={`row${rowIndex}col${columnIndex}`}
-      style={{backgroundColor: '#f0f0f0'}}
+      style={{backgroundColor: 	'#C0C0C0'}}
       onContextMenu={e => handleContextMenu(e)}
       onMouseDown={(event) => {
         if (contextMenuOpen) {

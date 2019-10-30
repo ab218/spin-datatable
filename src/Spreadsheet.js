@@ -265,12 +265,10 @@ function Spreadsheet({eventBus}) {
   }
 
   function changeActiveCell(row, column, selectionActive) {
-    console.log('changeActiveCell called with:', arguments);
     dispatchSpreadsheetAction({type: ACTIVATE_CELL, row, column, selectionActive});
   }
 
   function selectCell(row, column, selectionActive) {
-    console.log('selectCell called with:', arguments);
     dispatchSpreadsheetAction({type: SELECT_CELL, row, column, selectionActive});
   }
 

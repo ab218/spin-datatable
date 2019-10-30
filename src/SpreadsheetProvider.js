@@ -201,7 +201,6 @@ function spreadsheetReducer(state, action) {
       const colYArr = XYCols.map(a => a[1]);
 
       if (colXArr.length > 0 && colYArr.length > 0) {
-        console.log('performing analysis')
         performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols)
       } else {
         // TODO show some error here
@@ -296,7 +295,6 @@ function spreadsheetReducer(state, action) {
       return {...state, distributionModalOpen, activeCell: null, cellSelectionRanges: [], selectedRowIDs: [], currentCellSelectionRange: [], }
     }
     case TOGGLE_FILTER_MODAL: {
-      console.log(selectedColumns)
       return {...state, filterModalOpen, selectedColumn: null, activeCell: null, selectedColumns }
     }
     case SET_SELECTED_COLUMN: {

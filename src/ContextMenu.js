@@ -71,7 +71,7 @@ export default function ContextMenu() {
                 <Menu.Item disabled key="14">Option 1</Menu.Item>
                 <Menu.Item disabled key="15">Option 2</Menu.Item>
               </SubMenu> */}
-              <Menu.Item disabled key="16">Select Matching Cells</Menu.Item>
+              {/* <Menu.Item disabled key="16">Select Matching Cells</Menu.Item> */}
               <Menu.Item disabled key="17">Cut</Menu.Item>
               <Menu.Item disabled key="18">Copy</Menu.Item>
               <Menu.Item disabled key="19" onClick={() => dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })}>Paste</Menu.Item>
