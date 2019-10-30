@@ -98,7 +98,6 @@ export default function DistributionModal() {
           // TODO Shouldn't be using Number here?
           return event.data.vals.includes(Number(row[selectedColumn.id])) ? acc.concat(rowIndex) : acc;
         }, []);
-        console.log(rows,rowIndices)
         dispatchSpreadsheetAction({type: SELECT_CELLS, rows: rowIndices, column: columnIndex});
       }
     }

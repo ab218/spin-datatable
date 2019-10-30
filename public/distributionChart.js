@@ -71,7 +71,6 @@ histSvg.append("g")
 .attr("transform", "translate(-10,0)rotate(-45)")
 .style("text-anchor", "end");
 
-console.log(bins)
 
 // Histogram Bars
 histSvg.selectAll("myRect")

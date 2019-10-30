@@ -1,26 +1,6 @@
 import axios from 'axios';
 
-export async function performLinearRegressionAnalysis(colX, colY, rows) {
-  // refactor this function please
-  const colXLabel = colX.label;
-  const colYLabel = colY.label;
-  function mapColumnValues(colID) { return rows.map(row => Number(row[colID]))}
-  const colA = mapColumnValues(colX.id);
-  const colB = mapColumnValues(colY.id);
-
-  const maxColLength = Math.max(colA.length, colB.length);
-  function makeXYCols(colA, colB) {
-    const arr = [];
-    for (let i = 0; i < maxColLength; i++) {
-      if (colA[i] && colB[i]) {
-        arr.push([colA[i], colB[i]])
-      }
-    }
-    return arr.sort();
-  }
-  const XYCols = makeXYCols(colA, colB)
-  const colXArr = XYCols.map(a => a[0]);
-  const colYArr = XYCols.map(a => a[1]);
+export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabel, colYLabel, XYCols) {
   // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
   const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
   const result = await axios.post(gcloud, {
@@ -38,7 +18,6 @@ export async function performLinearRegressionAnalysis(colX, colY, rows) {
   }
 
   function receiveMessage(event) {
-    // console.log('ORIGIN', event);
     // target window is ready, time to send data.
     if (event.data === 'ready') {
       popup.postMessage(outputData, '*');
@@ -62,7 +41,7 @@ export async function performLinearRegressionAnalysis(colX, colY, rows) {
       colBMean: mean_y.toFixed(4) / 1,
       colBStdev: std_y.toFixed(4) / 1,
       pValue: pvalues[1].toFixed(4) / 1,
-      tempABVals: makeXYCols(colA, colB),
+      tempABVals: XYCols,
       linearRegressionLinePoints: fitted_values,
       linearRegressionLineR2: rsquared.toFixed(4) / 1,
       linearRegressionLineSlope: slope.toFixed(4) / 1,

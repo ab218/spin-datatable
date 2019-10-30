@@ -93,6 +93,7 @@ function spreadsheetReducer(state, action) {
     rowIndex,
     rowCount,
     selectionActive,
+    selectedColumns,
     setColName,
     type,
     updatedColumn,
@@ -140,7 +141,6 @@ function spreadsheetReducer(state, action) {
     }
     case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
-      console.log(state)
       function removeKeyReducer(container, key) {
         const {[key]: value, ...rest} = container;
         return rest;
@@ -182,8 +182,27 @@ function spreadsheetReducer(state, action) {
       const { columns, rows } = state;
       const colX = xColData || columns[0];
       const colY = yColData || columns[2];
-      if (colX.length > 0 && colY.length > 0) {
-        performLinearRegressionAnalysis(colX, colY, rows)
+      function mapColumnValues(colID) { return rows.map(row => Number(row[colID]))}
+      const colA = mapColumnValues(colX.id);
+      const colB = mapColumnValues(colY.id);
+
+      const maxColLength = Math.max(colA.length, colB.length);
+      function makeXYCols(colA, colB) {
+        const arr = [];
+        for (let i = 0; i < maxColLength; i++) {
+          if (colA[i] && colB[i]) {
+            arr.push([colA[i], colB[i]])
+          }
+        }
+        return arr.sort();
+      }
+      const XYCols = makeXYCols(colA, colB)
+      const colXArr = XYCols.map(a => a[0]);
+      const colYArr = XYCols.map(a => a[1]);
+
+      if (colXArr.length > 0 && colYArr.length > 0) {
+        console.log('performing analysis')
+        performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols)
       } else {
         // TODO show some error here
         console.log('empty array present')
@@ -191,7 +210,7 @@ function spreadsheetReducer(state, action) {
       return {...state };
     }
     case REMOVE_SELECTED_CELLS: {
-      return {...state, cellSelectionRanges: [], selectedRowIDs: [] }
+      return {...state, cellSelectionRanges: [], selectedRowIDs: [], activeCell: null }
     }
     case SELECT_CELL: {
       const {cellSelectionRanges = []} = state;
@@ -271,13 +290,14 @@ function spreadsheetReducer(state, action) {
       return {...state, analysisModalOpen, activeCell: null}
     }
     case TOGGLE_COLUMN_TYPE_MODAL: {
-      return {...state, activeCell: null, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column}
+      return {...state, activeCell: null, columnTypeModalOpen, selectedColumn: colName ? getCol(colName) : column, cellSelectionRanges: [], selectedRowIDs: [], currentCellSelectionRange: []}
     }
     case TOGGLE_DISTRIBUTION_MODAL: {
       return {...state, distributionModalOpen, activeCell: null, cellSelectionRanges: [], selectedRowIDs: [], currentCellSelectionRange: [], }
     }
     case TOGGLE_FILTER_MODAL: {
-      return {...state, filterModalOpen, selectedColumn: null, activeCell: null }
+      console.log(selectedColumns)
+      return {...state, filterModalOpen, selectedColumn: null, activeCell: null, selectedColumns }
     }
     case SET_SELECTED_COLUMN: {
       return {...state, selectedColumns: action.selectedColumns}
@@ -375,17 +395,17 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({children}) {
   // dummy data
-  const statsColumns = [
-    {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
-    {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
-    {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
-    // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
-  ]
+  // const statsColumns = [
+  //   {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
+  //   {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
+  //   {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
+  //   // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+  // ]
 
   // normal starting conditions
-  // const startingColumn = [{modelingType: 'Continuous', type: 'Number', label: 'Column 1'}]
+  const startingColumn = [{modelingType: 'Continuous', type: 'Number', label: 'Column 1'}]
 
-  const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
+  const columns = startingColumn.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
@@ -398,40 +418,40 @@ export function SpreadsheetProvider({children}) {
   })
 
   // dummy data
-  const pondEcologyRows = [
-    [10, 1, 12],
-    [20, 1, 10],
-    [30, 1, 7],
-    [40, 1, 6],
-    [50, 1, 2],
-    [10, 2, 10],
-    [20, 2, 9],
-    [30, 2, 6],
-    [40, 2, 4],
-    [50, 2, 4],
-    [10, 3, 12],
-    [20, 3, 9],
-    [30, 3, 8],
-    [40, 3, 5],
-    [50, 3, 3],
-    [10, 4, 11],
-    [20, 4, 8],
-    [30, 4, 7],
-    [40, 4, 6],
-    [50, 4, 2],
-    [10, 5, 11],
-    [20, 5, 10],
-    [30, 5, 7],
-    [40, 5, 5],
-    [50, 5, 3],
-  ]
+  // const pondEcologyRows = [
+  //   [10, 1, 12],
+  //   [20, 1, 10],
+  //   [30, 1, 7],
+  //   [40, 1, 6],
+  //   [50, 1, 2],
+  //   [10, 2, 10],
+  //   [20, 2, 9],
+  //   [30, 2, 6],
+  //   [40, 2, 4],
+  //   [50, 2, 4],
+  //   [10, 3, 12],
+  //   [20, 3, 9],
+  //   [30, 3, 8],
+  //   [40, 3, 5],
+  //   [50, 3, 3],
+  //   [10, 4, 11],
+  //   [20, 4, 8],
+  //   [30, 4, 7],
+  //   [40, 4, 6],
+  //   [50, 4, 2],
+  //   [10, 5, 11],
+  //   [20, 5, 10],
+  //   [30, 5, 7],
+  //   [40, 5, 5],
+  //   [50, 5, 3],
+  // ]
 
   // normal starting condition
-  // const startingRow = [[]];
+  const startingRow = [[]];
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
 
-  const rows = pondEcologyRows.map((tuple) => ({
+  const rows = startingRow.map((tuple) => ({
     id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
   })).map((originalRow) => {
     const formulaColumns = columns.filter(({type}) => type === 'Formula');

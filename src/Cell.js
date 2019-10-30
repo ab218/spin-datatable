@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL  } from './constants'
+import { CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL, UPDATE_CELL  } from './constants'
 import { formatForNumberColumn } from './Spreadsheet';
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
@@ -8,6 +8,7 @@ export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 export function SelectedCell({
   changeActiveCell,
   column,
+  columns,
   columnIndex,
   finishCurrentSelectionRange,
   handleContextMenu,
@@ -15,8 +16,10 @@ export function SelectedCell({
   modifyCellSelectionRange,
   numberOfRows,
   row,
+  rows,
   rowIndex,
-  updateCell,
+  createNewRows,
+  createNewColumns
 } ) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const { contextMenuOpen } = useSpreadsheetState();
@@ -41,8 +44,14 @@ export function SelectedCell({
     function onKeyDown(event) {
       // if the key pressed is not a non-character key (arrow key etc)
       if (!isFormulaColumn && event.key.length === 1) {
+          if (rows === 1 ) {
+            createNewRows(rows);
+          }
+          if (columnIndex > columns.length) {
+            createNewColumns(columnIndex - columns.length);
+          }
+        dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: event.key});
         dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
-        updateCell(event, true);
       } else {
         switch (true) {
           case Object.keys(cursorKeyToRowColMapper).includes(event.key):

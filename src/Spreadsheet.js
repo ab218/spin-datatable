@@ -59,6 +59,7 @@ function BlankClickableRow({
   modifyCellSelectionRange,
   numberOfRows,
   rowIndex,
+  row,
   rows,
   selectCell,
 }) {
@@ -69,15 +70,6 @@ function BlankClickableRow({
       {Array(cellCount).fill(undefined).map((_, columnIndex) => {
         const column = columns[columnIndex - 1];
         const isFormulaColumn = column && column.formula;
-        // REPEATED FUNCTION DECLARATION BELOW
-        function updateCell() {
-          if (rows === 1 ) {
-            createNewRows(rows);
-          }
-          if (columnIndex > columns.length) {
-            createNewColumns(columnIndex - columns.length);
-          }
-        }
         if (activeCell && activeCell.column > 0 && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
             <ActiveCell
@@ -92,7 +84,6 @@ function BlankClickableRow({
               numberOfRows={numberOfRows}
               rowIndex={rowIndex}
               rows={rows}
-              updateCell={updateCell}
             />
           )
         } else if (column && isSelectedCell(rowIndex, columnIndex)) {
@@ -102,13 +93,17 @@ function BlankClickableRow({
               isFormulaColumn={isFormulaColumn}
               changeActiveCell={changeActiveCell}
               column={column}
+              columns={columns}
+              row={row}
+              rows={rows}
               columnIndex={columnIndex}
+              createNewColumns={createNewColumns}
+              createNewRows={createNewRows}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               handleContextMenu={handleContextMenu}
               modifyCellSelectionRange={modifyCellSelectionRange}
               numberOfRows={numberOfRows}
               rowIndex={rowIndex}
-              updateCell={updateCell}
             />
           )
         } else if (!column) {
@@ -193,8 +188,6 @@ function Spreadsheet({eventBus}) {
     return groupedRowMap[index];
   });
 
-  // console.log('rowIDs: ', rowIDs, 'groupedRowIDs: ', groupedRowIDs)
-
   // We add one more column header as the capstone for the column of row headers
   const visibleColumnCount = Math.max(26, columns.length);
   const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (
@@ -272,10 +265,12 @@ function Spreadsheet({eventBus}) {
   }
 
   function changeActiveCell(row, column, selectionActive) {
+    console.log('changeActiveCell called with:', arguments);
     dispatchSpreadsheetAction({type: ACTIVATE_CELL, row, column, selectionActive});
   }
 
   function selectCell(row, column, selectionActive) {
+    console.log('selectCell called with:', arguments);
     dispatchSpreadsheetAction({type: SELECT_CELL, row, column, selectionActive});
   }
 

@@ -3,6 +3,7 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import {
   CLOSE_CONTEXT_MENU,
   PERFORM_ANALYSIS,
+  REMOVE_SELECTED_CELLS,
   SET_GROUPED_COLUMNS,
   SORT_COLUMN,
   TOGGLE_ANALYSIS_MODAL,
@@ -49,8 +50,14 @@ export default function ContextMenu() {
             <Menu.Item key="2" onClick={setGroupedColumns}>Split by <span style={{fontWeight: 'bold'}}>{colName}</span><span style={{fontStyle: 'italic'}}> (experimental)</span></Menu.Item>
             {layout || <Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_LAYOUT, layout: true })}>Return to normal view</Menu.Item>}
             <SubMenu key="sub1" title="Sort">
-              <Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: true })}>Descending</Menu.Item>
-              <Menu.Item key="5" onClick={() => dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: false })}>Ascending</Menu.Item>
+              <Menu.Item key="4" onClick={() => {
+                dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS })
+                dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: true })
+              }}>Descending</Menu.Item>
+              <Menu.Item key="5" onClick={() => {
+                dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS })
+                dispatchSpreadsheetAction({type: SORT_COLUMN, colName, descending: false })
+              }}>Ascending</Menu.Item>
             </SubMenu>
           </Menu>
         </div>
@@ -68,7 +75,7 @@ export default function ContextMenu() {
               <Menu.Item disabled key="17">Cut</Menu.Item>
               <Menu.Item disabled key="18">Copy</Menu.Item>
               <Menu.Item disabled key="19" onClick={() => dispatchSpreadsheetAction({type: PERFORM_ANALYSIS })}>Paste</Menu.Item>
-              <Menu.Item key="20" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true })}>Add Filter</Menu.Item>
+              <Menu.Item key="20" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })}>Add Filter</Menu.Item>
               <Menu.Item key="21" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: true })}>Distribution</Menu.Item>
               <Menu.Item key="22" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })}>Fit Y By X</Menu.Item>
           </Menu>

@@ -8,7 +8,6 @@ export default function IntegerStep({column, colMin, colMax, selectedColumns}) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   const onChange = function (value) {
-    console.log('onChange arguments:', arguments);
     const min = value[0];
     const max = value[1];
     const newCopy = selectedColumns.slice();

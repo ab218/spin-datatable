@@ -95,7 +95,7 @@ export default function AnalysisModal() {
   function CaratButtons({data, setData, axis}) {
     return (
       <div style={styles.flexColumn}>
-        <Button disabled={data.length !== 0} style={{marginBottom: 5}}onClick={() => addColumnToList(data, setData)}>Add {axis}
+        <Button disabled={data.length !== 0} style={{marginBottom: 5}} onClick={() => addColumnToList(data, setData)}>Add {axis}
         </Button>
         {data.length !== 0 &&
           <Button onClick={() => removeColumnFromList(setData)}>Remove {axis}

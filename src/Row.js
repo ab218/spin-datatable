@@ -1,9 +1,12 @@
 import React from 'react';
 import ActiveCell from './ActiveCell';
 import { NormalCell, RowNumberCell, SelectedCell } from './Cell';
-import { CLOSE_CONTEXT_MENU, UPDATE_CELL } from './constants';
+import {
+  CLOSE_CONTEXT_MENU,
+  // UPDATE_CELL
+ } from './constants';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { checkIfValidNumber } from './Spreadsheet';
+// import { checkIfValidNumber } from './Spreadsheet';
 
 export default function Row({
   activeCell,
@@ -39,25 +42,18 @@ export default function Row({
           // The row # on the left side
           return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex}/>
         }
-
-        function updateCell(event, clear) {
-          console.log('row updateCell:', arguments);
-          if (column &&column.type === 'Number'
-            && event.target.value
-            // negative number
-            && event.target.value !== '-'
-            // must be negative or positive int or float
-            && checkIfValidNumber(event.target.value)) {
-            return;
-          }
-          // if (rows === 1 ) {
-          //   createNewRows(rows);
-          // }
-          // if (columnIndex > columns.length) {
-          //   createNewColumns(columnIndex - columns.length);
-          // }
-          dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
-        }
+        // function updateCell(event, clear) {
+        //   console.log('row updateCell:', arguments);
+        //   if (column &&column.type === 'Number'
+        //     && event.target.value
+        //     // negative number
+        //     && event.target.value !== '-'
+        //     // must be negative or positive int or float
+        //     && checkIfValidNumber(event.target.value)) {
+        //     return;
+        //   }
+        //   dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
+        // }
 
         if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
           return (
@@ -74,7 +70,6 @@ export default function Row({
               row={row}
               rowIndex={rowIndex}
               rows={rows}
-              updateCell={updateCell}
               value={column && row ? row[column.id] : ''}
             />
           )
@@ -85,14 +80,17 @@ export default function Row({
               key={`Row${rowIndex}Col${columnIndex}`}
               changeActiveCell={changeActiveCell}
               column={column}
+              columns={columns}
               columnIndex={columnIndex}
+              createNewColumns={createNewColumns}
+              createNewRows={createNewRows}
               finishCurrentSelectionRange={finishCurrentSelectionRange}
               isFormulaColumn={isFormulaColumn}
               modifyCellSelectionRange={modifyCellSelectionRange}
               numberOfRows={numberOfRows}
               row={row}
+              rows={rows}
               rowIndex={rowIndex}
-              updateCell={updateCell}
             />
           )
         } else if (column) {

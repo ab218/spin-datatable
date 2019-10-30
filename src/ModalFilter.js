@@ -14,17 +14,17 @@ export default function AntModal() {
   const { filterModalOpen, columns, rows, selectedColumns } = useSpreadsheetState();
 
   function handleClose() {
-    dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumn: null})
+    dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumns: []})
   }
 
   function handleCancel() {
     dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS })
-    dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumn: null})
+    dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumns: []})
   }
 
   function handleColumnPickOk() {
     if (!selectedColumns.some(({id}) => id === clickedColumn.id)) {
-      const colVals = rows.map(row => row[clickedColumn.id])
+      const colVals = rows.map(row => Number(row[clickedColumn.id])).filter(x=>x);
       const colMax = Math.max(...colVals);
       const colMin = Math.min(...colVals);
       const columnObject = {
@@ -54,7 +54,7 @@ export default function AntModal() {
           style={{width: '300px'}}
         />
         <Button disabled={!clickedColumn} style={{width: 100, marginTop:10}} onClick={handleColumnPickOk}>Add</Button>
-        {selectedColumns.length > 0 && selectedColumns.map(col => <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns} />)}
+        {selectedColumns && selectedColumns.length > 0 && selectedColumns.map(col => <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns} />)}
         </div>
       </Modal>
     </div>

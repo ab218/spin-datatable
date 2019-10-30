@@ -134,7 +134,6 @@
             })
             .attr("height", function(d) {
               // The -1 adds a little bit of padding between bars
-              console.log(y(d.x0), y(d.x1))
               return y(d.x0) - y(d.x1) - 1
             })
             .attr("fill", "#69b3a2")
@@ -154,7 +153,6 @@
 
             function onClick(bar) {
               const thisBar = d3.select(this);
-              console.log(bar, thisBar)
               let metaKeyPressed = false;
               if (d3.event.metaKey) {
                 metaKeyPressed = true;

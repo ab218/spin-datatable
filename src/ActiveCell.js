@@ -13,13 +13,6 @@ const cursorKeyToRowColMapper = {
   Enter: function (row, column, numberOfRows) {
     return {row: Math.min(row + 1, numberOfRows), column};
   },
-  // ArrowLeft: function (row, column) {
-  //   // Column should be minimum of 1 due to side row header
-  //   return {row, column: Math.max(column - 1, 1)};
-  // },
-  // ArrowRight: function (row, column) {
-  //   return {row, column: column + 1};
-  // }
 };
 
 function ActiveCell({
@@ -37,7 +30,6 @@ function ActiveCell({
   value,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-
   const [inputVal, setInputVal] = useState(value);
 
   const onKeyDown = (event) => {
@@ -60,28 +52,41 @@ function ActiveCell({
   useEffect(() => {
     const oldInputElCurrent = inputEl.current;
     // Sometimes focus wasn't firing so I added a short setTimeout here
-    setTimeout(() => {oldInputElCurrent.focus();}, 30);
+    setTimeout(() => {
+      oldInputElCurrent.focus();
+      oldInputElCurrent.select();
+    }, 30);
+  }, [])
+
+  useEffect(() => {
     if (rows === 1 ) {
       createNewRows(rows);
     }
     if (columnIndex > columns.length) {
       createNewColumns(columnIndex - columns.length);
     }
-    return (() => {
-      if (oldInputElCurrent.value !== value) {
-        dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: oldInputElCurrent.value});
+  })
+
+  useEffect(() => {
+      if (inputVal !== value) {
+        dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: inputVal});
       }
-    })
-  }, [column, columnIndex, columns.length, createNewColumns, createNewRows, dispatchSpreadsheetAction, row, rows, value])
+  }, [column, dispatchSpreadsheetAction, inputVal, row, value])
+
 
   return (
-  <td onContextMenu={e => handleContextMenu(e)}>
+  <td
+    onContextMenu={e => handleContextMenu(e)}
+  >
     <input
       ref={inputEl}
       type="text"
       value={inputVal}
       onKeyDown={onKeyDown}
-      onChange={(e) => setInputVal(e.target.value)}
+      onChange={(e) => {
+        e.preventDefault();
+        setInputVal(e.target.value);
+      }}
     />
   </td>
   );
