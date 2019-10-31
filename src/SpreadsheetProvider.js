@@ -407,7 +407,7 @@ export function SpreadsheetProvider({children}) {
   // ]
 
   // normal starting conditions
-  const startingColumn = [{modelingType: 'Continuous', type: 'Number', label: 'Column 1'}]
+  const startingColumn = [{modelingType: 'Continuous', type: 'String', label: 'Column 1'}]
 
   const columns = startingColumn.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
