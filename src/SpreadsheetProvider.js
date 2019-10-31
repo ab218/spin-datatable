@@ -406,10 +406,8 @@ export function SpreadsheetProvider({children}) {
   //   // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
   // ]
 
-  // normal starting conditions
-  const startingColumn = [{modelingType: 'Continuous', type: 'String', label: 'Column 1'}]
-
-  const columns = startingColumn.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
+  // Starting columns
+  const columns = [].map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
