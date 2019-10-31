@@ -139,6 +139,12 @@ function spreadsheetReducer(state, action) {
       }, state.rowPositions);
       return {...state, rows: state.rows.concat(newRows), rowPositions: newRowPositions};
     }
+    case 'ENABLE_SELECT': {
+      return {...state, selectDisabled: false}
+    }
+    case 'DISABLE_SELECT': {
+      return {...state, selectDisabled: true}
+    }
     case DELETE_VALUES: {
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
       function removeKeyReducer(container, key) {
@@ -488,6 +494,7 @@ export function SpreadsheetProvider({children}) {
     filterModalOpen: false,
     layout: true,
     selectedColumns: [],
+    selectDisabled: false,
     xColData: null,
     yColData: null,
     lastSelection: {row: 1, column: 1},

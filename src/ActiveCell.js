@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 import { UPDATE_CELL } from './constants';
 
 const cursorKeyToRowColMapper = {
@@ -30,6 +30,7 @@ function ActiveCell({
   value,
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const { selectDisabled } = useSpreadsheetState();
   const [inputVal, setInputVal] = useState(value);
 
   const onKeyDown = (event) => {
@@ -54,8 +55,14 @@ function ActiveCell({
     // Sometimes focus wasn't firing so I added a short setTimeout here
     setTimeout(() => {
       oldInputElCurrent.focus();
-      oldInputElCurrent.select();
+      if (!selectDisabled) {
+        oldInputElCurrent.select();
+      }
     }, 5);
+    return () => {
+      dispatchSpreadsheetAction({type: 'ENABLE_SELECT'});
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

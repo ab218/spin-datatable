@@ -51,6 +51,7 @@ export function SelectedCell({
             createNewColumns(columnIndex - columns.length);
           }
           dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: event.key});
+          dispatchSpreadsheetAction({type: 'DISABLE_SELECT'});
           dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
       } else {
         switch (true) {
