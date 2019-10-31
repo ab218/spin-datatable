@@ -59,9 +59,7 @@ function ActiveCell({
         oldInputElCurrent.select();
       }
     }, 5);
-    return () => {
-      dispatchSpreadsheetAction({type: 'ENABLE_SELECT'});
-    }
+    dispatchSpreadsheetAction({type: 'ENABLE_SELECT'});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
