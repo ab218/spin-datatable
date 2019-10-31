@@ -50,8 +50,8 @@ export function SelectedCell({
           if (columnIndex > columns.length) {
             createNewColumns(columnIndex - columns.length);
           }
-        dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: event.key});
-        dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
+          dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: event.key});
+          dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: rowIndex, column: columnIndex});
       } else {
         switch (true) {
           case Object.keys(cursorKeyToRowColMapper).includes(event.key):

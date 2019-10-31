@@ -476,9 +476,7 @@ export function SpreadsheetProvider({children}) {
     analysisWindowOpen: false,
     columnTypeModalOpen: false,
     activeCell: null,
-    cellSelectionRanges: [{
-      top: 0, bottom: 0, left: 1, right: 1
-    }],
+    cellSelectionRanges: [],
     contextMenuPosition: null,
     currentCellSelectionRange: null,
     colHeaderContext: false,

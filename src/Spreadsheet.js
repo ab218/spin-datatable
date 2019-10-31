@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalFitXY';
@@ -160,6 +160,12 @@ function Spreadsheet({eventBus}) {
     tableView
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+  useEffect(() => {
+    // Activate cell top leftmost cell on first load
+    dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: 0, column: 1})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function isSelectedCell(row, column) {
     function withinRange(value) {
