@@ -121,7 +121,7 @@ function spreadsheetReducer(state, action) {
     }
     case CREATE_COLUMNS: {
       const newColumns = Array(columnCount).fill(undefined).map((_, i)=> {
-        const id = createRandomID();
+        const id = createRandomLetterString();
         return {id, type: 'String', label: `Column ${state.columns.length + i + 1}`};
       });
       const columns = state.columns.concat(newColumns);
@@ -355,21 +355,29 @@ function spreadsheetReducer(state, action) {
       if (columnHasFormula) {
         rows = rows.map((row) => {
           const formulaColumnsToUpdate = [columnCopy].concat(state.columns.filter(({type, formula}) => {
+            console.log('type', type, 'formula', formula)
             return type === 'Formula' && formula.includes(columnCopy.id);
           }));
+          console.log('formulaColumnsToUpdate', formulaColumnsToUpdate)
           const formulaParser = new Parser();
+          // Not getting called
           formulaParser.on('callVariable', function(name, done) {
+            console.log(name, 'name')
             const selectedColumn = state.columns.find((column) => column.id === name);
+            console.log('selectedColumn', selectedColumn)
             if (selectedColumn) {
+              console.log(row[selectedColumn.id])
               done(row[selectedColumn.id]);
             }
           });
           return formulaColumnsToUpdate.reduce((acc, column) => {
+            console.log(column)
             row = acc;
             const {
               result,
               // error
             } = formulaParser.parse(column.formula);
+            console.log('result', result)
             return {...acc, [column.id]: result};
           }, row);
         });
@@ -399,15 +407,17 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({children}) {
   // dummy data
-  // const statsColumns = [
-  //   {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
-  //   {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
-  //   {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
-  //   // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
-  // ]
+  const statsColumns = [
+    {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
+    {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
+    {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
+    // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+  ];
+
+  const startingColumn = [];
 
   // Starting columns
-  const columns = [].map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
+  const columns = startingColumn.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
@@ -420,33 +430,33 @@ export function SpreadsheetProvider({children}) {
   })
 
   // dummy data
-  // const pondEcologyRows = [
-  //   [10, 1, 12],
-  //   [20, 1, 10],
-  //   [30, 1, 7],
-  //   [40, 1, 6],
-  //   [50, 1, 2],
-  //   [10, 2, 10],
-  //   [20, 2, 9],
-  //   [30, 2, 6],
-  //   [40, 2, 4],
-  //   [50, 2, 4],
-  //   [10, 3, 12],
-  //   [20, 3, 9],
-  //   [30, 3, 8],
-  //   [40, 3, 5],
-  //   [50, 3, 3],
-  //   [10, 4, 11],
-  //   [20, 4, 8],
-  //   [30, 4, 7],
-  //   [40, 4, 6],
-  //   [50, 4, 2],
-  //   [10, 5, 11],
-  //   [20, 5, 10],
-  //   [30, 5, 7],
-  //   [40, 5, 5],
-  //   [50, 5, 3],
-  // ]
+  const pondEcologyRows = [
+    [10, 1, 12],
+    [20, 1, 10],
+    [30, 1, 7],
+    [40, 1, 6],
+    [50, 1, 2],
+    [10, 2, 10],
+    [20, 2, 9],
+    [30, 2, 6],
+    [40, 2, 4],
+    [50, 2, 4],
+    [10, 3, 12],
+    [20, 3, 9],
+    [30, 3, 8],
+    [40, 3, 5],
+    [50, 3, 3],
+    [10, 4, 11],
+    [20, 4, 8],
+    [30, 4, 7],
+    [40, 4, 6],
+    [50, 4, 2],
+    [10, 5, 11],
+    [20, 5, 10],
+    [30, 5, 7],
+    [40, 5, 5],
+    [50, 5, 3],
+  ]
 
   // normal starting condition
   const startingRow = [[]];
