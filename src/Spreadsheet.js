@@ -1,4 +1,5 @@
 import React, {useEffect} from 'react';
+import axios from 'axios';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalFitXY';
@@ -161,9 +162,23 @@ function Spreadsheet({eventBus}) {
    } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
+  async function pingCloudFunctions() {
+    const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
+    await axios.post(linearRegression, {ping: 'ping'}, {
+      crossDomain: true,
+    })
+
+    const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
+    await axios.post(gcloud, {ping: 'ping'}, {
+      crossDomain: true,
+    })
+  }
+
   useEffect(() => {
     // Activate cell top leftmost cell on first load
     dispatchSpreadsheetAction({type: ACTIVATE_CELL, row: 0, column: 1})
+    // Wake up cloud functions
+    pingCloudFunctions();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
