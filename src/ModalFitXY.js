@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Card, Modal, Radio } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_ANALYSIS_MODAL, PERFORM_ANALYSIS } from './constants';
+import { performLinearRegressionAnalysis } from './Analyses';
+import { TOGGLE_ANALYSIS_MODAL } from './constants';
 
 const styles = {
   cardWithBorder: {
@@ -52,8 +53,8 @@ export default function AnalysisModal() {
   const [selectedRightColumn, setSelectedRightColumn] = useState(null);
   const [xColData, setXColData] = useState([]);
   const [yColData, setYColData] = useState([]);
-  const [error, setError] = useState(false);
-  const { analysisModalOpen, columns } = useSpreadsheetState();
+  const [error, setError] = useState(null);
+  const { analysisModalOpen, columns, rows } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
   function handleModalClose() {
@@ -74,11 +75,37 @@ export default function AnalysisModal() {
 
   function performAnalysis() {
     if (!yColData[0] || !xColData[0]) {
-      setError(true);
+      setError('Please add all required columns and try again');
       return;
     };
-    dispatchSpreadsheetAction({type: PERFORM_ANALYSIS, xColData: xColData[0], yColData: yColData[0] })
-    dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+
+    const colX = xColData[0] || columns[0];
+    const colY = yColData[0] || columns[2];
+    function mapColumnValues(colID) { return rows.map(row => Number(row[colID]))}
+    const colA = mapColumnValues(colX.id);
+    const colB = mapColumnValues(colY.id);
+    const maxColLength = Math.max(colA.length, colB.length);
+    function makeXYCols(colA, colB) {
+      const arr = [];
+      for (let i = 0; i < maxColLength; i++) {
+        // Filter out NaN, undefined, null values
+        if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
+          arr.push([colA[i], colB[i]])
+        }
+      }
+      return arr.sort();
+    }
+    const XYCols = makeXYCols(colA, colB)
+    const colXArr = XYCols.map(a => a[0]);
+    const colYArr = XYCols.map(a => a[1]);
+
+    if (colXArr.length >= 3 && colYArr.length >= 3) {
+      performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols)
+      dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+    } else {
+      setError('Columns must each contain at least 3 values to perform this analysis');
+      return;
+    }
   }
 
   function RadioGroup({data, setData, styleProps}) {
@@ -136,7 +163,7 @@ export default function AnalysisModal() {
             </div>
           </div>
         </div>
-        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>Please add all required columns and try again</h5>
+        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>{error}</h5>
       </Modal>
     </div>
   )

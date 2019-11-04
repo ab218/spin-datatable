@@ -1,6 +1,5 @@
 import React, { useReducer } from 'react';
 import { Parser } from 'hot-formula-parser';
-import { performLinearRegressionAnalysis } from './Analyses';
 import './App.css';
 import {
   ACTIVATE_CELL,
@@ -12,7 +11,6 @@ import {
   DELETE_VALUES,
   FILTER_COLUMN,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
-  PERFORM_ANALYSIS,
   REMOVE_SELECTED_CELLS,
   SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
@@ -97,13 +95,11 @@ function spreadsheetReducer(state, action) {
     setColName,
     type,
     updatedColumn,
-    xColData,
-    yColData,
    } = action;
    function getCol(colName) {
     return state.columns.find(col => col.label === colName)
   }
-  console.log('dispatched:', type, 'with action:', action);
+  // console.log('dispatched:', type, 'with action:', action);
   switch (type) {
     // On text input of a selected cell, value is cleared, cell gets new value and cell is activated
     case ACTIVATE_CELL: {
@@ -183,36 +179,6 @@ function spreadsheetReducer(state, action) {
           state
         })
       } : state;
-    }
-    case PERFORM_ANALYSIS: {
-      const { columns, rows } = state;
-      const colX = xColData || columns[0];
-      const colY = yColData || columns[2];
-      function mapColumnValues(colID) { return rows.map(row => Number(row[colID]))}
-      const colA = mapColumnValues(colX.id);
-      const colB = mapColumnValues(colY.id);
-
-      const maxColLength = Math.max(colA.length, colB.length);
-      function makeXYCols(colA, colB) {
-        const arr = [];
-        for (let i = 0; i < maxColLength; i++) {
-          if (colA[i] && colB[i]) {
-            arr.push([colA[i], colB[i]])
-          }
-        }
-        return arr.sort();
-      }
-      const XYCols = makeXYCols(colA, colB)
-      const colXArr = XYCols.map(a => a[0]);
-      const colYArr = XYCols.map(a => a[1]);
-
-      if (colXArr.length > 0 && colYArr.length > 0) {
-        performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols)
-      } else {
-        // TODO show some error here
-        console.log('empty array present')
-      }
-      return {...state };
     }
     case REMOVE_SELECTED_CELLS: {
       return {...state, cellSelectionRanges: [], selectedRowIDs: [], activeCell: null }
@@ -407,12 +373,12 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({children}) {
   // dummy data
-  const statsColumns = [
-    {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
-    {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
-    {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
-    // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
-  ];
+  // const statsColumns = [
+  //   {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
+  //   {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
+  //   {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
+  //   // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+  // ];
 
   const startingColumn = [];
 
@@ -430,33 +396,33 @@ export function SpreadsheetProvider({children}) {
   })
 
   // dummy data
-  const pondEcologyRows = [
-    [10, 1, 12],
-    [20, 1, 10],
-    [30, 1, 7],
-    [40, 1, 6],
-    [50, 1, 2],
-    [10, 2, 10],
-    [20, 2, 9],
-    [30, 2, 6],
-    [40, 2, 4],
-    [50, 2, 4],
-    [10, 3, 12],
-    [20, 3, 9],
-    [30, 3, 8],
-    [40, 3, 5],
-    [50, 3, 3],
-    [10, 4, 11],
-    [20, 4, 8],
-    [30, 4, 7],
-    [40, 4, 6],
-    [50, 4, 2],
-    [10, 5, 11],
-    [20, 5, 10],
-    [30, 5, 7],
-    [40, 5, 5],
-    [50, 5, 3],
-  ]
+  // const pondEcologyRows = [
+  //   [10, 1, 12],
+  //   [20, 1, 10],
+  //   [30, 1, 7],
+  //   [40, 1, 6],
+  //   [50, 1, 2],
+  //   [10, 2, 10],
+  //   [20, 2, 9],
+  //   [30, 2, 6],
+  //   [40, 2, 4],
+  //   [50, 2, 4],
+  //   [10, 3, 12],
+  //   [20, 3, 9],
+  //   [30, 3, 8],
+  //   [40, 3, 5],
+  //   [50, 3, 3],
+  //   [10, 4, 11],
+  //   [20, 4, 8],
+  //   [30, 4, 7],
+  //   [40, 4, 6],
+  //   [50, 4, 2],
+  //   [10, 5, 11],
+  //   [20, 5, 10],
+  //   [30, 5, 7],
+  //   [40, 5, 5],
+  //   [50, 5, 3],
+  // ]
 
   // normal starting condition
   const startingRow = [[]];

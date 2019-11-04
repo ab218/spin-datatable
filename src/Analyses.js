@@ -11,11 +11,11 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
   })
   console.log(result.data) // gcloud
   // console.log(result.data.body); // Lambda
-  function mapBand(position) {
-    return result.data.predictions.map(point => {
-      return [point.x, point[position]]
-    })
-  }
+  // function mapBand(position) {
+  //   return result.data.predictions.map(point => {
+  //     return [point.x, point[position]]
+  //   })
+  // }
 
   function receiveMessage(event) {
     // target window is ready, time to send data.
@@ -30,8 +30,8 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 
   const { mean_x, mean_y, std_x, std_y, pvalues, fitted_values, rsquared, corrcoef, cov, slope, intercept } = result.data
   const outputData = {
-      upperBand: mapBand('upper'),
-      lowerBand: mapBand('lower'),
+      // upperBand: mapBand('upper'),
+      // lowerBand: mapBand('lower'),
       corrcoef: corrcoef[1][0].toFixed(4) / 1,
       covariance: cov[1][0].toFixed(4) / 1,
       colXLabel,
