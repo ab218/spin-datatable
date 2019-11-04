@@ -9,7 +9,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
   }, {
     crossDomain: true,
   })
-  console.log(result.data) // gcloud
+  // console.log(result.data) // gcloud
   // console.log(result.data.body); // Lambda
   // function mapBand(position) {
   //   return result.data.predictions.map(point => {
@@ -27,11 +27,10 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
   const popup = window.open(window.location.href + "linear_regression.html", "", "left=9999,top=100,width=450,height=850");
   // set event listener and wait for target to be ready
   window.addEventListener("message", receiveMessage, false);
+  console.log(result.data)
 
   const { mean_x, mean_y, std_x, std_y, pvalues, fitted_values, rsquared, corrcoef, cov, slope, intercept } = result.data
   const outputData = {
-      // upperBand: mapBand('upper'),
-      // lowerBand: mapBand('lower'),
       corrcoef: corrcoef[1][0].toFixed(4) / 1,
       covariance: cov[1][0].toFixed(4) / 1,
       colXLabel,
