@@ -2,6 +2,8 @@ import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 import { CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL, UPDATE_CELL  } from './constants'
 import { formatForNumberColumn } from './Spreadsheet';
+import { Tooltip } from 'antd';
+import './App.css';
 
 export function RowNumberCell({rowIndex}) { return <td>{rowIndex + 1}</td> }
 
@@ -74,26 +76,30 @@ export function SelectedCell({
     };
   })
 
+  function onMouseDown(event) {
+    if (contextMenuOpen) {
+      dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
+    }
+    if (!isFormulaColumn && event.button === 0) {
+      changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+    }
+  }
+
+  function onMouseEnter(event) {
+    if (typeof event.buttons === 'number' && event.buttons > 0) {
+      modifyCellSelectionRange(rowIndex, columnIndex, true);
+    }
+  }
+
   return (
     <td
       key={`row${rowIndex}col${columnIndex}`}
-      style={{backgroundColor: 	'#C0C0C0'}}
-      onContextMenu={e => handleContextMenu(e)}
-      onMouseDown={(event) => {
-        if (contextMenuOpen) {
-          dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
-        }
-        if (!isFormulaColumn && event.button === 0) {
-          changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
-        }
-      }}
-      onMouseEnter={(event) => {
-        if (typeof event.buttons === 'number' && event.buttons > 0) {
-          modifyCellSelectionRange(rowIndex, columnIndex, true);
-        }
-      }}
-      onMouseUp={() => {finishCurrentSelectionRange()}}
-    >{(row && column ? formatForNumberColumn(row[column.id], column) : '')}</td>
+      style={{backgroundColor:'#C0C0C0'}}
+      onContextMenu={handleContextMenu}
+      onMouseDown={onMouseDown}
+      onMouseEnter={onMouseEnter}
+      onMouseUp={finishCurrentSelectionRange}
+    >{(row && column ? row[column.id] : '')}</td>
   )
 }
 
@@ -108,25 +114,42 @@ export function NormalCell({
 }) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const { contextMenuOpen } = useSpreadsheetState();
-
   const cellValue = row[column.id];
+
+  function onMouseDown(event) {
+    // prevent text from being highlighted on drag select cells
+    event.preventDefault();
+    if (contextMenuOpen) {
+      dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU });
+    }
+    selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+  }
+
+  function onMouseEnter(event) {
+    if (typeof event.buttons === 'number' && event.buttons > 0) {
+      modifyCellSelectionRange(rowIndex, columnIndex, true);
+    }
+  }
+
   return (
-    <td
-    key={`row${rowIndex}col${columnIndex}`}
-    onMouseDown={(event) => {
-      // prevent text from being highlighted
-      event.preventDefault();
-      if (contextMenuOpen) {
-        dispatchSpreadsheetAction({type: CLOSE_CONTEXT_MENU })
-      }
-      selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
-    }}
-    onMouseEnter={(event) => {
-      if (typeof event.buttons === 'number' && event.buttons > 0) {
-        modifyCellSelectionRange(rowIndex, columnIndex, true);
-      }
-    }}
-    onMouseUp={finishCurrentSelectionRange}
-    >
-  {formatForNumberColumn(cellValue, column)}</td>
+    formatForNumberColumn(cellValue, column)
+      ? <Tooltip title={`Column is type 'Number'`}>
+          <td
+          className='NaN-value'
+          key={`row${rowIndex}col${columnIndex}`}
+          onMouseDown={onMouseDown}
+          onMouseEnter={onMouseEnter}
+          onMouseUp={finishCurrentSelectionRange}
+          >
+            {cellValue || '\u2022'}
+          </td>
+        </Tooltip>
+      : <td
+        key={`row${rowIndex}col${columnIndex}`}
+        onMouseDown={onMouseDown}
+        onMouseEnter={onMouseEnter}
+        onMouseUp={finishCurrentSelectionRange}
+        >
+          {cellValue || '\u2022'}
+        </td>
   )}

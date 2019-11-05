@@ -97,3 +97,7 @@ td input {
 .border-right {
   border-right: 1px solid black;
 }
+
+.NaN-value {
+  background-color: #ffe6e6;
+}

@@ -38,11 +38,10 @@ export const checkIfValidNumber = (str) => {
   return str;
 }
 
-export function formatForNumberColumn(val, column) {
-  if (val && column.type === 'Number') {
-    return Number(val);
+export function formatForNumberColumn(cellValue, column) {
+  if (cellValue && column.type === 'Number') {
+    return isNaN(cellValue);
   }
-  return val;
 }
 
 function BlankRow({cellCount}) { return <tr>{Array(cellCount).fill(undefined).map((_, columnIndex) => <td style={{backgroundColor: '#eee'}} key={'blankcol' + columnIndex}></td>)}</tr> }
@@ -243,7 +242,6 @@ function Spreadsheet({eventBus}) {
             createNewRows={createNewRows}
             finishCurrentSelectionRange={finishCurrentSelectionRange}
             handleContextMenu={handleContextMenu}
-            // isNumberColumn={isNumberColumn}
             isSelectedCell={isSelectedCell}
             modifyCellSelectionRange={modifyCellSelectionRange}
             numberOfRows={rowCount}
@@ -315,7 +313,6 @@ function Spreadsheet({eventBus}) {
           finishCurrentSelectionRange={finishCurrentSelectionRange}
           handleContextMenu={handleContextMenu}
           isSelectedCell={isSelectedCell}
-          // isNumberColumn={isNumberColumn}
           modifyCellSelectionRange={modifyCellSelectionRange}
           numberOfRows={groupedRowCount}
           row={physicalRows.find(({id}) => id === groupedRowIDs[index])}
