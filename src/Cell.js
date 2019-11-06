@@ -133,7 +133,7 @@ export function NormalCell({
 
   return (
     formatForNumberColumn(cellValue, column)
-      ? <Tooltip title={`Column is type 'Number'`}>
+      ? <Tooltip title={`Cell value is not a number`}>
           <td
           className='NaN-value'
           key={`row${rowIndex}col${columnIndex}`}

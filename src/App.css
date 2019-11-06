@@ -101,3 +101,15 @@ td input {
 .NaN-value {
   background-color: #ffe6e6;
 }
+
+.header-handle {
+  width: 10px;
+  position: absolute;
+  right: 0;
+  cursor: e-resize;
+  user-select: none;
+}
+
+/* .header-handle:hover {
+  background-color: blue;
+} */

@@ -142,6 +142,7 @@ function spreadsheetReducer(state, action) {
       return {...state, selectDisabled: true}
     }
     case DELETE_VALUES: {
+      console.log(state)
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
       function removeKeyReducer(container, key) {
         const {[key]: value, ...rest} = container;

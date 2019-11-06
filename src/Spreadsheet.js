@@ -20,7 +20,36 @@ import {
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
   SELECT_CELL,
   OPEN_CONTEXT_MENU,
+  TOGGLE_ANALYSIS_MODAL,
+  TOGGLE_DISTRIBUTION_MODAL,
+  TOGGLE_FILTER_MODAL
 } from './constants'
+import { Button, Icon, Tooltip } from 'antd';
+
+function AnalysisButtons() {
+  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  return (
+    <div style={{position: 'fixed', bottom: 20, justifyContent: 'center', width: '100%', display: 'flex', height: 45}}>
+      <div style={{marginTop: 3}}>
+        <Tooltip title='Distribution'>
+          <Button onClick={() => dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: true })} style={{height: 40, fontSize:26}}>
+            <Icon rotate={90} type="box-plot" />
+          </Button>
+        </Tooltip>
+      </div>
+      <div style={{marginLeft: 30, marginTop: 3}}>
+        <Tooltip title='Fit Y by X'>
+          <Button onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })} style={{height: 40, fontSize:26}} icon="line-chart" />
+        </Tooltip>
+      </div>
+      <div style={{marginLeft: 30, marginTop: 3}}>
+        <Tooltip title='Filter'>
+          <Button onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })} style={{height: 40, fontSize:26}} icon="filter" />
+        </Tooltip>
+      </div>
+    </div>
+  )
+}
 
 // function FormulaBar() {
 //   return (
@@ -179,7 +208,7 @@ function Spreadsheet({eventBus}) {
     // Wake up cloud functions
     pingCloudFunctions();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
 
   function isSelectedCell(row, column) {
     function withinRange(value) {
@@ -212,16 +241,20 @@ function Spreadsheet({eventBus}) {
   const visibleColumnCount = Math.max(26, columns.length);
   const headers = Array(visibleColumnCount).fill(undefined).map((_, index) => (
     <ColResizer
+      columns={columns}
+      createNewColumns={createNewColumns}
       borderRight={tableView && (index === 0 || index === 5) && true}
-      columnIndex={index}
+      columnIndex={index + 1}
       key={index}
       column={columns[index]}
     />
   ))
   const spreadsheetHeaders = Array(26).fill(undefined).map((_, index) => (
     <ColResizer
+      columns={columns}
+      createNewColumns={createNewColumns}
       borderRight={tableView && (index === 0 || index === 5) && true}
-      columnIndex={index}
+      columnIndex={index + 1}
       key={index}
       column={allPhysicalColumns && allPhysicalColumns[index]}
     />
@@ -362,7 +395,7 @@ function Spreadsheet({eventBus}) {
       {distributionModalOpen && <DistributionModal />}
       {analysisModalOpen && <AnalysisModal />}
       {filterModalOpen && <FilterModal selectedColumn={selectedColumn}/>}
-      {/* <FormulaBar /> */}
+      <AnalysisButtons />
       {layout
         ? <table>
           <thead>
@@ -377,7 +410,7 @@ function Spreadsheet({eventBus}) {
             </tr>
             <tr className={'move-row-up'}><th></th>
               {groupedColumns && Object.entries(groupedColumns).map(col => {
-                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>{getGroupedByColumnIDLabel(groupByColumnID)} {col[0]}</th>
+                return <th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}><span style={{fontStyle: 'italic'}}>{getGroupedByColumnIDLabel(groupByColumnID)}</span><span> {col[0]}</span></th>
               })}
               <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
             </tr>
