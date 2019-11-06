@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { Modal, Button } from 'antd';
+import { Button, Modal, Icon, Tooltip } from 'antd';
 import IntegerStep from './IntegerStep';
 import { SelectColumn } from './ModalFitXY';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
@@ -8,7 +8,6 @@ import { SET_SELECTED_COLUMN, TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from 
 export default function AntModal() {
 
   const [clickedColumn, setClickedColumn] = useState(null);
-  // const [selectedColumns, setSelectedColumns] = useState([]);
 
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const { filterModalOpen, columns, rows, selectedColumns } = useSpreadsheetState();
@@ -22,7 +21,7 @@ export default function AntModal() {
     dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumns: []})
   }
 
-  function handleColumnPickOk() {
+  function addColumn() {
     if (!selectedColumns.some(({id}) => id === clickedColumn.id)) {
       const colVals = rows.map(row => Number(row[clickedColumn.id])).filter(x=>x);
       const colMax = Math.max(...colVals);
@@ -33,13 +32,31 @@ export default function AntModal() {
         colMax
       }
       dispatchSpreadsheetAction({type: SET_SELECTED_COLUMN, selectedColumns: selectedColumns.concat(columnObject)});
+    }
   }
-}
+
+  function removeColumn(column) {
+    const filteredColumns = selectedColumns.filter(sel => sel.id !== column.id);
+    dispatchSpreadsheetAction({type: SET_SELECTED_COLUMN, selectedColumns: filteredColumns});
+  }
+
+
+  function AddColumnButton() {
+    return <Button disabled={!clickedColumn} style={{width: 100, marginTop:10}} onClick={addColumn}>Add</Button>
+  }
+
+  function RemoveColumnButton({column}) {
+    return (
+      <Tooltip onClick={() => removeColumn(column)} className='pointer' title="Remove Column">
+        <Icon type='close' style={{color: 'red', marginTop: 20}} />
+      </Tooltip>
+    )
+  }
 
   return  (
     <div>
       <Modal
-        className="ant-modal"
+        className='ant-modal'
         destroyOnClose
         onCancel={handleCancel}
         onOk={handleClose}
@@ -53,8 +70,14 @@ export default function AntModal() {
           setSelectedColumn={setClickedColumn}
           style={{width: '300px'}}
         />
-        <Button disabled={!clickedColumn} style={{width: 100, marginTop:10}} onClick={handleColumnPickOk}>Add</Button>
-        {selectedColumns && selectedColumns.length > 0 && selectedColumns.map(col => <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns} />)}
+        <AddColumnButton />
+        {selectedColumns && selectedColumns.length > 0 && selectedColumns.map(col => {
+        return (
+          <div style={{display: 'flex'}}>
+            <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns}/>
+            <RemoveColumnButton column={col}/>
+          </div>
+        )})}
         </div>
       </Modal>
     </div>

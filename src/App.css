@@ -110,6 +110,10 @@ td input {
   user-select: none;
 }
 
+.pointer {
+  cursor: pointer;
+}
+
 /* .header-handle:hover {
   background-color: blue;
 } */

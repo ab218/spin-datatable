@@ -37,12 +37,12 @@ function AnalysisButtons() {
           </Button>
         </Tooltip>
       </div>
-      <div style={{marginLeft: 30, marginTop: 3}}>
+      <div style={{marginLeft: 20, marginTop: 3}}>
         <Tooltip title='Fit Y by X'>
           <Button onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })} style={{height: 40, fontSize:26}} icon="line-chart" />
         </Tooltip>
       </div>
-      <div style={{marginLeft: 30, marginTop: 3}}>
+      <div style={{marginLeft: 20, marginTop: 3}}>
         <Tooltip title='Filter'>
           <Button onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })} style={{height: 40, fontSize:26}} icon="filter" />
         </Tooltip>
