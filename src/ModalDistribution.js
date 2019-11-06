@@ -52,7 +52,7 @@ export function SelectColumn({columns, setSelectedColumn}) {
 export default function DistributionModal() {
   const { distributionModalOpen, columns, rows } = useSpreadsheetState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
   const [numberOfBins, setNumberOfBins] = useState(10);
   const [yColData, setYColData] = useState([]);
 
@@ -61,14 +61,14 @@ export default function DistributionModal() {
   }
 
   async function performAnalysis() {
-    if (!yColData) {
-      setError(true);
+    if (yColData.length === 0) {
+      setError('Please add a valid column');
       return;
     }
     // TODO: Better error handling here
     const colVals = rows.map(row => row[yColData.id]).filter(x=>x);
-    if (colVals.length === 0) {
-      setError(true);
+    if (colVals.length < 3) {
+      setError('Column must have 3 valid values');
       return;
     };
     const results = await performDistributionAnalysis(yColData, rows, numberOfBins);
@@ -141,7 +141,7 @@ export default function DistributionModal() {
               <Input onChange={(e) => onChangeBinInput(e)} value={numberOfBins} style={{ marginLeft: 10, width: '40%' }} />
           </div>
         </div>
-        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>Please add a valid column</h5>
+        <h5 style={{display: error ? 'flex' : 'none', position: 'absolute', color: 'red'}}>{error}</h5>
       </Modal>
     </div>
   )
