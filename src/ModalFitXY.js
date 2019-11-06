@@ -42,8 +42,8 @@ const styles = {
 export function SelectColumn({columns, setSelectedColumn}) {
   return <Card bordered style={{ marginTop: 20, ...styles.cardWithBorder}}>
     <Radio.Group style={styles.radioGroup} buttonStyle='solid'>
-      {/* only map columns with labels */}
-      {columns.filter(a=>a.label).map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setSelectedColumn(column)} value={column}>{column.label}</Radio.Button>)}
+      {/* display only columns with labels and some data */}
+      {columns.map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setSelectedColumn(column)} value={column}>{column.label}</Radio.Button>)}
     </Radio.Group>
   </Card>
   }
@@ -132,6 +132,8 @@ export default function AnalysisModal() {
     )
   }
 
+  const filteredColumns = columns.filter(column => rows.some(row => row[column.id] || (typeof row[column.id] === 'number')))
+
   return (
     <div>
       <Modal
@@ -147,10 +149,9 @@ export default function AnalysisModal() {
         <div style={styles.flexSpaced}>
           <div>Select Column
             <SelectColumn
-              columns={columns}
+              columns={filteredColumns}
               setSelectedColumn={setSelectedColumn}
             />
-            {/* <RadioGroup data={columns} setData={setSelectedColumn} /> */}
           </div>
           <div style={{width: 310}}>Cast Selected Columns into Roles
             <div style={{marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>

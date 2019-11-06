@@ -43,8 +43,7 @@ const styles = {
 export function SelectColumn({columns, setSelectedColumn}) {
   return <Card bordered style={{ marginTop: 20, ...styles.cardWithBorder}}>
     <Radio.Group style={styles.radioGroup} buttonStyle='solid'>
-      {/* only map columns with labels */}
-      {columns.filter(a=>a.label).map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setSelectedColumn(column)} value={column}>{column.label}</Radio.Button>)}
+      {columns.map(column => <Radio.Button style={styles.radioButton} key={column.id} onClick={() => setSelectedColumn(column)} value={column}>{column.label}</Radio.Button>)}
     </Radio.Group>
   </Card>
   }
@@ -68,7 +67,7 @@ export default function DistributionModal() {
     // TODO: Better error handling here
     const colVals = rows.map(row => row[yColData.id]).filter(x=>x);
     if (colVals.length < 3) {
-      setError('Column must have 3 valid values');
+      setError('Column must have at least 3 valid values');
       return;
     };
     const results = await performDistributionAnalysis(yColData, rows, numberOfBins);
@@ -118,6 +117,8 @@ export default function DistributionModal() {
     return setNumberOfBins(e.target.value);
   }
 
+  const filteredColumns = columns.filter(column => rows.some(row => row[column.id] || (typeof row[column.id] === 'number')));
+
   return (
     <div>
       <Modal
@@ -132,7 +133,7 @@ export default function DistributionModal() {
         <div style={{...styles.flexSpaced}}>
           <div>Select Column
             <SelectColumn
-              columns={columns}
+              columns={filteredColumns}
               setSelectedColumn={setYColData}
             />
           </div>

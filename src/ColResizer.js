@@ -24,22 +24,22 @@ export default function ColumnResizer({borderRight, column, columnIndex, columns
   useEffect(() => {
     const onMouseMove = (e) => {
       if (!isDragging) return;
-      console.log('on mouse move');
+      // console.log('on mouse move');
       setOffset(e.clientX - startX);
     }
-    console.log('isDragging:', isDragging);
-    console.log('startX:', startX);
-    console.log('adding mouse move listener');
+    // console.log('isDragging:', isDragging);
+    // console.log('startX:', startX);
+    // console.log('adding mouse move listener');
     document.addEventListener('mousemove', onMouseMove);
     return () => {
-      console.log('removing mouse move listener')
+      // console.log('removing mouse move listener')
       document.removeEventListener('mousemove', onMouseMove);
     };
   }, [isDragging, startX]);
 
   const endDrag = () => {
     if (!isDragging) return;
-    console.log('call endDrag')
+    // console.log('call endDrag')
     setOriginalCellWidth(originalCellWidth + offset);
     setOffset(0);
     setIsDragging(false);
