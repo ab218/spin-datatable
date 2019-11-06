@@ -53,7 +53,16 @@ export default function AntModal() {
     )
   }
 
-  return  (
+  function FilterColumnSlider({col}) {
+    return (
+      <div style={{display: 'flex'}}>
+        <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns}/>
+        <RemoveColumnButton column={col}/>
+      </div>
+    )
+  }
+
+  return (
     <div>
       <Modal
         className='ant-modal'
@@ -71,13 +80,7 @@ export default function AntModal() {
           style={{width: '300px'}}
         />
         <AddColumnButton />
-        {selectedColumns && selectedColumns.length > 0 && selectedColumns.map(col => {
-        return (
-          <div style={{display: 'flex'}}>
-            <IntegerStep key={col.id} column={col} colMin={col.colMin} colMax={col.colMax} selectedColumns={selectedColumns}/>
-            <RemoveColumnButton column={col}/>
-          </div>
-        )})}
+        {selectedColumns && selectedColumns.length > 0 && selectedColumns.map(col => <FilterColumnSlider col={col} />)}
         </div>
       </Modal>
     </div>
