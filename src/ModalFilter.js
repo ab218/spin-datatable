@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import { Button, Modal, Icon, Tooltip } from 'antd';
 import IntegerStep from './IntegerStep';
-import { SelectColumn } from './ModalFitXY';
+import { SelectColumn } from './ModalShared';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { SET_SELECTED_COLUMN, TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from './constants';
 
