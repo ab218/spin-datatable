@@ -6,11 +6,13 @@ import {
   ADD_CELL_TO_SELECTIONS,
   ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
   CLOSE_CONTEXT_MENU,
+  COPY_VALUES,
   CREATE_COLUMNS,
   CREATE_ROWS,
   DELETE_VALUES,
   FILTER_COLUMN,
   MODIFY_CURRENT_SELECTION_CELL_RANGE,
+  PASTE_VALUES,
   REMOVE_SELECTED_CELLS,
   SET_GROUPED_COLUMNS,
   SET_ROW_POSITION,
@@ -70,6 +72,19 @@ function createRandomLetterString() {
   return '_' + Array(10).fill(undefined).map((_) => alphabet.charAt(Math.floor(Math.random() * alphabet.length))).join('') + '_';
 }
 
+function selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions) {
+  const selectedColumnPositions = Object.entries(columnPositions).filter(([_, position]) => {
+    // Subtract one because of header column
+    return position >= (left - 1) && position <= (right - 1);
+  });
+  const selectedColumnIDs = selectedColumnPositions.map(([id]) => id);
+  const selectedRowPositions = Object.entries(rowPositions).filter(([_, position]) => {
+    return position >= top && position <= bottom;
+  });
+  const selectedRowIDs = selectedRowPositions.map(([id]) => id);
+  return {selectedColumnIDs, selectedRowIDs}
+}
+
 function spreadsheetReducer(state, action) {
   const {
     analysisModalOpen,
@@ -104,6 +119,7 @@ function spreadsheetReducer(state, action) {
     // On text input of a selected cell, value is cleared, cell gets new value and cell is activated
     case ACTIVATE_CELL: {
       const activeCell = {row, column};
+      console.log(activeCell);
       return {...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] }
     }
     case ADD_CELL_TO_SELECTIONS: {
@@ -141,6 +157,61 @@ function spreadsheetReducer(state, action) {
     case 'DISABLE_SELECT': {
       return {...state, selectDisabled: true}
     }
+    case PASTE_VALUES: {
+      return {...state}
+    }
+    case COPY_VALUES: {
+      const { cellSelectionRanges, columnPositions, rowPositions } = state;
+      if (!cellSelectionRanges.length) return {...state};
+      const copyEl = (elToBeCopied) => {
+        let range, sel;
+        // Ensure that range and selection are supported by the browsers
+        if (document.createRange && window.getSelection) {
+          range = document.createRange();
+          sel = window.getSelection();
+          // unselect any element in the page
+          sel.removeAllRanges();
+          try {
+            range.selectNodeContents(elToBeCopied);
+            sel.addRange(range);
+          } catch (e) {
+            range.selectNode(elToBeCopied);
+            sel.addRange(range);
+          }
+          document.execCommand('copy');
+        }
+        sel.removeAllRanges();
+        console.log('Element Copied! Paste it in a file')
+      };
+
+      function createTable(tableData) {
+        const table = document.createElement('table');
+        table.setAttribute('id', 'copy-table')
+        let row = {};
+        let cell = {};
+
+        tableData.forEach(function(rowData) {
+          row = table.insertRow(-1); // [-1] for last position in Safari
+          rowData.forEach(function(cellData) {
+            cell = row.insertCell();
+            cell.textContent = cellData;
+          });
+        });
+        document.body.appendChild(table);
+        copyEl(table);
+        document.body.removeChild(table);
+      }
+      const copiedRows = cellSelectionRanges.reduce((rows, {top, left, bottom ,right}) => {
+        const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions);
+        return rows.map(row => {
+          if (selectedRowIDs.includes(row.id)) {
+            return selectedColumnIDs.map(selectedColumn => row[selectedColumn])
+          } return null;
+        })
+      }, state.rows).filter(x=>x);
+      createTable(copiedRows);
+      return {...state}
+    }
     case DELETE_VALUES: {
       console.log(state)
       const { cellSelectionRanges, columnPositions, rowPositions } = state;
@@ -149,15 +220,7 @@ function spreadsheetReducer(state, action) {
         return rest;
       }
       const newRows = cellSelectionRanges.reduce((rows, {top, left, bottom, right}) => {
-        const selectedColumnPositions = Object.entries(columnPositions).filter(([_, position]) => {
-          // Subtract one because of header column
-          return position >= (left - 1) && position <= (right - 1);
-        });
-        const selectedColumnIDs = selectedColumnPositions.map(([id]) => id);
-        const selectedRowPositions = Object.entries(rowPositions).filter(([_, position]) => {
-          return position >= top && position <= bottom;
-        });
-        const selectedRowIDs = selectedRowPositions.map(([id]) => id);
+        const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions);
         return rows.map((row) => {
           if (selectedRowIDs.includes(row.id)) {
             return selectedColumnIDs.reduce(removeKeyReducer, row);
@@ -374,17 +437,17 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({children}) {
   // dummy data
-  // const statsColumns = [
-  //   {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
-  //   {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
-  //   {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
-  //   // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
-  // ];
+  const statsColumns = [
+    {modelingType: 'Continuous', type: 'Number', label: 'Distance'},
+    {modelingType: 'Nominal', type: 'Number', label: 'Trial'},
+    {modelingType: 'Continuous', type: 'Number', label: 'Bubbles'},
+    // {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+  ];
 
   const startingColumn = [];
 
   // Starting columns
-  const columns = startingColumn.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
+  const columns = statsColumns.map((metadata) => ({id: metadata.id || createRandomLetterString(), ...metadata}))
   .map((column, _, array) => {
     const {formula, ...rest} = column;
     if (formula) {
@@ -397,40 +460,40 @@ export function SpreadsheetProvider({children}) {
   })
 
   // dummy data
-  // const pondEcologyRows = [
-  //   [10, 1, 12],
-  //   [20, 1, 10],
-  //   [30, 1, 7],
-  //   [40, 1, 6],
-  //   [50, 1, 2],
-  //   [10, 2, 10],
-  //   [20, 2, 9],
-  //   [30, 2, 6],
-  //   [40, 2, 4],
-  //   [50, 2, 4],
-  //   [10, 3, 12],
-  //   [20, 3, 9],
-  //   [30, 3, 8],
-  //   [40, 3, 5],
-  //   [50, 3, 3],
-  //   [10, 4, 11],
-  //   [20, 4, 8],
-  //   [30, 4, 7],
-  //   [40, 4, 6],
-  //   [50, 4, 2],
-  //   [10, 5, 11],
-  //   [20, 5, 10],
-  //   [30, 5, 7],
-  //   [40, 5, 5],
-  //   [50, 5, 3],
-  // ]
+  const pondEcologyRows = [
+    [10, 1, 12],
+    [20, 1, 10],
+    [30, 1, 7],
+    [40, 1, 6],
+    [50, 1, 2],
+    [10, 2, 10],
+    [20, 2, 9],
+    [30, 2, 6],
+    [40, 2, 4],
+    [50, 2, 4],
+    [10, 3, 12],
+    [20, 3, 9],
+    [30, 3, 8],
+    [40, 3, 5],
+    [50, 3, 3],
+    [10, 4, 11],
+    [20, 4, 8],
+    [30, 4, 7],
+    [40, 4, 6],
+    [50, 4, 2],
+    [10, 5, 11],
+    [20, 5, 10],
+    [30, 5, 7],
+    [40, 5, 5],
+    [50, 5, 3],
+  ]
 
   // normal starting condition
   const startingRow = [[]];
 
   const columnPositions = columns.reduce((acc, column, index) => ({...acc, [column.id]: index}), {});
 
-  const rows = startingRow.map((tuple) => ({
+  const rows = pondEcologyRows.map((tuple) => ({
     id: createRandomID(), ...tuple.reduce((acc, value, index) => ({...acc, [columns[index].id]: value}), {})
   })).map((originalRow) => {
     const formulaColumns = columns.filter(({type}) => type === 'Formula');

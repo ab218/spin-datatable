@@ -1,6 +1,14 @@
 import React, {useEffect} from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, ACTIVATE_CELL, UPDATE_CELL  } from './constants'
+import {
+  ACTIVATE_CELL,
+  CLOSE_CONTEXT_MENU,
+  COPY_VALUES,
+  DELETE_VALUES,
+  PASTE_VALUES,
+  TRANSLATE_SELECTED_CELL,
+  UPDATE_CELL
+  } from './constants'
 import { formatForNumberColumn } from './Spreadsheet';
 import { Tooltip } from 'antd';
 import './App.css';
@@ -24,7 +32,7 @@ export function SelectedCell({
   createNewColumns
 } ) {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-  const { contextMenuOpen } = useSpreadsheetState();
+  const { contextMenuOpen, cellSelectionRanges, columnPositions, rowPositions, rows: stateRows } = useSpreadsheetState();
   const cursorKeyToRowColMapper = {
     ArrowUp: function (row, column) {
       // rows should never go less than index 0 (top row header)
@@ -44,9 +52,42 @@ export function SelectedCell({
 
   useEffect(() => {
     function onKeyDown(event) {
+      if (event.metaKey) {
+        if (event.key === 'c') {
+          dispatchSpreadsheetAction({type: COPY_VALUES});
+          return;
+        } else if (event.key === 'v') {
+          console.log('pasted')
+          function updateKeyReducer(container, key) {
+            const {[key]: value, ...rest} = container;
+            console.log('container :', container, 'key: ', key, 'value: ', value, 'rest: ', rest)
+            return rest;
+          }
+          async function paste(input) {
+            const clipText = await navigator.clipboard.readText();
+            const clipTextRows = clipText.split('\n').slice(1);
+            const clipText2dArray = clipTextRows.map(clipRow => clipRow.split('\t'));
+            const { top, left } = cellSelectionRanges[0];
+            const arrayDimensions = {height: clipText2dArray.length, width:clipText2dArray[0].length};
+            // console.log('top left: ', top + 1, left);
+            // console.log('number of rows:', stateRows.length);
+            // console.log('rows', rows);
+            // console.log('height: ', arrayDimensions.height)
+            if ((arrayDimensions.height - 1 + rows) > 0) {
+              createNewRows(arrayDimensions.height - 1 + rows);
+            }
+            if ((left - 1 + arrayDimensions.width - columns.length) > 0) {
+              createNewColumns((left - 1 + arrayDimensions.width - columns.length));
+            }
+        }
+          paste()
+          dispatchSpreadsheetAction({type: PASTE_VALUES});
+          return;
+        }
+      }
       // if the key pressed is not a non-character key (arrow key etc)
       if (!isFormulaColumn && event.key.length === 1) {
-          if (rows === 1 ) {
+          if (rows > 1 ) {
             createNewRows(rows);
           }
           if (columnIndex > columns.length) {
