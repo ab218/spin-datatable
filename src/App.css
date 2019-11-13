@@ -1,116 +1,116 @@
 .App {
-  text-align: center;
+	text-align: center;
 }
 
 table {
-  border: 1px solid #ddd;
-  border-collapse: collapse;
-  table-layout: fixed;
-  width: 100%;
+	border: 1px solid #ddd;
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
 }
 
-td, th {
-  white-space: nowrap;
-  border: 1px solid #ddd;
-  height: 30px;
-  width: 40px;
-  overflow: hidden;
+td,
+th {
+	white-space: nowrap;
+	border: 1px solid #ddd;
+	height: 30px;
+	width: 40px;
+	overflow: hidden;
 }
 
- thead th {
-  background-color: #eee;
-  position: sticky;
-  top: -1px;
-  z-index: 1;
-}
-
-tbody tr td:first-of-type {
-  background-color: #eee;
-  position: sticky;
-  left: -1px;
-  z-index: 1;
+thead th {
+	background-color: #eee;
+	position: sticky;
+	top: -1px;
+	z-index: 1;
 }
 
 td input {
-  width: 95%;
-  height: 95%;
-  font-size: 1em;
+	width: 95%;
+	height: 95%;
+	font-size: 1em;
+}
+
+.row-number-cell {
+	background-color: #eee;
+	position: sticky;
+	left: -1px;
+	z-index: 1;
 }
 
 .selected-cell {
-  background-color: '#f0f0f0';
+	background-color: '#f0f0f0';
 }
 
 .menu {
-  z-index: 2;
-  text-align: left;
-  width: 220px;
-  box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
-  position: absolute;
-  display: none;
-  background: rgb(255, 250, 250);
+	z-index: 2;
+	text-align: left;
+	width: 220px;
+	box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+	position: absolute;
+	display: none;
+	background: rgb(255, 250, 250);
 }
 
 .menu-options {
-  list-style: none;
-  padding: 10px 0;
+	list-style: none;
+	padding: 10px 0;
 }
 
-
 .menu-option {
-  font-weight: 500;
-  font-size: 14px;
-  padding: 10px 40px 10px 20px;
-  cursor: pointer;
+	font-weight: 500;
+	font-size: 14px;
+	padding: 10px 40px 10px 20px;
+	cursor: pointer;
 }
 
 .menu-option:hover {
-  background: rgba(0, 0, 0, 0.2);
+	background: rgba(0, 0, 0, 0.2);
 }
 
 .modal-span {
-  display: flex;
-  justify-content: space-between;
+	display: flex;
+	justify-content: space-between;
 }
 
 .display-block {
-  display: block;
+	display: block;
 }
 
 .display-none {
-  display: none;
+	display: none;
 }
 
 .display-flex {
-  display: flex;
+	display: flex;
 }
 
 .move-row-up {
-  transform: translateY(-30px);
+	transform: translateY(-30px);
 }
 
 .move-row-down {
-  transform: translateY(30px);
+	transform: translateY(30px);
 }
 
 .border-right {
-  border-right: 1px solid black;
+	border-right: 1px solid black;
 }
 
 .NaN-value {
-  background-color: #ffe6e6;
+	background-color: #ffe6e6;
 }
 
 .header-handle {
-  width: 10px;
-  position: absolute;
-  right: 0;
-  cursor: e-resize;
-  user-select: none;
+	width: 10px;
+	position: absolute;
+	right: 0;
+	cursor: e-resize;
+	user-select: none;
 }
 
 .pointer {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 /* .header-handle:hover {
