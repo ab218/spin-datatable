@@ -195,13 +195,13 @@ function spreadsheetReducer(state, action) {
 						range.selectNodeContents(elToBeCopied);
 						sel.addRange(range);
 					} catch (e) {
-						range.selectNode(elToBeCopied);
-						sel.addRange(range);
+						console.log(e);
 					}
+					console.log(sel, range);
 					document.execCommand('copy');
 				}
 				sel.removeAllRanges();
-				console.log('Element Copied! Paste it in a file');
+				console.log('Element Copied!');
 			};
 
 			function createTable(tableData) {
@@ -209,35 +209,36 @@ function spreadsheetReducer(state, action) {
 				table.setAttribute('id', 'copy-table');
 				let row = {};
 				let cell = {};
-				tableData.forEach(function(rowData) {
-					row = table.insertRow(-1);
-					rowData.forEach(function(cellData) {
+				tableData.forEach((rowData) => {
+					row = table.insertRow(-1); // -1 is for safari
+					rowData.forEach((cellData) => {
 						cell = row.insertCell();
 						cell.textContent = cellData;
 					});
 				});
 				document.body.appendChild(table);
-				copyEl(table);
+				// copyEl(table);
+				table.execCommand('copy');
 				document.body.removeChild(table);
 			}
-			// TODO: Take only first selection in selection ranges
-			const copiedRows = cellSelectionRanges
-				.reduce((rows, { top, left, bottom, right }) => {
-					const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-						top,
-						left,
-						bottom,
-						right,
-						columnPositions,
-						rowPositions,
-					);
-					return rows.map((row) => {
-						if (selectedRowIDs.includes(row.id)) {
-							return selectedColumnIDs.map((selectedColumn) => row[selectedColumn]);
-						}
-						return null;
-					});
-				}, state.rows)
+
+			// In case there are multiple selection ranges, we only want the first selection made
+			const { top, left, bottom, right } = cellSelectionRanges[0];
+			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
+				top,
+				left,
+				bottom,
+				right,
+				columnPositions,
+				rowPositions,
+			);
+			const copiedRows = state.rows
+				.map((row) => {
+					if (selectedRowIDs.includes(row.id)) {
+						return selectedColumnIDs.map((selectedColumn) => row[selectedColumn]);
+					}
+					return null;
+				})
 				.filter((x) => x);
 			createTable(copiedRows);
 			return { ...state };
