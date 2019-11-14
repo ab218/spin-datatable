@@ -71,7 +71,7 @@ export default function AnalysisModal() {
 		return (
 			<Card bordered style={{ ...styles.cardWithBorder, ...styleProps }}>
 				<Radio.Group style={styles.radioGroup} buttonStyle="solid">
-					{data.length === 0 ? <em>Required</em> : <React.fragment />}
+					{data.length === 0 ? <em>Required</em> : <div />}
 					{data.map((column) => (
 						<Radio.Button style={styles.radioButton} key={column.id} onClick={() => setData(column)} value={column}>
 							{column.label}

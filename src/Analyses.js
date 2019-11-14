@@ -37,6 +37,8 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 	window.addEventListener('message', receiveMessage, false);
 	console.log(result.data);
 
+	const matrixToFixed = (arr) => arr.map((first) => first.map((second) => second.toFixed(4) / 1));
+
 	const {
 		mean_x,
 		mean_y,
@@ -61,7 +63,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		colBStdev: std_y.toFixed(4) / 1,
 		pValue: pvalues[1].toFixed(4) / 1,
 		tempABVals: XYCols,
-		linearRegressionLinePoints: fitted_values,
+		linearRegressionLinePoints: matrixToFixed(fitted_values),
 		linearRegressionLineR2: rsquared.toFixed(4) / 1,
 		linearRegressionLineSlope: slope.toFixed(4) / 1,
 		linearRegressionLineYIntercept: intercept.toFixed(4) / 1,
