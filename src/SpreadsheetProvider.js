@@ -217,8 +217,7 @@ function spreadsheetReducer(state, action) {
 					});
 				});
 				document.body.appendChild(table);
-				// copyEl(table);
-				table.execCommand('copy');
+				copyEl(table);
 				document.body.removeChild(table);
 			}
 

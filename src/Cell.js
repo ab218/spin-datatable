@@ -87,8 +87,8 @@ export function SelectedCell({
 		}
 
 		const copiedValues = await navigator.clipboard.readText();
-		// slice(1) because first element in array will always be undefined
-		const copiedValuesRows = copiedValues.split('\n').slice(1);
+		console.log(copiedValues);
+		const copiedValuesRows = copiedValues.trim().split('\n');
 		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
 		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
 		const { top, left } = cellSelectionRanges[0];
@@ -124,7 +124,6 @@ export function SelectedCell({
 					dispatchSpreadsheetAction({ type: COPY_VALUES });
 					return;
 				} else if (event.key === 'v') {
-					console.log('pasted');
 					paste();
 					return;
 				}
