@@ -202,9 +202,11 @@ function Spreadsheet({ eventBus }) {
 		return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
 	}
 
-	const rowMap = Object.entries(rowPositions).reduce((acc, [ id, position ]) => {
-		return { ...acc, [position]: id };
-	}, {});
+	const rowMap = {};
+	for (const id in rowPositions) {
+		rowMap[rowPositions[id]] = id;
+	}
+
 	// Check if object is empty
 	const rowCount = Object.keys(rowMap).length !== 0 ? Math.max(...Object.keys(rowMap)) + 1 : 0;
 	const visibleRowCount = Math.max(rowCount, 35); // 50 rows should be enough to fill the screen

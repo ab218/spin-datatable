@@ -624,7 +624,13 @@ export function SpreadsheetProvider({ children }) {
 
 			return rowCopy;
 		});
-	const rowPositions = rows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
+	// const rowPositions = rows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
+
+	const rowPositions = {};
+	for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+		const rowID = rows[rowIndex].id;
+		rowPositions[rowID] = rowIndex;
+	}
 
 	const initialState = {
 		analysisModalOpen: false,
