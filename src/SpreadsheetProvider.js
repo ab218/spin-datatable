@@ -78,7 +78,8 @@ function createRandomLetterString() {
 	);
 }
 
-export function selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions) {
+function selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions) {
+	console.log('column positions', columnPositions);
 	const selectedColumnPositions = Object.entries(columnPositions).filter(([ _, position ]) => {
 		// Subtract one because of header column
 		return position >= left - 1 && position <= right - 1;
@@ -175,7 +176,34 @@ function spreadsheetReducer(state, action) {
 			return { ...state, selectDisabled: true };
 		}
 		case PASTE_VALUES: {
-			return { ...state, rows: action.newValues };
+			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
+				const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
+				// We create a new object with its keys being the indices of the destination rows
+				// and the values being dictionaries mapping the new column ids to the copied values
+				const newRows = copiedValues.reduce((newRowAcc, rowValues, rowIndex) => {
+					return {
+						...newRowAcc,
+						[indexOfFirstDestinationRow + rowIndex]: rowValues.reduce((acc, copiedCellValue, colIndex) => {
+							return { ...acc, [destinationColumns[colIndex]]: copiedCellValue };
+						}, {}),
+					};
+				}, {});
+				// Merge the two entries together
+				Object.entries(newRows).forEach(([ rowIndex, rowSplice ]) => {
+					rows[rowIndex] = { ...rows[rowIndex], ...rowSplice };
+				});
+				return rows;
+			}
+
+			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
+				action.top,
+				action.left,
+				action.top + action.height - 1,
+				action.left + action.width - 1,
+				state.columnPositions,
+				state.rowPositions,
+			);
+			return { ...state, rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs) };
 		}
 		case COPY_VALUES: {
 			// TODO: There should be a line break if the row is undefined values
@@ -542,17 +570,17 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({ children }) {
 	// dummy data
-	const statsColumns = [
-		{ modelingType: 'Continuous', type: 'Number', label: 'Distance' },
-		{ modelingType: 'Nominal', type: 'Number', label: 'Trial' },
-		{ modelingType: 'Continuous', type: 'Number', label: 'Bubbles' },
-		// {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
-	];
+	// const statsColumns = [
+	// 	{ modelingType: 'Continuous', type: 'Number', label: 'Distance' },
+	// 	{ modelingType: 'Nominal', type: 'Number', label: 'Trial' },
+	// 	{ modelingType: 'Continuous', type: 'Number', label: 'Bubbles' },
+	// 	// {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+	// ];
 
 	const startingColumn = [];
 
 	// Starting columns
-	const columns = statsColumns
+	const columns = startingColumn
 		.map((metadata) => ({ id: metadata.id || createRandomLetterString(), ...metadata }))
 		.map((column, _, array) => {
 			const { formula, ...rest } = column;
@@ -568,40 +596,40 @@ export function SpreadsheetProvider({ children }) {
 		});
 
 	// dummy data
-	const pondEcologyRows = [
-		[ 10, 1, 12 ],
-		[ 20, 1, 10 ],
-		[ 30, 1, 7 ],
-		[ 40, 1, 6 ],
-		[ 50, 1, 2 ],
-		[ 10, 2, 10 ],
-		[ 20, 2, 9 ],
-		[ 30, 2, 6 ],
-		[ 40, 2, 4 ],
-		[ 50, 2, 4 ],
-		[ 10, 3, 12 ],
-		[ 20, 3, 9 ],
-		[ 30, 3, 8 ],
-		[ 40, 3, 5 ],
-		[ 50, 3, 3 ],
-		[ 10, 4, 11 ],
-		[ 20, 4, 8 ],
-		[ 30, 4, 7 ],
-		[ 40, 4, 6 ],
-		[ 50, 4, 2 ],
-		[ 10, 5, 11 ],
-		[ 20, 5, 10 ],
-		[ 30, 5, 7 ],
-		[ 40, 5, 5 ],
-		[ 50, 5, 3 ],
-	];
+	// const pondEcologyRows = [
+	// 	[ 10, 1, 12 ],
+	// 	[ 20, 1, 10 ],
+	// 	[ 30, 1, 7 ],
+	// 	[ 40, 1, 6 ],
+	// 	[ 50, 1, 2 ],
+	// 	[ 10, 2, 10 ],
+	// 	[ 20, 2, 9 ],
+	// 	[ 30, 2, 6 ],
+	// 	[ 40, 2, 4 ],
+	// 	[ 50, 2, 4 ],
+	// 	[ 10, 3, 12 ],
+	// 	[ 20, 3, 9 ],
+	// 	[ 30, 3, 8 ],
+	// 	[ 40, 3, 5 ],
+	// 	[ 50, 3, 3 ],
+	// 	[ 10, 4, 11 ],
+	// 	[ 20, 4, 8 ],
+	// 	[ 30, 4, 7 ],
+	// 	[ 40, 4, 6 ],
+	// 	[ 50, 4, 2 ],
+	// 	[ 10, 5, 11 ],
+	// 	[ 20, 5, 10 ],
+	// 	[ 30, 5, 7 ],
+	// 	[ 40, 5, 5 ],
+	// 	[ 50, 5, 3 ],
+	// ];
 
 	// normal starting condition
 	const startingRow = [ [] ];
 
 	const columnPositions = columns.reduce((acc, column, index) => ({ ...acc, [column.id]: index }), {});
 
-	const rows = pondEcologyRows
+	const rows = startingRow
 		.map((tuple) => ({
 			id: createRandomID(),
 			...tuple.reduce((acc, value, index) => ({ ...acc, [columns[index].id]: value }), {}),

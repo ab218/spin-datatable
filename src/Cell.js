@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useSpreadsheetDispatch, useSpreadsheetState, selectRowAndColumnIDs } from './SpreadsheetProvider';
+import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 import {
 	ACTIVATE_CELL,
 	CLOSE_CONTEXT_MENU,
@@ -34,13 +34,7 @@ export function SelectedCell({
 	createNewColumns,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const {
-		contextMenuOpen,
-		cellSelectionRanges,
-		columnPositions,
-		rowPositions,
-		rows: stateRows,
-	} = useSpreadsheetState();
+	const { contextMenuOpen, cellSelectionRanges } = useSpreadsheetState();
 	const cursorKeyToRowColMapper = {
 		ArrowUp: function(row, column) {
 			// rows should never go less than index 0 (top row header)
@@ -58,62 +52,33 @@ export function SelectedCell({
 		},
 	};
 
-	function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
-		const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
-		// We create a new object with its keys being the indices of the destination rows
-		// and the values being dictionaries mapping the new column ids to the copied values
-		const newRows = copiedValues.reduce((newRowAcc, rowValues, rowIndex) => {
-			return {
-				...newRowAcc,
-				[indexOfFirstDestinationRow + rowIndex]: rowValues.reduce((acc, copiedCellValue, colIndex) => {
-					return { ...acc, [destinationColumns[colIndex]]: copiedCellValue };
-				}, {}),
-			};
-		}, {});
-		// Merge the two entries together
-		Object.entries(newRows).forEach(([ rowIndex, rowSplice ]) => {
-			rows[rowIndex] = { ...rows[rowIndex], ...rowSplice };
-		});
-
-		console.log('new rows', rows);
-		return rows;
-	}
-
 	async function paste() {
 		// safari doesn't have navigator.clipboard
 		if (!navigator.clipboard) {
 			console.log('navigator.clipboard not supported by safari/edge');
 			return;
 		}
-
 		const copiedValues = await navigator.clipboard.readText();
-		console.log(copiedValues);
-		const copiedValuesRows = copiedValues.trim().split('\n');
+		const copiedValuesRows = copiedValues.split('\n');
 		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
 		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
 		const { top, left } = cellSelectionRanges[0];
 		const { height, width } = copiedValues2dArrayDimensions;
-		if (height - 1 + rows > 0) {
-			console.log('creating rows... (disabled for now)');
-			// TODO fix crash when data is entered into newly created rows
-			// createNewRows(height - 1 + rows);
+		const numberOfColumnsRequired = left - 1 + width - columns.length;
+		const numberOfRowsRequired = height - 1 + rows;
+		if (numberOfRowsRequired > 0) {
+			createNewRows(height - 1 + rows);
 		}
-		if (left - 1 + width - columns.length > 0) {
-			console.log('creating columns...');
-			createNewColumns(left - 1 + width - columns.length);
+		if (numberOfColumnsRequired > 0) {
+			createNewColumns(numberOfColumnsRequired);
 		}
-		const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-			top,
-			left,
-			top + height - 1,
-			left + width - 1,
-			columnPositions,
-			rowPositions,
-		);
-		const stateRowsCopy = stateRows.slice();
 		dispatchSpreadsheetAction({
 			type: PASTE_VALUES,
-			newValues: mapRows(stateRowsCopy, copiedValues2dArray, selectedColumnIDs, selectedRowIDs),
+			copiedValues2dArray,
+			top,
+			left,
+			height,
+			width,
 		});
 	}
 
@@ -124,6 +89,7 @@ export function SelectedCell({
 					dispatchSpreadsheetAction({ type: COPY_VALUES });
 					return;
 				} else if (event.key === 'v') {
+					console.log('pasted');
 					paste();
 					return;
 				}
