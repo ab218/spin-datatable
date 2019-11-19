@@ -1,66 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_COLUMN_TYPE_MODAL, OPEN_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants'
+import { TOGGLE_COLUMN_TYPE_MODAL, OPEN_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants';
 
-export default function ColumnResizer({borderRight, column, content}) {
+export default function ColumnResizer({ borderRight, column, columnIndex, columns, createNewColumns }) {
+	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [originalCellWidth, setOriginalCellWidth] = useState();
+	const [ isDragging, setIsDragging ] = useState(false);
+	const [ startX, setStartX ] = useState(0);
+	const [ offset, setOffset ] = useState(0);
+	const [ originalCellWidth, setOriginalCellWidth ] = useState();
 
-  const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	function openModal() {
+		if (!column) {
+			if (columnIndex > columns.length) {
+				createNewColumns(columnIndex - columns.length);
+				return;
+			}
+		}
+		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+		dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, column });
+	}
 
-  function openModal() {
-    if (!column) return;
-    dispatchSpreadsheetAction({type: REMOVE_SELECTED_CELLS })
-    dispatchSpreadsheetAction({type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, column})
-  }
+	useEffect(
+		() => {
+			const onMouseMove = (e) => {
+				if (!isDragging) return;
+				// console.log('on mouse move');
+				setOffset(e.clientX - startX);
+			};
+			// console.log('isDragging:', isDragging);
+			// console.log('startX:', startX);
+			// console.log('adding mouse move listener');
+			document.addEventListener('mousemove', onMouseMove);
+			return () => {
+				// console.log('removing mouse move listener')
+				document.removeEventListener('mousemove', onMouseMove);
+			};
+		},
+		[ isDragging, startX ],
+	);
 
-  useEffect(() => {
-    const endDrag = () => {
-      if (!isDragging) return;
-      setIsDragging(false);
-      setOriginalCellWidth(originalCellWidth + offset);
-      setOffset(0);
-    }
+	const endDrag = () => {
+		if (!isDragging) return;
+		// console.log('call endDrag')
+		setOriginalCellWidth(originalCellWidth + offset);
+		setOffset(0);
+		setIsDragging(false);
+	};
 
-    const onMouseMove = (e) => {
-      if (!isDragging) return;
-      setOffset(e.clientX - startX);
-    }
+	const startDrag = (e) => {
+		setIsDragging(true);
+		setStartX(e.clientX);
+		const { width: originalWidth } = e.currentTarget.parentNode.getBoundingClientRect();
+		setOriginalCellWidth(originalWidth);
+	};
 
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', endDrag);
-    return () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', endDrag);
+	const style = {
+		borderRight: borderRight && '1px solid black',
+		userSelect: 'none',
+		width: (originalCellWidth || 80) + offset,
+		textOverflow: 'ellipsis',
+	};
 
-    };
-  }, [content, isDragging, offset, originalCellWidth, startX]);
+	const onContextMenu = (e) => {
+		e.preventDefault();
+		dispatchSpreadsheetAction({
+			type: OPEN_CONTEXT_MENU,
+			colName: column && column.label,
+			colHeaderContext: true,
+			contextMenuPosition: { left: e.pageX, top: e.pageY },
+		});
+	};
 
-  const startDrag = (e) => {
-    setStartX(e.clientX);
-    const { width: originalWidth } = e.target.getBoundingClientRect();
-    setOriginalCellWidth(originalWidth);
-    setIsDragging(true);
-  }
-
-  const style = {
-    borderRight: borderRight && '1px solid black',
-    userSelect: 'none',
-    cursor: 'e-resize',
-    width: (originalCellWidth || 80) + offset,
-  };
-
-  const onContextMenu = (e) => {
-    e.preventDefault();
-    dispatchSpreadsheetAction({type: OPEN_CONTEXT_MENU, colName: e.target.innerHTML, colHeaderContext: true, contextMenuPosition: {left: e.pageX, top: e.pageY}});
-  }
-
-  return (
-      <th style={style} onMouseDown={startDrag} onDoubleClick={openModal} onContextMenu={e => onContextMenu(e)}>
-          {(column && column.label) || content}
-      </th>
-  );
+	return (
+		<th style={style} onMouseUp={endDrag} onDoubleClick={openModal} onContextMenu={onContextMenu}>
+			<span>{column && column.label}</span>
+			<span className="header-handle" onMouseDown={startDrag}>
+				&nbsp;
+			</span>
+		</th>
+	);
 }
