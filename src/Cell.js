@@ -5,7 +5,6 @@ import {
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	DELETE_VALUES,
-	PASTE_VALUES,
 	TRANSLATE_SELECTED_CELL,
 	UPDATE_CELL,
 } from './constants';
@@ -27,6 +26,7 @@ export function SelectedCell({
 	isFormulaColumn,
 	modifyCellSelectionRange,
 	numberOfRows,
+	paste,
 	row,
 	rows,
 	rowIndex,
@@ -34,7 +34,7 @@ export function SelectedCell({
 	createNewColumns,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { contextMenuOpen, cellSelectionRanges } = useSpreadsheetState();
+	const { contextMenuOpen } = useSpreadsheetState();
 	const cursorKeyToRowColMapper = {
 		ArrowUp: function(row, column) {
 			// rows should never go less than index 0 (top row header)
@@ -51,36 +51,6 @@ export function SelectedCell({
 			return { row, column: column + 1 };
 		},
 	};
-
-	async function paste() {
-		// safari doesn't have navigator.clipboard
-		if (!navigator.clipboard) {
-			console.log('navigator.clipboard not supported by safari/edge');
-			return;
-		}
-		const copiedValues = await navigator.clipboard.readText();
-		const copiedValuesRows = copiedValues.split('\n');
-		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
-		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
-		const { top, left } = cellSelectionRanges[0];
-		const { height, width } = copiedValues2dArrayDimensions;
-		const numberOfColumnsRequired = left - 1 + width - columns.length;
-		const numberOfRowsRequired = height - 1 + rows;
-		if (numberOfRowsRequired > 0) {
-			createNewRows(height - 1 + rows);
-		}
-		if (numberOfColumnsRequired > 0) {
-			createNewColumns(numberOfColumnsRequired);
-		}
-		dispatchSpreadsheetAction({
-			type: PASTE_VALUES,
-			copiedValues2dArray,
-			top,
-			left,
-			height,
-			width,
-		});
-	}
 
 	useEffect(() => {
 		function onKeyDown(event) {

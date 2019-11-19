@@ -21,6 +21,7 @@ export default function Row({
 	modifyCellSelectionRange,
 	numberOfRows,
 	handleContextMenu,
+	paste,
 	row,
 	rows,
 	rowIndex,
@@ -89,6 +90,7 @@ export default function Row({
 							isFormulaColumn={isFormulaColumn}
 							modifyCellSelectionRange={modifyCellSelectionRange}
 							numberOfRows={numberOfRows}
+							paste={paste}
 							row={row}
 							rows={rows}
 							rowIndex={rowIndex}
