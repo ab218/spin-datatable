@@ -2,18 +2,20 @@ import React, { useEffect } from 'react';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import {
 	CLOSE_CONTEXT_MENU,
+	COPY_VALUES,
 	REMOVE_SELECTED_CELLS,
 	SET_GROUPED_COLUMNS,
 	SORT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	TOGGLE_LAYOUT,
+	DELETE_VALUES,
 } from './constants';
 import { Menu } from 'antd';
 import './App.css';
 
 const { SubMenu } = Menu;
 
-export default function ContextMenu() {
+export default function ContextMenu({ paste }) {
 	const { colHeaderContext, colName, contextMenuOpen, contextMenuPosition, layout } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -93,13 +95,19 @@ export default function ContextMenu() {
                 <Menu.Item disabled key="15">Option 2</Menu.Item>
               </SubMenu> */}
 				{/* <Menu.Item disabled key="16">Select Matching Cells</Menu.Item> */}
-				<Menu.Item disabled key="17">
+				<Menu.Item
+					onClick={() => {
+						dispatchSpreadsheetAction({ type: COPY_VALUES });
+						dispatchSpreadsheetAction({ type: DELETE_VALUES });
+					}}
+					key="17"
+				>
 					Cut
 				</Menu.Item>
-				<Menu.Item disabled key="18">
+				<Menu.Item onClick={() => dispatchSpreadsheetAction({ type: COPY_VALUES })} key="18">
 					Copy
 				</Menu.Item>
-				<Menu.Item disabled key="19">
+				<Menu.Item onClick={paste} key="19">
 					Paste
 				</Menu.Item>
 				{/* <Menu.Item key="20" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })}>Add Filter</Menu.Item> */}

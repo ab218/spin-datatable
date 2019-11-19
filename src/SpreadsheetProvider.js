@@ -78,7 +78,7 @@ function createRandomLetterString() {
 	);
 }
 
-export function selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions) {
+function selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions) {
 	const selectedColumnPositions = Object.entries(columnPositions).filter(([ _, position ]) => {
 		// Subtract one because of header column
 		return position >= left - 1 && position <= right - 1;
@@ -175,7 +175,34 @@ function spreadsheetReducer(state, action) {
 			return { ...state, selectDisabled: true };
 		}
 		case PASTE_VALUES: {
-			return { ...state, rows: action.newValues };
+			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
+				const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
+				// We create a new object with its keys being the indices of the destination rows
+				// and the values being dictionaries mapping the new column ids to the copied values
+				const newRows = copiedValues.reduce((newRowAcc, rowValues, rowIndex) => {
+					return {
+						...newRowAcc,
+						[indexOfFirstDestinationRow + rowIndex]: rowValues.reduce((acc, copiedCellValue, colIndex) => {
+							return { ...acc, [destinationColumns[colIndex]]: copiedCellValue };
+						}, {}),
+					};
+				}, {});
+				// Merge the two entries together
+				Object.entries(newRows).forEach(([ rowIndex, rowSplice ]) => {
+					rows[rowIndex] = { ...rows[rowIndex], ...rowSplice };
+				});
+				return rows;
+			}
+
+			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
+				action.top,
+				action.left,
+				action.top + action.height - 1,
+				action.left + action.width - 1,
+				state.columnPositions,
+				state.rowPositions,
+			);
+			return { ...state, rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs) };
 		}
 		case COPY_VALUES: {
 			// TODO: There should be a line break if the row is undefined values
@@ -183,43 +210,43 @@ function spreadsheetReducer(state, action) {
 			const { cellSelectionRanges, columnPositions, rowPositions } = state;
 			// Fixes crash if cell from non existant column is selected
 			if (!cellSelectionRanges.length) return { ...state };
-			const copyEl = (elToBeCopied) => {
-				let range, sel;
-				// Ensure that range and selection are supported by the browsers
-				if (document.createRange && window.getSelection) {
-					range = document.createRange();
-					sel = window.getSelection();
-					// unselect any element in the page
-					sel.removeAllRanges();
-					try {
-						range.selectNodeContents(elToBeCopied);
-						sel.addRange(range);
-					} catch (e) {
-						console.log(e);
-					}
-					console.log(sel, range);
-					document.execCommand('copy');
-				}
-				sel.removeAllRanges();
-				console.log('Element Copied!');
-			};
+			// const copyEl = (elToBeCopied) => {
+			// 	let range, sel;
+			// 	// Ensure that range and selection are supported by the browsers
+			// 	if (document.createRange && window.getSelection) {
+			// 		range = document.createRange();
+			// 		sel = window.getSelection();
+			// 		// unselect any element in the page
+			// 		sel.removeAllRanges();
+			// 		try {
+			// 			range.selectNodeContents(elToBeCopied);
+			// 			sel.addRange(range);
+			// 		} catch (e) {
+			// 			console.log(e);
+			// 		}
+			// 		console.log(sel, range);
+			// 		document.execCommand('copy');
+			// 	}
+			// 	sel.removeAllRanges();
+			// 	console.log('Element Copied!');
+			// };
 
-			function createTable(tableData) {
-				const table = document.createElement('table');
-				table.setAttribute('id', 'copy-table');
-				let row = {};
-				let cell = {};
-				tableData.forEach((rowData) => {
-					row = table.insertRow(-1); // -1 is for safari
-					rowData.forEach((cellData) => {
-						cell = row.insertCell();
-						cell.textContent = cellData;
-					});
-				});
-				document.body.appendChild(table);
-				copyEl(table);
-				document.body.removeChild(table);
-			}
+			// function createTable(tableData) {
+			// 	const table = document.createElement('table');
+			// 	table.setAttribute('id', 'copy-table');
+			// 	let row = {};
+			// 	let cell = {};
+			// 	tableData.forEach((rowData) => {
+			// 		row = table.insertRow(-1); // -1 is for safari
+			// 		rowData.forEach((cellData) => {
+			// 			cell = row.insertCell();
+			// 			cell.textContent = cellData;
+			// 		});
+			// 	});
+			// 	document.body.appendChild(table);
+			// 	copyEl(table);
+			// 	document.body.removeChild(table);
+			// }
 
 			// In case there are multiple selection ranges, we only want the first selection made
 			const { top, left, bottom, right } = cellSelectionRanges[0];
@@ -239,7 +266,11 @@ function spreadsheetReducer(state, action) {
 					return null;
 				})
 				.filter((x) => x);
-			createTable(copiedRows);
+			const clipboardContents = copiedRows.map((row) => row.join('\t')).join('\n');
+			navigator.clipboard
+				.writeText(clipboardContents)
+				.then(() => console.log('wrote to clipboard', clipboardContents))
+				.catch((args) => console.error('did not copy to clipboard:', args));
 			return { ...state };
 		}
 		case DELETE_VALUES: {
@@ -620,7 +651,13 @@ export function SpreadsheetProvider({ children }) {
 
 			return rowCopy;
 		});
-	const rowPositions = rows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
+	// const rowPositions = rows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
+
+	const rowPositions = {};
+	for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+		const rowID = rows[rowIndex].id;
+		rowPositions[rowID] = rowIndex;
+	}
 
 	const initialState = {
 		analysisModalOpen: false,

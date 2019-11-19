@@ -21,6 +21,7 @@ import {
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	SELECT_CELL,
 	OPEN_CONTEXT_MENU,
+	PASTE_VALUES,
 } from './constants';
 
 // function FormulaBar() {
@@ -67,6 +68,7 @@ function BlankClickableRow({
 	isSelectedCell,
 	modifyCellSelectionRange,
 	numberOfRows,
+	paste,
 	rowIndex,
 	row,
 	rows,
@@ -102,16 +104,17 @@ function BlankClickableRow({
 							isFormulaColumn={isFormulaColumn}
 							changeActiveCell={changeActiveCell}
 							column={column}
-							columns={columns}
-							row={row}
-							rows={rows}
 							columnIndex={columnIndex}
+							columns={columns}
 							createNewColumns={createNewColumns}
 							createNewRows={createNewRows}
 							finishCurrentSelectionRange={finishCurrentSelectionRange}
 							handleContextMenu={handleContextMenu}
 							modifyCellSelectionRange={modifyCellSelectionRange}
 							numberOfRows={numberOfRows}
+							paste={paste}
+							row={row}
+							rows={rows}
 							rowIndex={rowIndex}
 						/>
 					);
@@ -202,9 +205,11 @@ function Spreadsheet({ eventBus }) {
 		return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
 	}
 
-	const rowMap = Object.entries(rowPositions).reduce((acc, [ id, position ]) => {
-		return { ...acc, [position]: id };
-	}, {});
+	const rowMap = {};
+	for (const id in rowPositions) {
+		rowMap[rowPositions[id]] = id;
+	}
+
 	// Check if object is empty
 	const rowCount = Object.keys(rowMap).length !== 0 ? Math.max(...Object.keys(rowMap)) + 1 : 0;
 	const visibleRowCount = Math.max(rowCount, 35); // 50 rows should be enough to fill the screen
@@ -269,6 +274,7 @@ function Spreadsheet({ eventBus }) {
 					isSelectedCell={isSelectedCell}
 					modifyCellSelectionRange={modifyCellSelectionRange}
 					numberOfRows={rowCount}
+					paste={paste}
 					row={rows.find(({ id }) => id === rowIDs[index])}
 					rowIDs={rowIDs}
 					rowIndex={index}
@@ -291,6 +297,7 @@ function Spreadsheet({ eventBus }) {
 					isSelectedCell={isSelectedCell}
 					modifyCellSelectionRange={modifyCellSelectionRange}
 					numberOfRows={rowCount}
+					paste={paste}
 					rowIndex={index}
 					rows={index - rowCount + 1}
 					selectCell={selectCell}
@@ -300,6 +307,41 @@ function Spreadsheet({ eventBus }) {
 			return <BlankRow key={'BlankRow' + index} cellCount={visibleColumnCount + 1} />;
 		}
 	});
+
+	async function paste() {
+		// safari doesn't have navigator.clipboard
+		if (!navigator.clipboard) {
+			console.log('navigator.clipboard not supported by safari/edge');
+			return;
+		}
+		// TODO: Fix this bug properly
+		if (!cellSelectionRanges[0]) {
+			console.log('no cell selection range');
+			return;
+		}
+		const copiedValues = await navigator.clipboard.readText();
+		const copiedValuesRows = copiedValues.split('\n');
+		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
+		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
+		const { top, left } = cellSelectionRanges[0];
+		const { height, width } = copiedValues2dArrayDimensions;
+		const numberOfColumnsRequired = left - 1 + width - columns.length;
+		const numberOfRowsRequired = top + height - rows.length;
+		if (numberOfRowsRequired > 0) {
+			createNewRows(numberOfRowsRequired);
+		}
+		if (numberOfColumnsRequired > 0) {
+			createNewColumns(numberOfColumnsRequired);
+		}
+		dispatchSpreadsheetAction({
+			type: PASTE_VALUES,
+			copiedValues2dArray,
+			top,
+			left,
+			height,
+			width,
+		});
+	}
 
 	function createNewRows(rowCount) {
 		dispatchSpreadsheetAction({ type: CREATE_ROWS, rowCount });
@@ -346,6 +388,7 @@ function Spreadsheet({ eventBus }) {
 					rowIndex={index}
 					rows={index - groupedRowCount + 1}
 					selectCell={selectCell}
+					paste={paste}
 				/>
 			);
 		} else if (groupedRowIDs[index - 1]) {
@@ -363,6 +406,7 @@ function Spreadsheet({ eventBus }) {
 					isSelectedCell={isSelectedCell}
 					modifyCellSelectionRange={modifyCellSelectionRange}
 					numberOfRows={groupedRowCount}
+					paste={paste}
 					rowIndex={index}
 					rows={index - groupedRowCount + 1}
 					selectCell={selectCell}
@@ -385,7 +429,7 @@ function Spreadsheet({ eventBus }) {
 
 	return (
 		<div>
-			<ContextMenu />
+			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
 			{distributionModalOpen && <DistributionModal />}
 			{analysisModalOpen && <AnalysisModal />}
