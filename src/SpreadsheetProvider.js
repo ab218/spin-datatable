@@ -126,7 +126,6 @@ function spreadsheetReducer(state, action) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column };
-			console.log(activeCell);
 			return { ...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] };
 		}
 		case ADD_CELL_TO_SELECTIONS: {
@@ -464,6 +463,7 @@ function spreadsheetReducer(state, action) {
 		}
 		case UPDATE_CELL: {
 			const { rows, columns } = state;
+			console.log(rows);
 			// row from action or last row from state
 			const originalRow = row || rows[rows.length - 1];
 			const newRows = rows.slice();

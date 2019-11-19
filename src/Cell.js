@@ -59,14 +59,13 @@ export function SelectedCell({
 					dispatchSpreadsheetAction({ type: COPY_VALUES });
 					return;
 				} else if (event.key === 'v') {
-					console.log('pasted');
 					paste();
 					return;
 				}
 			}
 			// if the key pressed is not a non-character key (arrow key etc)
 			if (!isFormulaColumn && event.key.length === 1) {
-				if (rows > 1) {
+				if (rows > 0) {
 					createNewRows(rows);
 				}
 				if (columnIndex > columns.length) {
