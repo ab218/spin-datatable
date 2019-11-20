@@ -59,7 +59,6 @@ export function SelectedCell({
 					dispatchSpreadsheetAction({ type: COPY_VALUES });
 					return;
 				} else if (event.key === 'v') {
-					console.log('pasted');
 					paste();
 					return;
 				}

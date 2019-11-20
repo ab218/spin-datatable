@@ -120,12 +120,10 @@ function spreadsheetReducer(state, action) {
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
-	// console.log('dispatched:', type, 'with action:', action);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column };
-			console.log(activeCell);
 			return { ...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] };
 		}
 		case ADD_CELL_TO_SELECTIONS: {

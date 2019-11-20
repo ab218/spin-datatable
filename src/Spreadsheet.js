@@ -320,7 +320,8 @@ function Spreadsheet({ eventBus }) {
 			return;
 		}
 		const copiedValues = await navigator.clipboard.readText();
-		const copiedValuesRows = copiedValues.split('\n');
+		const copiedValuesStringified = JSON.stringify(copiedValues).replace(/(?:\\[rn]|[\r\n])/g, '\\n');
+		const copiedValuesRows = JSON.parse(copiedValuesStringified).split('\n');
 		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
 		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
 		const { top, left } = cellSelectionRanges[0];
