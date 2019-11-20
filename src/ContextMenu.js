@@ -86,15 +86,6 @@ export default function ContextMenu({ paste }) {
 	) : (
 		<div onClick={onClick} className="menu">
 			<Menu selectable={false} style={{ width: 256 }} mode="vertical">
-				{/* <SubMenu key="sub3" title="Fill">
-                <Menu.Item disabled key="12">Option 1</Menu.Item>
-                <Menu.Item disabled key="13">Option 2</Menu.Item>
-              </SubMenu>
-              <SubMenu key="sub4" title="Color">
-                <Menu.Item disabled key="14">Option 1</Menu.Item>
-                <Menu.Item disabled key="15">Option 2</Menu.Item>
-              </SubMenu> */}
-				{/* <Menu.Item disabled key="16">Select Matching Cells</Menu.Item> */}
 				<Menu.Item
 					onClick={() => {
 						dispatchSpreadsheetAction({ type: COPY_VALUES });
@@ -110,9 +101,6 @@ export default function ContextMenu({ paste }) {
 				<Menu.Item onClick={paste} key="19">
 					Paste
 				</Menu.Item>
-				{/* <Menu.Item key="20" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })}>Add Filter</Menu.Item> */}
-				{/* <Menu.Item key="21" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: true })}>Distribution</Menu.Item> */}
-				{/* <Menu.Item key="22" onClick={() => dispatchSpreadsheetAction({type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })}>Fit Y By X</Menu.Item> */}
 			</Menu>
 		</div>
 	);
