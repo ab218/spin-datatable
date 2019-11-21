@@ -35,28 +35,17 @@ export default function Row({
 
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { contextMenuOpen } = useSpreadsheetState();
+
 	return (
-		<tr>
+		<div>
 			{Array(cellCount).fill(undefined).map((_, columnIndex) => {
+				console.log(columnIndex);
 				const column = columns[columnIndex - 1];
 				const isFormulaColumn = column && column.type === 'Formula' && column.formula;
 				if (columnIndex === 0) {
 					// The row # on the left side
 					return <RowNumberCell key={`RowNumberCell${rowIndex}`} rowIndex={rowIndex} />;
 				}
-				// function updateCell(event, clear) {
-				//   console.log('row updateCell:', arguments);
-				//   if (column &&column.type === 'Number'
-				//     && event.target.value
-				//     // negative number
-				//     && event.target.value !== '-'
-				//     // must be negative or positive int or float
-				//     && checkIfValidNumber(event.target.value)) {
-				//     return;
-				//   }
-				//   dispatchSpreadsheetAction({type: UPDATE_CELL, row, column, cellValue: clear ? '' : event.target.value});
-				// }
-
 				if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
 					return (
 						<ActiveCell
@@ -114,7 +103,7 @@ export default function Row({
 				} else {
 					// The rest of the cells in the row that aren't in a defined column
 					return (
-						<td
+						<div
 							style={{ backgroundColor: '#eee' }}
 							key={`row${rowIndex}col${columnIndex}`}
 							onMouseDown={(e) => {
@@ -128,6 +117,6 @@ export default function Row({
 					);
 				}
 			})}
-		</tr>
+		</div>
 	);
 }

@@ -13,7 +13,7 @@ import { Tooltip } from 'antd';
 import './App.css';
 
 export function RowNumberCell({ rowIndex }) {
-	return <td className={'row-number-cell'}>{rowIndex + 1}</td>;
+	return <div className={'row-number-cell'}>{rowIndex + 1}</div>;
 }
 
 export function SelectedCell({
@@ -111,7 +111,7 @@ export function SelectedCell({
 	}
 
 	return (
-		<td
+		<div
 			key={`row${rowIndex}col${columnIndex}`}
 			style={{ backgroundColor: '#C0C0C0' }}
 			onContextMenu={handleContextMenu}
@@ -120,7 +120,7 @@ export function SelectedCell({
 			onMouseUp={finishCurrentSelectionRange}
 		>
 			{row && column ? row[column.id] : ''}
-		</td>
+		</div>
 	);
 }
 
@@ -154,7 +154,7 @@ export function NormalCell({
 
 	return formatForNumberColumn(cellValue, column) ? (
 		<Tooltip title={`Cell value is not a number`}>
-			<td
+			<div
 				className="NaN-value"
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
@@ -162,16 +162,16 @@ export function NormalCell({
 				onMouseUp={finishCurrentSelectionRange}
 			>
 				{cellValue || '\u2022'}
-			</td>
+			</div>
 		</Tooltip>
 	) : (
-		<td
+		<div
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 			onMouseUp={finishCurrentSelectionRange}
 		>
 			{cellValue || '\u2022'}
-		</td>
+		</div>
 	);
 }

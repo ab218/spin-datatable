@@ -82,7 +82,7 @@ function ActiveCell({
 	);
 
 	return (
-		<td onContextMenu={(e) => handleContextMenu(e)}>
+		<div onContextMenu={(e) => handleContextMenu(e)}>
 			<input
 				ref={inputEl}
 				type="text"
@@ -93,7 +93,7 @@ function ActiveCell({
 					setInputVal(e.target.value);
 				}}
 			/>
-		</td>
+		</div>
 	);
 }
 

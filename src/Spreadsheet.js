@@ -11,6 +11,7 @@ import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import AnalysisButtons from './AnalysisButtons';
 import Row from './Row';
+import { FixedSizeGrid as Grid } from 'react-window';
 import { SelectedCell } from './Cell';
 import {
 	ACTIVATE_CELL,
@@ -193,6 +194,7 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: 0, column: 1 });
 		// Wake up cloud functions
 		pingCloudFunctions();
+		console.log(rows, columns, rowPositions, columnPositions);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -428,6 +430,21 @@ function Spreadsheet({ eventBus }) {
 		return found.label;
 	}
 
+	function getKeyByValue(object, value) {
+		return Object.keys(object).find((key) => object[key] === value);
+	}
+
+	const Cell = ({ columnIndex, rowIndex, style }) => {
+		const columnId = getKeyByValue(columnPositions, columnIndex);
+		const rowId = getKeyByValue(rowPositions, rowIndex);
+		const foundRow = rows.find((row) => row.id === rowId);
+		return (
+			<div className={'virtualized-cell'} style={{ ...style }}>
+				{foundRow[columnId]}
+			</div>
+		);
+	};
+
 	return (
 		<div>
 			<ContextMenu paste={paste} />
@@ -436,53 +453,25 @@ function Spreadsheet({ eventBus }) {
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			<AnalysisButtons />
-			{layout ? (
-				<table>
-					<thead>
-						<tr>
-							<th />
-							{headers}
-						</tr>
-					</thead>
-					<tbody>{visibleRows}</tbody>
-				</table>
-			) : (
-				<table>
-					<thead>
-						<tr className={'move-row-down'}>
-							<th />
-							{spreadsheetHeaders}
-						</tr>
-						<tr className={'move-row-up'}>
-							<th />
-							{groupedColumns &&
-								Object.entries(groupedColumns).map((col) => {
-									return (
-										<th key={col[0]} colSpan={Object.keys(col[1][0]).length - 1}>
-											<span style={{ fontStyle: 'italic' }}>{getGroupedByColumnIDLabel(groupByColumnID)}</span>
-											<span> {col[0]}</span>
-										</th>
-									);
-								})}
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-							<th />
-						</tr>
-					</thead>
-					<tbody>{visibleSpreadsheetRows}</tbody>
-				</table>
-			)}
+			<Grid
+				columnCount={columns.length}
+				columnWidth={100}
+				height={800}
+				rowCount={rows.length}
+				rowHeight={35}
+				width={1000}
+			>
+				{Cell}
+			</Grid>
+			{/* <table>
+				<thead>
+					<tr>
+						<th />
+						{headers}
+					</tr>
+				</thead>
+				<tbody>{visibleRows}</tbody>
+			</table> */}
 		</div>
 	);
 }

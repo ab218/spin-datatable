@@ -569,17 +569,17 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({ children }) {
 	// dummy data
-	// const statsColumns = [
-	// 	{ modelingType: 'Continuous', type: 'Number', label: 'Distance' },
-	// 	{ modelingType: 'Nominal', type: 'Number', label: 'Trial' },
-	// 	{ modelingType: 'Continuous', type: 'Number', label: 'Bubbles' },
-	// 	// {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
-	// ];
+	const statsColumns = [
+		{ modelingType: 'Continuous', type: 'Number', label: 'Distance' },
+		{ modelingType: 'Nominal', type: 'Number', label: 'Trial' },
+		{ modelingType: 'Continuous', type: 'Number', label: 'Bubbles' },
+		// {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
+	];
 
 	const startingColumn = [];
 
 	// Starting columns
-	const columns = startingColumn
+	const columns = statsColumns
 		.map((metadata) => ({ id: metadata.id || createRandomLetterString(), ...metadata }))
 		.map((column, _, array) => {
 			const { formula, ...rest } = column;
@@ -595,40 +595,115 @@ export function SpreadsheetProvider({ children }) {
 		});
 
 	// dummy data
-	// const pondEcologyRows = [
-	// 	[ 10, 1, 12 ],
-	// 	[ 20, 1, 10 ],
-	// 	[ 30, 1, 7 ],
-	// 	[ 40, 1, 6 ],
-	// 	[ 50, 1, 2 ],
-	// 	[ 10, 2, 10 ],
-	// 	[ 20, 2, 9 ],
-	// 	[ 30, 2, 6 ],
-	// 	[ 40, 2, 4 ],
-	// 	[ 50, 2, 4 ],
-	// 	[ 10, 3, 12 ],
-	// 	[ 20, 3, 9 ],
-	// 	[ 30, 3, 8 ],
-	// 	[ 40, 3, 5 ],
-	// 	[ 50, 3, 3 ],
-	// 	[ 10, 4, 11 ],
-	// 	[ 20, 4, 8 ],
-	// 	[ 30, 4, 7 ],
-	// 	[ 40, 4, 6 ],
-	// 	[ 50, 4, 2 ],
-	// 	[ 10, 5, 11 ],
-	// 	[ 20, 5, 10 ],
-	// 	[ 30, 5, 7 ],
-	// 	[ 40, 5, 5 ],
-	// 	[ 50, 5, 3 ],
-	// ];
+	const pondEcologyRows = [
+		[ 10, 1, 12 ],
+		[ 20, 1, 10 ],
+		[ 30, 1, 7 ],
+		[ 40, 1, 6 ],
+		[ 50, 1, 2 ],
+		[ 10, 2, 10 ],
+		[ 20, 2, 9 ],
+		[ 30, 2, 6 ],
+		[ 40, 2, 4 ],
+		[ 50, 2, 4 ],
+		[ 10, 3, 12 ],
+		[ 20, 3, 9 ],
+		[ 30, 3, 8 ],
+		[ 40, 3, 5 ],
+		[ 50, 3, 3 ],
+		[ 10, 4, 11 ],
+		[ 20, 4, 8 ],
+		[ 30, 4, 7 ],
+		[ 40, 4, 6 ],
+		[ 50, 4, 2 ],
+		[ 10, 5, 11 ],
+		[ 20, 5, 10 ],
+		[ 30, 5, 7 ],
+		[ 40, 5, 5 ],
+		[ 50, 5, 3 ],
+		[ 10, 1, 12 ],
+		[ 20, 1, 10 ],
+		[ 30, 1, 7 ],
+		[ 40, 1, 6 ],
+		[ 50, 1, 2 ],
+		[ 10, 2, 10 ],
+		[ 20, 2, 9 ],
+		[ 30, 2, 6 ],
+		[ 40, 2, 4 ],
+		[ 50, 2, 4 ],
+		[ 10, 3, 12 ],
+		[ 20, 3, 9 ],
+		[ 30, 3, 8 ],
+		[ 40, 3, 5 ],
+		[ 50, 3, 3 ],
+		[ 10, 4, 11 ],
+		[ 20, 4, 8 ],
+		[ 30, 4, 7 ],
+		[ 40, 4, 6 ],
+		[ 50, 4, 2 ],
+		[ 10, 5, 11 ],
+		[ 20, 5, 10 ],
+		[ 30, 5, 7 ],
+		[ 40, 5, 5 ],
+		[ 50, 5, 3 ],
+		[ 10, 1, 12 ],
+		[ 20, 1, 10 ],
+		[ 30, 1, 7 ],
+		[ 40, 1, 6 ],
+		[ 50, 1, 2 ],
+		[ 10, 2, 10 ],
+		[ 20, 2, 9 ],
+		[ 30, 2, 6 ],
+		[ 40, 2, 4 ],
+		[ 50, 2, 4 ],
+		[ 10, 3, 12 ],
+		[ 20, 3, 9 ],
+		[ 30, 3, 8 ],
+		[ 40, 3, 5 ],
+		[ 50, 3, 3 ],
+		[ 10, 4, 11 ],
+		[ 20, 4, 8 ],
+		[ 30, 4, 7 ],
+		[ 40, 4, 6 ],
+		[ 50, 4, 2 ],
+		[ 10, 5, 11 ],
+		[ 20, 5, 10 ],
+		[ 30, 5, 7 ],
+		[ 40, 5, 5 ],
+		[ 50, 5, 3 ],
+		[ 10, 1, 12 ],
+		[ 20, 1, 10 ],
+		[ 30, 1, 7 ],
+		[ 40, 1, 6 ],
+		[ 50, 1, 2 ],
+		[ 10, 2, 10 ],
+		[ 20, 2, 9 ],
+		[ 30, 2, 6 ],
+		[ 40, 2, 4 ],
+		[ 50, 2, 4 ],
+		[ 10, 3, 12 ],
+		[ 20, 3, 9 ],
+		[ 30, 3, 8 ],
+		[ 40, 3, 5 ],
+		[ 50, 3, 3 ],
+		[ 10, 4, 11 ],
+		[ 20, 4, 8 ],
+		[ 30, 4, 7 ],
+		[ 40, 4, 6 ],
+		[ 50, 4, 2 ],
+		[ 10, 5, 11 ],
+		[ 20, 5, 10 ],
+		[ 30, 5, 7 ],
+		[ 40, 5, 5 ],
+		[ 50, 5, 3 ],
+	];
 
 	// normal starting condition
 	const startingRow = [ [] ];
 
 	const columnPositions = columns.reduce((acc, column, index) => ({ ...acc, [column.id]: index }), {});
 
-	const rows = startingRow
+	const rows = pondEcologyRows
 		.map((tuple) => ({
 			id: createRandomID(),
 			...tuple.reduce((acc, value, index) => ({ ...acc, [columns[index].id]: value }), {}),
