@@ -32,6 +32,7 @@ export function SelectedCell({
 	rowIndex,
 	createNewRows,
 	createNewColumns,
+	style,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { contextMenuOpen } = useSpreadsheetState();
@@ -53,6 +54,7 @@ export function SelectedCell({
 	};
 
 	useEffect(() => {
+		console.log(row, column);
 		function onKeyDown(event) {
 			if (event.metaKey) {
 				if (event.key === 'c') {
@@ -113,7 +115,8 @@ export function SelectedCell({
 	return (
 		<div
 			key={`row${rowIndex}col${columnIndex}`}
-			style={{ backgroundColor: '#C0C0C0' }}
+			style={{ ...style, backgroundColor: '#C0C0C0' }}
+			className={'virtualized-cell'}
 			onContextMenu={handleContextMenu}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}

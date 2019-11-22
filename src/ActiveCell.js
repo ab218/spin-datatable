@@ -28,10 +28,11 @@ function ActiveCell({
 	numberOfRows,
 	rowIndex,
 	value,
+	style,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { selectDisabled } = useSpreadsheetState();
-	const [ inputVal, setInputVal ] = useState(value);
+	const [ inputVal, setInputVal ] = useState('');
 
 	const onKeyDown = (event) => {
 		switch (event.key) {
@@ -50,39 +51,39 @@ function ActiveCell({
 	};
 
 	const inputEl = useRef(null);
-	useEffect(() => {
-		const oldInputElCurrent = inputEl.current;
-		// Sometimes focus wasn't firing so I added a short setTimeout here
-		setTimeout(() => {
-			oldInputElCurrent.focus();
-			if (!selectDisabled) {
-				oldInputElCurrent.select();
-			}
-		}, 5);
-		dispatchSpreadsheetAction({ type: 'ENABLE_SELECT' });
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	// useEffect(() => {
+	// 	const oldInputElCurrent = inputEl.current;
+	// 	// Sometimes focus wasn't firing so I added a short setTimeout here
+	// 	setTimeout(() => {
+	// 		oldInputElCurrent.focus();
+	// 		if (!selectDisabled) {
+	// 			oldInputElCurrent.select();
+	// 		}
+	// 	}, 5);
+	// 	dispatchSpreadsheetAction({ type: 'ENABLE_SELECT' });
+	// 	// eslint-disable-next-line react-hooks/exhaustive-deps
+	// }, []);
 
-	useEffect(() => {
-		if (rows === 1) {
-			createNewRows(rows);
-		}
-		if (columnIndex > columns.length) {
-			createNewColumns(columnIndex - columns.length);
-		}
-	});
+	// useEffect(() => {
+	// 	if (rows === 1) {
+	// 		createNewRows(rows);
+	// 	}
+	// 	if (columnIndex > columns.length) {
+	// 		createNewColumns(columnIndex - columns.length);
+	// 	}
+	// });
 
-	useEffect(
-		() => {
-			if (inputVal !== value) {
-				dispatchSpreadsheetAction({ type: UPDATE_CELL, row, column, cellValue: inputVal });
-			}
-		},
-		[ column, dispatchSpreadsheetAction, inputVal, row, value ],
-	);
+	// useEffect(
+	// 	() => {
+	// 		if (inputVal !== value) {
+	// 			dispatchSpreadsheetAction({ type: UPDATE_CELL, row, column, cellValue: inputVal });
+	// 		}
+	// 	},
+	// 	[ column, dispatchSpreadsheetAction, inputVal, row, value ],
+	// );
 
 	return (
-		<div onContextMenu={(e) => handleContextMenu(e)}>
+		<div style={{ ...style }} className={'virtualized-cell'} onContextMenu={(e) => handleContextMenu(e)}>
 			<input
 				ref={inputEl}
 				type="text"

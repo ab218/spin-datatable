@@ -434,12 +434,68 @@ function Spreadsheet({ eventBus }) {
 		return Object.keys(object).find((key) => object[key] === value);
 	}
 
-	const Cell = ({ columnIndex, rowIndex, style }) => {
+	function newSelectCell(e, rowIndex, columnIndex) {
+		console.log(rowIndex, columnIndex);
+		selectCell(rowIndex, columnIndex, e.ctrlKey || e.shiftKey || e.metaKey);
+	}
+
+	function newActivateCell(e, rowIndex, columnIndex) {
+		changeActiveCell(rowIndex, columnIndex, e.ctrlKey || e.shiftKey || e.metaKey);
+	}
+
+	const Cell = ({ rowIndex, columnIndex, style }) => {
 		const columnId = getKeyByValue(columnPositions, columnIndex);
 		const rowId = getKeyByValue(rowPositions, rowIndex);
 		const foundRow = rows.find((row) => row.id === rowId);
+		// if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
+		// 	return <ActiveCell />;
+		// }
+		if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
+			console.log('here');
+			return (
+				// <div />
+				<ActiveCell
+					handleContextMenu={handleContextMenu}
+					key={`row${rowIndex}col${columnIndex}`}
+					changeActiveCell={changeActiveCell}
+					// column={columns[columnIndex]}
+					columnIndex={columnIndex}
+					columns={columns}
+					createNewColumns={createNewColumns}
+					createNewRows={createNewRows}
+					numberOfRows={rows.length}
+					style={style}
+					// row={foundRow}
+					// rowIndex={rowIndex}
+					// rows={rows}
+				/>
+			);
+		}
+		if (isSelectedCell(rowIndex, columnIndex)) {
+			return (
+				<SelectedCell
+					key={`Row${rowIndex}Col${columnIndex}`}
+					// isFormulaColumn={isFormulaColumn}
+					changeActiveCell={changeActiveCell}
+					column={columns[columnIndex]}
+					columnIndex={columnIndex}
+					columns={columns}
+					createNewColumns={createNewColumns}
+					createNewRows={createNewRows}
+					finishCurrentSelectionRange={finishCurrentSelectionRange}
+					handleContextMenu={handleContextMenu}
+					modifyCellSelectionRange={modifyCellSelectionRange}
+					numberOfRows={rows.length}
+					paste={paste}
+					row={foundRow}
+					rows={rows}
+					rowIndex={rowIndex}
+					style={style}
+				/>
+			);
+		}
 		return (
-			<div className={'virtualized-cell'} style={{ ...style }}>
+			<div onClick={(e) => newSelectCell(e, rowIndex, columnIndex)} className={'virtualized-cell'} style={{ ...style }}>
 				{foundRow[columnId]}
 			</div>
 		);
