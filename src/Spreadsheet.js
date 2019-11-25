@@ -10,8 +10,8 @@ import DistributionModal from './ModalDistribution';
 import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import AnalysisButtons from './AnalysisButtons';
-import Row from './Row';
-import { VariableSizeGrid as Grid } from 'react-window';
+// import Row from './Row';
+import { VariableSizeList as List } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { SelectedCell, NormalCell } from './Cell';
 import {
@@ -439,103 +439,82 @@ function Spreadsheet({ eventBus }) {
 		selectCell(rowIndex, columnIndex, e.ctrlKey || e.shiftKey || e.metaKey);
 	}
 
-	function RowHeader({ rowIndex, style }) {
+	function RowHeader({ rowIndex }) {
 		return (
-			<div className={'row-number-cell'} style={{ ...style }}>
+			<span style={{ marginRight: 20 }} className={'row-number-cell'}>
 				{rowIndex + 1}
-			</div>
+			</span>
 		);
 	}
 
-	const Cell = ({ rowIndex, columnIndex, style }) => {
-		const columnIndexOffsetOne = columnIndex - 1;
-		const columnId = getKeyByValue(columnPositions, columnIndexOffsetOne);
+	const Row = ({ index: rowIndex, style }) => {
+		// const columnIndexOffsetOne = columnIndex - 1;
+		// const columnId = getKeyByValue(columnPositions, columnIndexOffsetOne);
 		const rowId = rowIDs[rowIndex];
 		const foundRow = rows[rowPositions[rowId]];
 
-		if (columnIndexOffsetOne >= columns.length) {
-			return (
-				<div
-					style={{ ...style, backgroundColor: '#eee' }}
-					key={`row${rowIndex}col${columnIndex}`}
-					className={'virtualized-cell'}
-					onMouseDown={(e) => {
-						e.preventDefault();
-						// if (contextMenuOpen) {
-						//   dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-						// }
-						selectCell(rowIndex, columnIndex);
-					}}
-				/>
-			);
-		}
-		// const rowId = getKeyByValue(rowPositions, rowIndex);
-		// const foundRow = rows.find((row) => row.id === rowId);
-
-		console.log('rowId: ', rowId, 'foundRow: ', foundRow);
-
-		if (columnIndex === 0) {
-			return <RowHeader rowIndex={rowIndex} style={style} />;
-		}
-		if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndexOffsetOne) {
-			return (
-				<ActiveCell
-					handleContextMenu={handleContextMenu}
-					key={`row${rowIndex}col${columnIndex}`}
-					changeActiveCell={changeActiveCell}
-					column={columns[columnIndexOffsetOne]}
-					columnIndex={columnIndexOffsetOne}
-					columns={columns}
-					createNewColumns={createNewColumns}
-					createNewRows={createNewRows}
-					numberOfRows={rows.length}
-					style={style}
-					row={foundRow}
-					value={foundRow[columnId]}
-				/>
-			);
-		}
-		if (isSelectedCell(rowIndex, columnIndex)) {
-			return (
-				<SelectedCell
-					key={`Row${rowIndex}Col${columnIndex}`}
-					// isFormulaColumn={isFormulaColumn}
-					changeActiveCell={changeActiveCell}
-					column={columns[columnIndexOffsetOne]}
-					columnIndex={columnIndexOffsetOne}
-					columns={columns}
-					createNewColumns={createNewColumns}
-					createNewRows={createNewRows}
-					finishCurrentSelectionRange={finishCurrentSelectionRange}
-					handleContextMenu={handleContextMenu}
-					modifyCellSelectionRange={modifyCellSelectionRange}
-					numberOfRows={rows.length}
-					paste={paste}
-					row={foundRow}
-					rows={rows}
-					rowIndex={rowIndex}
-					style={style}
-				/>
-			);
-		}
-
 		return (
-			<NormalCell
-				key={`Row${rowIndex}Col${columnIndex}`}
-				changeActiveCell={changeActiveCell}
-				column={columns[columnIndexOffsetOne]}
-				columnIndex={columnIndex}
-				finishCurrentSelectionRange={finishCurrentSelectionRange}
-				modifyCellSelectionRange={modifyCellSelectionRange}
-				row={foundRow}
-				rowIndex={rowIndex}
-				selectCell={selectCell}
-				cellValue={foundRow[columnId]}
-				style={style}
-			/>
-			// <div onClick={(e) => newSelectCell(e, rowIndex, columnIndex)} className={'virtualized-cell'} style={{ ...style }}>
-			// 	{foundRow[columnId]}
-			// </div>
+			<div style={{ ...style, textAlign: 'left' }}>
+				<div style={{ display: 'flex' }}>
+					<RowHeader rowIndex={rowIndex} />
+					{columns.map((col, columnIndex) => {
+						if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
+							return (
+								<ActiveCell
+									handleContextMenu={handleContextMenu}
+									key={`row${rowIndex}col${columnIndex}`}
+									changeActiveCell={changeActiveCell}
+									column={columns[columnIndex]}
+									columnIndex={columnIndex}
+									columns={columns}
+									createNewColumns={createNewColumns}
+									createNewRows={createNewRows}
+									numberOfRows={rows.length}
+									row={foundRow}
+									value={foundRow[col.id]}
+								/>
+							);
+						}
+						if (isSelectedCell(rowIndex, columnIndex)) {
+							return (
+								<SelectedCell
+									key={`Row${rowIndex}Col${columnIndex}`}
+									// isFormulaColumn={isFormulaColumn}
+									changeActiveCell={changeActiveCell}
+									column={col}
+									columnIndex={columnIndex}
+									columns={columns}
+									createNewColumns={createNewColumns}
+									createNewRows={createNewRows}
+									finishCurrentSelectionRange={finishCurrentSelectionRange}
+									handleContextMenu={handleContextMenu}
+									modifyCellSelectionRange={modifyCellSelectionRange}
+									numberOfRows={rows.length}
+									paste={paste}
+									row={foundRow}
+									rows={rows}
+									rowIndex={rowIndex}
+								/>
+							);
+						}
+
+						return (
+							<NormalCell
+								key={`Row${rowIndex}Col${columnIndex}`}
+								changeActiveCell={changeActiveCell}
+								column={columns[columnIndex]}
+								columnIndex={columnIndex}
+								finishCurrentSelectionRange={finishCurrentSelectionRange}
+								modifyCellSelectionRange={modifyCellSelectionRange}
+								row={foundRow}
+								rowIndex={rowIndex}
+								selectCell={selectCell}
+								cellValue={foundRow[col.id]}
+							/>
+						);
+					})}
+				</div>
+			</div>
 		);
 	};
 
@@ -545,8 +524,9 @@ function Spreadsheet({ eventBus }) {
 		}
 		return 80;
 	});
-	const rowHeights = new Array(rows.length).fill(true).map(() => 30);
-	const gridRef = React.createRef();
+	// Yours should be based on the content of the row.
+	const rowHeights = new Array(rows.length).fill(true).map(() => 35);
+	const getItemSize = (index) => rowHeights[index];
 
 	return (
 		// Height 100% necessary for autosizer to work
@@ -559,17 +539,20 @@ function Spreadsheet({ eventBus }) {
 			<span style={{ display: 'flex' }}>{headers}</span>
 			<AutoSizer>
 				{({ height, width }) => (
-					<Grid
-						ref={gridRef}
-						columnCount={26}
-						columnWidth={(index) => columnWidths[index]}
+					<List
+						// columnCount={26}
+						// columnWidth={(index) => columnWidths[index]}
+						// height={height}
+						// rowCount={rows.length}
+						// rowHeight={(index) => rowHeights[index]}
+						// width={width}
 						height={height}
-						rowCount={rows.length}
-						rowHeight={(index) => rowHeights[index]}
+						itemCount={rows.length}
+						itemSize={getItemSize}
 						width={width}
 					>
-						{Cell}
-					</Grid>
+						{Row}
+					</List>
 				)}
 			</AutoSizer>
 			<AnalysisButtons />

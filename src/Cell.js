@@ -13,7 +13,7 @@ import { Tooltip } from 'antd';
 import './App.css';
 
 export function RowNumberCell({ rowIndex }) {
-	return <div className={'row-number-cell'}>{rowIndex + 1}</div>;
+	return <span className={'row-number-cell'}>{rowIndex + 1}</span>;
 }
 
 export function SelectedCell({
@@ -32,7 +32,6 @@ export function SelectedCell({
 	rowIndex,
 	createNewRows,
 	createNewColumns,
-	style,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { contextMenuOpen } = useSpreadsheetState();
@@ -112,17 +111,16 @@ export function SelectedCell({
 	}
 
 	return (
-		<div
+		<span
 			key={`row${rowIndex}col${columnIndex}`}
-			style={{ ...style, backgroundColor: '#C0C0C0' }}
-			className={'virtualized-cell'}
+			style={{ margin: '0 20px', backgroundColor: '#C0C0C0' }}
 			onContextMenu={handleContextMenu}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 			onMouseUp={finishCurrentSelectionRange}
 		>
 			{row && column ? row[column.id] : ''}
-		</div>
+		</span>
 	);
 }
 
@@ -134,7 +132,6 @@ export function NormalCell({
 	modifyCellSelectionRange,
 	row,
 	rowIndex,
-	style,
 	selectCell,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -157,27 +154,25 @@ export function NormalCell({
 
 	return formatForNumberColumn(cellValue, column) ? (
 		<Tooltip title={`Cell value is not a number`}>
-			<div
-				className={'virtualized-cell'}
+			<span
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				onMouseUp={finishCurrentSelectionRange}
-				style={{ ...style, backgroundColor: 'red' }}
+				style={{ margin: '0 20px', backgroundColor: 'green' }}
 			>
 				{cellValue || '\u2022'}
-			</div>
+			</span>
 		</Tooltip>
 	) : (
-		<div
-			className={'virtualized-cell'}
+		<span
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 			onMouseUp={finishCurrentSelectionRange}
-			style={{ ...style }}
+			style={{ margin: '0 20px' }}
 		>
 			{cellValue || '\u2022'}
-		</div>
+		</span>
 	);
 }

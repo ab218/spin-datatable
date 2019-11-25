@@ -74,9 +74,9 @@ export default function ActiveCell({
 	// });
 
 	return (
-		<div style={{ ...style }} className={'virtualized-cell'} onContextMenu={(e) => handleContextMenu(e)}>
+		<span style={{ margin: '0 20px' }} onContextMenu={(e) => handleContextMenu(e)}>
 			<ActiveCellInput value={value} row={row} column={column} />
-		</div>
+		</span>
 	);
 }
 
