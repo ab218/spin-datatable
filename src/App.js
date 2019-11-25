@@ -9,7 +9,7 @@ eventBus.subscribe('select-cell', function handlingCellSelection() {});
 
 function App() {
 	return (
-		<div className="App">
+		<div style={{ height: '100%' }} className="App">
 			<SpreadsheetProvider>
 				<Spreadsheet eventBus={eventBus} />
 			</SpreadsheetProvider>

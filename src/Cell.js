@@ -54,7 +54,6 @@ export function SelectedCell({
 	};
 
 	useEffect(() => {
-		console.log(row, column);
 		function onKeyDown(event) {
 			if (event.metaKey) {
 				if (event.key === 'c') {
@@ -128,17 +127,18 @@ export function SelectedCell({
 }
 
 export function NormalCell({
+	cellValue,
 	column,
 	columnIndex,
 	finishCurrentSelectionRange,
 	modifyCellSelectionRange,
 	row,
 	rowIndex,
+	style,
 	selectCell,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { contextMenuOpen } = useSpreadsheetState();
-	const cellValue = row[column.id];
 
 	function onMouseDown(event) {
 		// prevent text from being highlighted on drag select cells
@@ -158,21 +158,24 @@ export function NormalCell({
 	return formatForNumberColumn(cellValue, column) ? (
 		<Tooltip title={`Cell value is not a number`}>
 			<div
-				className="NaN-value"
+				className={'virtualized-cell'}
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				onMouseUp={finishCurrentSelectionRange}
+				style={{ ...style, backgroundColor: 'red' }}
 			>
 				{cellValue || '\u2022'}
 			</div>
 		</Tooltip>
 	) : (
 		<div
+			className={'virtualized-cell'}
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 			onMouseUp={finishCurrentSelectionRange}
+			style={{ ...style }}
 		>
 			{cellValue || '\u2022'}
 		</div>

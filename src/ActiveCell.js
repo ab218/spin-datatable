@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useRef, useEffect, useState } from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
 import { UPDATE_CELL } from './constants';
@@ -15,7 +16,7 @@ const cursorKeyToRowColMapper = {
 	},
 };
 
-function ActiveCell({
+export default function ActiveCell({
 	changeActiveCell,
 	columnIndex,
 	row,
@@ -32,7 +33,6 @@ function ActiveCell({
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { selectDisabled } = useSpreadsheetState();
-	const [ inputVal, setInputVal ] = useState('');
 
 	const onKeyDown = (event) => {
 		switch (event.key) {
@@ -50,7 +50,7 @@ function ActiveCell({
 		}
 	};
 
-	const inputEl = useRef(null);
+	// const inputEl = useRef(null);
 	// useEffect(() => {
 	// 	const oldInputElCurrent = inputEl.current;
 	// 	// Sometimes focus wasn't firing so I added a short setTimeout here
@@ -73,29 +73,47 @@ function ActiveCell({
 	// 	}
 	// });
 
-	// useEffect(
-	// 	() => {
-	// 		if (inputVal !== value) {
-	// 			dispatchSpreadsheetAction({ type: UPDATE_CELL, row, column, cellValue: inputVal });
-	// 		}
-	// 	},
-	// 	[ column, dispatchSpreadsheetAction, inputVal, row, value ],
-	// );
-
 	return (
 		<div style={{ ...style }} className={'virtualized-cell'} onContextMenu={(e) => handleContextMenu(e)}>
-			<input
-				ref={inputEl}
-				type="text"
-				value={inputVal}
-				onKeyDown={onKeyDown}
-				onChange={(e) => {
-					e.preventDefault();
-					setInputVal(e.target.value);
-				}}
-			/>
+			<ActiveCellInput value={value} row={row} column={column} />
 		</div>
 	);
 }
 
-export default ActiveCell;
+export function ActiveCellInput(props) {
+	const [ currentValue, setCurrentValue ] = useState(props.value || '');
+	const [ oldValue, setOldValue ] = useState(props.value);
+	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const inputRef = useRef(null);
+
+	useEffect(() => {
+		const oldInputRef = inputRef.current;
+		setTimeout(() => {
+			oldInputRef.focus();
+		}, 5);
+	}, []);
+
+	useEffect(
+		() => {
+			if (currentValue && currentValue !== oldValue) {
+				// Dispatch is causing page to scroll up. Why?
+				dispatchSpreadsheetAction({ type: UPDATE_CELL, row: props.row, column: props.column, cellValue: currentValue });
+				setOldValue(currentValue);
+			}
+		},
+		[ currentValue ],
+	);
+
+	return (
+		<input
+			ref={inputRef}
+			type="text"
+			value={currentValue}
+			// onKeyDown={onKeyDown}
+			onChange={(e) => {
+				e.preventDefault();
+				setCurrentValue(e.target.value);
+			}}
+		/>
+	);
+}

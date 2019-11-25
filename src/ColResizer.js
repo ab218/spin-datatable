@@ -56,7 +56,7 @@ export default function ColumnResizer({ borderRight, column, columnIndex, column
 	};
 
 	const style = {
-		borderRight: borderRight && '1px solid black',
+		borderRight: '1px solid #ddd',
 		userSelect: 'none',
 		width: (originalCellWidth || 80) + offset,
 		textOverflow: 'ellipsis',
@@ -73,11 +73,11 @@ export default function ColumnResizer({ borderRight, column, columnIndex, column
 	};
 
 	return (
-		<th style={style} onMouseUp={endDrag} onDoubleClick={openModal} onContextMenu={onContextMenu}>
+		<div style={style} onMouseUp={endDrag} onDoubleClick={openModal} onContextMenu={onContextMenu}>
 			<span>{column && column.label}</span>
 			<span className="header-handle" onMouseDown={startDrag}>
 				&nbsp;
 			</span>
-		</th>
+		</div>
 	);
 }
