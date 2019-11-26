@@ -21,15 +21,14 @@ export default function ActiveCell({
 	columnIndex,
 	row,
 	rows,
-	column,
 	columns,
 	createNewColumns,
 	createNewRows,
+	columnId,
 	handleContextMenu,
 	numberOfRows,
 	rowIndex,
 	value,
-	style,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { selectDisabled } = useSpreadsheetState();
@@ -64,26 +63,17 @@ export default function ActiveCell({
 	// 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	// }, []);
 
-	// useEffect(() => {
-	// 	if (rows === 1) {
-	// 		createNewRows(rows);
-	// 	}
-	// 	if (columnIndex > columns.length) {
-	// 		createNewColumns(columnIndex - columns.length);
-	// 	}
-	// });
+	useEffect(() => {
+		if (rows === 1) {
+			createNewRows(rows);
+		}
+		if (columnIndex > columns.length) {
+			createNewColumns(columnIndex - columns.length);
+		}
+	});
 
-	return (
-		<span style={{ margin: '0 20px' }} onContextMenu={(e) => handleContextMenu(e)}>
-			<ActiveCellInput value={value} row={row} column={column} />
-		</span>
-	);
-}
-
-export function ActiveCellInput(props) {
-	const [ currentValue, setCurrentValue ] = useState(props.value || '');
-	const [ oldValue, setOldValue ] = useState(props.value);
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const [ currentValue, setCurrentValue ] = useState(value || '');
+	const [ oldValue, setOldValue ] = useState(value);
 	const inputRef = useRef(null);
 
 	useEffect(() => {
@@ -96,8 +86,12 @@ export function ActiveCellInput(props) {
 	useEffect(
 		() => {
 			if (currentValue && currentValue !== oldValue) {
-				// Dispatch is causing page to scroll up. Why?
-				dispatchSpreadsheetAction({ type: UPDATE_CELL, row: props.row, column: props.column, cellValue: currentValue });
+				dispatchSpreadsheetAction({
+					type: UPDATE_CELL,
+					row: row,
+					columnId: columnId,
+					cellValue: currentValue,
+				});
 				setOldValue(currentValue);
 			}
 		},
@@ -105,15 +99,17 @@ export function ActiveCellInput(props) {
 	);
 
 	return (
-		<input
-			ref={inputRef}
-			type="text"
-			value={currentValue}
-			// onKeyDown={onKeyDown}
-			onChange={(e) => {
-				e.preventDefault();
-				setCurrentValue(e.target.value);
-			}}
-		/>
+		<div onContextMenu={(e) => handleContextMenu(e)}>
+			<input
+				ref={inputRef}
+				type="text"
+				value={currentValue}
+				onKeyDown={onKeyDown}
+				onChange={(e) => {
+					e.preventDefault();
+					setCurrentValue(e.target.value);
+				}}
+			/>
+		</div>
 	);
 }

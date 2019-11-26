@@ -13,12 +13,11 @@ import { Tooltip } from 'antd';
 import './App.css';
 
 export function RowNumberCell({ rowIndex }) {
-	return <span className={'row-number-cell'}>{rowIndex + 1}</span>;
+	return <div className={'row-number-cell'}>{rowIndex + 1}</div>;
 }
 
 export function SelectedCell({
 	changeActiveCell,
-	column,
 	columns,
 	columnIndex,
 	finishCurrentSelectionRange,
@@ -30,6 +29,7 @@ export function SelectedCell({
 	row,
 	rows,
 	rowIndex,
+	cellValue,
 	createNewRows,
 	createNewColumns,
 }) {
@@ -71,7 +71,7 @@ export function SelectedCell({
 				if (columnIndex > columns.length) {
 					createNewColumns(columnIndex - columns.length);
 				}
-				dispatchSpreadsheetAction({ type: UPDATE_CELL, row, column, cellValue: event.key });
+				dispatchSpreadsheetAction({ type: UPDATE_CELL, row, column: columnIndex, cellValue: event.key });
 				dispatchSpreadsheetAction({ type: 'DISABLE_SELECT' });
 				dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: rowIndex, column: columnIndex });
 			} else {
@@ -111,26 +111,24 @@ export function SelectedCell({
 	}
 
 	return (
-		<span
+		<div
 			key={`row${rowIndex}col${columnIndex}`}
-			style={{ margin: '0 20px', backgroundColor: '#C0C0C0' }}
+			style={{ width: '100%', height: '100%', backgroundColor: '#C0C0C0' }}
 			onContextMenu={handleContextMenu}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 			onMouseUp={finishCurrentSelectionRange}
 		>
-			{row && column ? row[column.id] : ''}
-		</span>
+			{cellValue || ''}
+		</div>
 	);
 }
 
 export function NormalCell({
 	cellValue,
-	column,
 	columnIndex,
 	finishCurrentSelectionRange,
 	modifyCellSelectionRange,
-	row,
 	rowIndex,
 	selectCell,
 }) {
@@ -152,27 +150,27 @@ export function NormalCell({
 		}
 	}
 
-	return formatForNumberColumn(cellValue, column) ? (
+	// this will need fixing
+	return formatForNumberColumn(cellValue, columnIndex) ? (
 		<Tooltip title={`Cell value is not a number`}>
-			<span
+			<div
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				onMouseUp={finishCurrentSelectionRange}
-				style={{ margin: '0 20px', backgroundColor: 'green' }}
+				style={{ backgroundColor: 'green' }}
 			>
 				{cellValue || '\u2022'}
-			</span>
+			</div>
 		</Tooltip>
 	) : (
-		<span
+		<div
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 			onMouseUp={finishCurrentSelectionRange}
-			style={{ margin: '0 20px' }}
 		>
 			{cellValue || '\u2022'}
-		</span>
+		</div>
 	);
 }
