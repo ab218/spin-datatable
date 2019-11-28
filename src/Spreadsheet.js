@@ -10,6 +10,7 @@ import DistributionModal from './ModalDistribution';
 import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import AnalysisButtons from './AnalysisButtons';
+import HamburgerMenu from './HamburgerMenu';
 import { Column, Table, AutoSizer } from 'react-virtualized';
 import Draggable from 'react-draggable';
 import { SelectedCell, NormalCell } from './Cell';
@@ -38,15 +39,15 @@ export function formatForNumberColumn(cellValue, column) {
 	}
 }
 
-// function BlankRow({ cellCount }) {
-// 	return (
-// 		<tr>
-// 			{Array(cellCount)
-// 				.fill(undefined)
-// 				.map((_, columnIndex) => <td style={{ backgroundColor: '#eee' }} key={'blankcol' + columnIndex} />)}
-// 		</tr>
-// 	);
-// }
+function BlankRow({ cellCount }) {
+	return (
+		<tr>
+			{Array(cellCount)
+				.fill(undefined)
+				.map((_, columnIndex) => <td style={{ backgroundColor: '#eee' }} key={'blankcol' + columnIndex} />)}
+		</tr>
+	);
+}
 
 // function BlankClickableRow({
 // 	activeCell,
@@ -277,10 +278,39 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: OPEN_CONTEXT_MENU, contextMenuPosition: { left: e.pageX, top: e.pageY } });
 	}
 
-	const headerRenderer = ({ columnData, dataKey, disableSort, label, sortBy, sortDirection }) => {
+	const headerRenderer = ({ columnData: columnIndex, dataKey, disableSort, label, sortBy, sortDirection }) => {
+		const onContextMenu = (e) => {
+			e.preventDefault();
+			dispatchSpreadsheetAction({
+				type: OPEN_CONTEXT_MENU,
+				colName: label,
+				colHeaderContext: true,
+				contextMenuPosition: { left: e.pageX, top: e.pageY },
+			});
+		};
+		function openModal(e) {
+			if (!dataKey) {
+				if (columnIndex > columns.length) {
+					createNewColumns(columnIndex + 1 - columns.length);
+					return;
+				}
+			}
+			dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
+			dispatchSpreadsheetAction({
+				type: 'TOGGLE_COLUMN_TYPE_MODAL',
+				columnTypeModalOpen: true,
+				column: columns.find((col) => col.id === dataKey),
+			});
+		}
 		return (
 			<React.Fragment key={dataKey}>
-				<div className="ReactVirtualized__Table__headerTruncatedText">{label}</div>
+				<div
+					onDoubleClick={openModal}
+					onContextMenu={onContextMenu}
+					className="ReactVirtualized__Table__headerTruncatedText"
+				>
+					{label}
+				</div>
 				<Draggable
 					axis="x"
 					defaultClassName="DragHandle"
@@ -360,24 +390,78 @@ function Spreadsheet({ eventBus }) {
 					cellValue={cellData}
 				/>
 			);
+		} else if (dataKey) {
+			return (
+				<NormalCell
+					key={`Row${rowIndex}Col${columnIndex}`}
+					changeActiveCell={changeActiveCell}
+					columnIndex={columnIndex}
+					finishCurrentSelectionRange={finishCurrentSelectionRange}
+					modifyCellSelectionRange={modifyCellSelectionRange}
+					row={rowData}
+					rowIndex={rowIndex}
+					selectCell={selectCell}
+					cellValue={cellData}
+				/>
+			);
+		} else {
+			return (
+				<div
+					style={{ backgroundColor: '#eee', height: '100%', width: '100%' }}
+					key={`row${rowIndex}col${columnIndex}`}
+					onMouseDown={(e) => {
+						e.preventDefault();
+						// if (contextMenuOpen) {
+						// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
+						// }
+						selectCell(rowIndex, columnIndex);
+					}}
+				>
+					&nbsp;
+				</div>
+			);
 		}
-		return (
-			<NormalCell
-				key={`Row${rowIndex}Col${columnIndex}`}
-				changeActiveCell={changeActiveCell}
-				columnIndex={columnIndex}
-				finishCurrentSelectionRange={finishCurrentSelectionRange}
-				modifyCellSelectionRange={modifyCellSelectionRange}
-				row={rowData}
-				rowIndex={rowIndex}
-				selectCell={selectCell}
-				cellValue={cellData}
-			/>
-		);
 	}
 
 	function rowHeaders({ rowIndex }) {
 		return <div className={'row-number-cell'}>{rowIndex + 1}</div>;
+	}
+
+	function renderColumns(totalColumnCount) {
+		const colsContainer = [];
+		for (let i = 0; i < totalColumnCount; i++) {
+			const col = columns[i];
+			if (col) {
+				colsContainer.push(
+					<Column
+						key={i}
+						headerRenderer={headerRenderer}
+						dataKey={col.id}
+						label={col.label}
+						width={widths[col.id]}
+						cellRenderer={cellRenderer}
+						style={{ border: '1px solid #ddd', borderLeft: i === 0 ? '1 px solid #ddd' : 'none', margin: 0 }}
+					/>,
+				);
+			} else {
+				colsContainer.push(
+					<Column
+						key={i}
+						cellRenderer={cellRenderer}
+						headerRenderer={headerRenderer}
+						columnData={i}
+						label={''}
+						width={100}
+						style={{ border: '1px solid #ddd', borderLeft: i === 0 ? '1 px solid #ddd' : 'none', margin: 0 }}
+					/>,
+				);
+			}
+		}
+		return colsContainer;
+	}
+
+	function rowHeaderColumnHeaderRenderer() {
+		return <HamburgerMenu />;
 	}
 
 	return (
@@ -392,38 +476,29 @@ function Spreadsheet({ eventBus }) {
 				<AutoSizer>
 					{({ height, width }) => (
 						<Table
+							overscanRowCount={0}
 							width={width}
 							height={height}
-							headerHeight={20}
+							headerHeight={30}
 							rowHeight={30}
 							rowCount={rows.length}
 							rowGetter={({ index }) => rows[index]}
 							rowStyle={{ alignItems: 'stretch' }}
-							style={{
-								// border: '1px solid #ddd',
-								// borderCollapse: 'collapse',
-								// tableLayout: 'fixed',
-							}}
 						>
-							<Column width={30} label={''} dataKey={'abc123'} cellRenderer={rowHeaders} style={{ margin: 0 }} />
-							{columns.map((col, i) => {
-								return (
-									<Column
-										key={i}
-										headerRenderer={headerRenderer}
-										dataKey={col.id}
-										label={col.label}
-										width={widths[col.id]}
-										cellRenderer={cellRenderer}
-										style={{ border: '1px solid #ddd', borderLeft: i === 0 ? '1 px solid #ddd' : 'none', margin: 0 }}
-									/>
-								);
-							})}
+							<Column
+								width={40}
+								label={''}
+								dataKey={'abc123'}
+								headerRenderer={rowHeaderColumnHeaderRenderer}
+								cellRenderer={rowHeaders}
+								style={{ margin: 0 }}
+							/>
+							{renderColumns(16)}
 						</Table>
 					)}
 				</AutoSizer>
 			)}
-			<AnalysisButtons />
+			{/* <AnalysisButtons /> */}
 		</div>
 	);
 }

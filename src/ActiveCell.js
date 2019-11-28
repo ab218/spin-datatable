@@ -1,6 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useRef, useEffect, useState } from 'react';
-import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
+import {
+	useSpreadsheetDispatch,
+	// useSpreadsheetState
+} from './SpreadsheetProvider';
 import { UPDATE_CELL } from './constants';
 
 const cursorKeyToRowColMapper = {
@@ -31,7 +34,7 @@ export default function ActiveCell({
 	value,
 }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { selectDisabled } = useSpreadsheetState();
+	// const { selectDisabled } = useSpreadsheetState();
 
 	const onKeyDown = (event) => {
 		switch (event.key) {

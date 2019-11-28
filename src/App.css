@@ -15,7 +15,36 @@ th {
 	border: 1px solid #ddd;
 	height: 30px;
 	width: 40px;
-	overflow: hidden;
+	/* overflow: hidden; */
+}
+
+/* Create a simple white box, and add the shadow for the initial state */
+.hamburger {
+	position: relative;
+	display: inline-block;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	transition: all 0.1s ease-in-out;
+}
+
+/* Create the hidden pseudo-element */
+/* include the shadow for the end state */
+.hamburger::after {
+	content: '';
+	position: absolute;
+	z-index: -1;
+	opacity: 0;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+	transition: opacity 0.1s ease-in-out;
+}
+
+/* Scale up the box */
+.hamburger:hover {
+	transform: scale(1.4, 1.4);
+}
+
+/* Fade in the pseudo-element with the bigger shadow */
+.hamburger:hover::after {
+	opacity: 1;
 }
 
 /* .virtualized-cell {
@@ -132,6 +161,10 @@ th {
 	border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
+/* .ReactVirtualized__Table__rowColumn {
+	overflow: 'hidden';
+} */
+
 .ReactVirtualized__Table__headerColumn {
 	display: flex;
 	flex-direction: row;
@@ -146,6 +179,7 @@ th {
 
 .ReactVirtualized__Table__headerTruncatedText {
 	flex: auto;
+	cursor: pointer;
 }
 
 .DragHandle {

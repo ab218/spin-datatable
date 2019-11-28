@@ -20,6 +20,7 @@ export function SelectedCell({
 	changeActiveCell,
 	columns,
 	columnIndex,
+	columnId,
 	finishCurrentSelectionRange,
 	handleContextMenu,
 	isFormulaColumn,
@@ -54,7 +55,7 @@ export function SelectedCell({
 
 	useEffect(() => {
 		function onKeyDown(event) {
-			if (event.metaKey) {
+			if (event.metaKey || event.ctrlKey) {
 				if (event.key === 'c') {
 					dispatchSpreadsheetAction({ type: COPY_VALUES });
 					return;
@@ -71,7 +72,7 @@ export function SelectedCell({
 				if (columnIndex > columns.length) {
 					createNewColumns(columnIndex - columns.length);
 				}
-				dispatchSpreadsheetAction({ type: UPDATE_CELL, row, column: columnIndex, cellValue: event.key });
+				dispatchSpreadsheetAction({ type: UPDATE_CELL, row, columnId, cellValue: event.key });
 				dispatchSpreadsheetAction({ type: 'DISABLE_SELECT' });
 				dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: rowIndex, column: columnIndex });
 			} else {
@@ -96,6 +97,7 @@ export function SelectedCell({
 	});
 
 	function onMouseDown(event) {
+		event.preventDefault();
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
@@ -158,13 +160,14 @@ export function NormalCell({
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				onMouseUp={finishCurrentSelectionRange}
-				style={{ backgroundColor: 'green' }}
+				style={{ backgroundColor: 'green', height: '100%', width: '100%' }}
 			>
 				{cellValue || '\u2022'}
 			</div>
 		</Tooltip>
 	) : (
 		<div
+			style={{ height: '100%', width: '100%', overflow: 'hidden', padding: '0 5px' }}
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}

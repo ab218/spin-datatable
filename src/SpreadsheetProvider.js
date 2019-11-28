@@ -80,7 +80,6 @@ function createRandomLetterString() {
 }
 
 function selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions) {
-	console.log('column positions', columnPositions);
 	const selectedColumnPositions = Object.entries(columnPositions).filter(([ _, position ]) => {
 		// Subtract one because of header column
 		return position >= left - 1 && position <= right - 1;
@@ -122,7 +121,7 @@ function spreadsheetReducer(state, action) {
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
-	console.log('dispatched:', type, 'with action:', action, 'state: ', state);
+	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
 		case ACTIVATE_CELL: {
@@ -575,17 +574,15 @@ export function SpreadsheetProvider({ children }) {
 		{ modelingType: 'Continuous', type: 'Number', label: 'Distance' },
 		{ modelingType: 'Nominal', type: 'Number', label: 'Trial' },
 		{ modelingType: 'Continuous', type: 'Number', label: 'Bubbles' },
-		{ modelingType: 'Continuous', type: 'Number', label: 'Distance' },
-		{ modelingType: 'Nominal', type: 'Number', label: 'Trial' },
-		{ modelingType: 'Continuous', type: 'Number', label: 'Bubbles' },
+		{ modelingType: 'Continuous', type: 'Number', label: 'Time' },
+		{ modelingType: 'Nominal', type: 'Number', label: 'Date' },
 
 		// {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
 	];
 
-	const startingColumn = [];
-
+	const startingColumn = [ { modelingType: 'Continuous', type: 'String', label: 'Column 1' } ];
 	// Starting columns
-	const columns = statsColumns
+	const columns = startingColumn
 		.map((metadata) => ({ id: metadata.id || createRandomLetterString(), ...metadata }))
 		.map((column, _, array) => {
 			const { formula, ...rest } = column;
@@ -601,13 +598,13 @@ export function SpreadsheetProvider({ children }) {
 		});
 
 	// normal starting condition
-	const startingRow = [ [] ];
 
 	// const dummyRows = [ ...Array(1000) ].map((e) => Array(10).fill(Math.random() * 10));
 
 	const columnPositions = columns.reduce((acc, column, index) => ({ ...acc, [column.id]: index }), {});
 
-	const rows = pondEcologyRows
+	const startingRow = [ [] ];
+	const rows = startingRow
 		.map((tuple) => ({
 			id: createRandomID(),
 			...tuple.reduce((acc, value, index) => ({ ...acc, [columns[index].id]: value }), {}),
@@ -630,7 +627,6 @@ export function SpreadsheetProvider({ children }) {
 
 			return rowCopy;
 		});
-	// const rowPositions = rows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
 
 	const rowPositions = {};
 	for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
