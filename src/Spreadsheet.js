@@ -444,7 +444,11 @@ function Spreadsheet({ eventBus }) {
 						label={col.label}
 						width={widths[col.id]}
 						cellRenderer={cellRenderer}
-						style={{ border: '1px solid #ddd', borderLeft: i === 0 ? '1 px solid #ddd' : 'none', margin: 0 }}
+						style={{
+							border: '1px solid #ddd',
+							borderLeft: i === 0 ? '1 px solid #ddd' : 'none',
+							margin: 0,
+						}}
 					/>,
 				);
 			} else {
@@ -468,9 +472,17 @@ function Spreadsheet({ eventBus }) {
 		return <HamburgerMenu />;
 	}
 
+	function sumOfColumnWidths(columns) {
+		let total = 0;
+		for (let i = 0; i < columns.length; i++) {
+			total += columns[i];
+		}
+		return total;
+	}
+
 	return (
 		// Height 100% necessary for autosizer to work
-		<div style={{ height: '100%' }}>
+		<div style={{ height: '100%', width: '100%' }}>
 			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
 			{distributionModalOpen && <DistributionModal />}
@@ -481,7 +493,7 @@ function Spreadsheet({ eventBus }) {
 					{({ height, width }) => (
 						<Table
 							overscanRowCount={0}
-							width={width}
+							width={Math.max(width, 100 + sumOfColumnWidths(Object.values(widths)))}
 							height={height}
 							headerHeight={25}
 							rowHeight={30}
@@ -497,7 +509,7 @@ function Spreadsheet({ eventBus }) {
 								cellRenderer={rowHeaders}
 								style={{ margin: 0 }}
 							/>
-							{renderColumns(Math.max(columns.length, 16))}
+							{renderColumns(Math.max(columns.length, 18))}
 						</Table>
 					)}
 				</AutoSizer>

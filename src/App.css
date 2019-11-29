@@ -178,6 +178,7 @@ th {
 }
 
 .ReactVirtualized__Table__headerTruncatedText {
+	line-height: 2;
 	flex: auto;
 	cursor: pointer;
 }
