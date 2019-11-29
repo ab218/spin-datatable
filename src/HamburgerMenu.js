@@ -27,7 +27,7 @@ export default function HamburgerMenu() {
 	);
 
 	return (
-		<div style={{ marginLeft: 10, width: 20, fontSize: 22 }}>
+		<div style={{ marginLeft: 10, width: 20, fontSize: 18 }}>
 			<Dropdown overlay={menu}>
 				<Icon
 					className={'hamburger'}

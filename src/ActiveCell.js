@@ -102,10 +102,11 @@ export default function ActiveCell({
 	);
 
 	return (
-		<div onContextMenu={(e) => handleContextMenu(e)}>
+		<div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => handleContextMenu(e)}>
 			<input
 				ref={inputRef}
 				type="text"
+				style={{ height: '100%', width: '100%' }}
 				value={currentValue}
 				onKeyDown={onKeyDown}
 				onChange={(e) => {

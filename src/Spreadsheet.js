@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
@@ -236,6 +237,7 @@ function Spreadsheet({ eventBus }) {
 		if (numberOfRowsRequired > 0) {
 			createNewRows(numberOfRowsRequired);
 		}
+		console.log(numberOfColumnsRequired);
 		if (numberOfColumnsRequired > 0) {
 			createNewColumns(numberOfColumnsRequired);
 		}
@@ -331,6 +333,7 @@ function Spreadsheet({ eventBus }) {
 
 	useEffect(
 		() => {
+			// TODO: Fix this so it doesn't reset widths whenever a new column is created
 			columns.forEach((col) => {
 				setWidths((prevWidths) => {
 					return { ...prevWidths, [col.id]: 100 };
@@ -344,6 +347,7 @@ function Spreadsheet({ eventBus }) {
 
 	const resizeRow = ({ dataKey, deltaX }) =>
 		setWidths((prevWidths) => {
+			console.log(prevWidths);
 			return {
 				...prevWidths,
 				[dataKey]: prevWidths[dataKey] + deltaX,
@@ -479,7 +483,7 @@ function Spreadsheet({ eventBus }) {
 							overscanRowCount={0}
 							width={width}
 							height={height}
-							headerHeight={30}
+							headerHeight={25}
 							rowHeight={30}
 							rowCount={rows.length}
 							rowGetter={({ index }) => rows[index]}
@@ -493,7 +497,7 @@ function Spreadsheet({ eventBus }) {
 								cellRenderer={rowHeaders}
 								style={{ margin: 0 }}
 							/>
-							{renderColumns(16)}
+							{renderColumns(Math.max(columns.length, 16))}
 						</Table>
 					)}
 				</AutoSizer>
