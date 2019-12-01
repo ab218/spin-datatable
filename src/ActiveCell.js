@@ -17,6 +17,17 @@ const cursorKeyToRowColMapper = {
 	Enter: function(row, column, numberOfRows) {
 		return { row: Math.min(row + 1, numberOfRows), column };
 	},
+	Tab: function(row, column, numberOfRows, numberOfColumns, shiftKey) {
+		if (shiftKey) {
+			if (column !== 1) return { row, column: column - 1 };
+			else if (column === 1 && row === 0) return { row: numberOfRows - 1, column: numberOfColumns };
+			else if (column === 1 && row !== 0) return { row: row - 1, column: numberOfColumns };
+		} else {
+			if (column < numberOfColumns) return { row, column: column + 1 };
+			else if (column === numberOfColumns && row === numberOfRows - 1) return { row: 0, column: 1 };
+			else if (column === numberOfColumns) return { row: row + 1, column: 1 };
+		}
+	},
 };
 
 export default function ActiveCell({
@@ -29,7 +40,6 @@ export default function ActiveCell({
 	createNewRows,
 	columnId,
 	handleContextMenu,
-	numberOfRows,
 	rowIndex,
 	value,
 }) {
@@ -42,8 +52,15 @@ export default function ActiveCell({
 			case 'ArrowDown':
 			case 'ArrowUp':
 			case 'Enter':
+			case 'Tab':
 				event.preventDefault();
-				const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
+				const { row, column } = cursorKeyToRowColMapper[event.key](
+					rowIndex,
+					columnIndex,
+					rows.length,
+					columns.length,
+					event.shiftKey,
+				);
 				changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
 				break;
 
@@ -67,8 +84,8 @@ export default function ActiveCell({
 	// }, []);
 
 	useEffect(() => {
-		if (rows === 1) {
-			createNewRows(rows);
+		if (rowIndex + 1 > rows.length) {
+			createNewRows(rowIndex + 1 - rows.length);
 		}
 		if (columnIndex > columns.length) {
 			createNewColumns(columnIndex - columns.length);

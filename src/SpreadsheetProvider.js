@@ -464,7 +464,7 @@ function spreadsheetReducer(state, action) {
 		case UPDATE_CELL: {
 			const { rows, columns } = state;
 			// row from action or last row from state
-			const originalRow = row || rows[rows.length - 1];
+			const originalRow = Object.keys(row).length > 0 ? row : rows[rows.length - 1];
 			const newRows = rows.slice();
 			const column = columns.find((col) => action.columnId === col.id);
 			const { id: columnID } = column || columns[columns.length - 1];

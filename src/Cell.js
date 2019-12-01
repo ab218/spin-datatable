@@ -66,7 +66,7 @@ export function SelectedCell({
 			}
 			// if the key pressed is not a non-character key (arrow key etc)
 			if (!isFormulaColumn && event.key.length === 1) {
-				if (rows > 0) {
+				if (rowIndex + 1 > rows.length) {
 					createNewRows(rows);
 				}
 				if (columnIndex > columns.length) {
@@ -79,7 +79,7 @@ export function SelectedCell({
 				switch (true) {
 					case Object.keys(cursorKeyToRowColMapper).includes(event.key):
 						event.preventDefault();
-						const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, numberOfRows);
+						const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, rows.length);
 						dispatchSpreadsheetAction({ type: TRANSLATE_SELECTED_CELL, rowIndex: row, columnIndex: column });
 						break;
 					case event.key === 'Backspace':
@@ -129,6 +129,8 @@ export function SelectedCell({
 export function NormalCell({
 	cellValue,
 	columnIndex,
+	columns,
+	columnId,
 	finishCurrentSelectionRange,
 	modifyCellSelectionRange,
 	rowIndex,
@@ -153,14 +155,14 @@ export function NormalCell({
 	}
 
 	// this will need fixing
-	return formatForNumberColumn(cellValue, columnIndex) ? (
+	return formatForNumberColumn(cellValue, columns.find((col) => col.id === columnId)) ? (
 		<Tooltip title={`Cell value is not a number`}>
 			<div
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				onMouseUp={finishCurrentSelectionRange}
-				style={{ backgroundColor: 'green', height: '100%', width: '100%' }}
+				style={{ backgroundColor: 'pink', height: '100%', width: '100%' }}
 			>
 				{cellValue || '\u2022'}
 			</div>
