@@ -106,12 +106,6 @@ export function SelectedCell({
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
 		if (!isFormulaColumn && event.button === 0) {
-			if (rowIndex + 1 > rows.length) {
-				createNewRows(rowIndex + 1 - rows.length);
-			}
-			if (columnIndex > columns.length) {
-				createNewColumns(columnIndex - columns.length);
-			}
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
 		}
 	}
