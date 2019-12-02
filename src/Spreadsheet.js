@@ -212,19 +212,19 @@ function Spreadsheet({ eventBus }) {
 		);
 	};
 
+	// When a new column is created, set the default width to 100px;
 	useEffect(
 		() => {
-			// TODO: Fix this so it doesn't reset widths whenever a new column is created
 			columns.forEach((col) => {
 				setWidths((prevWidths) => {
-					return { ...prevWidths, [col.id]: 100 };
+					return prevWidths.hasOwnProperty(col.id) ? { ...prevWidths } : { ...prevWidths, [col.id]: 100 };
 				});
 			});
 		},
 		[ columns ],
 	);
 
-	const [ widths, setWidths ] = useState(null);
+	const [ widths, setWidths ] = useState({});
 
 	const resizeRow = ({ dataKey, deltaX }) =>
 		setWidths((prevWidths) => {

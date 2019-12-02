@@ -25,7 +25,6 @@ export function SelectedCell({
 	handleContextMenu,
 	isFormulaColumn,
 	modifyCellSelectionRange,
-	numberOfRows,
 	paste,
 	row,
 	rows,
