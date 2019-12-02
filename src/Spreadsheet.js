@@ -218,7 +218,7 @@ function Spreadsheet({ eventBus }) {
 			columns.forEach((col) => {
 				setWidths((prevWidths) => {
 					// hasOwnProperty might need to be changed for better performance
-					return prevWidths.hasOwnProperty(col.id) ? { ...prevWidths } : { ...prevWidths, [col.id]: 100 };
+					return prevWidths.hasOwnProperty(col.id) ? prevWidths : { ...prevWidths, [col.id]: 100 };
 				});
 			});
 		},
