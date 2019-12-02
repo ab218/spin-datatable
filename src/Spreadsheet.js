@@ -188,6 +188,7 @@ function Spreadsheet({ eventBus }) {
 		return (
 			<React.Fragment key={props.dataKey}>
 				<div
+					style={{ userSelect: 'none' }}
 					onDoubleClick={openModal}
 					onContextMenu={onContextMenu}
 					className="ReactVirtualized__Table__headerTruncatedText"
@@ -206,7 +207,9 @@ function Spreadsheet({ eventBus }) {
 					position={{ x: 0 }}
 					zIndex={999}
 				>
-					<span className="DragHandleIcon">⋮</span>
+					<span style={{ userSelect: 'none' }} className="DragHandleIcon">
+						⋮
+					</span>
 				</Draggable>
 			</React.Fragment>
 		);
