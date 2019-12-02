@@ -41,14 +41,14 @@ export function SelectedCell({
 			return { row: Math.max(row - 1, 0), column };
 		},
 		ArrowDown: function(row, column, numberOfRows) {
-			return { row: Math.min(row + 1, numberOfRows), column };
+			return { row: Math.min(row + 1, numberOfRows - 1), column };
 		},
 		ArrowLeft: function(row, column) {
 			// Column should be minimum of 1 due to side row header
 			return { row, column: Math.max(column - 1, 1) };
 		},
-		ArrowRight: function(row, column) {
-			return { row, column: column + 1 };
+		ArrowRight: function(row, column, _, numberOfColumns) {
+			return { row, column: Math.min(column + 1, numberOfColumns) };
 		},
 	};
 
@@ -78,7 +78,12 @@ export function SelectedCell({
 				switch (true) {
 					case Object.keys(cursorKeyToRowColMapper).includes(event.key):
 						event.preventDefault();
-						const { row, column } = cursorKeyToRowColMapper[event.key](rowIndex, columnIndex, rows.length);
+						const { row, column } = cursorKeyToRowColMapper[event.key](
+							rowIndex,
+							columnIndex,
+							rows.length,
+							columns.length,
+						);
 						dispatchSpreadsheetAction({ type: TRANSLATE_SELECTED_CELL, rowIndex: row, columnIndex: column });
 						break;
 					case event.key === 'Backspace':
@@ -101,6 +106,12 @@ export function SelectedCell({
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
 		if (!isFormulaColumn && event.button === 0) {
+			if (rowIndex + 1 > rows.length) {
+				createNewRows(rowIndex + 1 - rows.length);
+			}
+			if (columnIndex > columns.length) {
+				createNewColumns(columnIndex - columns.length);
+			}
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
 		}
 	}

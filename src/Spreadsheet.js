@@ -161,19 +161,19 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: OPEN_CONTEXT_MENU, contextMenuPosition: { left: e.pageX, top: e.pageY } });
 	}
 
-	const headerRenderer = ({ columnData: columnIndex, dataKey, disableSort, label, sortBy, sortDirection }) => {
+	const headerRenderer = (props, columnIndex) => {
 		const onContextMenu = (e) => {
 			e.preventDefault();
 			dispatchSpreadsheetAction({
 				type: OPEN_CONTEXT_MENU,
-				colName: label,
+				colName: props.label,
 				colHeaderContext: true,
 				contextMenuPosition: { left: e.pageX, top: e.pageY },
 			});
 		};
 		function openModal(e) {
-			if (!dataKey) {
-				if (columnIndex > columns.length) {
+			if (!props.dataKey) {
+				if (columnIndex >= columns.length) {
 					createNewColumns(columnIndex + 1 - columns.length);
 					return;
 				}
@@ -182,25 +182,25 @@ function Spreadsheet({ eventBus }) {
 			dispatchSpreadsheetAction({
 				type: 'TOGGLE_COLUMN_TYPE_MODAL',
 				columnTypeModalOpen: true,
-				column: columns.find((col) => col.id === dataKey),
+				column: columns.find((col) => col.id === props.dataKey),
 			});
 		}
 		return (
-			<React.Fragment key={dataKey}>
+			<React.Fragment key={props.dataKey}>
 				<div
 					onDoubleClick={openModal}
 					onContextMenu={onContextMenu}
 					className="ReactVirtualized__Table__headerTruncatedText"
 				>
-					{label}
+					{props.label}
 				</div>
 				<Draggable
 					axis="x"
 					defaultClassName="DragHandle"
 					defaultClassNameDragging="DragHandleActive"
 					onDrag={(event, { deltaX }) =>
-						resizeRow({
-							dataKey,
+						resizeColumn({
+							dataKey: props.dataKey,
 							deltaX,
 						})}
 					position={{ x: 0 }}
@@ -217,6 +217,7 @@ function Spreadsheet({ eventBus }) {
 		() => {
 			columns.forEach((col) => {
 				setWidths((prevWidths) => {
+					// hasOwnProperty might need to be changed for better performance
 					return prevWidths.hasOwnProperty(col.id) ? { ...prevWidths } : { ...prevWidths, [col.id]: 100 };
 				});
 			});
@@ -226,7 +227,7 @@ function Spreadsheet({ eventBus }) {
 
 	const [ widths, setWidths ] = useState({});
 
-	const resizeRow = ({ dataKey, deltaX }) =>
+	const resizeColumn = ({ dataKey, deltaX }) =>
 		setWidths((prevWidths) => {
 			// for empty columns
 			if (!dataKey) {
@@ -293,15 +294,17 @@ function Spreadsheet({ eventBus }) {
 					/>
 				);
 			} else {
-				// Cells not in a defined column or row
+				// Cells in blank clickable row not in a defined column
 				return (
 					<div
-						onMouseDown={(e) => {
+						onDoubleClick={(e) => {
 							e.preventDefault();
 							if (contextMenuOpen) {
 								dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 							}
-							selectCell(rowIndex, columnIndex);
+							if (columnIndex > columns.length) {
+								createNewColumns(columnIndex - columns.length);
+							}
 						}}
 						style={{ backgroundColor: '#eee', height: '100%', width: '100%' }}
 					/>
@@ -328,15 +331,19 @@ function Spreadsheet({ eventBus }) {
 			);
 		} else {
 			return (
+				// cells in defined rows but undefined columns
 				<div
 					style={{ backgroundColor: '#eee', height: '100%', width: '100%' }}
 					key={`row${rowIndex}col${columnIndex}`}
-					onMouseDown={(e) => {
+					onDoubleClick={(e) => {
 						e.preventDefault();
 						if (contextMenuOpen) {
 							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 						}
-						selectCell(rowIndex, columnIndex);
+						if (columnIndex > columns.length) {
+							createNewColumns(columnIndex - columns.length);
+						}
+						// selectCell(rowIndex, columnIndex);
 					}}
 				>
 					&nbsp;
@@ -346,25 +353,27 @@ function Spreadsheet({ eventBus }) {
 	}
 
 	function rowHeaders({ rowIndex }) {
-		return <div className={'row-number-cell'}>{rowIndex + 1}</div>;
+		// only show row numbers of existing rows
+		return <div className={'row-number-cell'}>{rows.length > rowIndex && rowIndex + 1}</div>;
 	}
 
 	function renderColumns(totalColumnCount) {
 		// Render column if it exists, otherwise render a blank column
 		const colsContainer = [];
-		for (let i = 0; i < totalColumnCount; i++) {
-			const col = columns[i];
+		for (let columnIndex = 0; columnIndex < totalColumnCount; columnIndex++) {
+			const column = columns[columnIndex];
 			colsContainer.push(
 				<Column
-					key={i}
+					key={columnIndex}
 					cellRenderer={cellRenderer}
-					headerRenderer={headerRenderer}
-					dataKey={col ? col.id : ''}
-					label={col ? col.label : ''}
-					width={col ? widths[col.id] : blankColumnWidth}
+					columnIndex={columnIndex}
+					headerRenderer={(props) => headerRenderer(props, columnIndex)}
+					dataKey={column ? column.id : ''}
+					label={column ? column.label : ''}
+					width={column ? widths[column.id] : blankColumnWidth}
 					style={{
 						border: '1px solid #ddd',
-						borderLeft: i === 0 ? '1 px solid #ddd' : 'none',
+						borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
 						margin: 0,
 					}}
 				/>,

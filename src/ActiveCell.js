@@ -83,15 +83,6 @@ export default function ActiveCell({
 	// 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	// }, []);
 
-	useEffect(() => {
-		if (rowIndex + 1 > rows.length) {
-			createNewRows(rowIndex + 1 - rows.length);
-		}
-		if (columnIndex > columns.length) {
-			createNewColumns(columnIndex - columns.length);
-		}
-	});
-
 	const [ currentValue, setCurrentValue ] = useState(value || '');
 	const [ oldValue, setOldValue ] = useState(value);
 	const inputRef = useRef(null);
@@ -106,6 +97,12 @@ export default function ActiveCell({
 	useEffect(
 		() => {
 			if (currentValue && currentValue !== oldValue) {
+				if (rowIndex + 1 > rows.length) {
+					createNewRows(rowIndex + 1 - rows.length);
+				}
+				if (columnIndex > columns.length) {
+					createNewColumns(columnIndex - columns.length);
+				}
 				dispatchSpreadsheetAction({
 					type: UPDATE_CELL,
 					row: row,
