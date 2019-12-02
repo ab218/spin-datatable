@@ -343,18 +343,30 @@ function Spreadsheet({ eventBus }) {
 						if (columnIndex > columns.length) {
 							createNewColumns(columnIndex - columns.length);
 						}
-						// selectCell(rowIndex, columnIndex);
 					}}
-				>
-					&nbsp;
-				</div>
+				/>
 			);
+		}
+	}
+
+	function rowHeadersOnClick(e, rowIndex) {
+		e.preventDefault();
+		if (rowIndex + 1 > rows.length) {
+			createNewRows(rowIndex + 1 - rows.length);
 		}
 	}
 
 	function rowHeaders({ rowIndex }) {
 		// only show row numbers of existing rows
-		return <div className={'row-number-cell'}>{rows.length > rowIndex && rowIndex + 1}</div>;
+		return (
+			<div
+				onClick={(e) => rowHeadersOnClick(e, rowIndex)}
+				className={'row-number-cell'}
+				style={{ borderBottom: '1px solid rgb(221, 221, 221)', userSelect: 'none' }}
+			>
+				{rows.length > rowIndex && rowIndex + 1}
+			</div>
+		);
 	}
 
 	function renderColumns(totalColumnCount) {

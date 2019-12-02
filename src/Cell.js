@@ -172,14 +172,21 @@ export function NormalCell({
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				onMouseUp={finishCurrentSelectionRange}
-				style={{ backgroundColor: 'pink', height: '100%', width: '100%' }}
+				style={{ backgroundColor: 'pink', height: '100%', width: '100%', userSelect: cellValue ? '' : 'none' }}
 			>
 				{cellValue || '\u2022'}
 			</div>
 		</Tooltip>
 	) : (
 		<div
-			style={{ height: '100%', width: '100%', lineHeight: 2, overflow: 'hidden', padding: '0 5px' }}
+			style={{
+				height: '100%',
+				width: '100%',
+				lineHeight: 2,
+				overflow: 'hidden',
+				padding: '0 5px',
+				userSelect: cellValue ? '' : 'none',
+			}}
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
