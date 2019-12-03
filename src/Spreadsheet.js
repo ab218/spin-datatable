@@ -53,6 +53,7 @@ function Spreadsheet({ eventBus }) {
 		selectedColumn,
 	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const [ widths, setWidths ] = useState({});
 
 	async function pingCloudFunctions() {
 		const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
@@ -81,6 +82,31 @@ function Spreadsheet({ eventBus }) {
 		pingCloudFunctions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
+
+	// When a new column is created, set the default width to 100px;
+	useEffect(
+		() => {
+			columns.forEach((col) => {
+				setWidths((prevWidths) => {
+					return prevWidths[col.id] ? prevWidths : { ...prevWidths, [col.id]: 100 };
+				});
+			});
+		},
+		[ columns ],
+	);
+
+	const resizeColumn = ({ dataKey, deltaX }) =>
+		setWidths((prevWidths) => {
+			// for empty columns
+			if (!dataKey) {
+				return prevWidths;
+			}
+			return {
+				...prevWidths,
+				// don't allow columns to shrink below 50px
+				[dataKey]: Math.max(prevWidths[dataKey] + deltaX, 50),
+			};
+		});
 
 	function isSelectedCell(row, column) {
 		function withinRange(value) {
@@ -214,33 +240,6 @@ function Spreadsheet({ eventBus }) {
 			</React.Fragment>
 		);
 	};
-
-	// When a new column is created, set the default width to 100px;
-	useEffect(
-		() => {
-			columns.forEach((col) => {
-				setWidths((prevWidths) => {
-					return prevWidths[col.id] ? prevWidths : { ...prevWidths, [col.id]: 100 };
-				});
-			});
-		},
-		[ columns ],
-	);
-
-	const [ widths, setWidths ] = useState({});
-
-	const resizeColumn = ({ dataKey, deltaX }) =>
-		setWidths((prevWidths) => {
-			// for empty columns
-			if (!dataKey) {
-				return prevWidths;
-			}
-			return {
-				...prevWidths,
-				// don't allow columns to shrink below 50px
-				[dataKey]: Math.max(prevWidths[dataKey] + deltaX, 50),
-			};
-		});
 
 	function cellRenderer({ rowIndex, columnIndex, rowData, cellData, dataKey, columnData, isScrolling }) {
 		if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {

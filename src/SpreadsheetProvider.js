@@ -124,10 +124,12 @@ function spreadsheetReducer(state, action) {
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
+		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column };
 			return { ...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] };
 		}
+		// EVENT: Select a cell
 		case ADD_CELL_TO_SELECTIONS: {
 			const { cellSelectionRanges = [] } = state;
 			const newSelection = { top: row, bottom: row, left: column, right: column };
@@ -148,6 +150,7 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: null,
 			};
 		}
+		// EVENT: Create many columns
 		case CREATE_COLUMNS: {
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
@@ -159,6 +162,7 @@ function spreadsheetReducer(state, action) {
 			}, state.columnPositions);
 			return { ...state, columns, columnPositions };
 		}
+		// EVENT: Create many rows
 		case CREATE_ROWS: {
 			const newRows = Array(rowCount).fill(undefined).map((_) => {
 				return { id: createRandomID() };
@@ -174,36 +178,7 @@ function spreadsheetReducer(state, action) {
 		case 'DISABLE_SELECT': {
 			return { ...state, selectDisabled: true };
 		}
-		case PASTE_VALUES: {
-			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
-				const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
-				// We create a new object with its keys being the indices of the destination rows
-				// and the values being dictionaries mapping the new column ids to the copied values
-				const newRows = copiedValues.reduce((newRowAcc, rowValues, rowIndex) => {
-					return {
-						...newRowAcc,
-						[indexOfFirstDestinationRow + rowIndex]: rowValues.reduce((acc, copiedCellValue, colIndex) => {
-							return { ...acc, [destinationColumns[colIndex]]: copiedCellValue };
-						}, {}),
-					};
-				}, {});
-				// Merge the two entries together
-				Object.entries(newRows).forEach(([ rowIndex, rowSplice ]) => {
-					rows[rowIndex] = { ...rows[rowIndex], ...rowSplice };
-				});
-				return rows;
-			}
-
-			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-				action.top,
-				action.left,
-				action.top + action.height - 1,
-				action.left + action.width - 1,
-				state.columnPositions,
-				state.rowPositions,
-			);
-			return { ...state, rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs) };
-		}
+		// EVENT: Copy
 		case COPY_VALUES: {
 			// TODO: There should be a line break if the row is undefined values
 			// TODO: There should be no line break for the first row when you copy
@@ -273,6 +248,38 @@ function spreadsheetReducer(state, action) {
 				.catch((args) => console.error('did not copy to clipboard:', args));
 			return { ...state };
 		}
+		// EVENT: Paste
+		case PASTE_VALUES: {
+			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
+				const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
+				// We create a new object with its keys being the indices of the destination rows
+				// and the values being dictionaries mapping the new column ids to the copied values
+				const newRows = copiedValues.reduce((newRowAcc, rowValues, rowIndex) => {
+					return {
+						...newRowAcc,
+						[indexOfFirstDestinationRow + rowIndex]: rowValues.reduce((acc, copiedCellValue, colIndex) => {
+							return { ...acc, [destinationColumns[colIndex]]: copiedCellValue };
+						}, {}),
+					};
+				}, {});
+				// Merge the two entries together
+				Object.entries(newRows).forEach(([ rowIndex, rowSplice ]) => {
+					rows[rowIndex] = { ...rows[rowIndex], ...rowSplice };
+				});
+				return rows;
+			}
+
+			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
+				action.top,
+				action.left,
+				action.top + action.height - 1,
+				action.left + action.width - 1,
+				state.columnPositions,
+				state.rowPositions,
+			);
+			return { ...state, rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs) };
+		}
+		// EVENT: Delete values
 		case DELETE_VALUES: {
 			console.log(state);
 			const { cellSelectionRanges, columnPositions, rowPositions } = state;
@@ -317,6 +324,7 @@ function spreadsheetReducer(state, action) {
 		case REMOVE_SELECTED_CELLS: {
 			return { ...state, cellSelectionRanges: [], selectedRowIDs: [], activeCell: null };
 		}
+		// EVENT: Select Cell
 		case SELECT_CELL: {
 			const { cellSelectionRanges = [] } = state;
 			// track lastSelection to know where to begin range selection on drag
@@ -355,12 +363,15 @@ function spreadsheetReducer(state, action) {
 				cellSelectionRanges: newCellSelectionRanges,
 			};
 		}
+		// QUESTION: Is there ever a time to reorder rows?
 		case SET_ROW_POSITION: {
 			return { ...state, rowPositions: { ...state.rowPositions, [action.rowID]: action.row } };
 		}
+		// EVENT: Change layout
 		case TOGGLE_LAYOUT: {
 			return { ...state, layout };
 		}
+		// EVENT: Set grouped columns
 		case SET_GROUPED_COLUMNS: {
 			const matchColNameWithID = state.columns.find((col) => {
 				return col.label === setColName;
@@ -421,15 +432,19 @@ function spreadsheetReducer(state, action) {
 				allPhysicalColumns,
 			};
 		}
+		// EVENT: Context menu opened
 		case OPEN_CONTEXT_MENU: {
 			return { ...state, colName, contextMenuOpen: true, contextMenuPosition, colHeaderContext };
 		}
+		// EVENT: Context menu closed
 		case CLOSE_CONTEXT_MENU: {
 			return { ...state, contextMenuOpen: false };
 		}
+		// EVENT: Analysis Modal opened/closed
 		case TOGGLE_ANALYSIS_MODAL: {
 			return { ...state, analysisModalOpen, activeCell: null };
 		}
+		// EVENT: Column Type Modal opened/closed
 		case TOGGLE_COLUMN_TYPE_MODAL: {
 			return {
 				...state,
@@ -441,6 +456,7 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: [],
 			};
 		}
+		// EVENT: Distribution Modal opened/closed
 		case TOGGLE_DISTRIBUTION_MODAL: {
 			return {
 				...state,
@@ -451,16 +467,19 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: [],
 			};
 		}
+		// EVENT: Filter Modal opened/closed
 		case TOGGLE_FILTER_MODAL: {
 			return { ...state, filterModalOpen, selectedColumn: null, activeCell: null, selectedColumns };
 		}
 		case SET_SELECTED_COLUMN: {
 			return { ...state, selectedColumns: action.selectedColumns };
 		}
+		// EVENT: Selected Cell translated
 		case TRANSLATE_SELECTED_CELL: {
 			const newCellSelectionRanges = [ { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex } ];
 			return { ...state, cellSelectionRanges: newCellSelectionRanges, currentCellSelectionRange: null };
 		}
+		// EVENT: Cell updated
 		case UPDATE_CELL: {
 			const { rows, columns } = state;
 			// row from action or last row from state
@@ -487,6 +506,7 @@ function spreadsheetReducer(state, action) {
 			const changedRows = newRows.map((newRow) => (newRow.id !== rowCopy.id ? newRow : rowCopy));
 			return { ...state, rows: changedRows };
 		}
+		// EVENT: Column sorted
 		case SORT_COLUMN: {
 			const columnID = getCol(action.colName).id;
 			const sortedRows = state.rows.sort(
@@ -495,10 +515,12 @@ function spreadsheetReducer(state, action) {
 			const sortedPositions = sortedRows.reduce((obj, item, i) => Object.assign(obj, { [item.id]: i }), {});
 			return { ...state, rowPositions: sortedPositions };
 		}
+		// EVENT: Values filtered
 		case FILTER_COLUMN: {
 			const selectedRowIDs = filterRowsByColumnRange(action.selectedColumns, state.rows).map(({ id }) => id);
 			return { ...state, selectedRowIDs, selectedColumns: action.selectedColumns };
 		}
+		// EVENT: Column updated
 		case UPDATE_COLUMN: {
 			// TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
 			const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
