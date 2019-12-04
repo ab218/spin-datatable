@@ -51,6 +51,7 @@ function Spreadsheet({ eventBus }) {
 		rowPositions,
 		rows,
 		selectedColumn,
+		selectedRowIDs,
 	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ widths, setWidths ] = useState({});
@@ -241,7 +242,7 @@ function Spreadsheet({ eventBus }) {
 		);
 	};
 
-	function cellRenderer({ rowIndex, columnIndex, rowData, cellData, dataKey, columnData, isScrolling }) {
+	function cellRenderer({ rowIndex, columnIndex, rowData, cellData, dataKey }) {
 		if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
 			return (
 				<ActiveCell
@@ -259,7 +260,7 @@ function Spreadsheet({ eventBus }) {
 					value={cellData}
 				/>
 			);
-		} else if (isSelectedCell(rowIndex, columnIndex)) {
+		} else if (selectedRowIDs.includes(rowData.id) || isSelectedCell(rowIndex, columnIndex)) {
 			return (
 				<SelectedCell
 					handleContextMenu={handleContextMenu}
@@ -420,7 +421,7 @@ function Spreadsheet({ eventBus }) {
 				<AutoSizer>
 					{({ height }) => (
 						<Table
-							overscanRowCount={0}
+							overscanRowCount={3}
 							width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
 							height={height}
 							headerHeight={25}

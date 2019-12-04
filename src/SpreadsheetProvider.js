@@ -1,7 +1,7 @@
 import React, { useReducer } from 'react';
 import { Parser } from 'hot-formula-parser';
 import './App.css';
-import { pondEcologyRows } from './dummyData.js';
+// import { pondEcologyRows } from './dummyData.js';
 import {
 	ACTIVATE_CELL,
 	ADD_CELL_TO_SELECTIONS,
@@ -31,6 +31,7 @@ import {
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 } from './constants';
+import { pondEcologyRows } from './dummyData';
 
 function rowValueWithinTheseColumnRanges(row) {
 	const columns = this;
@@ -472,7 +473,7 @@ function spreadsheetReducer(state, action) {
 			return { ...state, filterModalOpen, selectedColumn: null, activeCell: null, selectedColumns };
 		}
 		case SET_SELECTED_COLUMN: {
-			return { ...state, selectedColumns: action.selectedColumns };
+			return { ...state, selectedColumns };
 		}
 		// EVENT: Selected Cell translated
 		case TRANSLATE_SELECTED_CELL: {
@@ -517,8 +518,8 @@ function spreadsheetReducer(state, action) {
 		}
 		// EVENT: Values filtered
 		case FILTER_COLUMN: {
-			const selectedRowIDs = filterRowsByColumnRange(action.selectedColumns, state.rows).map(({ id }) => id);
-			return { ...state, selectedRowIDs, selectedColumns: action.selectedColumns };
+			const selectedRowIDs = filterRowsByColumnRange(selectedColumns, state.rows).map(({ id }) => id);
+			return { ...state, selectedRowIDs, selectedColumns };
 		}
 		// EVENT: Column updated
 		case UPDATE_COLUMN: {
@@ -539,30 +540,23 @@ function spreadsheetReducer(state, action) {
 				rows = rows.map((row) => {
 					const formulaColumnsToUpdate = [ columnCopy ].concat(
 						state.columns.filter(({ type, formula }) => {
-							console.log('type', type, 'formula', formula);
 							return type === 'Formula' && formula.includes(columnCopy.id);
 						}),
 					);
-					console.log('formulaColumnsToUpdate', formulaColumnsToUpdate);
 					const formulaParser = new Parser();
 					// Not getting called
 					formulaParser.on('callVariable', function(name, done) {
-						console.log(name, 'name');
 						const selectedColumn = state.columns.find((column) => column.id === name);
-						console.log('selectedColumn', selectedColumn);
 						if (selectedColumn) {
-							console.log(row[selectedColumn.id]);
 							done(row[selectedColumn.id]);
 						}
 					});
 					return formulaColumnsToUpdate.reduce((acc, column) => {
-						console.log(column);
 						row = acc;
 						const {
 							result,
 							// error
 						} = formulaParser.parse(column.formula);
-						console.log('result', result);
 						return { ...acc, [column.id]: result };
 					}, row);
 				});
@@ -602,9 +596,9 @@ export function SpreadsheetProvider({ children }) {
 		// {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
 	];
 
-	const startingColumn = [ { modelingType: 'Continuous', type: 'String', label: 'Column 1' } ];
+	// const startingColumn = [ { modelingType: 'Continuous', type: 'String', label: 'Column 1' } ];
 	// Starting columns
-	const columns = startingColumn
+	const columns = statsColumns
 		.map((metadata) => ({ id: metadata.id || createRandomLetterString(), ...metadata }))
 		.map((column, _, array) => {
 			const { formula, ...rest } = column;
@@ -621,12 +615,10 @@ export function SpreadsheetProvider({ children }) {
 
 	// normal starting condition
 
-	// const dummyRows = [ ...Array(1000) ].map((e) => Array(10).fill(Math.random() * 10));
-
 	const columnPositions = columns.reduce((acc, column, index) => ({ ...acc, [column.id]: index }), {});
 
-	const startingRow = [ [] ];
-	const rows = startingRow
+	// const startingRow = [ [] ];
+	const rows = pondEcologyRows
 		.map((tuple) => ({
 			id: createRandomID(),
 			...tuple.reduce((acc, value, index) => ({ ...acc, [columns[index].id]: value }), {}),
@@ -674,8 +666,7 @@ export function SpreadsheetProvider({ children }) {
 		layout: true,
 		selectedColumns: [],
 		selectDisabled: false,
-		xColData: null,
-		yColData: null,
+		selectedRowIDs: [],
 		lastSelection: { row: 1, column: 1 },
 		rowPositions,
 		rows,

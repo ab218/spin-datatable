@@ -34,8 +34,8 @@ export default function AntModal() {
 		}
 	}
 
-	function removeColumn(column) {
-		const filteredColumns = selectedColumns.filter((sel) => sel.id !== column.id);
+	function removeColumn(columnId) {
+		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnId);
 		dispatchSpreadsheetAction({ type: SET_SELECTED_COLUMN, selectedColumns: filteredColumns });
 	}
 
@@ -47,25 +47,30 @@ export default function AntModal() {
 		);
 	}
 
-	function RemoveColumnButton({ column }) {
+	function RemoveColumnButton({ columnId }) {
 		return (
-			<Tooltip onClick={() => removeColumn(column)} className="pointer" title="Remove Column">
+			<Tooltip onClick={() => removeColumn(columnId)} className="pointer" title="Remove Column">
 				<Icon type="close" style={{ color: 'red', marginTop: 20 }} />
 			</Tooltip>
 		);
 	}
 
-	function FilterColumnSlider({ col }) {
+	function FilterColumnSlider({ column }) {
+		const { id, colMin, colMax, label, min, max } = column;
+		console.log(column);
 		return (
 			<div style={{ display: 'flex' }}>
 				<IntegerStep
-					key={col.id}
-					column={col}
-					colMin={col.colMin}
-					colMax={col.colMax}
+					currentMin={min}
+					currentMax={max}
+					key={id}
+					columnId={id}
+					label={label}
+					colMin={colMin}
+					colMax={colMax}
 					selectedColumns={selectedColumns}
 				/>
-				<RemoveColumnButton column={col} />
+				<RemoveColumnButton columnId={id} />
 			</div>
 		);
 	}
@@ -86,7 +91,7 @@ export default function AntModal() {
 					<AddColumnButton />
 					{selectedColumns &&
 						selectedColumns.length > 0 &&
-						selectedColumns.map((col) => <FilterColumnSlider col={col} />)}
+						selectedColumns.map((col) => <FilterColumnSlider column={col} />)}
 				</div>
 			</Modal>
 		</div>
