@@ -4,7 +4,6 @@ import './App.css';
 // import { pondEcologyRows } from './dummyData.js';
 import {
 	ACTIVATE_CELL,
-	ADD_CELL_TO_SELECTIONS,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
@@ -130,19 +129,6 @@ function spreadsheetReducer(state, action) {
 			const activeCell = { row, column };
 			return { ...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] };
 		}
-		// EVENT: Select a cell
-		case ADD_CELL_TO_SELECTIONS: {
-			const { cellSelectionRanges = [] } = state;
-			const newSelection = { top: row, bottom: row, left: column, right: column };
-			return {
-				...state,
-				cellSelectionRanges: cellSelectionRanges.concat(
-					cellSelectionRanges.some((cell) => cell.top === newSelection.top && cell.left === newSelection.left)
-						? []
-						: newSelection,
-				),
-			};
-		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
 			return {
@@ -200,7 +186,6 @@ function spreadsheetReducer(state, action) {
 			// 		} catch (e) {
 			// 			console.log(e);
 			// 		}
-			// 		console.log(sel, range);
 			// 		document.execCommand('copy');
 			// 	}
 			// 	sel.removeAllRanges();
