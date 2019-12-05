@@ -14,10 +14,10 @@ import {
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
-	SET_GROUPED_COLUMNS,
 	SET_SELECTED_COLUMN,
 	SELECT_CELL,
 	SELECT_CELLS,
+	SELECT_ALL_CELLS,
 	SORT_COLUMN,
 	OPEN_CONTEXT_MENU,
 	TOGGLE_ANALYSIS_MODAL,
@@ -285,7 +285,6 @@ function spreadsheetReducer(state, action) {
 							startRangeColumn: lastSelection.column,
 							endRangeRow,
 							endRangeColumn,
-							state,
 						}),
 					}
 				: state;
@@ -331,6 +330,15 @@ function spreadsheetReducer(state, action) {
 				selectedRowIDs: newCellSelectionRanges,
 				cellSelectionRanges: newCellSelectionRanges,
 			};
+		}
+		case SELECT_ALL_CELLS: {
+			const allCells = getRangeBoundaries({
+				startRangeRow: 0,
+				startRangeColumn: 1,
+				endRangeRow: state.rows.length - 1,
+				endRangeColumn: state.columns.length,
+			});
+			return { ...state, cellSelectionRanges: [ allCells ] };
 		}
 		// EVENT: Change layout
 		case TOGGLE_LAYOUT: {

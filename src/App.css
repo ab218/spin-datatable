@@ -9,14 +9,13 @@
 	width: 100%;
 } */
 
-td,
+/* td,
 th {
 	white-space: nowrap;
 	border: 1px solid #ddd;
 	height: 30px;
 	width: 40px;
-	/* overflow: hidden; */
-}
+} */
 
 /* Create a simple white box, and add the shadow for the initial state */
 .hamburger {

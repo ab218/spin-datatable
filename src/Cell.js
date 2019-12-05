@@ -61,6 +61,9 @@ export function SelectedCell({
 				} else if (event.key === 'v') {
 					// Spreadsheet is handling paste event
 					return;
+				} else if (event.key === 'a') {
+					// Spreadsheet is handling selectAll event
+					return;
 				}
 			}
 			// if the key pressed is not a non-character key (arrow key etc)
@@ -119,7 +122,7 @@ export function SelectedCell({
 	return (
 		<div
 			key={`row${rowIndex}col${columnIndex}`}
-			style={{ width: '100%', height: '100%', backgroundColor: '#C0C0C0' }}
+			style={{ width: '100%', height: '100%', backgroundColor: '#C0C0C0', userSelect: 'none' }}
 			onContextMenu={handleContextMenu}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
@@ -179,7 +182,7 @@ export function NormalCell({
 				lineHeight: 2,
 				overflow: 'hidden',
 				padding: '0 5px',
-				userSelect: cellValue ? '' : 'none',
+				userSelect: 'none',
 			}}
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}

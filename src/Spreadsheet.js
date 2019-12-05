@@ -405,13 +405,18 @@ function Spreadsheet({ eventBus }) {
 
 	useEffect(() => {
 		function onKeyDown(event) {
+			if (activeCell) {
+				return;
+			}
 			if (event.metaKey || event.ctrlKey) {
 				if (event.key === 'c') {
-					console.log('copy fired');
 					dispatchSpreadsheetAction({ type: 'COPY_VALUES' });
 					return;
 				} else if (event.key === 'v') {
 					paste();
+					return;
+				} else if (event.key === 'a') {
+					dispatchSpreadsheetAction({ type: 'SELECT_ALL_CELLS' });
 					return;
 				}
 			}
