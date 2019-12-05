@@ -56,10 +56,10 @@ export function SelectedCell({
 		function onKeyDown(event) {
 			if (event.metaKey || event.ctrlKey) {
 				if (event.key === 'c') {
-					dispatchSpreadsheetAction({ type: COPY_VALUES });
+					// Spreadsheet is handling copy event
 					return;
 				} else if (event.key === 'v') {
-					paste();
+					// Spreadsheet is handling paste event
 					return;
 				}
 			}

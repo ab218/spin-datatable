@@ -11,7 +11,6 @@ import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvid
 export default function Row({
 	activeCell,
 	cellCount,
-	columnPositions,
 	columns,
 	changeActiveCell,
 	createNewColumns,
@@ -28,11 +27,6 @@ export default function Row({
 	selectCell,
 	selectedRow,
 }) {
-	columnPositions &&
-		columns.sort((colA, colB) => {
-			return columnPositions[colA.id] - columnPositions[colB.id];
-		});
-
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { contextMenuOpen } = useSpreadsheetState();
 

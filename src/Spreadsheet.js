@@ -48,7 +48,6 @@ function Spreadsheet({ eventBus }) {
 		distributionModalOpen,
 		currentCellSelectionRange,
 		filterModalOpen,
-		rowPositions,
 		rows,
 		selectedColumn,
 		selectedRowIDs,
@@ -116,11 +115,6 @@ function Spreadsheet({ eventBus }) {
 		}
 		const withinASelectedRange = cellSelectionRanges.some(withinRange);
 		return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
-	}
-
-	const rowMap = {};
-	for (const id in rowPositions) {
-		rowMap[rowPositions[id]] = id;
 	}
 
 	async function paste() {
@@ -409,6 +403,25 @@ function Spreadsheet({ eventBus }) {
 	const columnsDiff = visibleColumns - columns.length;
 	const blankColumnWidth = 100;
 
+	useEffect(() => {
+		function onKeyDown(event) {
+			if (event.metaKey || event.ctrlKey) {
+				if (event.key === 'c') {
+					console.log('copy fired');
+					dispatchSpreadsheetAction({ type: 'COPY_VALUES' });
+					return;
+				} else if (event.key === 'v') {
+					paste();
+					return;
+				}
+			}
+		}
+		document.addEventListener('keydown', onKeyDown);
+		return () => {
+			document.removeEventListener('keydown', onKeyDown);
+		};
+	});
+
 	return (
 		// Height 100% necessary for autosizer to work
 		<div style={{ height: '100%', width: '100%' }}>
@@ -421,7 +434,7 @@ function Spreadsheet({ eventBus }) {
 				<AutoSizer>
 					{({ height }) => (
 						<Table
-							overscanRowCount={3}
+							overscanRowCount={0}
 							width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
 							height={height}
 							headerHeight={25}
