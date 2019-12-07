@@ -108,6 +108,7 @@ export function SelectedCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
+		dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
 		if (!isFormulaColumn && event.button === 0) {
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
 		}
@@ -122,7 +123,14 @@ export function SelectedCell({
 	return (
 		<div
 			key={`row${rowIndex}col${columnIndex}`}
-			style={{ width: '100%', height: '100%', backgroundColor: '#C0C0C0', userSelect: 'none' }}
+			style={{
+				width: '100%',
+				height: '100%',
+				backgroundColor: '#C0C0C0',
+				userSelect: 'none',
+				lineHeight: 2,
+				padding: '0 5px',
+			}}
 			onContextMenu={handleContextMenu}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
@@ -180,8 +188,8 @@ export function NormalCell({
 				height: '100%',
 				width: '100%',
 				lineHeight: 2,
-				overflow: 'hidden',
 				padding: '0 5px',
+				overflow: 'hidden',
 				userSelect: 'none',
 			}}
 			key={`row${rowIndex}col${columnIndex}`}

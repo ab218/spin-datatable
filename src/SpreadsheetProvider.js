@@ -9,6 +9,8 @@ import {
 	COPY_VALUES,
 	CREATE_COLUMNS,
 	CREATE_ROWS,
+	DELETE_ROW,
+	DELETE_COLUMN,
 	DELETE_VALUES,
 	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
@@ -18,6 +20,8 @@ import {
 	SELECT_CELL,
 	SELECT_CELLS,
 	SELECT_ALL_CELLS,
+	SELECT_ROW,
+	SELECT_COLUMN,
 	SORT_COLUMN,
 	OPEN_CONTEXT_MENU,
 	TOGGLE_ANALYSIS_MODAL,
@@ -97,7 +101,7 @@ function spreadsheetReducer(state, action) {
 		analysisModalOpen,
 		cellValue,
 		contextMenuPosition,
-		colHeaderContext,
+		contextMenuType,
 		colName,
 		column,
 		columnCount,
@@ -136,7 +140,6 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: null,
 			};
 		}
-		// EVENT: Create many columns
 		case CREATE_COLUMNS: {
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
@@ -145,7 +148,7 @@ function spreadsheetReducer(state, action) {
 			const columns = state.columns.concat(newColumns);
 			return { ...state, columns };
 		}
-		// EVENT: Create many rows
+
 		case CREATE_ROWS: {
 			const newRows = Array(rowCount).fill(undefined).map((_) => {
 				return { id: createRandomID() };
@@ -158,7 +161,33 @@ function spreadsheetReducer(state, action) {
 		case 'DISABLE_SELECT': {
 			return { ...state, selectDisabled: true };
 		}
-		// EVENT: Copy
+		case DELETE_COLUMN: {
+			const { rows } = state;
+			const columnID = getCol(action.colName).id;
+			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
+			for (let i = 0; i < rows.length; i++) {
+				delete rows[i][columnID];
+			}
+			return {
+				...state,
+				columns: filteredColumns,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
+		}
+		case DELETE_ROW: {
+			const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
+			return {
+				...state,
+				rows: slicedRows,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
+		}
 		case COPY_VALUES: {
 			// TODO: There should be a line break if the row is undefined values
 			// TODO: There should be no line break for the first row when you copy
@@ -251,6 +280,7 @@ function spreadsheetReducer(state, action) {
 		}
 		// EVENT: Delete values
 		case DELETE_VALUES: {
+			console.log(state);
 			const { cellSelectionRanges } = state;
 			function removeKeyReducer(container, key) {
 				const { [key]: value, ...rest } = container;
@@ -290,7 +320,13 @@ function spreadsheetReducer(state, action) {
 				: state;
 		}
 		case REMOVE_SELECTED_CELLS: {
-			return { ...state, cellSelectionRanges: [], selectedRowIDs: [], activeCell: null };
+			return {
+				...state,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
 		}
 		// EVENT: Select Cell
 		case SELECT_CELL: {
@@ -332,13 +368,43 @@ function spreadsheetReducer(state, action) {
 			};
 		}
 		case SELECT_ALL_CELLS: {
-			const allCells = getRangeBoundaries({
-				startRangeRow: 0,
-				startRangeColumn: 1,
-				endRangeRow: state.rows.length - 1,
-				endRangeColumn: state.columns.length,
-			});
-			return { ...state, cellSelectionRanges: [ allCells ] };
+			const allCells = {
+				top: 0,
+				left: 1,
+				bottom: state.rows.length - 1,
+				right: state.columns.length,
+			};
+			return { ...state, activeCell: null, currentCellSelectionRange: allCells, cellSelectionRanges: [] };
+		}
+		case SELECT_ROW: {
+			const { cellSelectionRanges } = state;
+			const allCellsInRow = {
+				top: rowIndex,
+				left: 1,
+				bottom: rowIndex,
+				right: state.columns.length,
+			};
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: allCellsInRow,
+				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
+			};
+		}
+		case SELECT_COLUMN: {
+			const { cellSelectionRanges } = state;
+			const allCellsInColumn = {
+				top: 0,
+				left: columnIndex + 1,
+				bottom: state.rows.length - 1,
+				right: columnIndex + 1,
+			};
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: allCellsInColumn,
+				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
+			};
 		}
 		// EVENT: Change layout
 		case TOGGLE_LAYOUT: {
@@ -407,7 +473,14 @@ function spreadsheetReducer(state, action) {
 		// }
 		// EVENT: Context menu opened
 		case OPEN_CONTEXT_MENU: {
-			return { ...state, colName, contextMenuOpen: true, contextMenuPosition, colHeaderContext };
+			return {
+				...state,
+				colName,
+				contextMenuOpen: true,
+				contextMenuPosition,
+				contextMenuType,
+				contextMenuRowIndex: rowIndex,
+			};
 		}
 		// EVENT: Context menu closed
 		case CLOSE_CONTEXT_MENU: {
@@ -640,6 +713,7 @@ export function SpreadsheetProvider({ children }) {
 		activeCell: null,
 		cellSelectionRanges: [],
 		contextMenuPosition: null,
+		contextMenuRowIndex: null,
 		currentCellSelectionRange: null,
 		colHeaderContext: false,
 		columns: statsColumns,

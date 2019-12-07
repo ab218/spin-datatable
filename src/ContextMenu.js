@@ -16,7 +16,14 @@ import './App.css';
 const { SubMenu } = Menu;
 
 export default function ContextMenu({ paste }) {
-	const { colHeaderContext, colName, contextMenuOpen, contextMenuPosition, layout } = useSpreadsheetState();
+	const {
+		contextMenuType,
+		colName,
+		contextMenuOpen,
+		contextMenuPosition,
+		layout,
+		contextMenuRowIndex,
+	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	const onClick = (e) => {
@@ -42,48 +49,71 @@ export default function ContextMenu({ paste }) {
 			menu.style.top = `${top}px`;
 		}
 	});
-	return colHeaderContext ? (
-		<div onClick={onClick} className="menu">
-			<Menu selectable={false} style={{ width: 256 }} mode="vertical">
-				<Menu.Item
-					key="1"
-					onClick={() =>
-						dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, colName })}
-				>
-					Column Info...
-				</Menu.Item>
-				<Menu.Item key="2" onClick={setGroupedColumns}>
-					Split by <span style={{ fontWeight: 'bold' }}>{colName}</span>
-					<span style={{ fontStyle: 'italic' }}> (experimental)</span>
-				</Menu.Item>
-				{layout || (
-					<Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({ type: TOGGLE_LAYOUT, layout: true })}>
-						Return to normal view
-					</Menu.Item>
-				)}
-				<SubMenu key="sub1" title="Sort">
+
+	if (contextMenuType === 'column') {
+		return (
+			<div onClick={onClick} className="menu">
+				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
-						key="4"
-						onClick={() => {
-							dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-							dispatchSpreadsheetAction({ type: SORT_COLUMN, colName, descending: true });
-						}}
+						key="1"
+						onClick={() =>
+							dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, colName })}
 					>
-						Descending
+						Column Info...
 					</Menu.Item>
+					<Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({ type: 'DELETE_COLUMN', colName })}>
+						Delete Column
+					</Menu.Item>
+					<Menu.Item key="2" onClick={setGroupedColumns}>
+						Split by <span style={{ fontWeight: 'bold' }}>{colName}</span>
+						<span style={{ fontStyle: 'italic' }}> (experimental)</span>
+					</Menu.Item>
+					{layout || (
+						<Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({ type: TOGGLE_LAYOUT, layout: true })}>
+							Return to normal view
+						</Menu.Item>
+					)}
+					<SubMenu key="sub1" title="Sort">
+						<Menu.Item
+							key="4"
+							onClick={() => {
+								dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+								dispatchSpreadsheetAction({ type: SORT_COLUMN, colName, descending: true });
+							}}
+						>
+							Descending
+						</Menu.Item>
+						<Menu.Item
+							key="5"
+							onClick={() => {
+								dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+								dispatchSpreadsheetAction({ type: SORT_COLUMN, colName, descending: false });
+							}}
+						>
+							Ascending
+						</Menu.Item>
+					</SubMenu>
+				</Menu>
+			</div>
+		);
+	} else if (contextMenuType === 'row') {
+		return (
+			<div onClick={onClick} className="menu">
+				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
-						key="5"
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-							dispatchSpreadsheetAction({ type: SORT_COLUMN, colName, descending: false });
+							dispatchSpreadsheetAction({ type: 'DELETE_ROW', rowIndex: contextMenuRowIndex });
 						}}
+						key="19"
 					>
-						Ascending
+						Delete Row
 					</Menu.Item>
-				</SubMenu>
-			</Menu>
-		</div>
-	) : (
+				</Menu>
+			</div>
+		);
+	}
+
+	return (
 		<div onClick={onClick} className="menu">
 			<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 				<Menu.Item
