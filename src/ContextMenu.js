@@ -4,10 +4,10 @@ import {
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	REMOVE_SELECTED_CELLS,
-	SET_GROUPED_COLUMNS,
+	// SET_GROUPED_COLUMNS,
 	SORT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
-	TOGGLE_LAYOUT,
+	// TOGGLE_LAYOUT,
 	DELETE_VALUES,
 } from './constants';
 import { Menu } from 'antd';
@@ -21,7 +21,7 @@ export default function ContextMenu({ paste }) {
 		colName,
 		contextMenuOpen,
 		contextMenuPosition,
-		layout,
+		// layout,
 		contextMenuRowIndex,
 	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -32,13 +32,13 @@ export default function ContextMenu({ paste }) {
 		}
 	};
 
-	const setGroupedColumns = () => {
-		if (!colName) return;
-		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-		dispatchSpreadsheetAction({ type: SET_GROUPED_COLUMNS, setColName: colName });
-		// layout: false is grouped (spreadsheet) view
-		dispatchSpreadsheetAction({ type: TOGGLE_LAYOUT, layout: false });
-	};
+	// const setGroupedColumns = () => {
+	// 	if (!colName) return;
+	// 	dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+	// 	dispatchSpreadsheetAction({ type: SET_GROUPED_COLUMNS, setColName: colName });
+	// 	// layout: false is grouped (spreadsheet) view
+	// 	dispatchSpreadsheetAction({ type: TOGGLE_LAYOUT, layout: false });
+	// };
 
 	useEffect(() => {
 		const menu = document.querySelector('.menu');
@@ -64,7 +64,7 @@ export default function ContextMenu({ paste }) {
 					<Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({ type: 'DELETE_COLUMN', colName })}>
 						Delete Column
 					</Menu.Item>
-					<Menu.Item key="2" onClick={setGroupedColumns}>
+					{/* <Menu.Item key="2" onClick={setGroupedColumns}>
 						Split by <span style={{ fontWeight: 'bold' }}>{colName}</span>
 						<span style={{ fontStyle: 'italic' }}> (experimental)</span>
 					</Menu.Item>
@@ -72,7 +72,7 @@ export default function ContextMenu({ paste }) {
 						<Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({ type: TOGGLE_LAYOUT, layout: true })}>
 							Return to normal view
 						</Menu.Item>
-					)}
+					)} */}
 					<SubMenu key="sub1" title="Sort">
 						<Menu.Item
 							key="4"
