@@ -1,13 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import {
-	ACTIVATE_CELL,
-	CLOSE_CONTEXT_MENU,
-	COPY_VALUES,
-	DELETE_VALUES,
-	TRANSLATE_SELECTED_CELL,
-	UPDATE_CELL,
-} from './constants';
+import { ACTIVATE_CELL, CLOSE_CONTEXT_MENU, DELETE_VALUES, TRANSLATE_SELECTED_CELL, UPDATE_CELL } from './constants';
 import { formatForNumberColumn } from './Spreadsheet';
 import { Tooltip } from 'antd';
 import './App.css';
@@ -55,16 +48,8 @@ export function SelectedCell({
 	useEffect(() => {
 		function onKeyDown(event) {
 			if (event.metaKey || event.ctrlKey) {
-				if (event.key === 'c') {
-					// Spreadsheet is handling copy event
-					return;
-				} else if (event.key === 'v') {
-					// Spreadsheet is handling paste event
-					return;
-				} else if (event.key === 'a') {
-					// Spreadsheet is handling selectAll event
-					return;
-				}
+				// prevent cell input if holding ctrl/meta
+				return;
 			}
 			// if the key pressed is not a non-character key (arrow key etc)
 			if (!isFormulaColumn && event.key.length === 1) {

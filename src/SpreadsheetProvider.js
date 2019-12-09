@@ -5,6 +5,7 @@ import './App.css';
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+	ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS,
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	CREATE_COLUMNS,
@@ -14,6 +15,7 @@ import {
 	DELETE_VALUES,
 	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	MODIFY_CURRENT_SELECTION_ROW_RANGE,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
 	SET_SELECTED_COLUMN,
@@ -319,6 +321,21 @@ function spreadsheetReducer(state, action) {
 					}
 				: state;
 		}
+		case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
+			const { lastSelection } = state;
+			// Note: In this case I am modifying the cellSelectionRanges directly instead of currentCellSelectionRange
+			return state.cellSelectionRanges
+				? {
+						...state,
+						currentCellSelectionRange: getRangeBoundaries({
+							startRangeRow: lastSelection.row,
+							endRangeRow,
+							startRangeColumn: 1,
+							endRangeColumn: state.columns.length,
+						}),
+					}
+				: state;
+		}
 		case REMOVE_SELECTED_CELLS: {
 			return {
 				...state,
@@ -374,7 +391,7 @@ function spreadsheetReducer(state, action) {
 				bottom: state.rows.length - 1,
 				right: state.columns.length,
 			};
-			return { ...state, activeCell: null, currentCellSelectionRange: allCells, cellSelectionRanges: [] };
+			return { ...state, activeCell: null, currentCellSelectionRange: null, cellSelectionRanges: [ allCells ] };
 		}
 		case SELECT_ROW: {
 			const { cellSelectionRanges } = state;
@@ -389,6 +406,7 @@ function spreadsheetReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: allCellsInRow,
 				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
+				lastSelection: { row: rowIndex },
 			};
 		}
 		case SELECT_COLUMN: {

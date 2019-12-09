@@ -16,6 +16,7 @@ import { SelectedCell, NormalCell } from './Cell';
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+	ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS,
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	CREATE_COLUMNS,
@@ -29,6 +30,7 @@ import {
 	SELECT_ALL_CELLS,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	REMOVE_SELECTED_CELLS,
+	MODIFY_CURRENT_SELECTION_ROW_RANGE,
 } from './constants';
 
 export const checkIfValidNumber = (str) => {
@@ -185,8 +187,16 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: MODIFY_CURRENT_SELECTION_CELL_RANGE, endRangeRow: row, endRangeColumn: col });
 	}
 
+	function modifyRowSelectionRange(row) {
+		dispatchSpreadsheetAction({ type: MODIFY_CURRENT_SELECTION_ROW_RANGE, endRangeRow: row });
+	}
+
 	function finishCurrentSelectionRange() {
 		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
+	}
+
+	function finishCurrentSelectionRowRange() {
+		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS });
 	}
 
 	function handleContextMenu(e) {
@@ -404,7 +414,7 @@ function Spreadsheet({ eventBus }) {
 						});
 					}
 				}}
-				onClick={(e) => {
+				onMouseDown={(e) => {
 					if (rowIndex < rows.length) {
 						if (contextMenuOpen) {
 							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
@@ -416,6 +426,12 @@ function Spreadsheet({ eventBus }) {
 						});
 					}
 				}}
+				onMouseEnter={(e) => {
+					if (typeof e.buttons === 'number' && e.buttons > 0) {
+						modifyRowSelectionRange(rowIndex);
+					}
+				}}
+				onMouseUp={finishCurrentSelectionRange}
 				onDoubleClick={(e) => rowHeadersOnDoubleClick(e, rowIndex)}
 				className={'row-number-cell'}
 				style={{
@@ -430,6 +446,12 @@ function Spreadsheet({ eventBus }) {
 		);
 	}
 
+	const emptyRow = {};
+	const visibleColumns = Math.max(columns.length + 3, Math.ceil(window.innerWidth / 100));
+	const visibleRows = Math.max(rows.length + 5, Math.ceil(window.innerHeight / 30));
+	const columnsDiff = visibleColumns - columns.length;
+	const blankColumnWidth = 100;
+
 	function renderColumns(totalColumnCount) {
 		// Render column if it exists, otherwise render a blank column
 		const colsContainer = [];
@@ -441,9 +463,9 @@ function Spreadsheet({ eventBus }) {
 					cellRenderer={cellRenderer}
 					columnIndex={columnIndex}
 					headerRenderer={(props) => headerRenderer(props, columnIndex)}
-					dataKey={column ? column.id : ''}
-					label={column ? column.label : ''}
-					width={column ? widths[column.id] : blankColumnWidth}
+					dataKey={(column && column.id) || ''}
+					label={(column && column.label) || ''}
+					width={(column && widths[column.id]) || blankColumnWidth}
 					style={{
 						border: '1px solid #ddd',
 						borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
@@ -463,13 +485,11 @@ function Spreadsheet({ eventBus }) {
 		return total;
 	}
 
-	const emptyRow = {};
-	const visibleColumns = Math.max(columns.length + 1, Math.ceil(window.innerWidth / 100));
-	const columnsDiff = visibleColumns - columns.length;
-	const blankColumnWidth = 100;
-
 	useEffect(() => {
 		function onKeyDown(event) {
+			if (event.key === 'Escape') {
+				dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+			}
 			if (activeCell) {
 				return;
 			}
@@ -504,13 +524,12 @@ function Spreadsheet({ eventBus }) {
 				<AutoSizer>
 					{({ height }) => (
 						<Table
-							onScroll={() => window.scrollBy(0, 30)}
 							overscanRowCount={0}
 							width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
 							height={height}
 							headerHeight={25}
 							rowHeight={30}
-							rowCount={Math.max(rows.length + 1, 30)}
+							rowCount={visibleRows}
 							rowGetter={({ index }) => rows[index] || emptyRow}
 							rowStyle={{ alignItems: 'stretch' }}
 						>
