@@ -59,7 +59,7 @@ export default function DistributionModal() {
 			}
 		}
 
-		const popup = window.open(window.location.href + 'distribution.html', '', 'left=9999,top=100,width=450,height=850');
+		const popup = window.open(window.location.href + 'distribution.html', '', 'left=9999,top=100,width=500,height=850');
 		// set event listener and wait for target to be ready
 		window.addEventListener('message', receiveMessage, false);
 		window.addEventListener('message', targetClickEvent);

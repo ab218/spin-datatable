@@ -15,6 +15,10 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 	);
 	// console.log(result.data) // gcloud
 	// console.log(result.data.body); // Lambda
+	// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
+	if (typeof result.data === 'string') {
+		return alert('Something went wrong. Check your data and try again.');
+	}
 	// function mapBand(position) {
 	//   return result.data.predictions.map(point => {
 	//     return [point.x, point[position]]
@@ -31,15 +35,16 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 	const popup = window.open(
 		window.location.href + 'linear_regression.html',
 		'',
-		'left=9999,top=100,width=450,height=850',
+		'left=9999,top=100,width=650,height=850',
 	);
 	// set event listener and wait for target to be ready
 	window.addEventListener('message', receiveMessage, false);
-	console.log(result.data);
 
 	const matrixToFixed = (arr) => arr.map((first) => first.map((second) => second.toFixed(4) / 1));
 
 	const {
+		conf_low,
+		conf_upp,
 		mean_x,
 		mean_y,
 		std_x,
@@ -51,8 +56,15 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		cov,
 		slope,
 		intercept,
+		mean_ci_low,
+		mean_ci_upp,
 	} = result.data;
+
 	const outputData = {
+		confLow: conf_low,
+		confUpp: conf_upp,
+		meanCiLow: mean_ci_low,
+		meanCiUpp: mean_ci_upp,
 		corrcoef: corrcoef[1][0].toFixed(4) / 1,
 		covariance: cov[1][0].toFixed(4) / 1,
 		colXLabel,

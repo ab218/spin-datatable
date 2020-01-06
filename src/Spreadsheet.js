@@ -351,7 +351,9 @@ function Spreadsheet({ eventBus }) {
 			}
 		} else if (!rowData.id) {
 			// The cells in these rows cannot be clicked
-			return <div style={{ backgroundColor: '#eee', height: '100%', width: '100%' }} />;
+			return (
+				<div className="non-interactive-cell" style={{ backgroundColor: '#eee', height: '100%', width: '100%' }} />
+			);
 		} else if (dataKey) {
 			return (
 				<NormalCell

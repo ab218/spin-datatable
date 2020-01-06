@@ -46,6 +46,10 @@ th {
 	opacity: 1;
 }
 
+.non-interactive-cell:hover {
+	cursor: not-allowed;
+}
+
 /* .virtualized-cell {
 	white-space: nowrap;
 	border: 1px solid #ddd;
