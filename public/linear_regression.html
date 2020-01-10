@@ -14,6 +14,36 @@
       z-index: 1;
     }
 
+    .degree2PolyLine {
+      stroke-width: 2px;
+      stroke: green;
+      z-index: 1;
+    }
+
+    .degree3PolyLine {
+      stroke-width: 2px;
+      stroke: darkmagenta;
+      z-index: 1;
+    }
+
+    .degree4PolyLine {
+      stroke-width: 2px;
+      stroke: saddlebrown;
+      z-index: 1;
+    }
+
+    .degree5PolyLine {
+      stroke-width: 2px;
+      stroke: goldenrod;
+      z-index: 1;
+    }
+
+    .degree6PolyLine {
+      stroke-width: 2px;
+      stroke: thistle;
+      z-index: 1;
+    }
+
     .confidenceBands {
       stroke-width: 2px;
       stroke: red;
@@ -35,16 +65,23 @@
       text-align: center;
     }
   </style>
-    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="./d3-v4.js"></script>
   <title>Data Analysis</title>
 </head>
 
 <body>
   <div id="chart" class="chart"></div><div id="histogramVis"></div>
-  <div><input type="checkbox" value="histogramBorders" onclick="toggleChartElement(this)">Show Histogram Borders</div>
-  <div><input type="checkbox" value="confidenceBands" onclick="toggleChartElement(this)">Show Confidence Bands</div>
-  <div><input type="checkbox" value="confidenceBandsFit" onclick="toggleChartElement(this)">Show Confidence Bands (Trend Line)</div>
-  <div><input type="checkbox" value="linearRegressionLine" onclick="toggleChartElement(this)" checked>Show Linear Regression Line</div>
+  <div><input type="checkbox" value="linearRegressionLine" onclick="toggleChartElement(this)" checked>Linear Fit</div>
+  <div><input type="checkbox" value="degree2PolyLine" onclick="toggleChartElement(this)">Quadratic Fit</div>
+  <div><input type="checkbox" value="degree3PolyLine" onclick="toggleChartElement(this)">Cubic Fit</div>
+  <div><input type="checkbox" value="degree4PolyLine" onclick="toggleChartElement(this)">Quartic Fit</div>
+  <div><input type="checkbox" value="degree5PolyLine" onclick="toggleChartElement(this)">5th Degree Fit</div>
+  <div><input type="checkbox" value="degree6PolyLine" onclick="toggleChartElement(this)">6th Degree Fit</div>
+  <br>
+  <div><input type="checkbox" value="histogramBorders" onclick="toggleChartElement(this)">Histogram Borders</div>
+  <br>
+  <div><input type="checkbox" value="confidenceBandsFit" onclick="toggleChartElement(this)">Confid Curves Fit</div>
+  <div><input type="checkbox" value="confidenceBands" onclick="toggleChartElement(this)">Confid Curves Indiv</div>
   <div style="width:500px;" id="container"></div>
   <script src="linear_regression.js"></script>
 </body>

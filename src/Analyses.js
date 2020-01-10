@@ -2,7 +2,8 @@ import axios from 'axios';
 
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabel, colYLabel, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
+	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
+	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
 	const result = await axios.post(
 		gcloud,
 		{
@@ -50,15 +51,21 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		std_x,
 		std_y,
 		pvalues,
-		fitted_values,
 		rsquared,
 		corrcoef,
 		cov,
+		degree_2_poly,
+		degree_3_poly,
+		degree_4_poly,
+		degree_5_poly,
+		degree_6_poly,
 		slope,
 		intercept,
 		mean_ci_low,
 		mean_ci_upp,
 	} = result.data;
+
+	console.log(result.data);
 
 	const outputData = {
 		confLow: conf_low,
@@ -74,8 +81,12 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		colBMean: mean_y.toFixed(4) / 1,
 		colBStdev: std_y.toFixed(4) / 1,
 		pValue: pvalues[1].toFixed(4) / 1,
-		tempABVals: XYCols,
-		linearRegressionLinePoints: matrixToFixed(fitted_values),
+		degree2Poly: degree_2_poly,
+		degree3Poly: degree_3_poly,
+		degree4Poly: degree_4_poly,
+		degree5Poly: degree_5_poly,
+		degree6Poly: degree_6_poly,
+		coordinates: XYCols,
 		linearRegressionLineR2: rsquared.toFixed(4) / 1,
 		linearRegressionLineSlope: slope.toFixed(4) / 1,
 		linearRegressionLineYIntercept: intercept.toFixed(4) / 1,

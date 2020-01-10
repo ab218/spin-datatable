@@ -27,7 +27,7 @@ function receiveMessage(event) {
 		meanCiUpp,
 		colXLabel,
 		colYLabel,
-		tempABVals,
+		coordinates,
 		corrcoef,
 		covariance,
 		colAMean,
@@ -35,6 +35,12 @@ function receiveMessage(event) {
 		colBMean,
 		colBStdev,
 		pValue,
+		degree2Poly,
+		degree3Poly,
+		degree4Poly,
+		degree5Poly,
+		degree6Poly,
+		linearRegressionLinePoints,
 		linearRegressionLineEquation,
 		linearRegressionLineSlope,
 		linearRegressionLineR2,
@@ -56,8 +62,8 @@ function receiveMessage(event) {
 	const svgWidth = width + margin.left + margin.right + 100;
 	const svgHeight = height + margin.top + margin.bottom + 100;
 
-	const colA = tempABVals.map((a) => a[1]).sort(d3.ascending);
-	const colB = tempABVals.map((a) => a[0]).sort(d3.ascending);
+	const colA = coordinates.map((a) => a[1]).sort(d3.ascending);
+	const colB = coordinates.map((a) => a[0]).sort(d3.ascending);
 
 	const svg = d3
 		.select('.chart')
@@ -80,11 +86,11 @@ function receiveMessage(event) {
 	barsX.domain([ 0, colB.length ]);
 
 	// get extents and range
-	const xExtent = d3.extent(tempABVals, function(d) {
+	const xExtent = d3.extent(coordinates, function(d) {
 		return d[0];
 	});
 	const xRange = xExtent[1] - xExtent[0];
-	const yExtent = d3.extent(tempABVals, function(d) {
+	const yExtent = d3.extent(coordinates, function(d) {
 		return d[1];
 	});
 	const yRange = yExtent[1] - yExtent[0];
@@ -97,17 +103,18 @@ function receiveMessage(event) {
 	const histogramY = d3
 		.histogram()
 		.domain(y.domain()) // then the domain of the graphic
-		.thresholds(y.ticks(5)); // then the numbers of bins
+		.thresholds(y.ticks(6)); // then the numbers of bins
 
 	const histogramX = d3
 		.histogram()
 		.domain(x.domain()) // then the domain of the graphic
-		.thresholds(x.ticks(5)); // then the numbers of bins
+		.thresholds(x.ticks(6)); // then the numbers of bins
 
 	// And apply this function to data to get the bins
 	const colABins = histogramY(colA);
 	const colBBins = histogramX(colB);
 
+	svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
 	// Histogram Bars
 	svg
 		.selectAll('xHistBars')
@@ -184,23 +191,122 @@ function receiveMessage(event) {
 	const y2 = xDomainMax * linearRegressionLineSlope + linearRegressionLineYIntercept;
 
 	// define the line
-	var valueline = d3
-		.line()
-		.x(function(d) {
-			return x(d[1]);
-		})
-		.y(function(d) {
-			return y(d[0]);
-		});
+	const valueline = d3.line().x((d) => x(d[1])).y((d) => y(d[0]));
+	const reversedLine = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
 
-	svg.append('path').data([ confUpp ]).style('fill', 'none').attr('class', 'confidenceBands').attr('d', valueline);
-	svg.append('path').data([ confLow ]).style('fill', 'none').attr('class', 'confidenceBands').attr('d', valueline);
-	svg.append('path').data([ meanCiLow ]).style('fill', 'none').attr('class', 'confidenceBandsFit').attr('d', valueline);
-	svg.append('path').data([ meanCiUpp ]).style('fill', 'none').attr('class', 'confidenceBandsFit').attr('d', valueline);
+	//generate points y = ax^2+bx+c
+	function createPoints(rangeX, step, equation) {
+		return Array.from({ length: Math.round((rangeX[1] - rangeX[0]) / step) || 1 }, function(_, i) {
+			const x = rangeX[0] + i * step;
+			return [ x, equation(x) ];
+		});
+	}
+
+	const poly2equation = (x) => degree2Poly[0] + degree2Poly[1] * x + degree2Poly[2] * x * x;
+	const poly3equation = (x) =>
+		degree3Poly[0] + degree3Poly[1] * x + degree3Poly[2] * x * x + degree3Poly[3] * x * x * x;
+	const poly4equation = (x) =>
+		degree4Poly[0] +
+		degree4Poly[1] * x +
+		degree4Poly[2] * x * x +
+		degree4Poly[3] * x * x * x +
+		degree4Poly[4] * x * x * x * x;
+	const poly5equation = (x) =>
+		degree5Poly[0] +
+		degree5Poly[1] * x +
+		degree5Poly[2] * x * x +
+		degree5Poly[3] * x * x * x +
+		degree5Poly[4] * x * x * x * x +
+		degree5Poly[5] * x * x * x * x * x;
+	const poly6equation = (x) =>
+		degree6Poly[0] +
+		degree6Poly[1] * x +
+		degree6Poly[2] * x * x +
+		degree6Poly[3] * x * x * x +
+		degree6Poly[4] * x * x * x * x +
+		degree6Poly[5] * x * x * x * x * x +
+		degree6Poly[6] * x * x * x * x * x * x;
+
+	//points
+	const degree2points = createPoints(x.domain(), 1, poly2equation);
+	const degree3points = createPoints(x.domain(), 1, poly3equation);
+	const degree4points = createPoints(x.domain(), 0.5, poly4equation);
+	const degree5points = createPoints(x.domain(), 0.5, poly5equation);
+	const degree6points = createPoints(x.domain(), 0.5, poly6equation);
+
+	svg
+		.append('path')
+		.data([ degree2points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'degree2PolyLine')
+		.attr('d', reversedLine);
+
+	svg
+		.append('path')
+		.data([ degree3points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'degree3PolyLine')
+		.attr('d', reversedLine);
+
+	svg
+		.append('path')
+		.data([ degree4points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'degree4PolyLine')
+		.attr('d', reversedLine);
+
+	svg
+		.append('path')
+		.data([ degree5points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'degree5PolyLine')
+		.attr('d', reversedLine);
+
+	svg
+		.append('path')
+		.data([ degree6points ])
+		.attr('clip-path', 'url(#clip)')
+		.style('fill', 'none')
+		.attr('class', 'degree6PolyLine')
+		.attr('d', reversedLine);
+
+	svg
+		.append('path')
+		.data([ confUpp ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'confidenceBands')
+		.attr('d', valueline);
+	svg
+		.append('path')
+		.data([ confLow ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'confidenceBands')
+		.attr('d', valueline);
+	svg
+		.append('path')
+		.data([ meanCiLow ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'confidenceBandsFit')
+		.attr('d', valueline);
+	svg
+		.append('path')
+		.data([ meanCiUpp ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'confidenceBandsFit')
+		.attr('d', valueline);
 
 	svg
 		.append('line')
 		.attr('class', 'linearRegressionLine')
+		.attr('clip-path', 'url(#clip)')
 		.attr('x1', x(xDomainMin))
 		.attr('y1', y(y1))
 		.attr('x2', x(xDomainMax))
@@ -220,7 +326,7 @@ function receiveMessage(event) {
 
 	svg
 		.selectAll('.point')
-		.data(tempABVals)
+		.data(coordinates)
 		.enter()
 		.append('circle')
 		.attr('class', 'point')
@@ -255,7 +361,7 @@ function receiveMessage(event) {
                 </tr>
                 <tr>
                   <td>Count:</td>
-                  <td>${tempABVals.length}</td>
+                  <td>${coordinates.length}</td>
                 </tr>
               </table>
               <br>
@@ -303,6 +409,11 @@ function receiveMessage(event) {
 	d3.selectAll('.histogramBorders').attr('display', 'none');
 	d3.selectAll('.confidenceBands').attr('display', 'none');
 	d3.selectAll('.confidenceBandsFit').attr('display', 'none');
+	d3.selectAll('.degree2PolyLine').attr('display', 'none');
+	d3.selectAll('.degree3PolyLine').attr('display', 'none');
+	d3.selectAll('.degree4PolyLine').attr('display', 'none');
+	d3.selectAll('.degree5PolyLine').attr('display', 'none');
+	d3.selectAll('.degree6PolyLine').attr('display', 'none');
 }
 
 window.addEventListener('message', receiveMessage, false);
