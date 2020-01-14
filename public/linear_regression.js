@@ -1,10 +1,10 @@
 function evaluatePValue(pValue) {
 	if (pValue < 0.0001) {
-		return `<td><0.0001</td>`;
+		return `<td style="width: 100px;"><0.0001</td>`;
 	} else if (pValue < 0.001) {
-		return `<td>${pValue}</td>`;
+		return `<td style="width: 100px;">${pValue}</td>`;
 	} else if (pValue < 0.01) {
-		return `<td>${pValue}</td>`;
+		return `<td style="width: 100px;">${pValue}</td>`;
 	}
 	return `<td style=color:green;>${pValue}</td>`;
 }
@@ -40,7 +40,6 @@ function receiveMessage(event) {
 		degree4Poly,
 		degree5Poly,
 		degree6Poly,
-		linearRegressionLinePoints,
 		linearRegressionLineEquation,
 		linearRegressionLineSlope,
 		linearRegressionLineR2,
@@ -95,9 +94,9 @@ function receiveMessage(event) {
 	});
 	const yRange = yExtent[1] - yExtent[0];
 
-	// set domain to be extent +- 20%
-	x.domain([ xExtent[0] - xRange * 0.2, xExtent[1] + xRange * 0.2 ]).nice();
-	y.domain([ yExtent[0] - yRange * 0.2, yExtent[1] + yRange * 0.2 ]).nice();
+	// set domain to be extent +- 5%
+	x.domain([ xExtent[0] - xRange * 0.05, xExtent[1] + xRange * 0.05 ]).nice();
+	y.domain([ yExtent[0] - yRange * 0.05, yExtent[1] + yRange * 0.05 ]).nice();
 
 	// set the parameters for the histogram
 	const histogramY = d3
@@ -122,10 +121,10 @@ function receiveMessage(event) {
 		.enter()
 		.append('rect')
 		.attr('class', 'histogramBorders')
-		.attr('x', 450)
+		.attr('x', 425)
 		.attr('y', function(d) {
 			// move down 10
-			return y(d.x1) + 10;
+			return y(d.x1);
 		})
 		.attr('width', function(d) {
 			return barsX(d.length);
@@ -227,16 +226,21 @@ function receiveMessage(event) {
 		degree6Poly[5] * x * x * x * x * x +
 		degree6Poly[6] * x * x * x * x * x * x;
 
+	const step = (xDomainMax - xDomainMin) / 200;
+
 	//points
-	const degree2points = createPoints(x.domain(), 1, poly2equation);
-	const degree3points = createPoints(x.domain(), 1, poly3equation);
-	const degree4points = createPoints(x.domain(), 0.5, poly4equation);
-	const degree5points = createPoints(x.domain(), 0.5, poly5equation);
-	const degree6points = createPoints(x.domain(), 0.5, poly6equation);
+	const degree2Points = createPoints(x.domain(), step, poly2equation);
+	const degree3Points = createPoints(x.domain(), step, poly3equation);
+	const degree4Points = createPoints(x.domain(), step, poly4equation);
+	const degree5Points = createPoints(x.domain(), step, poly5equation);
+	const degree6Points = createPoints(x.domain(), step, poly6equation);
+
+	console.log(degree2Points, degree6Points);
+	console.log((xDomainMax - xDomainMin) / 200);
 
 	svg
 		.append('path')
-		.data([ degree2points ])
+		.data([ degree2Points ])
 		.style('fill', 'none')
 		.attr('clip-path', 'url(#clip)')
 		.attr('class', 'degree2PolyLine')
@@ -244,7 +248,7 @@ function receiveMessage(event) {
 
 	svg
 		.append('path')
-		.data([ degree3points ])
+		.data([ degree3Points ])
 		.style('fill', 'none')
 		.attr('clip-path', 'url(#clip)')
 		.attr('class', 'degree3PolyLine')
@@ -252,7 +256,7 @@ function receiveMessage(event) {
 
 	svg
 		.append('path')
-		.data([ degree4points ])
+		.data([ degree4Points ])
 		.style('fill', 'none')
 		.attr('clip-path', 'url(#clip)')
 		.attr('class', 'degree4PolyLine')
@@ -260,7 +264,7 @@ function receiveMessage(event) {
 
 	svg
 		.append('path')
-		.data([ degree5points ])
+		.data([ degree5Points ])
 		.style('fill', 'none')
 		.attr('clip-path', 'url(#clip)')
 		.attr('class', 'degree5PolyLine')
@@ -268,7 +272,7 @@ function receiveMessage(event) {
 
 	svg
 		.append('path')
-		.data([ degree6points ])
+		.data([ degree6Points ])
 		.attr('clip-path', 'url(#clip)')
 		.style('fill', 'none')
 		.attr('class', 'degree6PolyLine')
@@ -344,69 +348,181 @@ function receiveMessage(event) {
 			d3.select(this).transition().duration(50).attr('r', 2).style('fill', 'black');
 		});
 
-	const template = `<div style="text-align: center; margin: 0 3em;">
-            <h4>Summary Statistics</h4>
-              <table style="width: 100%;">
-                <tr>
-                  <td>Pearson's Correlation:</td>
-                  <td>${corrcoef}</td>
-                </tr>
-                <tr>
-                  <td>p:</td>
-                  ${evaluatePValue(pValue)}
-                </tr>
-                <tr>
-                  <td>Covariance:</td>
-                  <td>${covariance}</td>
-                </tr>
-                <tr>
-                  <td>Count:</td>
-                  <td>${coordinates.length}</td>
-                </tr>
-              </table>
-              <br>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="font-weight: bold;">Variable</td>
-                  <td style="font-weight: bold;">Mean</td>
-                  <td style="font-weight: bold;">Std Dev</td>
-                </tr>
-                <tr>
-                  <td>${colXLabel}</td>
-                  <td>${colAMean}</td>
-                  <td>${colAStdev}</td>
-                </tr>
-                <tr>
-                  <td>${colYLabel}</td>
-                  <td>${colBMean}</td>
-                  <td>${colBStdev}</td>
-                </tr>
-              </table>
-            <h4>Linear Fit</h4>
+	const summaryStatsTemplate = `
+  <div style="padding: 10px 30px 30px; text-align: center;">
+    <h4>Summary Statistics</h4>
+    <div style="display: flex;">
+      <table style="width: 300px;">
+        <tr>
+          <td style="width: 200px;">Pearson's Correlation:</td>
+          <td style="width: 100px;">${corrcoef}</td>
+        </tr>
+        <tr>
+          <td style="width: 100px;">p:</td>
+          ${evaluatePValue(pValue)}
+        </tr>
+        <tr>
+          <td style="width: 200px;">Covariance:</td>
+          <td style="width: 100px;">${covariance}</td>
+        </tr>
+        <tr>
+          <td style="width: 200px;">Count:</td>
+          <td style="width: 100px;">${coordinates.length}</td>
+        </tr>
+      </table>
+      <table style="width: 300px">
+        <tr>
+          <td style="width: 100px; font-weight: bold;">Variable</td>
+          <td style="width: 100px; font-weight: bold;">Mean</td>
+          <td style="width: 100px; font-weight: bold;">Std Dev</td>
+        </tr>
+        <tr>
+          <td style="width: 100px;">${colXLabel}</td>
+          <td style="width: 100px;">${colAMean}</td>
+          <td style="width: 100px;">${colAStdev}</td>
+        </tr>
+        <tr>
+          <td style="width: 100px;">${colYLabel}</td>
+          <td style="width: 100px;">${colBMean}</td>
+          <td style="width: 100px;">${colBStdev}</td>
+        </tr>
+      </table>
+    </div>
+  </div>`;
+
+	const linearFitTemplate = `<div style="padding: 10px 30px; text-align: center;">
+    <h4 style="margin-bottom: 0;">Linear Fit</h4>
+    <table style="width: 100%;">
+      <tr>
+        <td style="width: 25%;">r²:</td>
+        <td style="width: 75%;">${linearRegressionLineR2}</td>
+      </tr>
+      <tr>
+        <td style="width: 25%;">slope:</td>
+        <td style="width: 75%;">${linearRegressionLineSlope}</td>
+      </tr>
+      <tr>
+        <td style="width: 25%; white-space: nowrap;">y-intercept:</td>
+        <td style="width: 75%;">${linearRegressionLineYIntercept}</td>
+      </tr>
+      <tr>
+        <td style="width: 25%;">equation:</td>
+        <td style="width: 75%;">${linearRegressionLineEquation}</td>
+      </tr>
+    </table>
+  </div>`;
+
+	const template = `<div>
+          <div style="padding: 10px 30px; text-align: center;">
+            <h4 style="margin-bottom: 0;">Quadratic Fit Parameter Estimates</h4>
             <table style="width: 100%;">
               <tr>
-                <td style="width: 50%;">r²:</td>
-                <td style="width: 50%;">${linearRegressionLineR2}</td>
+                <td style="width: 25%;">Equation</td>
+                <td style="width: 75%;">${colYLabel} = ${degree2Poly[0].toFixed(4)} + ${degree2Poly[1].toFixed(
+		4,
+	)} * ${colXLabel} + ${degree2Poly[2].toFixed(4)} * ${colXLabel}²</td>
+              </tr>
+              <br>
+              <tr>
+                <td style="width: 25%; font-weight: bold;">Term</td>
+                <td style="width: 75%; font-weight: bold;">Estimate</td>
               </tr>
               <tr>
-                <td style="width: 50%;">slope:</td>
-                <td style="width: 50%;">${linearRegressionLineSlope}</td>
+                <td style="width: 25%;">Intercept</td>
+                <td style="width: 75%;">${degree2Poly[0].toFixed(4)}</td>
               </tr>
               <tr>
-                <td style="white-space: nowrap;">y-intercept:</td>
-                <td style="width: 50%;">${linearRegressionLineYIntercept}</td>
+                <td style="width: 25%;">${colXLabel}</td>
+                <td style="width: 75%;">${degree2Poly[1].toFixed(4)}</td>
               </tr>
               <tr>
-                <td style="width: 50%;">equation:</td>
-                <td style="width: 50%;">${linearRegressionLineEquation}</td>
+                <td style="width: 25%;">${colXLabel}²</td>
+                <td style="width: 75%;">${degree2Poly[2].toFixed(4)}</td>
               </tr>
             </table>
-          </div>`;
+            </div>
+            <div style="padding: 10px 30px; text-align: center;">
+            <h4 style="margin-bottom: 0;">Cubic Fit Parameter Estimates</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="width: 25%;">Equation</td>
+                  <td style="width: 75%;">${colYLabel} = ${degree3Poly[0].toFixed(4)} + ${degree3Poly[1].toFixed(
+		4,
+	)} * ${colXLabel} + ${degree3Poly[2].toFixed(4)} * ${colXLabel}² + ${degree3Poly[3].toFixed(4)} * ${colXLabel}³</td>
+                </tr>
+                <br>
+                <tr>
+                  <td style="width: 25%; font-weight: bold;">Term</td>
+                  <td style="width: 75%; font-weight: bold;">Estimate</td>
+                </tr>
+                <tr>
+                  <td style="width: 25%;">Intercept</td>
+                  <td style="width: 75%;">${degree3Poly[0].toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td style="width: 25%;">${colXLabel}</td>
+                  <td style="width: 75%;">${degree3Poly[1].toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td style="width: 25%;">${colXLabel}²</td>
+                  <td style="width: 75%;">${degree3Poly[2].toFixed(4)}</td>
+                </tr>
+                <tr>
+                  <td style="width: 25%;">${colXLabel}³</td>
+                  <td style="width: 75%;">${degree3Poly[3].toFixed(4)}</td>
+                </tr>
+              </table>
+            </div>
+            <div style="padding: 10px 30px; text-align: center;">
+            <h4 style="margin-bottom: 0;">Quartic Fit Parameter Estimates</h4>
+            <table style="width: 100%;">
+              <tr>
+                <td style="width: 25%;">Equation</td>
+                <td style="width: 75%;">${colYLabel} = ${degree4Poly[0].toFixed(4)} + ${degree4Poly[1].toFixed(
+		4,
+	)} * ${colXLabel} + ${degree4Poly[2].toFixed(4)} * ${colXLabel}² + ${degree4Poly[3].toFixed(
+		4,
+	)} * ${colXLabel}³ + ${degree4Poly[4].toFixed(4)} * ${colXLabel}⁴</td>
+              </tr>
+              <br>
+              <tr>
+                <td style="width: 25%; font-weight: bold;">Term</td>
+                <td style="width: 75%; font-weight: bold;">Estimate</td>
+              </tr>
+            <tr>
+              <td style="width: 25%;">Intercept</td>
+              <td style="width: 75%;">${degree4Poly[0].toFixed(4)}</td>
+            </tr>
+            <tr>
+              <td style="width: 25%;">${colXLabel}</td>
+              <td style="width: 75%;">${degree4Poly[1].toFixed(4)}</td>
+            </tr>
+            <tr>
+              <td style="width: 25%;">${colXLabel}²</td>
+              <td style="width: 75%;">${degree4Poly[2].toFixed(4)}</td>
+            </tr>
+            <tr>
+              <td style="width: 25%;">${colXLabel}³</td>
+              <td style="width: 75%;">${degree4Poly[3].toFixed(4)}</td>
+            </tr>
+            <tr>
+              <td style="width: 25%;">${colXLabel}⁴</td>
+              <td style="width: 75%;">${degree4Poly[4].toFixed(4)}</td>
+            </tr>
+          </table>
+        </div>
+        </div>
+          `;
 
-	const doc = new DOMParser().parseFromString(template, 'text/html');
-	container.appendChild(doc.body.firstChild);
+	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
+	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
+	const outputTemplateParsed = new DOMParser().parseFromString(template, 'text/html');
+
+	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
+	container.appendChild(linearFitParsed.body.firstChild);
+	container.appendChild(outputTemplateParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
-	d3.selectAll('.histogramBorders').attr('display', 'none');
+	// d3.selectAll('.histogramBorders').attr('display', 'none');
 	d3.selectAll('.confidenceBands').attr('display', 'none');
 	d3.selectAll('.confidenceBandsFit').attr('display', 'none');
 	d3.selectAll('.degree2PolyLine').attr('display', 'none');

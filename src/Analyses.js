@@ -90,7 +90,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		linearRegressionLineR2: rsquared.toFixed(4) / 1,
 		linearRegressionLineSlope: slope.toFixed(4) / 1,
 		linearRegressionLineYIntercept: intercept.toFixed(4) / 1,
-		linearRegressionLineEquation: `${colYLabel} = ${slope.toFixed(4) / 1}*(${colXLabel}) + ${intercept.toFixed(4) / 1}`,
+		linearRegressionLineEquation: `${colYLabel} = ${slope.toFixed(4) / 1} * ${colXLabel} + ${intercept.toFixed(4) / 1}`,
 	};
 }
 

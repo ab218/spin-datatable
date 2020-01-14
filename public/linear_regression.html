@@ -70,7 +70,10 @@
 </head>
 
 <body>
-  <div id="chart" class="chart"></div><div id="histogramVis"></div>
+  <div style="text-align: center;" id="chart" class="chart"></div>
+  <div><input type="checkbox" value="histogramBorders" onclick="toggleChartElement(this)" checked>Histogram Borders</div>
+  <br>
+  <br>
   <div><input type="checkbox" value="linearRegressionLine" onclick="toggleChartElement(this)" checked>Linear Fit</div>
   <div><input type="checkbox" value="degree2PolyLine" onclick="toggleChartElement(this)">Quadratic Fit</div>
   <div><input type="checkbox" value="degree3PolyLine" onclick="toggleChartElement(this)">Cubic Fit</div>
@@ -78,11 +81,10 @@
   <div><input type="checkbox" value="degree5PolyLine" onclick="toggleChartElement(this)">5th Degree Fit</div>
   <div><input type="checkbox" value="degree6PolyLine" onclick="toggleChartElement(this)">6th Degree Fit</div>
   <br>
-  <div><input type="checkbox" value="histogramBorders" onclick="toggleChartElement(this)">Histogram Borders</div>
   <br>
   <div><input type="checkbox" value="confidenceBandsFit" onclick="toggleChartElement(this)">Confid Curves Fit</div>
   <div><input type="checkbox" value="confidenceBands" onclick="toggleChartElement(this)">Confid Curves Indiv</div>
-  <div style="width:500px;" id="container"></div>
+  <div id="container"></div>
   <script src="linear_regression.js"></script>
 </body>
 
