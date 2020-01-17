@@ -11,6 +11,7 @@ export default function AnalysisModal() {
 	const [ xColData, setXColData ] = useState([]);
 	const [ yColData, setYColData ] = useState([]);
 	const [ error, setError ] = useState(null);
+	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
 	const { analysisModalOpen, columns, rows } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -30,12 +31,12 @@ export default function AnalysisModal() {
 		setCol((prevState) => prevState.filter((col) => col !== selectedRightColumn));
 	}
 
-	function performAnalysis() {
+	async function performAnalysis() {
 		if (!yColData[0] || !xColData[0]) {
 			setError('Please add all required columns and try again');
 			return;
 		}
-
+		setPerformingAnalysis(true);
 		const colX = xColData[0] || columns[0];
 		const colY = yColData[0] || columns[2];
 		function mapColumnValues(colID) {
@@ -59,8 +60,55 @@ export default function AnalysisModal() {
 		const colYArr = XYCols.map((a) => a[1]);
 
 		if (colXArr.length >= 3 && colYArr.length >= 3) {
-			performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols);
+			const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols);
+			const popup = window.open(
+				window.location.href + 'linear_regression.html',
+				'',
+				'left=9999,top=100,width=650,height=850',
+			);
+			function receiveMessage(event) {
+				// target window is ready, time to send data.
+				if (event.data === 'ready') {
+					// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
+					if (typeof results === 'string') {
+						return alert('Something went wrong. Check your data and try again.');
+					}
+					popup.postMessage(results, '*');
+					window.removeEventListener('message', receiveMessage);
+				}
+			}
+
+			function removeTargetClickEvent(event) {
+				if (event.data === 'closed') {
+					console.log(event);
+					console.log('target closed');
+					window.removeEventListener('message', targetClickEvent);
+					window.removeEventListener('message', removeTargetClickEvent);
+				}
+			}
+
+			function targetClickEvent(event) {
+				if (event.data.message === 'clicked') {
+					const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
+					const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
+					if (!event.data.metaKeyPressed) {
+						dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
+					}
+
+					const rowIndices = rows.reduce((acc, row, rowIndex) => {
+						// TODO Shouldn't be using Number here?
+						return event.data.vals.includes(Number(row[selectedColumn.id])) ? acc.concat(rowIndex) : acc;
+					}, []);
+					dispatchSpreadsheetAction({ type: 'SELECT_CELLS', rows: rowIndices, column: columnIndex });
+				}
+			}
+			setPerformingAnalysis(false);
 			dispatchSpreadsheetAction({ type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+
+			// set event listener and wait for target to be ready
+			window.addEventListener('message', receiveMessage, false);
+			window.addEventListener('message', targetClickEvent);
+			window.addEventListener('message', removeTargetClickEvent);
 		} else {
 			setError('Columns must each contain at least 3 values to perform this analysis');
 			return;
@@ -103,6 +151,9 @@ export default function AnalysisModal() {
 				className="ant-modal"
 				// destroyOnClose
 				onCancel={handleModalClose}
+				okButtonProps={{ disabled: performingAnalysis }}
+				cancelButtonProps={{ disabled: performingAnalysis }}
+				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
 				title="Fit Y by X"
 				visible={analysisModalOpen}

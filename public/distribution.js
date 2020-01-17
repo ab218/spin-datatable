@@ -1,9 +1,41 @@
-window.addEventListener('unload', function(e) {
+function onClickSelectPoints(thisBar, bar, col) {
+	let metaKeyPressed = false;
+	if (d3.event.metaKey) {
+		metaKeyPressed = true;
+	} else {
+		// If meta key is not held down, remove other highlighted bars
+		d3.selectAll('rect').style('fill', '#69b3a2');
+	}
+	// TODO: If holding meta key and click on bar again, deselect cells
+	// if (metaKeyPressed && thisBar.style("fill") === 'red') {
+	//   thisBar.style("fill", "#69b3a2");
+	//   window.opener.postMessage({
+	//     message: 'unclicked',
+	//     metaKeyPressed,
+	//     vals: bar,
+	//   }, '*');
+	//   return;
+	// }
+	thisBar.style('fill', 'red');
+	window.opener.postMessage(
+		{
+			message: 'clicked',
+			metaKeyPressed,
+			vals: bar,
+			col,
+		},
+		'*',
+	);
+}
+
+function unload(e) {
 	e.preventDefault();
 	// Chrome requires returnValue to be set
 	e.returnValue = '';
 	window.opener.postMessage('closed', '*');
-});
+}
+
+window.addEventListener('unload', unload);
 
 window.opener.postMessage('ready', '*');
 const container = document.getElementById('container');
@@ -110,37 +142,10 @@ function receiveMessage(event) {
 		.on(`mouseleave`, function() {
 			d3.select(this).transition().duration(50).attr('opacity', 1);
 		})
-		.on('click', onClick);
+		.on('click', function(d) {
+			onClickSelectPoints(d3.select(this), d, 'y');
+		});
 
-	function onClick(bar) {
-		const thisBar = d3.select(this);
-		let metaKeyPressed = false;
-		if (d3.event.metaKey) {
-			metaKeyPressed = true;
-		} else {
-			// If meta key is not held down, remove other highlighted bars
-			d3.selectAll('rect').style('fill', '#69b3a2');
-		}
-		// TODO: If holding meta key and click on bar again, deselect cells
-		// if (metaKeyPressed && thisBar.style("fill") === 'red') {
-		//   thisBar.style("fill", "#69b3a2");
-		//   window.opener.postMessage({
-		//     message: 'unclicked',
-		//     metaKeyPressed,
-		//     vals: bar,
-		//   }, '*');
-		//   return;
-		// }
-		thisBar.style('fill', 'red');
-		window.opener.postMessage(
-			{
-				message: 'clicked',
-				metaKeyPressed,
-				vals: bar,
-			},
-			'*',
-		);
-	}
 	// Boxplot
 	// Show the main vertical line
 	boxSvg

@@ -10,12 +10,61 @@ function evaluatePValue(pValue) {
 }
 
 function toggleChartElement(ele) {
+	const outputElement = document.getElementById(ele.value);
 	if (ele.checked) {
+		if (outputElement) {
+			outputElement.style.display = 'block';
+		}
 		d3.selectAll(`.${ele.value}`).attr('display', 'block');
 	} else {
+		if (outputElement) {
+			outputElement.style.display = 'none';
+		}
 		d3.selectAll(`.${ele.value}`).attr('display', 'none');
 	}
 }
+
+function onClickSelectPoints(thisBar, bar, col) {
+	let metaKeyPressed = false;
+	if (d3.event.metaKey) {
+		metaKeyPressed = true;
+	} else {
+		// If meta key is not held down, remove other highlighted bars
+		d3.selectAll('rect').style('fill', '#69b3a2');
+	}
+	// TODO: If holding meta key and click on bar again, deselect cells
+	// if (metaKeyPressed && thisBar.style("fill") === 'red') {
+	//   thisBar.style("fill", "#69b3a2");
+	//   window.opener.postMessage({
+	//     message: 'unclicked',
+	//     metaKeyPressed,
+	//     vals: bar,
+	//   }, '*');
+	//   return;
+	// }
+	thisBar.style('fill', 'red');
+	window.opener.postMessage(
+		{
+			message: 'clicked',
+			metaKeyPressed,
+			vals: bar,
+			col,
+		},
+		'*',
+	);
+}
+
+const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
+
+function unload(e) {
+	e.preventDefault();
+	// Chrome requires returnValue to be set
+	e.returnValue = '';
+	window.opener.postMessage('closed', '*');
+}
+
+window.addEventListener('unload', unload);
+
 window.opener.postMessage('ready', '*');
 const container = document.getElementById('container');
 function receiveMessage(event) {
@@ -40,7 +89,6 @@ function receiveMessage(event) {
 		degree4Poly,
 		degree5Poly,
 		degree6Poly,
-		linearRegressionLineEquation,
 		linearRegressionLineSlope,
 		linearRegressionLineR2,
 		linearRegressionLineYIntercept,
@@ -49,7 +97,7 @@ function receiveMessage(event) {
 	const titleEl = document.createElement('div');
 	titleEl.style.textAlign = 'center';
 	titleEl.style.fontSize = 20;
-	const titleText = document.createTextNode(`Fit ${colYLabel} by ${colXLabel}`);
+	const titleText = document.createTextNode(`Bivariate Fit of ${colYLabel} By ${colXLabel}`);
 	titleEl.appendChild(titleText);
 	const chartsContainer = document.getElementById('chart');
 	document.body.insertBefore(titleEl, chartsContainer);
@@ -64,6 +112,8 @@ function receiveMessage(event) {
 	const colA = coordinates.map((a) => a[1]).sort(d3.ascending);
 	const colB = coordinates.map((a) => a[0]).sort(d3.ascending);
 
+	const div = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0);
+
 	const svg = d3
 		.select('.chart')
 		.append('svg')
@@ -74,14 +124,14 @@ function receiveMessage(event) {
 
 	const x = d3.scaleLinear().range([ 0, width ]);
 	const y = d3.scaleLinear().range([ height, 0 ]);
-	const xAxis = d3.axisBottom().scale(x);
-	const yAxis = d3.axisLeft().scale(y);
+	const xAxis = d3.axisBottom().scale(x).ticks(10, 's');
+	const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
 
 	// Lower number = higher bars
 	const barHeight = 150;
 	const barsY = d3.scaleLinear().range([ height, barHeight ]);
 	barsY.domain([ 0, colA.length ]);
-	const barsX = d3.scaleLinear().range([ 0, width ]);
+	const barsX = d3.scaleLinear().range([ 0, 250 ]);
 	barsX.domain([ 0, colB.length ]);
 
 	// get extents and range
@@ -102,18 +152,19 @@ function receiveMessage(event) {
 	const histogramY = d3
 		.histogram()
 		.domain(y.domain()) // then the domain of the graphic
-		.thresholds(y.ticks(6)); // then the numbers of bins
+		.thresholds(8); // then the numbers of bins
 
 	const histogramX = d3
 		.histogram()
 		.domain(x.domain()) // then the domain of the graphic
-		.thresholds(x.ticks(6)); // then the numbers of bins
+		.thresholds(8); // then the numbers of bins
 
 	// And apply this function to data to get the bins
 	const colABins = histogramY(colA);
 	const colBBins = histogramX(colB);
 
 	svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
+
 	// Histogram Bars
 	svg
 		.selectAll('xHistBars')
@@ -122,22 +173,21 @@ function receiveMessage(event) {
 		.append('rect')
 		.attr('class', 'histogramBorders')
 		.attr('x', 425)
-		.attr('y', function(d) {
-			// move down 10
-			return y(d.x1);
-		})
-		.attr('width', function(d) {
-			return barsX(d.length);
-		})
-		.attr('height', function(d) {
-			return y(d.x0) - y(d.x1) - 1;
-		})
+		.attr('y', (d) => y(d.x1))
+		.attr('width', (d) => barsX(d.length))
+		.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
 		.attr('fill', '#69b3a2')
-		.on(`mouseenter`, function() {
+		.on('mouseover', function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 0.6);
+			div.transition().duration(200).style('opacity', 0.9);
+			div.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
 		})
-		.on(`mouseleave`, function() {
+		.on('mouseout', function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 1);
+			div.transition().duration(500).style('opacity', 0);
+		})
+		.on('click', function(d) {
+			onClickSelectPoints(d3.select(this), d, 'y');
 		});
 
 	// Histogram Bars
@@ -147,24 +197,22 @@ function receiveMessage(event) {
 		.enter()
 		.append('rect')
 		.attr('class', 'histogramBorders')
-		.attr('y', function(d) {
-			return barsY(d.length) - height;
-		})
-		.attr('x', function(d) {
-			return x(d.x0);
-		})
-		.attr('height', function(d) {
-			return height - barsY(d.length);
-		})
-		.attr('width', function(d) {
-			return x(d.x1) - x(d.x0) - 1;
-		})
+		.attr('y', (d) => barsY(d.length) - height)
+		.attr('x', (d) => x(d.x0))
+		.attr('height', (d) => height - barsY(d.length))
+		.attr('width', (d) => x(d.x1) - x(d.x0) - 1)
 		.attr('fill', '#69b3a2')
-		.on(`mouseenter`, function() {
+		.on(`mouseenter`, function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 0.6);
+			div.transition().duration(200).style('opacity', 0.9);
+			div.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
 		})
-		.on(`mouseleave`, function() {
+		.on(`mouseleave`, function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 1);
+			div.transition().duration(500).style('opacity', 0);
+		})
+		.on('click', function(d) {
+			onClickSelectPoints(d3.select(this), d, 'x');
 		});
 
 	// text label for the x axis
@@ -234,9 +282,6 @@ function receiveMessage(event) {
 	const degree4Points = createPoints(x.domain(), step, poly4equation);
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
-
-	console.log(degree2Points, degree6Points);
-	console.log((xDomainMax - xDomainMin) / 200);
 
 	svg
 		.append('path')
@@ -316,15 +361,15 @@ function receiveMessage(event) {
 		.attr('x2', x(xDomainMax))
 		.attr('y2', y(y2))
 		.on(`mouseenter`, function() {
-			d3.select(this).transition().duration(50).attr('opacity', 0.6);
+			return d3.select(this).transition().duration(50).attr('opacity', 0.6);
 		})
 		.on(`mouseleave`, function() {
-			d3.select(this).transition().duration(50).attr('opacity', 1);
+			return d3.select(this).transition().duration(50).attr('opacity', 1);
 		});
 
-	svg.append('g').attr('class', 'x axis').attr('transform', 'translate(0,' + height + ')').call(xAxis.ticks(12, 's'));
+	svg.append('g').attr('class', 'x axis').attr('transform', 'translate(0,' + height + ')').call(xAxis);
 
-	svg.append('g').attr('class', 'y axis').call(yAxis.ticks(12, 's'));
+	svg.append('g').attr('class', 'y axis').call(yAxis);
 
 	// const randomJitter = Math.random();
 
@@ -335,17 +380,13 @@ function receiveMessage(event) {
 		.append('circle')
 		.attr('class', 'point')
 		.attr('r', 2)
-		.attr('cy', function(d) {
-			return y(d[1]);
-		})
-		.attr('cx', function(d) {
-			return x(d[0]);
-		})
+		.attr('cy', (d) => y(d[1]))
+		.attr('cx', (d) => x(d[0]))
 		.on(`mouseenter`, function() {
-			d3.select(this).transition().duration(50).attr('r', 5).style('fill', 'red');
+			return d3.select(this).transition().duration(50).attr('r', 5).style('fill', 'red');
 		})
 		.on(`mouseleave`, function() {
-			d3.select(this).transition().duration(50).attr('r', 2).style('fill', 'black');
+			return d3.select(this).transition().duration(50).attr('r', 2).style('fill', 'black');
 		});
 
 	const summaryStatsTemplate = `
@@ -390,37 +431,48 @@ function receiveMessage(event) {
     </div>
   </div>`;
 
-	const linearFitTemplate = `<div style="padding: 10px 30px; text-align: center;">
-    <h4 style="margin-bottom: 0;">Linear Fit</h4>
+	const linearFitTemplate = `<div id="linearRegressionLine" style="padding: 10px 30px; text-align: center;">
+    <h4 style="margin-bottom: 0;">Summary of Linear Fit</h4>
     <table style="width: 100%;">
       <tr>
-        <td style="width: 25%;">r²:</td>
+        <td style="width: 25%;">Equation:</td>
+        <td style="width: 75%;"> ${colYLabel} = ${linearRegressionLineYIntercept.toFixed(4) / 1} ${addOrSubtract(
+		linearRegressionLineSlope.toFixed(4) / 1,
+	)} ${Math.abs(linearRegressionLineSlope.toFixed(4) / 1)} * ${colXLabel}</td>
+      </tr>
+      <tr>
+        <td style="width: 25%;">RSquare:</td>
         <td style="width: 75%;">${linearRegressionLineR2}</td>
       </tr>
+    </table>
+    <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
+    <table style="width: 100%;">
       <tr>
-        <td style="width: 25%;">slope:</td>
-        <td style="width: 75%;">${linearRegressionLineSlope}</td>
+        <td style="width: 25%; font-weight: bold;">Term</td>
+        <td style="width: 75%; font-weight: bold;">Estimate</td>
       </tr>
       <tr>
-        <td style="width: 25%; white-space: nowrap;">y-intercept:</td>
+        <td style="width: 25%; white-space: nowrap;">Intercept:</td>
         <td style="width: 75%;">${linearRegressionLineYIntercept}</td>
       </tr>
       <tr>
-        <td style="width: 25%;">equation:</td>
-        <td style="width: 75%;">${linearRegressionLineEquation}</td>
+        <td style="width: 25%;">${colXLabel}</td>
+        <td style="width: 75%;">${linearRegressionLineSlope.toFixed(4) / 1}</td>
       </tr>
     </table>
   </div>`;
 
-	const template = `<div>
-          <div style="padding: 10px 30px; text-align: center;">
+	const quadraticFitTemplate = `<div>
+          <div id="degree2PolyLine" style="padding: 10px 30px; text-align: center;">
             <h4 style="margin-bottom: 0;">Quadratic Fit Parameter Estimates</h4>
             <table style="width: 100%;">
               <tr>
                 <td style="width: 25%;">Equation</td>
-                <td style="width: 75%;">${colYLabel} = ${degree2Poly[0].toFixed(4)} + ${degree2Poly[1].toFixed(
-		4,
-	)} * ${colXLabel} + ${degree2Poly[2].toFixed(4)} * ${colXLabel}²</td>
+                <td style="width: 75%;">${colYLabel} = ${degree2Poly[0].toFixed(4)} ${addOrSubtract(
+		degree2Poly[1],
+	)} ${Math.abs(degree2Poly[1]).toFixed(4)} * ${colXLabel} ${addOrSubtract(degree2Poly[2])} ${Math.abs(
+		degree2Poly[2],
+	).toFixed(4)} * ${colXLabel}^2</td>
               </tr>
               <br>
               <tr>
@@ -436,21 +488,70 @@ function receiveMessage(event) {
                 <td style="width: 75%;">${degree2Poly[1].toFixed(4)}</td>
               </tr>
               <tr>
-                <td style="width: 25%;">${colXLabel}²</td>
+                <td style="width: 25%;">${colXLabel}^2</td>
                 <td style="width: 75%;">${degree2Poly[2].toFixed(4)}</td>
               </tr>
             </table>
-            </div>
-            <div style="padding: 10px 30px; text-align: center;">
-            <h4 style="margin-bottom: 0;">Cubic Fit Parameter Estimates</h4>
+            </div>`;
+
+	// const cubicFitTemplate = `<div id="degree3PolyLine" style="padding: 10px 30px; text-align: center;">
+	//           <h4 style="margin-bottom: 0;">Summary of Cubic Fit</h4>
+	//             <table style="width: 100%;">
+	//               <tr>
+	//                 <td style="width: 25%;">Equation</td>
+	//                 <td style="width: 75%;">Verb = 61.6718 + 0.0253208*Math - 0.0032453*(Math-39.04)^2 + 0.0062349*(Math-39.04)^3</td>
+	//               </tr>
+	//               <tr>
+	//                 <td>RSquare</td>
+	//                 <td>0.045633</td>
+	//               </tr>
+	//               </table>
+	//               <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
+	//               <table style="width: 100%;">
+	//               <tr>
+	//                 <td style="width: 25%; font-weight: bold;">Term</td>
+	//                 <td style="width: 75%; font-weight: bold;">Estimate</td>
+	//               </tr>
+	//               <tr>
+	//                 <td style="width: 25%;">Intercept</td>
+	//                 <td style="width: 75%;">61.6718</td>
+	//               </tr>
+	//               <tr>
+	//                 <td style="width: 25%;">${colXLabel}</td>
+	//                 <td style="width: 75%;">0.0253</td>
+	//               </tr>
+	//               <tr>
+	//                 <td style="width: 25%;">(${colXLabel} - 39.04)^2</td>
+	//                 <td style="width: 75%;">-0.0032</td>
+	//               </tr>
+	//               <tr>
+	//                 <td style="width: 25%;">(${colXLabel} - 39.04)^3</td>
+	//                 <td style="width: 75%;">0.0062</td>
+	//               </tr>
+	//             </table>
+	//           </div>
+	//           `;
+
+	const cubicFitTemplate = `<div id="degree3PolyLine" style="padding: 10px 30px; text-align: center;">
+            <h4 style="margin-bottom: 0;">Summary of Cubic Fit</h4>
               <table style="width: 100%;">
                 <tr>
                   <td style="width: 25%;">Equation</td>
-                  <td style="width: 75%;">${colYLabel} = ${degree3Poly[0].toFixed(4)} + ${degree3Poly[1].toFixed(
+                  <td style="width: 75%;">${colYLabel} = ${degree3Poly[0].toFixed(4)} ${addOrSubtract(
+		degree3Poly[1],
+	)} ${Math.abs(degree3Poly[1]).toFixed(4)} * ${colXLabel} ${addOrSubtract(degree3Poly[2])} ${Math.abs(
+		degree3Poly[2],
+	).toFixed(4)} * ${colXLabel}^2 ${addOrSubtract(degree3Poly[3])} ${Math.abs(degree3Poly[3]).toFixed(
 		4,
-	)} * ${colXLabel} + ${degree3Poly[2].toFixed(4)} * ${colXLabel}² + ${degree3Poly[3].toFixed(4)} * ${colXLabel}³</td>
+	)} * ${colXLabel}^3</td>
                 </tr>
-                <br>
+                <tr>
+                  <td>RSquare</td>
+                  <td>0.045633</td>
+                </tr>
+                </table>
+                <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
+                <table style="width: 100%;">
                 <tr>
                   <td style="width: 25%; font-weight: bold;">Term</td>
                   <td style="width: 75%; font-weight: bold;">Estimate</td>
@@ -464,25 +565,29 @@ function receiveMessage(event) {
                   <td style="width: 75%;">${degree3Poly[1].toFixed(4)}</td>
                 </tr>
                 <tr>
-                  <td style="width: 25%;">${colXLabel}²</td>
+                  <td style="width: 25%;">${colXLabel}^2</td>
                   <td style="width: 75%;">${degree3Poly[2].toFixed(4)}</td>
                 </tr>
                 <tr>
-                  <td style="width: 25%;">${colXLabel}³</td>
+                  <td style="width: 25%;">${colXLabel}^3</td>
                   <td style="width: 75%;">${degree3Poly[3].toFixed(4)}</td>
                 </tr>
               </table>
             </div>
-            <div style="padding: 10px 30px; text-align: center;">
+            `;
+
+	const quarticFitTemplate = `<div id="degree4PolyLine" style="padding: 10px 30px; text-align: center;">
             <h4 style="margin-bottom: 0;">Quartic Fit Parameter Estimates</h4>
             <table style="width: 100%;">
               <tr>
                 <td style="width: 25%;">Equation</td>
-                <td style="width: 75%;">${colYLabel} = ${degree4Poly[0].toFixed(4)} + ${degree4Poly[1].toFixed(
+                <td style="width: 75%;">${colYLabel} = ${degree4Poly[0].toFixed(4)} ${addOrSubtract(
+		degree4Poly[1],
+	)} ${Math.abs(degree4Poly[1]).toFixed(4)} * ${colXLabel} ${addOrSubtract(degree4Poly[2])} ${Math.abs(
+		degree4Poly[2],
+	).toFixed(4)} * ${colXLabel}^2 ${addOrSubtract(degree4Poly[3])} ${Math.abs(degree4Poly[3]).toFixed(
 		4,
-	)} * ${colXLabel} + ${degree4Poly[2].toFixed(4)} * ${colXLabel}² + ${degree4Poly[3].toFixed(
-		4,
-	)} * ${colXLabel}³ + ${degree4Poly[4].toFixed(4)} * ${colXLabel}⁴</td>
+	)} * ${colXLabel}^3 ${addOrSubtract(degree4Poly[4])} ${Math.abs(degree4Poly[4]).toFixed(4)} * ${colXLabel}^4</td>
               </tr>
               <br>
               <tr>
@@ -498,15 +603,15 @@ function receiveMessage(event) {
               <td style="width: 75%;">${degree4Poly[1].toFixed(4)}</td>
             </tr>
             <tr>
-              <td style="width: 25%;">${colXLabel}²</td>
+              <td style="width: 25%;">${colXLabel}^2</td>
               <td style="width: 75%;">${degree4Poly[2].toFixed(4)}</td>
             </tr>
             <tr>
-              <td style="width: 25%;">${colXLabel}³</td>
+              <td style="width: 25%;">${colXLabel}^3</td>
               <td style="width: 75%;">${degree4Poly[3].toFixed(4)}</td>
             </tr>
             <tr>
-              <td style="width: 25%;">${colXLabel}⁴</td>
+              <td style="width: 25%;">${colXLabel}^4</td>
               <td style="width: 75%;">${degree4Poly[4].toFixed(4)}</td>
             </tr>
           </table>
@@ -516,11 +621,15 @@ function receiveMessage(event) {
 
 	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
 	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
-	const outputTemplateParsed = new DOMParser().parseFromString(template, 'text/html');
+	const quadraticFitParsed = new DOMParser().parseFromString(quadraticFitTemplate, 'text/html');
+	const cubicFitParsed = new DOMParser().parseFromString(cubicFitTemplate, 'text/html');
+	const quarticFitParsed = new DOMParser().parseFromString(quarticFitTemplate, 'text/html');
 
 	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
 	container.appendChild(linearFitParsed.body.firstChild);
-	container.appendChild(outputTemplateParsed.body.firstChild);
+	container.appendChild(quadraticFitParsed.body.firstChild);
+	container.appendChild(cubicFitParsed.body.firstChild);
+	container.appendChild(quarticFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
 	// d3.selectAll('.histogramBorders').attr('display', 'none');
 	d3.selectAll('.confidenceBands').attr('display', 'none');

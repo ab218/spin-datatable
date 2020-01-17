@@ -1,47 +1,12 @@
 <html>
 
 <head>
+  <script src="./d3-v4.js"></script>
   <style>
     body {
       margin: 0 auto;
       display: table;
       font-family: "Helvetica Neue", sans-serif;
-    }
-
-    .linearRegressionLine {
-      stroke-width: 2px;
-      stroke: steelblue;
-      z-index: 1;
-    }
-
-    .degree2PolyLine {
-      stroke-width: 2px;
-      stroke: green;
-      z-index: 1;
-    }
-
-    .degree3PolyLine {
-      stroke-width: 2px;
-      stroke: darkmagenta;
-      z-index: 1;
-    }
-
-    .degree4PolyLine {
-      stroke-width: 2px;
-      stroke: saddlebrown;
-      z-index: 1;
-    }
-
-    .degree5PolyLine {
-      stroke-width: 2px;
-      stroke: goldenrod;
-      z-index: 1;
-    }
-
-    .degree6PolyLine {
-      stroke-width: 2px;
-      stroke: thistle;
-      z-index: 1;
     }
 
     .confidenceBands {
@@ -58,32 +23,92 @@
       z-index: 1;
     }
 
+    .degree2PolyLine {
+      stroke-width: 2px;
+      stroke: green;
+      z-index: 1;
+    }
+
+    #degree2PolyLine {
+      display: none;
+    }
+
+    .degree3PolyLine {
+      stroke-width: 2px;
+      stroke: darkmagenta;
+      z-index: 1;
+    }
+
+    #degree3PolyLine {
+      display: none;
+    }
+
+    .degree4PolyLine {
+      stroke-width: 2px;
+      stroke: saddlebrown;
+      z-index: 1;
+    }
+
+    #degree4PolyLine {
+      display: none;
+    }
+
+    .degree5PolyLine {
+      stroke-width: 2px;
+      stroke: goldenrod;
+      z-index: 1;
+    }
+
+    .degree6PolyLine {
+      stroke-width: 2px;
+      stroke: thistle;
+      z-index: 1;
+    }
+
+    div.tooltip {
+      position: absolute;
+      text-align: center;
+      width: 60px;
+      height: 28px;
+      padding: 2px;
+      font: 12px sans-serif;
+      background: lightsteelblue;
+      border: 0px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
 
     .equation {
       font-size: 12px;
       margin-top: 10px;
       text-align: center;
     }
+
+    .linearRegressionLine {
+      stroke-width: 2px;
+      stroke: steelblue;
+      z-index: 1;
+    }
+
   </style>
-    <script src="./d3-v4.js"></script>
   <title>Data Analysis</title>
 </head>
 
 <body>
   <div style="text-align: center;" id="chart" class="chart"></div>
-  <div><input type="checkbox" value="histogramBorders" onclick="toggleChartElement(this)" checked>Histogram Borders</div>
-  <br>
-  <br>
-  <div><input type="checkbox" value="linearRegressionLine" onclick="toggleChartElement(this)" checked>Linear Fit</div>
-  <div><input type="checkbox" value="degree2PolyLine" onclick="toggleChartElement(this)">Quadratic Fit</div>
-  <div><input type="checkbox" value="degree3PolyLine" onclick="toggleChartElement(this)">Cubic Fit</div>
-  <div><input type="checkbox" value="degree4PolyLine" onclick="toggleChartElement(this)">Quartic Fit</div>
-  <div><input type="checkbox" value="degree5PolyLine" onclick="toggleChartElement(this)">5th Degree Fit</div>
-  <div><input type="checkbox" value="degree6PolyLine" onclick="toggleChartElement(this)">6th Degree Fit</div>
-  <br>
-  <br>
-  <div><input type="checkbox" value="confidenceBandsFit" onclick="toggleChartElement(this)">Confid Curves Fit</div>
-  <div><input type="checkbox" value="confidenceBands" onclick="toggleChartElement(this)">Confid Curves Indiv</div>
+  <h4 style="margin-top: 0; text-align: center;">Chart Options</h4>
+  <div>
+    <div><input type="checkbox" value="histogramBorders" onclick="toggleChartElement(this)" checked>Histogram Borders</div>
+    <br>
+    <div><input type="checkbox" value="linearRegressionLine" onclick="toggleChartElement(this)" checked>Linear Fit</div>
+    <div style="margin-left: 2em;"><input type="checkbox" value="confidenceBandsFit" onclick="toggleChartElement(this)">Confid Curves Fit</div>
+    <div style="margin-left: 2em;"><input type="checkbox" value="confidenceBands" onclick="toggleChartElement(this)">Confid Curves Indiv</div>
+    <div><input type="checkbox" value="degree2PolyLine" onclick="toggleChartElement(this)">Quadratic Fit</div>
+    <div><input type="checkbox" value="degree3PolyLine" onclick="toggleChartElement(this)">Cubic Fit</div>
+    <div><input type="checkbox" value="degree4PolyLine" onclick="toggleChartElement(this)">Quartic Fit</div>
+    <div><input type="checkbox" value="degree5PolyLine" onclick="toggleChartElement(this)">5th Degree Fit</div>
+    <div><input type="checkbox" value="degree6PolyLine" onclick="toggleChartElement(this)">6th Degree Fit</div>
+  </div>
   <div id="container"></div>
   <script src="linear_regression.js"></script>
 </body>
