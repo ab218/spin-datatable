@@ -1,11 +1,9 @@
 import React, { useReducer } from 'react';
 import { Parser } from 'hot-formula-parser';
 import './App.css';
-// import { pondEcologyRows } from './dummyData.js';
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
-	ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS,
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	CREATE_COLUMNS,
@@ -35,7 +33,6 @@ import {
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 } from './constants';
-import { pondEcologyRows } from './dummyData';
 
 function rowValueWithinTheseColumnRanges(row) {
 	const columns = this;
@@ -727,30 +724,6 @@ export function SpreadsheetProvider({ children }) {
 		{ id: 'cgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 5 },
 		{ id: 'AaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 3 },
 	];
-
-	// const startingRow = [ [] ];
-	// const rows = pondEcologyRows
-	// 	.map((tuple) => ({
-	// 		id: createRandomID(),
-	// 		...tuple.reduce((acc, value, index) => ({ ...acc, [columns[index].id]: value }), {}),
-	// 	}))
-	// 	.map((originalRow) => {
-	// 		const formulaColumns = columns.filter(({ type }) => type === 'Formula');
-	// 		let rowCopy = Object.assign({}, originalRow);
-	// 		if (formulaColumns.length) {
-	// 			const formulaParser = new Parser();
-	// 			formulaParser.on('callVariable', function(name, done) {
-	// 				const selectedColumn = columns.find((column) => column.id === name);
-	// 				if (selectedColumn) {
-	// 					done(originalRow[selectedColumn.id]);
-	// 				}
-	// 			});
-	// 			rowCopy = formulaColumns.reduce((acc, column) => {
-	// 				return { ...acc, [column.id]: formulaParser.parse(column.formula).result };
-	// 			}, rowCopy);
-	// 		}
-	// 		return rowCopy;
-	// 	});
 
 	const initialState = {
 		analysisModalOpen: false,

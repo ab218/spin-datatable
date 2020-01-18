@@ -1,4 +1,13 @@
-function onClickSelectPoints(thisBar, bar, col) {
+function unload(e) {
+	e.preventDefault();
+	// Chrome requires returnValue to be set
+	e.returnValue = '';
+	window.opener.postMessage('closed', '*');
+}
+
+window.addEventListener('unload', unload);
+
+function onClickSelectCells(thisBar, bar, col) {
 	let metaKeyPressed = false;
 	if (d3.event.metaKey) {
 		metaKeyPressed = true;
@@ -28,28 +37,19 @@ function onClickSelectPoints(thisBar, bar, col) {
 	);
 }
 
-function unload(e) {
-	e.preventDefault();
-	// Chrome requires returnValue to be set
-	e.returnValue = '';
-	window.opener.postMessage('closed', '*');
-}
-
-window.addEventListener('unload', unload);
-
 window.opener.postMessage('ready', '*');
 const container = document.getElementById('container');
 function receiveMessage(event) {
 	console.log('TARGET', event);
 	const { colB, colYLabel, kurtosis, skew, numberOfBins } = event.data;
 
-	const titleEl = document.createElement('div');
-	titleEl.style.textAlign = 'center';
-	titleEl.style.fontSize = 20;
 	const titleText = document.createTextNode(`Distribution of ${colYLabel}`);
+	const titleEl = document.createElement('div');
+	titleEl.classList.add('analysis-title');
 	titleEl.appendChild(titleText);
 	const chartsSpan = document.getElementById('charts');
 	document.body.insertBefore(titleEl, chartsSpan);
+
 	// set the dimensions and margins of the graph
 	const margin = { top: 20, right: 30, bottom: 40, left: 50 };
 	const width = 260 - margin.left - margin.right;
@@ -69,24 +69,19 @@ function receiveMessage(event) {
 	const histSvg = makeSvg('histogramVis');
 	const boxSvg = makeSvg('boxplotVis', 100);
 
-	// Parse the Data
-	// const boxData = [12, 10, 7, 6, 2, 10, 9, 6, 4, 4, 12, 9, 8, 3, 11, 8, 7, 6, 2, 11, 10, 7, 5, 3, 5];
-
 	// Compute summary statistics used for the box:
 	const boxDataSorted = colB.sort(d3.ascending);
 	const q1 = d3.quantile(boxDataSorted, 0.25);
 	const median = d3.quantile(boxDataSorted, 0.5);
 	const q3 = d3.quantile(boxDataSorted, 0.75);
-	// const interQuantileRange = q3 - q1;
+	// interQuantileRange = q3 - q1;
 	const min = boxDataSorted[0];
 	const max = boxDataSorted[boxDataSorted.length - 1];
 	const center = 1;
 	const boxWidth = 40;
 
-	// Add X axis
+	// Add axes
 	const x = d3.scaleLinear().range([ 0, width ]);
-
-	// Y axis
 	const y = d3
 		.scaleLinear()
 		// .nice() rounds the tick values to nice numbers
@@ -103,7 +98,6 @@ function receiveMessage(event) {
 
 	// And apply this function to data to get the bins
 	const bins = histogram(boxDataSorted);
-	console.log(bins, boxDataSorted);
 
 	function maxBinLength(arr) {
 		let highest = 0;
@@ -143,7 +137,7 @@ function receiveMessage(event) {
 			d3.select(this).transition().duration(50).attr('opacity', 1);
 		})
 		.on('click', function(d) {
-			onClickSelectPoints(d3.select(this), d, 'y');
+			onClickSelectCells(d3.select(this), d, 'y');
 		});
 
 	// Boxplot
@@ -187,6 +181,8 @@ function receiveMessage(event) {
 		.attr('stroke', 'black');
 
 	const jitterWidth = 10;
+	const jitter = jitterWidth / 2 + Math.random() * jitterWidth;
+
 	boxSvg
 		.selectAll('indPoints')
 		.data(boxDataSorted)
@@ -196,7 +192,7 @@ function receiveMessage(event) {
 			return center - boxWidth / 10;
 		})
 		.attr('cy', function(d) {
-			return y(d) - jitterWidth / 2 + Math.random() * jitterWidth;
+			return y(d) - jitter;
 		})
 		.attr('r', 4)
 		.style('fill', 'white')
