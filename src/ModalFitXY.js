@@ -64,7 +64,7 @@ export default function AnalysisModal() {
 			const popup = window.open(
 				window.location.href + 'linear_regression.html',
 				'',
-				'left=9999,top=100,width=650,height=850',
+				'left=9999,top=100,width=700,height=850',
 			);
 			function receiveMessage(event) {
 				// target window is ready, time to send data.
