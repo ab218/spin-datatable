@@ -6,20 +6,20 @@
   <title>Data Analysis</title>
 </head>
 
-<body>
+<body style="min-width: 100%; min-height: 100%;">
   <div style="text-align: center;" id="chart" class="chart"></div>
   <h4 style="margin-top: 0; text-align: center;">Chart Options</h4>
   <div>
     <div><input type="checkbox" value="histogramBorders" onclick="toggleChartElement(this)" checked>Histogram Borders</div>
     <br>
-    <div><input type="checkbox" value="linearRegressionLine" onclick="toggleChartElement(this)" checked>Linear Fit</div>
-    <div style="margin-left: 2em;"><input type="checkbox" value="confidenceBandsFit" onclick="toggleChartElement(this)">Confid Curves Fit</div>
-    <div style="margin-left: 2em;"><input type="checkbox" value="confidenceBands" onclick="toggleChartElement(this)">Confid Curves Indiv</div>
-    <div><input type="checkbox" value="degree2PolyLine" onclick="toggleChartElement(this)">Quadratic Fit</div>
-    <div><input type="checkbox" value="degree3PolyLine" onclick="toggleChartElement(this)">Cubic Fit</div>
-    <div><input type="checkbox" value="degree4PolyLine" onclick="toggleChartElement(this)">Quartic Fit</div>
-    <div><input type="checkbox" value="degree5PolyLine" onclick="toggleChartElement(this)">5th Degree Fit</div>
-    <div><input type="checkbox" value="degree6PolyLine" onclick="toggleChartElement(this)">6th Degree Fit</div>
+    <div><input type="checkbox" value="linearRegressionLine" onclick="toggleChartElement(this)">Linear Fit <span style="font-size: 1.5em; color: steelblue;">&#9656</span></div>
+    <div style="margin-left: 2em;"><input type="checkbox" value="confidenceBandsFit" onclick="toggleChartElement(this)">Confid Curves Fit <span style="font-size: 1.5em; color: red;">&#9656</span></div>
+    <div style="margin-left: 2em;"><input type="checkbox" value="confidenceBands" onclick="toggleChartElement(this)">Confid Curves Indiv <span style="font-size: 1.5em; color: red;">&#9656</span></div>
+    <div><input type="checkbox" value="degree2PolyLine" onclick="toggleChartElement(this)">Quadratic Fit <span style="font-size: 1.5em; color: green;">&#9656</span></div>
+    <div><input type="checkbox" value="degree3PolyLine" onclick="toggleChartElement(this)">Cubic Fit <span style="font-size: 1.5em; color: darkmagenta;">&#9656</span></div>
+    <div><input type="checkbox" value="degree4PolyLine" onclick="toggleChartElement(this)">Quartic Fit <span style="font-size: 1.5em; color: saddlebrown;">&#9656</span></div>
+    <div><input type="checkbox" value="degree5PolyLine" onclick="toggleChartElement(this)">5th Degree Fit <span style="font-size: 1.5em; color: goldenrod;">&#9656</span></div>
+    <div><input type="checkbox" value="degree6PolyLine" onclick="toggleChartElement(this)">6th Degree Fit <span style="font-size: 1.5em; color: thistle;">&#9656</span></div>
   </div>
   <div id="container"></div>
   <script src="linear_regression.js"></script>

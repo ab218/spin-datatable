@@ -48,9 +48,10 @@ export default function AnalysisModal() {
 		function makeXYCols(colA, colB) {
 			const arr = [];
 			for (let i = 0; i < maxColLength; i++) {
+				const row = i + 1;
 				// Filter out NaN, undefined, null values
 				if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
-					arr.push([ colA[i], colB[i] ]);
+					arr.push([ colA[i], colB[i], row ]);
 				}
 			}
 			return arr.sort();

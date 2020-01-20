@@ -14,11 +14,13 @@ function toggleChartElement(ele) {
 	const outputElement = document.getElementById(ele.value);
 	if (ele.checked) {
 		d3.selectAll(`.${ele.value}`).attr('display', 'block');
+		d3.selectAll(`.${ele.value}-hitbox`).attr('display', 'block');
 		if (outputElement) {
 			outputElement.style.display = 'block';
 		}
 	} else {
 		d3.selectAll(`.${ele.value}`).attr('display', 'none');
+		d3.selectAll(`.${ele.value}-hitbox`).attr('display', 'none');
 		if (outputElement) {
 			outputElement.style.display = 'none';
 		}
@@ -108,7 +110,18 @@ function receiveMessage(event) {
 	const colA = coordinates.map((a) => a[1]).sort(d3.ascending);
 	const colB = coordinates.map((a) => a[0]).sort(d3.ascending);
 
-	const div = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0);
+	const histogramBinTooltip = d3
+		.select('body')
+		.append('div')
+		.attr('class', 'histogram-border tooltip')
+		.style('opacity', 0);
+	// TODO: Points don't know what row they are in right now. They should.
+	const pointTooltip = d3.select('body').append('div').attr('class', 'point tooltip').style('opacity', 0);
+	const regressionTooltip = d3
+		.select('body')
+		.append('div')
+		.attr('class', 'regression-line tooltip')
+		.style('opacity', 0);
 
 	const svg = d3
 		.select('.chart')
@@ -197,12 +210,12 @@ function receiveMessage(event) {
 		.attr('fill', '#69b3a2')
 		.on(`mouseenter`, function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 0.6);
-			div.transition().duration(200).style('opacity', 0.9);
-			div.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
+			histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
+			histogramBinTooltip.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 1);
-			div.transition().duration(500).style('opacity', 0);
+			histogramBinTooltip.transition().duration(500).style('opacity', 0);
 		})
 		.on('click', function(d) {
 			onClickSelectCells(d3.select(this), d, 'x');
@@ -222,12 +235,12 @@ function receiveMessage(event) {
 		.attr('fill', '#69b3a2')
 		.on('mouseover', function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 0.6);
-			div.transition().duration(200).style('opacity', 0.9);
-			div.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
+			histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
+			histogramBinTooltip.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on('mouseout', function(d) {
 			d3.select(this).transition().duration(50).attr('opacity', 1);
-			div.transition().duration(500).style('opacity', 0);
+			histogramBinTooltip.transition().duration(500).style('opacity', 0);
 		})
 		.on('click', function(d) {
 			onClickSelectCells(d3.select(this), d, 'y');
@@ -293,6 +306,25 @@ function receiveMessage(event) {
 		.attr('class', 'degree2PolyLine')
 		.attr('d', reversedLine);
 
+	// invisible hitbox
+	svg
+		.append('path')
+		.data([ degree2Points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'degree2PolyLine-hitbox')
+		.attr('d', reversedLine)
+		.on(`mouseenter`, function() {
+			regressionTooltip.transition().duration(200).style('opacity', 0.9);
+			regressionTooltip
+				.html('Quadratic Regression Line')
+				.style('left', d3.event.pageX + 'px')
+				.style('top', d3.event.pageY - 28 + 'px');
+		})
+		.on(`mouseleave`, function() {
+			regressionTooltip.transition().duration(500).style('opacity', 0);
+		});
+
 	svg
 		.append('path')
 		.data([ degree3Points ])
@@ -303,11 +335,47 @@ function receiveMessage(event) {
 
 	svg
 		.append('path')
+		.data([ degree3Points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'degree3PolyLine-hitbox')
+		.attr('d', reversedLine)
+		.on(`mouseenter`, function() {
+			regressionTooltip.transition().duration(200).style('opacity', 0.9);
+			regressionTooltip
+				.html('Cubic Regression Line')
+				.style('left', d3.event.pageX + 'px')
+				.style('top', d3.event.pageY - 28 + 'px');
+		})
+		.on(`mouseleave`, function() {
+			regressionTooltip.transition().duration(500).style('opacity', 0);
+		});
+
+	svg
+		.append('path')
 		.data([ degree4Points ])
 		.style('fill', 'none')
 		.attr('clip-path', 'url(#clip)')
 		.attr('class', 'degree4PolyLine')
 		.attr('d', reversedLine);
+
+	svg
+		.append('path')
+		.data([ degree4Points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', 'degree4PolyLine-hitbox')
+		.attr('d', reversedLine)
+		.on(`mouseenter`, function() {
+			regressionTooltip.transition().duration(200).style('opacity', 0.9);
+			regressionTooltip
+				.html('Quartic Regression Line')
+				.style('left', d3.event.pageX + 'px')
+				.style('top', d3.event.pageY - 28 + 'px');
+		})
+		.on(`mouseleave`, function() {
+			regressionTooltip.transition().duration(500).style('opacity', 0);
+		});
 
 	svg
 		.append('path')
@@ -365,12 +433,26 @@ function receiveMessage(event) {
 		.attr('x1', x(xDomainMin))
 		.attr('y1', y(y1))
 		.attr('x2', x(xDomainMax))
+		.attr('y2', y(y2));
+
+	// Hidden line with a big hitbox
+	svg
+		.append('line')
+		.attr('class', 'linearRegressionLine-hitbox')
+		.attr('clip-path', 'url(#clip)')
+		.attr('x1', x(xDomainMin))
+		.attr('y1', y(y1))
+		.attr('x2', x(xDomainMax))
 		.attr('y2', y(y2))
 		.on(`mouseenter`, function() {
-			return d3.select(this).transition().duration(50).attr('opacity', 0.6);
+			regressionTooltip.transition().duration(200).style('opacity', 0.9);
+			regressionTooltip
+				.html('Linear Regression Line')
+				.style('left', d3.event.pageX + 'px')
+				.style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function() {
-			return d3.select(this).transition().duration(50).attr('opacity', 1);
+			regressionTooltip.transition().duration(500).style('opacity', 0);
 		});
 
 	svg
@@ -382,11 +464,17 @@ function receiveMessage(event) {
 		.attr('r', 2)
 		.attr('cy', (d) => y(d[1]))
 		.attr('cx', (d) => x(d[0]))
-		.on(`mouseenter`, function() {
-			return d3.select(this).transition().duration(50).attr('r', 5).style('fill', 'red');
+		.on(`mouseenter`, function(d) {
+			d3.select(this).transition().duration(50).attr('r', 5).style('fill', 'red');
+			pointTooltip.transition().duration(200).style('opacity', 0.9);
+			pointTooltip
+				.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
+				.style('left', d3.event.pageX + 'px')
+				.style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function() {
-			return d3.select(this).transition().duration(50).attr('r', 2).style('fill', 'black');
+			d3.select(this).transition().duration(50).attr('r', 2).style('fill', 'black');
+			pointTooltip.transition().duration(500).style('opacity', 0);
 		});
 
 	const summaryStatsTemplate = `
@@ -611,11 +699,18 @@ function receiveMessage(event) {
 	// hide unchecked chart options
 	d3.selectAll('.confidenceBands').attr('display', 'none');
 	d3.selectAll('.confidenceBandsFit').attr('display', 'none');
+	d3.selectAll('.linearRegressionLine').attr('display', 'none');
+	d3.selectAll('.linearRegressionLine-hitbox').attr('display', 'none');
 	d3.selectAll('.degree2PolyLine').attr('display', 'none');
+	d3.selectAll('.degree2PolyLine-hitbox').attr('display', 'none');
 	d3.selectAll('.degree3PolyLine').attr('display', 'none');
+	d3.selectAll('.degree3PolyLine-hitbox').attr('display', 'none');
 	d3.selectAll('.degree4PolyLine').attr('display', 'none');
+	d3.selectAll('.degree4PolyLine-hitbox').attr('display', 'none');
 	d3.selectAll('.degree5PolyLine').attr('display', 'none');
+	d3.selectAll('.degree5PolyLine-hitbox').attr('display', 'none');
 	d3.selectAll('.degree6PolyLine').attr('display', 'none');
+	d3.selectAll('.degree6PolyLine-hitbox').attr('display', 'none');
 }
 
 window.addEventListener('message', receiveMessage, false);
