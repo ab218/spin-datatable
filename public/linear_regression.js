@@ -109,6 +109,11 @@ function receiveMessage(event) {
 		degree4Poly,
 		degree5Poly,
 		degree6Poly,
+		centeredDegree2Poly,
+		centeredDegree3Poly,
+		centeredDegree4Poly,
+		centeredDegree5Poly,
+		centeredDegree6Poly,
 		linearRegressionLineSlope,
 		linearRegressionLineR2,
 		linearRegressionLineYIntercept,
@@ -119,7 +124,11 @@ function receiveMessage(event) {
 	const degree4PolyCoefficients = degree4Poly['polynomial'];
 	const degree5PolyCoefficients = degree5Poly['polynomial'];
 	const degree6PolyCoefficients = degree6Poly['polynomial'];
-	const centered2PolyCoefficients = event.data.centered_2_poly['polynomial'];
+	const centered2PolyCoefficients = centeredDegree2Poly['polynomial'];
+	const centered3PolyCoefficients = centeredDegree3Poly['polynomial'];
+	const centered4PolyCoefficients = centeredDegree4Poly['polynomial'];
+	const centered5PolyCoefficients = centeredDegree5Poly['polynomial'];
+	const centered6PolyCoefficients = centeredDegree6Poly['polynomial'];
 
 	const titleEl = document.createElement('div');
 	const titleText = document.createTextNode(`Bivariate Fit of ${colYLabel} By ${colXLabel}`);
@@ -332,92 +341,58 @@ function receiveMessage(event) {
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
 
-	const centeredX = centered ? `(${colXLabel} - ${colAMean})` : `${colXLabel}`;
+	const centeredX = `(${colXLabel} - ${colAMean})`;
 
 	const linearEquationTemplate = `${colYLabel} = ${linearRegressionLineYIntercept.toFixed(6) / 1} ${addOrSubtract(
 		linearRegressionLineSlope.toFixed(6) / 1,
 	)} ${Math.abs(linearRegressionLineSlope.toFixed(6) / 1)} * ${colXLabel}`;
 
-	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colYLabel, centeredX);
-	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colYLabel, centeredX);
-	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colYLabel, centeredX);
-	const degree5EquationTemplate = generateEquationTemplate(degree5PolyCoefficients, colYLabel, centeredX);
-	const degree6EquationTemplate = generateEquationTemplate(degree6PolyCoefficients, colYLabel, centeredX);
+	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colXLabel, colYLabel);
+	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colXLabel, colYLabel);
+	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colXLabel, colYLabel);
+	const degree5EquationTemplate = generateEquationTemplate(degree5PolyCoefficients, colXLabel, colYLabel);
+	const degree6EquationTemplate = generateEquationTemplate(degree6PolyCoefficients, colXLabel, colYLabel);
+	const centeredQuadraticEquationTemplate = generateEquationTemplate(centered2PolyCoefficients, colXLabel, colYLabel);
+	const centeredCubicEquationTemplate = generateEquationTemplate(centered3PolyCoefficients, colXLabel, colYLabel);
+	const centeredQuarticEquationTemplate = generateEquationTemplate(centered4PolyCoefficients, colXLabel, colYLabel);
+	const centeredDegree5EquationTemplate = generateEquationTemplate(centered5PolyCoefficients, colXLabel, colYLabel);
+	const centeredDegree6EquationTemplate = generateEquationTemplate(centered6PolyCoefficients, colXLabel, colYLabel);
 
-	const drawBasicPath = (points, line, name) => {
-		return svg
+	const drawBasicPath = (points, line, name, title) => {
+		svg
 			.append('path')
 			.data([ points ])
 			.style('fill', 'none')
 			.attr('clip-path', 'url(#clip)')
 			.attr('class', name)
 			.attr('d', line);
+
+		// invisible hitbox
+		svg
+			.append('path')
+			.data([ points ])
+			.style('fill', 'none')
+			.attr('clip-path', 'url(#clip)')
+			.attr('class', `${name}-hitbox`)
+			.attr('d', reversedLine)
+			.on(`mouseenter`, function() {
+				regressionTooltip.transition().duration(200).style('opacity', 0.9);
+				regressionTooltip.html(title).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
+			})
+			.on(`mouseleave`, function() {
+				regressionTooltip.transition().duration(500).style('opacity', 0);
+			});
 	};
 
-	drawBasicPath(degree2Points, reversedLine, 'degree2PolyLine');
-	drawBasicPath(degree3Points, reversedLine, 'degree3PolyLine');
-	drawBasicPath(degree4Points, reversedLine, 'degree4PolyLine');
-	drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine');
-	drawBasicPath(degree6Points, reversedLine, 'degree6PolyLine');
+	drawBasicPath(degree2Points, reversedLine, 'degree2PolyLine', 'Quadratic Regression Line');
+	drawBasicPath(degree3Points, reversedLine, 'degree3PolyLine', 'Cubic Regression Line');
+	drawBasicPath(degree4Points, reversedLine, 'degree4PolyLine', 'Quartic Regression Line');
+	drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine', 'Fifth Degree Regression Line');
+	drawBasicPath(degree6Points, reversedLine, 'degree6PolyLine', 'Sixth Degree Regression Line');
 	drawBasicPath(confUpp, valueLine, 'confidenceBands');
 	drawBasicPath(confLow, valueLine, 'confidenceBands');
 	drawBasicPath(meanCiUpp, valueLine, 'confidenceBandsFit');
 	drawBasicPath(meanCiLow, valueLine, 'confidenceBandsFit');
-
-	// invisible hitbox
-	svg
-		.append('path')
-		.data([ degree2Points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'degree2PolyLine-hitbox')
-		.attr('d', reversedLine)
-		.on(`mouseenter`, function() {
-			regressionTooltip.transition().duration(200).style('opacity', 0.9);
-			regressionTooltip
-				.html('Quadratic Regression Line')
-				.style('left', d3.event.pageX + 'px')
-				.style('top', d3.event.pageY - 28 + 'px');
-		})
-		.on(`mouseleave`, function() {
-			regressionTooltip.transition().duration(500).style('opacity', 0);
-		});
-
-	svg
-		.append('path')
-		.data([ degree3Points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'degree3PolyLine-hitbox')
-		.attr('d', reversedLine)
-		.on(`mouseenter`, function() {
-			regressionTooltip.transition().duration(200).style('opacity', 0.9);
-			regressionTooltip
-				.html('Cubic Regression Line')
-				.style('left', d3.event.pageX + 'px')
-				.style('top', d3.event.pageY - 28 + 'px');
-		})
-		.on(`mouseleave`, function() {
-			regressionTooltip.transition().duration(500).style('opacity', 0);
-		});
-
-	svg
-		.append('path')
-		.data([ degree4Points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'degree4PolyLine-hitbox')
-		.attr('d', reversedLine)
-		.on(`mouseenter`, function() {
-			regressionTooltip.transition().duration(200).style('opacity', 0.9);
-			regressionTooltip
-				.html('Quartic Regression Line')
-				.style('left', d3.event.pageX + 'px')
-				.style('top', d3.event.pageY - 28 + 'px');
-		})
-		.on(`mouseleave`, function() {
-			regressionTooltip.transition().duration(500).style('opacity', 0);
-		});
 
 	// get points to draw linear regression line
 	const y1 = xDomainMin * linearRegressionLineSlope + linearRegressionLineYIntercept;
@@ -561,31 +536,81 @@ function receiveMessage(event) {
 		colXLabel,
 	);
 
+	const centered2DegreeFitTemplate = generateTemplate(
+		'Quadratic Fit (centered)',
+		'degree2CenteredPolyLine',
+		centeredQuadraticEquationTemplate,
+		centeredDegree2Poly,
+		centered2PolyCoefficients,
+		colXLabel,
+		centeredX,
+	);
+
+	const centered3DegreeFitTemplate = generateTemplate(
+		'Cubic Fit (centered)',
+		'degree3CenteredPolyLine',
+		centeredCubicEquationTemplate,
+		centeredDegree3Poly,
+		centered3PolyCoefficients,
+		colXLabel,
+		centeredX,
+	);
+
+	const centered4DegreeFitTemplate = generateTemplate(
+		'Quartic Fit (centered)',
+		'degree4CenteredPolyLine',
+		centeredQuarticEquationTemplate,
+		centeredDegree4Poly,
+		centered4PolyCoefficients,
+		colXLabel,
+		centeredX,
+	);
+
+	const centered5DegreeFitTemplate = generateTemplate(
+		'Fifth Degree Fit (centered)',
+		'degree5CenteredPolyLine',
+		centeredDegree5EquationTemplate,
+		centeredDegree5Poly,
+		centered5PolyCoefficients,
+		colXLabel,
+		centeredX,
+	);
+
+	const centered6DegreeFitTemplate = generateTemplate(
+		'Sixth Degree Fit (centered)',
+		'degree6CenteredPolyLine',
+		centeredDegree6EquationTemplate,
+		centeredDegree6Poly,
+		centered6PolyCoefficients,
+		colXLabel,
+		centeredX,
+	);
+
 	const linearFitTemplate = `<details class="analysis-details" open id="linearRegressionLine">
   <summary class="analysis-summary-title">Summary of Linear Fit</summary>
   <table style="width: 100%;">
     <tr>
-      <td style="width: 25%;">Equation:</td>
-      <td style="width: 75%;">${linearEquationTemplate}</td>
+      <td style="width: 34%;">Equation:</td>
+      <td style="width: 66%;">${linearEquationTemplate}</td>
     </tr>
     <tr>
-      <td style="width: 25%;">R-squared:</td>
-      <td style="width: 75%;">${linearRegressionLineR2}</td>
+      <td style="width: 34%;">R-squared:</td>
+      <td style="width: 66%;">${linearRegressionLineR2}</td>
     </tr>
   </table>
   <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
   <table style="width: 100%;">
     <tr>
-      <td style="width: 25%; font-weight: bold;">Term</td>
-      <td style="width: 75%; font-weight: bold;">Estimate</td>
+      <td style="width: 34%; font-weight: bold;">Term</td>
+      <td style="width: 66%; font-weight: bold;">Estimate</td>
     </tr>
     <tr>
-      <td style="width: 25%; white-space: nowrap;">Intercept:</td>
-      <td style="width: 75%;">${linearRegressionLineYIntercept}</td>
+      <td style="width: 34%; white-space: nowrap;">Intercept:</td>
+      <td style="width: 66%;">${linearRegressionLineYIntercept}</td>
     </tr>
     <tr>
-      <td style="width: 25%;">${colXLabel}</td>
-      <td style="width: 75%;">${linearRegressionLineSlope.toFixed(6) / 1}</td>
+      <td style="width: 34%;">${colXLabel}</td>
+      <td style="width: 66%;">${linearRegressionLineSlope.toFixed(6) / 1}</td>
     </tr>
   </table>
 </details>`;
@@ -597,6 +622,11 @@ function receiveMessage(event) {
 	const quarticFitParsed = new DOMParser().parseFromString(quarticFitTemplate, 'text/html');
 	const fifthDegreeFitParsed = new DOMParser().parseFromString(fifthDegreeFitTemplate, 'text/html');
 	const sixthDegreeFitParsed = new DOMParser().parseFromString(sixthDegreeFitTemplate, 'text/html');
+	const centeredQuadraticFitParsed = new DOMParser().parseFromString(centered2DegreeFitTemplate, 'text/html');
+	const centeredCubicFitParsed = new DOMParser().parseFromString(centered3DegreeFitTemplate, 'text/html');
+	const centeredQuarticFitParsed = new DOMParser().parseFromString(centered4DegreeFitTemplate, 'text/html');
+	const centeredFifthDegreeFitParsed = new DOMParser().parseFromString(centered5DegreeFitTemplate, 'text/html');
+	const centeredSixthDegreeFitParsed = new DOMParser().parseFromString(centered6DegreeFitTemplate, 'text/html');
 
 	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
 	container.appendChild(linearFitParsed.body.firstChild);
@@ -605,6 +635,11 @@ function receiveMessage(event) {
 	container.appendChild(quarticFitParsed.body.firstChild);
 	container.appendChild(fifthDegreeFitParsed.body.firstChild);
 	container.appendChild(sixthDegreeFitParsed.body.firstChild);
+	container.appendChild(centeredQuadraticFitParsed.body.firstChild);
+	container.appendChild(centeredCubicFitParsed.body.firstChild);
+	container.appendChild(centeredQuarticFitParsed.body.firstChild);
+	container.appendChild(centeredFifthDegreeFitParsed.body.firstChild);
+	container.appendChild(centeredSixthDegreeFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
 
 	// hide unchecked chart options
