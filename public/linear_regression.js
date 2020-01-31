@@ -1,3 +1,5 @@
+/*global d3 generateTemplate generateEquationTemplate*/
+/*eslint no-undef: "error"*/
 function unload(e) {
 	e.preventDefault();
 	// Chrome requires returnValue to be set
@@ -46,6 +48,21 @@ function onClickSelectCells(thisBar, bar, col) {
 	//   return;
 	// }
 	thisBar.style('fill', 'red');
+	d3
+		.selectAll('.point')
+		.style('fill', 'black')
+		.filter((d) => {
+			const binMin = bar.x0;
+			const binMax = bar.x1;
+			if (!d) {
+				return null;
+			}
+			if (col === 'x') {
+				return d[0] >= binMin && d[0] < binMax;
+			}
+			return d[1] >= binMin && d[1] < binMax;
+		})
+		.style('fill', 'red');
 	window.opener.postMessage(
 		{
 			message: 'clicked',
@@ -59,7 +76,18 @@ function onClickSelectCells(thisBar, bar, col) {
 
 const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
 
+function centerPoly(ele) {
+	if (ele.checked) {
+		centered = false;
+	} else {
+		centered = true;
+	}
+}
+
+let centered;
+
 window.opener.postMessage('ready', '*');
+
 const container = document.getElementById('container');
 function receiveMessage(event) {
 	console.log('TARGET', event);
@@ -93,6 +121,7 @@ function receiveMessage(event) {
 	const degree4PolyCoefficients = degree4Poly['polynomial'];
 	const degree5PolyCoefficients = degree5Poly['polynomial'];
 	const degree6PolyCoefficients = degree6Poly['polynomial'];
+	const centered2PolyCoefficients = event.data.centered_2_poly['polynomial'];
 
 	const titleEl = document.createElement('div');
 	const titleText = document.createTextNode(`Bivariate Fit of ${colYLabel} By ${colXLabel}`);
@@ -228,7 +257,7 @@ function receiveMessage(event) {
 		.enter()
 		.append('rect')
 		.attr('class', 'histogramBorders')
-		.attr('x', 425)
+		.attr('x', 405)
 		.attr('y', (d) => y(d.x1))
 		.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
 		.attr('width', (d) => barsX(d.length))
@@ -247,7 +276,7 @@ function receiveMessage(event) {
 		});
 
 	// define the line
-	const valueline = d3.line().x((d) => x(d[1])).y((d) => y(d[0]));
+	const valueLine = d3.line().x((d) => x(d[1])).y((d) => y(d[0]));
 	const reversedLine = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
 
 	//generate n (step) points given some range and equation (ie: y = ax^2+bx+c)
@@ -258,6 +287,12 @@ function receiveMessage(event) {
 		});
 	}
 
+	// const centeredX = x - colAMean;
+
+	// const centered2equation = (x) =>
+	// 	centered2PolyCoefficients[2] +
+	// 	centered2PolyCoefficients[1] * centeredX +
+	// 	centered2PolyCoefficients[0] * centeredX * centeredX;
 	const poly2equation = (x) =>
 		degree2PolyCoefficients[2] + degree2PolyCoefficients[1] * x + degree2PolyCoefficients[0] * x * x;
 	const poly3equation = (x) =>
@@ -292,19 +327,44 @@ function receiveMessage(event) {
 	const step = (xDomainMax - xDomainMin) / 200;
 
 	//points
+	// const centered2Points = createPoints(x.domain(), step, centered2equation);
 	const degree2Points = createPoints(x.domain(), step, poly2equation);
 	const degree3Points = createPoints(x.domain(), step, poly3equation);
 	const degree4Points = createPoints(x.domain(), step, poly4equation);
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
 
-	svg
-		.append('path')
-		.data([ degree2Points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'degree2PolyLine')
-		.attr('d', reversedLine);
+	const centeredX = centered ? `(${colXLabel} - ${colAMean})` : `${colXLabel}`;
+
+	const linearEquationTemplate = `${colYLabel} = ${linearRegressionLineYIntercept.toFixed(6) / 1} ${addOrSubtract(
+		linearRegressionLineSlope.toFixed(6) / 1,
+	)} ${Math.abs(linearRegressionLineSlope.toFixed(6) / 1)} * ${colXLabel}`;
+
+	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colYLabel, centeredX);
+	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colYLabel, centeredX);
+	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colYLabel, centeredX);
+	const degree5EquationTemplate = generateEquationTemplate(degree5PolyCoefficients, colYLabel, centeredX);
+	const degree6EquationTemplate = generateEquationTemplate(degree6PolyCoefficients, colYLabel, centeredX);
+
+	const drawBasicPath = (points, line, name) => {
+		return svg
+			.append('path')
+			.data([ points ])
+			.style('fill', 'none')
+			.attr('clip-path', 'url(#clip)')
+			.attr('class', name)
+			.attr('d', line);
+	};
+
+	drawBasicPath(degree2Points, reversedLine, 'degree2PolyLine');
+	drawBasicPath(degree3Points, reversedLine, 'degree3PolyLine');
+	drawBasicPath(degree4Points, reversedLine, 'degree4PolyLine');
+	drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine');
+	drawBasicPath(degree6Points, reversedLine, 'degree6PolyLine');
+	drawBasicPath(confUpp, valueLine, 'confidenceBands');
+	drawBasicPath(confLow, valueLine, 'confidenceBands');
+	drawBasicPath(meanCiUpp, valueLine, 'confidenceBandsFit');
+	drawBasicPath(meanCiLow, valueLine, 'confidenceBandsFit');
 
 	// invisible hitbox
 	svg
@@ -330,14 +390,6 @@ function receiveMessage(event) {
 		.data([ degree3Points ])
 		.style('fill', 'none')
 		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'degree3PolyLine')
-		.attr('d', reversedLine);
-
-	svg
-		.append('path')
-		.data([ degree3Points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
 		.attr('class', 'degree3PolyLine-hitbox')
 		.attr('d', reversedLine)
 		.on(`mouseenter`, function() {
@@ -356,14 +408,6 @@ function receiveMessage(event) {
 		.data([ degree4Points ])
 		.style('fill', 'none')
 		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'degree4PolyLine')
-		.attr('d', reversedLine);
-
-	svg
-		.append('path')
-		.data([ degree4Points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
 		.attr('class', 'degree4PolyLine-hitbox')
 		.attr('d', reversedLine)
 		.on(`mouseenter`, function() {
@@ -376,51 +420,6 @@ function receiveMessage(event) {
 		.on(`mouseleave`, function() {
 			regressionTooltip.transition().duration(500).style('opacity', 0);
 		});
-
-	svg
-		.append('path')
-		.data([ degree5Points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'degree5PolyLine')
-		.attr('d', reversedLine);
-
-	svg
-		.append('path')
-		.data([ degree6Points ])
-		.attr('clip-path', 'url(#clip)')
-		.style('fill', 'none')
-		.attr('class', 'degree6PolyLine')
-		.attr('d', reversedLine);
-
-	svg
-		.append('path')
-		.data([ confUpp ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'confidenceBands')
-		.attr('d', valueline);
-	svg
-		.append('path')
-		.data([ confLow ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'confidenceBands')
-		.attr('d', valueline);
-	svg
-		.append('path')
-		.data([ meanCiLow ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'confidenceBandsFit')
-		.attr('d', valueline);
-	svg
-		.append('path')
-		.data([ meanCiUpp ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', 'confidenceBandsFit')
-		.attr('d', valueline);
 
 	// get points to draw linear regression line
 	const y1 = xDomainMin * linearRegressionLineSlope + linearRegressionLineYIntercept;
@@ -465,7 +464,7 @@ function receiveMessage(event) {
 		.attr('cy', (d) => y(d[1]))
 		.attr('cx', (d) => x(d[0]))
 		.on(`mouseenter`, function(d) {
-			d3.select(this).transition().duration(50).attr('r', 5).style('fill', 'red');
+			d3.select(this).transition().duration(50).attr('r', 5);
 			pointTooltip.transition().duration(200).style('opacity', 0.9);
 			pointTooltip
 				.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
@@ -473,13 +472,13 @@ function receiveMessage(event) {
 				.style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function() {
-			d3.select(this).transition().duration(50).attr('r', 2).style('fill', 'black');
+			d3.select(this).transition().duration(50).attr('r', 2);
 			pointTooltip.transition().duration(500).style('opacity', 0);
 		});
 
 	const summaryStatsTemplate = `
-  <div style="padding: 10px 30px 30px; text-align: center;">
-    <h4>Summary Statistics</h4>
+  <details open style="padding: 10px 30px 30px; text-align: center;">
+    <summary class="analysis-summary-title">Summary Statistics</summary>
     <div style="display: flex;">
       <table style="width: 300px;">
         <tr>
@@ -517,183 +516,97 @@ function receiveMessage(event) {
         </tr>
       </table>
     </div>
-  </div>`;
+  </details>`;
 
-	const linearFitTemplate = `<div id="linearRegressionLine" style="padding: 10px 30px; text-align: center;">
-    <h4 style="margin-bottom: 0;">Summary of Linear Fit</h4>
-    <table style="width: 100%;">
-      <tr>
-        <td style="width: 25%;">Equation:</td>
-        <td style="width: 75%;"> ${colYLabel} = ${linearRegressionLineYIntercept.toFixed(6) / 1} ${addOrSubtract(
-		linearRegressionLineSlope.toFixed(6) / 1,
-	)} ${Math.abs(linearRegressionLineSlope.toFixed(6) / 1)} * ${colXLabel}</td>
-      </tr>
-      <tr>
-        <td style="width: 25%;">R-squared:</td>
-        <td style="width: 75%;">${linearRegressionLineR2}</td>
-      </tr>
-    </table>
-    <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
-    <table style="width: 100%;">
-      <tr>
-        <td style="width: 25%; font-weight: bold;">Term</td>
-        <td style="width: 75%; font-weight: bold;">Estimate</td>
-      </tr>
-      <tr>
-        <td style="width: 25%; white-space: nowrap;">Intercept:</td>
-        <td style="width: 75%;">${linearRegressionLineYIntercept}</td>
-      </tr>
-      <tr>
-        <td style="width: 25%;">${colXLabel}</td>
-        <td style="width: 75%;">${linearRegressionLineSlope.toFixed(6) / 1}</td>
-      </tr>
-    </table>
-  </div>`;
+	const quadraticFitTemplate = generateTemplate(
+		'Quadratic Fit',
+		'degree2PolyLine',
+		quadraticEquationTemplate,
+		degree2Poly,
+		degree2PolyCoefficients,
+		colXLabel,
+	);
 
-	const quadraticFitTemplate = `<div>
-          <div id="degree2PolyLine" style="padding: 10px 30px; text-align: center;">
-            <h4 style="margin-bottom: 0;">Summary of Quadratic Fit</h4>
-            <table style="width: 100%;">
-              <tr>
-                <td style="width: 25%;">Equation</td>
-                <td style="width: 75%;">${colYLabel} = ${degree2PolyCoefficients[2].toFixed(6) / 1} ${addOrSubtract(
-		degree2PolyCoefficients[1],
-	)} ${Math.abs(degree2PolyCoefficients[1]).toFixed(6) / 1} * ${colXLabel} ${addOrSubtract(
-		degree2PolyCoefficients[0],
-	)} ${Math.abs(degree2PolyCoefficients[0]).toFixed(6) / 1} * ${colXLabel}^2</td>
-              </tr>
-              <tr>
-                <td style="width: 25%;">R-squared</td>
-                <td style="width: 75%;">${degree2Poly.determination.toFixed(6) / 1}</td>
-              </tr>
-              </table>
-              <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
-              <table style="width: 100%;">
-              <tr>
-                <td style="width: 25%; font-weight: bold;">Term</td>
-                <td style="width: 75%; font-weight: bold;">Estimate</td>
-              </tr>
-              <tr>
-                <td style="width: 25%;">Intercept</td>
-                <td style="width: 75%;">${degree2PolyCoefficients[2].toFixed(6) / 1}</td>
-              </tr>
-              <tr>
-                <td style="width: 25%;">${colXLabel}</td>
-                <td style="width: 75%;">${degree2PolyCoefficients[1].toFixed(6) / 1}</td>
-              </tr>
-              <tr>
-                <td style="width: 25%;">${colXLabel}^2</td>
-                <td style="width: 75%;">${degree2PolyCoefficients[0].toFixed(6) / 1}</td>
-              </tr>
-            </table>
-            </div>`;
+	const cubicFitTemplate = generateTemplate(
+		'Cubic Fit',
+		'degree3PolyLine',
+		cubicEquationTemplate,
+		degree3Poly,
+		degree3PolyCoefficients,
+		colXLabel,
+	);
 
-	const cubicFitTemplate = `<div id="degree3PolyLine" style="padding: 10px 30px; text-align: center;">
-            <h4 style="margin-bottom: 0;">Summary of Cubic Fit</h4>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="width: 25%;">Equation</td>
-                  <td style="width: 75%;">${colYLabel} = ${degree3PolyCoefficients[3].toFixed(6) / 1} ${addOrSubtract(
-		degree3PolyCoefficients[2],
-	)} ${Math.abs(degree3PolyCoefficients[2]).toFixed(6) / 1} * ${colXLabel} ${addOrSubtract(
-		degree3PolyCoefficients[1],
-	)} ${Math.abs(degree3PolyCoefficients[1]).toFixed(6) / 1} * ${colXLabel}^2 ${addOrSubtract(
-		degree3PolyCoefficients[0],
-	)} ${Math.abs(degree3PolyCoefficients[0]).toFixed(6) / 1} * ${colXLabel}^3</td>
-                </tr>
-                <tr>
-                  <td style="width: 25%;">R-squared</td>
-                  <td style="width: 75%;">${degree3Poly.determination.toFixed(6) / 1}</td>
-                </tr>
-                </table>
-                <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
-                <table style="width: 100%;">
-                <tr>
-                  <td style="width: 25%; font-weight: bold;">Term</td>
-                  <td style="width: 75%; font-weight: bold;">Estimate</td>
-                </tr>
-                <tr>
-                  <td style="width: 25%;">Intercept</td>
-                  <td style="width: 75%;">${degree3PolyCoefficients[3].toFixed(6) / 1}</td>
-                </tr>
-                <tr>
-                  <td style="width: 25%;">${colXLabel}</td>
-                  <td style="width: 75%;">${degree3PolyCoefficients[2].toFixed(6) / 1}</td>
-                </tr>
-                <tr>
-                  <td style="width: 25%;">${colXLabel}^2</td>
-                  <td style="width: 75%;">${degree3PolyCoefficients[1].toFixed(6) / 1}</td>
-                </tr>
-                <tr>
-                  <td style="width: 25%;">${colXLabel}^3</td>
-                  <td style="width: 75%;">${degree3PolyCoefficients[0].toFixed(6) / 1}</td>
-                </tr>
-              </table>
-            </div>
-            `;
+	const quarticFitTemplate = generateTemplate(
+		'Quartic Fit',
+		'degree4PolyLine',
+		quarticEquationTemplate,
+		degree4Poly,
+		degree4PolyCoefficients,
+		colXLabel,
+	);
 
-	const quarticFitTemplate = `<div id="degree4PolyLine" style="padding: 10px 30px; text-align: center;">
-            <h4 style="margin-bottom: 0;">Summary of Quartic Fit</h4>
-            <table style="width: 100%;">
-              <tr>
-                <td style="width: 25%;">Equation</td>
-                <td style="width: 75%;">${colYLabel} = ${degree4PolyCoefficients[4].toFixed(6) / 1} ${addOrSubtract(
-		degree4PolyCoefficients[3],
-	)} ${Math.abs(degree4PolyCoefficients[3]).toFixed(6) / 1} * ${colXLabel} ${addOrSubtract(
-		degree4PolyCoefficients[2],
-	)} ${Math.abs(degree4PolyCoefficients[2]).toFixed(6) / 1} * ${colXLabel}^2 ${addOrSubtract(
-		degree4PolyCoefficients[1],
-	)} ${Math.abs(degree4PolyCoefficients[1]).toFixed(6) / 1} * ${colXLabel}^3 ${addOrSubtract(
-		degree4PolyCoefficients[0],
-	)} ${Math.abs(degree4PolyCoefficients[0]).toFixed(6) / 1} * ${colXLabel}^4</td>
-              </tr>
-              <tr>
-                <td style="width: 25%;">R-squared</td>
-                <td style="width: 75%;">${degree4Poly.determination.toFixed(6) / 1}</td>
-              </tr>
-              </table>
-              <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
-              <table style="width: 100%;">
-              <tr>
-                <td style="width: 25%; font-weight: bold;">Term</td>
-                <td style="width: 75%; font-weight: bold;">Estimate</td>
-              </tr>
-            <tr>
-              <td style="width: 25%;">Intercept</td>
-              <td style="width: 75%;">${degree4PolyCoefficients[4].toFixed(6) / 1}</td>
-            </tr>
-            <tr>
-              <td style="width: 25%;">${colXLabel}</td>
-              <td style="width: 75%;">${degree4PolyCoefficients[3].toFixed(6) / 1}</td>
-            </tr>
-            <tr>
-              <td style="width: 25%;">${colXLabel}^2</td>
-              <td style="width: 75%;">${degree4PolyCoefficients[2].toFixed(6) / 1}</td>
-            </tr>
-            <tr>
-              <td style="width: 25%;">${colXLabel}^3</td>
-              <td style="width: 75%;">${degree4PolyCoefficients[1].toFixed(6) / 1}</td>
-            </tr>
-            <tr>
-              <td style="width: 25%;">${colXLabel}^4</td>
-              <td style="width: 75%;">${degree4PolyCoefficients[0].toFixed(6) / 1}</td>
-            </tr>
-          </table>
-        </div>
-        </div>
-          `;
+	const fifthDegreeFitTemplate = generateTemplate(
+		'Fifth Degree Fit',
+		'degree5PolyLine',
+		degree5EquationTemplate,
+		degree5Poly,
+		degree5PolyCoefficients,
+		colXLabel,
+	);
+
+	const sixthDegreeFitTemplate = generateTemplate(
+		'Sixth Degree Fit',
+		'degree6PolyLine',
+		degree6EquationTemplate,
+		degree6Poly,
+		degree6PolyCoefficients,
+		colXLabel,
+	);
+
+	const linearFitTemplate = `<details class="analysis-details" open id="linearRegressionLine">
+  <summary class="analysis-summary-title">Summary of Linear Fit</summary>
+  <table style="width: 100%;">
+    <tr>
+      <td style="width: 25%;">Equation:</td>
+      <td style="width: 75%;">${linearEquationTemplate}</td>
+    </tr>
+    <tr>
+      <td style="width: 25%;">R-squared:</td>
+      <td style="width: 75%;">${linearRegressionLineR2}</td>
+    </tr>
+  </table>
+  <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
+  <table style="width: 100%;">
+    <tr>
+      <td style="width: 25%; font-weight: bold;">Term</td>
+      <td style="width: 75%; font-weight: bold;">Estimate</td>
+    </tr>
+    <tr>
+      <td style="width: 25%; white-space: nowrap;">Intercept:</td>
+      <td style="width: 75%;">${linearRegressionLineYIntercept}</td>
+    </tr>
+    <tr>
+      <td style="width: 25%;">${colXLabel}</td>
+      <td style="width: 75%;">${linearRegressionLineSlope.toFixed(6) / 1}</td>
+    </tr>
+  </table>
+</details>`;
 
 	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
 	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
 	const quadraticFitParsed = new DOMParser().parseFromString(quadraticFitTemplate, 'text/html');
 	const cubicFitParsed = new DOMParser().parseFromString(cubicFitTemplate, 'text/html');
 	const quarticFitParsed = new DOMParser().parseFromString(quarticFitTemplate, 'text/html');
+	const fifthDegreeFitParsed = new DOMParser().parseFromString(fifthDegreeFitTemplate, 'text/html');
+	const sixthDegreeFitParsed = new DOMParser().parseFromString(sixthDegreeFitTemplate, 'text/html');
 
 	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
 	container.appendChild(linearFitParsed.body.firstChild);
 	container.appendChild(quadraticFitParsed.body.firstChild);
 	container.appendChild(cubicFitParsed.body.firstChild);
 	container.appendChild(quarticFitParsed.body.firstChild);
+	container.appendChild(fifthDegreeFitParsed.body.firstChild);
+	container.appendChild(sixthDegreeFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
 
 	// hide unchecked chart options
