@@ -1,4 +1,4 @@
-/*global d3 generateTemplate generateEquationTemplate*/
+/*global d3 generateTemplate generateEquationTemplate addOrSubtract*/
 /*eslint no-undef: "error"*/
 function unload(e) {
 	e.preventDefault();
@@ -73,8 +73,6 @@ function onClickSelectCells(thisBar, bar, col) {
 		'*',
 	);
 }
-
-const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
 
 function centerPoly(ele) {
 	if (ele.checked) {
