@@ -10,13 +10,18 @@ import DistributionModal from './ModalDistribution';
 import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import AnalysisMenu from './AnalysisMenu';
-import { Column, Table, AutoSizer, WindowScroller } from 'react-virtualized';
+import {
+	Column,
+	Table,
+	// AutoSizer,
+	WindowScroller,
+} from 'react-virtualized';
 import Draggable from 'react-draggable';
 import { SelectedCell, NormalCell } from './Cell';
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
-	ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS,
+	// ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS,
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	CREATE_COLUMNS,
@@ -196,10 +201,6 @@ function Spreadsheet({ eventBus }) {
 
 	function finishCurrentSelectionRange() {
 		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
-	}
-
-	function finishCurrentSelectionRowRange() {
-		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS });
 	}
 
 	function handleContextMenu(e) {
