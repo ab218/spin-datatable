@@ -74,16 +74,6 @@ function onClickSelectCells(thisBar, bar, col) {
 	);
 }
 
-function centerPoly(ele) {
-	if (ele.checked) {
-		centered = false;
-	} else {
-		centered = true;
-	}
-}
-
-let centered;
-
 window.opener.postMessage('ready', '*');
 
 const container = document.getElementById('container');

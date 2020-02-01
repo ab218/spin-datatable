@@ -9,9 +9,22 @@ body {
 	font-family: "Helvetica Neue", sans-serif;
 }
 
+.analysis-details {
+	border-bottom: 1px solid rgb(192, 192, 192);
+	padding: 10px 30px;
+	text-align: center;
+}
+
 .analysis-title {
 	text-align: center;
-	font-size: 20;
+	font-size: 26px;
+}
+
+.analysis-summary-title {
+	font-size: 20px;
+	margin-top: 15px;
+	margin-bottom: 30px;
+	text-align: center;
 }
 
 .confidenceBands {
@@ -52,10 +65,6 @@ body {
 	z-index: 1;
 }
 
-#degree2PolyLine {
-	display: none;
-}
-
 .degree3PolyLine {
 	stroke-width: 2px;
 	stroke: darkmagenta;
@@ -68,10 +77,6 @@ body {
 	z-index: 1;
 }
 
-#degree3PolyLine {
-	display: none;
-}
-
 .degree4PolyLine {
 	stroke-width: 2px;
 	stroke: saddlebrown;
@@ -82,10 +87,6 @@ body {
 	stroke-width: 10px;
 	stroke: transparent;
 	z-index: 1;
-}
-
-#degree4PolyLine {
-	display: none;
 }
 
 .degree5PolyLine {
@@ -110,6 +111,26 @@ body {
 	stroke-width: 10px;
 	stroke: transparent;
 	z-index: 1;
+}
+
+#degree2PolyLine {
+	display: none;
+}
+
+#degree3PolyLine {
+	display: none;
+}
+
+#degree4PolyLine {
+	display: none;
+}
+
+#degree5PolyLine {
+	display: none;
+}
+
+#degree6PolyLine {
+	display: none;
 }
 
 .tooltip {
