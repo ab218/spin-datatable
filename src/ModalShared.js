@@ -40,16 +40,22 @@ export function SelectColumn({ columns, setSelectedColumn }) {
 		<Card bordered style={{ marginTop: 20, ...styles.cardWithBorder }}>
 			<Radio.Group style={styles.radioGroup} buttonStyle="solid">
 				{/* display only columns with labels and some data */}
-				{columns.map((column) => (
-					<Radio.Button
-						style={styles.radioButton}
-						key={column.id}
-						onClick={() => setSelectedColumn(column)}
-						value={column}
-					>
-						{column.label}
-					</Radio.Button>
-				))}
+				{columns.length > 0 ? (
+					columns.map((column) => (
+						<Radio.Button
+							style={styles.radioButton}
+							key={column.id}
+							onClick={() => setSelectedColumn(column)}
+							value={column}
+						>
+							{column.label}
+						</Radio.Button>
+					))
+				) : (
+					<div style={{ color: 'red' }}>
+						There must be at least one column with at least three valid data points to run this type of analysis.
+					</div>
+				)}
 			</Radio.Group>
 		</Card>
 	);

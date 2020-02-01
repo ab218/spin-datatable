@@ -3,22 +3,25 @@ import { Parser } from 'hot-formula-parser';
 import './App.css';
 import {
 	ACTIVATE_CELL,
-	ADD_CELL_TO_SELECTIONS,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	CREATE_COLUMNS,
 	CREATE_ROWS,
+	DELETE_ROW,
+	DELETE_COLUMN,
 	DELETE_VALUES,
 	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	MODIFY_CURRENT_SELECTION_ROW_RANGE,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
-	SET_GROUPED_COLUMNS,
-	SET_ROW_POSITION,
 	SET_SELECTED_COLUMN,
 	SELECT_CELL,
 	SELECT_CELLS,
+	SELECT_ALL_CELLS,
+	SELECT_ROW,
+	SELECT_COLUMN,
 	SORT_COLUMN,
 	OPEN_CONTEXT_MENU,
 	TOGGLE_ANALYSIS_MODAL,
@@ -78,18 +81,18 @@ function createRandomLetterString() {
 	);
 }
 
-function selectRowAndColumnIDs(top, left, bottom, right, columnPositions, rowPositions) {
-	console.log('column positions', columnPositions);
-	const selectedColumnPositions = Object.entries(columnPositions).filter(([ _, position ]) => {
-		// Subtract one because of header column
-		return position >= left - 1 && position <= right - 1;
-	});
-	const selectedColumnIDs = selectedColumnPositions.map(([ id ]) => id);
-	const selectedRowPositions = Object.entries(rowPositions).filter(([ _, position ]) => {
-		return position >= top && position <= bottom;
-	});
-	const selectedRowIDs = selectedRowPositions.map(([ id ]) => id);
-	return { selectedColumnIDs, selectedRowIDs };
+function selectRowAndColumnIDs(top, left, bottom, right, columns, rows) {
+	const colPos = columns
+		.map((col, i) => {
+			return i >= left - 1 && i <= right - 1 && col.id;
+		})
+		.filter((x) => x);
+	const rowPos = rows
+		.map((row, i) => {
+			return i >= top && i <= bottom && row.id;
+		})
+		.filter((x) => x);
+	return { selectedColumnIDs: colPos, selectedRowIDs: rowPos };
 }
 
 function spreadsheetReducer(state, action) {
@@ -97,10 +100,11 @@ function spreadsheetReducer(state, action) {
 		analysisModalOpen,
 		cellValue,
 		contextMenuPosition,
-		colHeaderContext,
+		contextMenuType,
 		colName,
 		column,
 		columnCount,
+		columnId,
 		columnIndex,
 		columnTypeModalOpen,
 		distributionModalOpen,
@@ -114,31 +118,20 @@ function spreadsheetReducer(state, action) {
 		rowCount,
 		selectionActive,
 		selectedColumns,
-		setColName,
-		type,
 		updatedColumn,
 	} = action;
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
-	// console.log('dispatched:', type, 'with action:', action);
+	const { type, ...event } = action;
+	state.eventBus.fire(type, event);
+	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
+		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
-			const activeCell = { row, column };
+			const activeCell = { row, column, columnId };
 			return { ...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] };
-		}
-		case ADD_CELL_TO_SELECTIONS: {
-			const { cellSelectionRanges = [] } = state;
-			const newSelection = { top: row, bottom: row, left: column, right: column };
-			return {
-				...state,
-				cellSelectionRanges: cellSelectionRanges.concat(
-					cellSelectionRanges.some((cell) => cell.top === newSelection.top && cell.left === newSelection.left)
-						? []
-						: newSelection,
-				),
-			};
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
@@ -154,19 +147,14 @@ function spreadsheetReducer(state, action) {
 				return { id, type: 'String', label: `Column ${state.columns.length + i + 1}` };
 			});
 			const columns = state.columns.concat(newColumns);
-			const columnPositions = newColumns.reduce((acc, { id }, offset) => {
-				return { ...acc, [id]: state.columns.length + offset };
-			}, state.columnPositions);
-			return { ...state, columns, columnPositions };
+			return { ...state, columns };
 		}
+
 		case CREATE_ROWS: {
 			const newRows = Array(rowCount).fill(undefined).map((_) => {
 				return { id: createRandomID() };
 			});
-			const newRowPositions = newRows.reduce((acc, { id }, offset) => {
-				return { ...acc, [id]: state.rows.length + offset };
-			}, state.rowPositions);
-			return { ...state, rows: state.rows.concat(newRows), rowPositions: newRowPositions };
+			return { ...state, rows: state.rows.concat(newRows) };
 		}
 		case 'ENABLE_SELECT': {
 			return { ...state, selectDisabled: false };
@@ -174,40 +162,37 @@ function spreadsheetReducer(state, action) {
 		case 'DISABLE_SELECT': {
 			return { ...state, selectDisabled: true };
 		}
-		case PASTE_VALUES: {
-			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
-				const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
-				// We create a new object with its keys being the indices of the destination rows
-				// and the values being dictionaries mapping the new column ids to the copied values
-				const newRows = copiedValues.reduce((newRowAcc, rowValues, rowIndex) => {
-					return {
-						...newRowAcc,
-						[indexOfFirstDestinationRow + rowIndex]: rowValues.reduce((acc, copiedCellValue, colIndex) => {
-							return { ...acc, [destinationColumns[colIndex]]: copiedCellValue };
-						}, {}),
-					};
-				}, {});
-				// Merge the two entries together
-				Object.entries(newRows).forEach(([ rowIndex, rowSplice ]) => {
-					rows[rowIndex] = { ...rows[rowIndex], ...rowSplice };
-				});
-				return rows;
+		case DELETE_COLUMN: {
+			const { rows } = state;
+			const columnID = getCol(action.colName).id;
+			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
+			for (let i = 0; i < rows.length; i++) {
+				delete rows[i][columnID];
 			}
-
-			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-				action.top,
-				action.left,
-				action.top + action.height - 1,
-				action.left + action.width - 1,
-				state.columnPositions,
-				state.rowPositions,
-			);
-			return { ...state, rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs) };
+			return {
+				...state,
+				columns: filteredColumns,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
+		}
+		case DELETE_ROW: {
+			const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
+			return {
+				...state,
+				rows: slicedRows,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
 		}
 		case COPY_VALUES: {
 			// TODO: There should be a line break if the row is undefined values
 			// TODO: There should be no line break for the first row when you copy
-			const { cellSelectionRanges, columnPositions, rowPositions } = state;
+			const { cellSelectionRanges, columns, rows } = state;
 			// Fixes crash if cell from non existant column is selected
 			if (!cellSelectionRanges.length) return { ...state };
 			// const copyEl = (elToBeCopied) => {
@@ -224,7 +209,6 @@ function spreadsheetReducer(state, action) {
 			// 		} catch (e) {
 			// 			console.log(e);
 			// 		}
-			// 		console.log(sel, range);
 			// 		document.execCommand('copy');
 			// 	}
 			// 	sel.removeAllRanges();
@@ -250,15 +234,8 @@ function spreadsheetReducer(state, action) {
 
 			// In case there are multiple selection ranges, we only want the first selection made
 			const { top, left, bottom, right } = cellSelectionRanges[0];
-			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-				top,
-				left,
-				bottom,
-				right,
-				columnPositions,
-				rowPositions,
-			);
-			const copiedRows = state.rows
+			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(top, left, bottom, right, columns, rows);
+			const copiedRows = rows
 				.map((row) => {
 					if (selectedRowIDs.includes(row.id)) {
 						return selectedColumnIDs.map((selectedColumn) => row[selectedColumn]);
@@ -273,9 +250,39 @@ function spreadsheetReducer(state, action) {
 				.catch((args) => console.error('did not copy to clipboard:', args));
 			return { ...state };
 		}
+		// EVENT: Paste
+		case PASTE_VALUES: {
+			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
+				const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
+				// We create an updated copy of the rows that are to be changed as a result of the paste operation
+				const newRowValues = [];
+				for (let copiedValuesIndex = 0; copiedValuesIndex < copiedValues.length; copiedValuesIndex++) {
+					const newRowValue = { ...rows[indexOfFirstDestinationRow + copiedValuesIndex] };
+					for (let colIndex = 0; colIndex < destinationColumns.length; colIndex++) {
+						newRowValue[destinationColumns[colIndex]] = copiedValues[copiedValuesIndex][colIndex];
+					}
+					newRowValues.push(newRowValue);
+				}
+				return rows
+					.slice(0, indexOfFirstDestinationRow)
+					.concat(newRowValues)
+					.concat(rows.slice(indexOfFirstDestinationRow + newRowValues.length));
+			}
+
+			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
+				action.top,
+				action.left,
+				action.top + action.height - 1,
+				action.left + action.width - 1,
+				state.columns,
+				state.rows,
+			);
+			return { ...state, rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs) };
+		}
+		// EVENT: Delete values
 		case DELETE_VALUES: {
 			console.log(state);
-			const { cellSelectionRanges, columnPositions, rowPositions } = state;
+			const { cellSelectionRanges } = state;
 			function removeKeyReducer(container, key) {
 				const { [key]: value, ...rest } = container;
 				return rest;
@@ -286,8 +293,8 @@ function spreadsheetReducer(state, action) {
 					left,
 					bottom,
 					right,
-					columnPositions,
-					rowPositions,
+					state.columns,
+					state.rows,
 				);
 				return rows.map((row) => {
 					if (selectedRowIDs.includes(row.id)) {
@@ -309,14 +316,35 @@ function spreadsheetReducer(state, action) {
 							startRangeColumn: lastSelection.column,
 							endRangeRow,
 							endRangeColumn,
-							state,
+						}),
+					}
+				: state;
+		}
+		case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
+			const { lastSelection } = state;
+			// Note: In this case I am modifying the cellSelectionRanges directly instead of currentCellSelectionRange
+			return state.cellSelectionRanges
+				? {
+						...state,
+						currentCellSelectionRange: getRangeBoundaries({
+							startRangeRow: lastSelection.row,
+							endRangeRow,
+							startRangeColumn: 1,
+							endRangeColumn: state.columns.length,
 						}),
 					}
 				: state;
 		}
 		case REMOVE_SELECTED_CELLS: {
-			return { ...state, cellSelectionRanges: [], selectedRowIDs: [], activeCell: null };
+			return {
+				...state,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
 		}
+		// EVENT: Select Cell
 		case SELECT_CELL: {
 			const { cellSelectionRanges = [] } = state;
 			// track lastSelection to know where to begin range selection on drag
@@ -355,81 +383,131 @@ function spreadsheetReducer(state, action) {
 				cellSelectionRanges: newCellSelectionRanges,
 			};
 		}
-		case SET_ROW_POSITION: {
-			return { ...state, rowPositions: { ...state.rowPositions, [action.rowID]: action.row } };
+		case SELECT_ALL_CELLS: {
+			const allCells = {
+				top: 0,
+				left: 1,
+				bottom: state.rows.length - 1,
+				right: state.columns.length,
+			};
+			return { ...state, activeCell: null, currentCellSelectionRange: null, cellSelectionRanges: [ allCells ] };
 		}
+		case SELECT_ROW: {
+			const { cellSelectionRanges } = state;
+			const allCellsInRow = {
+				top: rowIndex,
+				left: 1,
+				bottom: rowIndex,
+				right: state.columns.length,
+			};
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: allCellsInRow,
+				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
+				lastSelection: { row: rowIndex },
+			};
+		}
+		case SELECT_COLUMN: {
+			const { cellSelectionRanges } = state;
+			const allCellsInColumn = {
+				top: 0,
+				left: columnIndex + 1,
+				bottom: state.rows.length - 1,
+				right: columnIndex + 1,
+			};
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: allCellsInColumn,
+				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
+			};
+		}
+		// EVENT: Change layout
 		case TOGGLE_LAYOUT: {
 			return { ...state, layout };
 		}
-		case SET_GROUPED_COLUMNS: {
-			const matchColNameWithID = state.columns.find((col) => {
-				return col.label === setColName;
-			});
+		// EVENT: Set grouped columns
+		// case SET_GROUPED_COLUMNS: {
+		// 	const matchColNameWithID = state.columns.find((col) => {
+		// 		return col.label === setColName;
+		// 	});
 
-			const groupByColumnID = matchColNameWithID && matchColNameWithID.id;
-			// Maybe we can make groupedColumns keep track of column properties such as label, etc
-			const groupedColumns = state.rows.reduce((acc, row) => {
-				const { [groupByColumnID]: _, ...restRow } = row;
-				return { ...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow) };
-			}, {});
+		// 	const groupByColumnID = matchColNameWithID && matchColNameWithID.id;
+		// 	// Maybe we can make groupedColumns keep track of column properties such as label, etc
+		// 	const groupedColumns = state.rows.reduce((acc, row) => {
+		// 		const { [groupByColumnID]: _, ...restRow } = row;
+		// 		return { ...acc, [row[groupByColumnID]]: (acc[row[groupByColumnID]] || []).concat(restRow) };
+		// 	}, {});
 
-			const groupCount = Object.keys(groupedColumns).length;
-			const sortedNonGroupedColumns = state.columns.filter(({ id }) => id !== groupByColumnID).sort((colA, colB) => {
-				return state.columnPositions[colA.id] - state.columnPositions[colB.id];
-			});
+		// 	const groupCount = Object.keys(groupedColumns).length;
+		// 	const sortedNonGroupedColumns = state.columns.filter(({ id }) => id !== groupByColumnID).sort((colA, colB) => {
+		// 		return state.columnPositions[colA.id] - state.columnPositions[colB.id];
+		// 	});
 
-			// Given m logical columns and n different values in our group by column,
-			// we should have (m - 1) * n number of physical columns
-			const allPhysicalColumns = Array.from({ length: groupCount }).flatMap((_) => {
-				return sortedNonGroupedColumns.map((logicalColumn) => {
-					return { ...logicalColumn, id: createRandomID(), logicalColumn: logicalColumn.id };
-				});
-			});
-			const logicalRowGroups = Object.values(groupedColumns);
-			// the size of the largest group is the maximum number of physical rows
-			const physicalRowTotal = Math.max(...logicalRowGroups.map((group) => group.length));
-			// We have to translate the logical rows into physical rows
-			const physicalRows = state.rows.slice(0, physicalRowTotal).reduce((acc, _, index) => {
-				return acc.concat(
-					logicalRowGroups.reduce(
-						(physicalRow, group, groupIndex) => {
-							const logicalRow = group[index];
-							// If we have a valid logical row from our group, we then map the row values
-							// for all its logical column ids to refer to physical column ids
-							return logicalRow
-								? sortedNonGroupedColumns.reduce((acc, column, columnIndex, array) => {
-										// We compute the offset bvecause allPhysicalColumns is a flat list
-										const physicalColumn = allPhysicalColumns[columnIndex + groupIndex * array.length];
-										const result = { ...acc, [physicalColumn.id]: logicalRow[column.id] };
-										return result;
-									}, physicalRow)
-								: physicalRow;
-						},
-						{ id: createRandomID() },
-					),
-				);
-			}, []);
+		// 	// Given m logical columns and n different values in our group by column,
+		// 	// we should have (m - 1) * n number of physical columns
+		// 	const allPhysicalColumns = Array.from({ length: groupCount }).flatMap((_) => {
+		// 		return sortedNonGroupedColumns.map((logicalColumn) => {
+		// 			return { ...logicalColumn, id: createRandomID(), logicalColumn: logicalColumn.id };
+		// 		});
+		// 	});
+		// 	const logicalRowGroups = Object.values(groupedColumns);
+		// 	// the size of the largest group is the maximum number of physical rows
+		// 	const physicalRowTotal = Math.max(...logicalRowGroups.map((group) => group.length));
+		// 	// We have to translate the logical rows into physical rows
+		// 	const physicalRows = state.rows.slice(0, physicalRowTotal).reduce((acc, _, index) => {
+		// 		return acc.concat(
+		// 			logicalRowGroups.reduce(
+		// 				(physicalRow, group, groupIndex) => {
+		// 					const logicalRow = group[index];
+		// 					// If we have a valid logical row from our group, we then map the row values
+		// 					// for all its logical column ids to refer to physical column ids
+		// 					return logicalRow
+		// 						? sortedNonGroupedColumns.reduce((acc, column, columnIndex, array) => {
+		// 								// We compute the offset bvecause allPhysicalColumns is a flat list
+		// 								const physicalColumn = allPhysicalColumns[columnIndex + groupIndex * array.length];
+		// 								const result = { ...acc, [physicalColumn.id]: logicalRow[column.id] };
+		// 								return result;
+		// 							}, physicalRow)
+		// 						: physicalRow;
+		// 				},
+		// 				{ id: createRandomID() },
+		// 			),
+		// 		);
+		// 	}, []);
 
-			const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
+		// 	const physicalRowPositions = physicalRows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
+		// 	return {
+		// 		...state,
+		// 		setColName,
+		// 		physicalRowPositions,
+		// 		physicalRows,
+		// 		groupedColumns,
+		// 		groupByColumnID,
+		// 		allPhysicalColumns,
+		// 	};
+		// }
+		// EVENT: Context menu opened
+		case OPEN_CONTEXT_MENU: {
 			return {
 				...state,
-				setColName,
-				physicalRowPositions,
-				physicalRows,
-				groupedColumns,
-				groupByColumnID,
-				allPhysicalColumns,
+				colName,
+				contextMenuOpen: true,
+				contextMenuPosition,
+				contextMenuType,
+				contextMenuRowIndex: rowIndex,
 			};
 		}
-		case OPEN_CONTEXT_MENU: {
-			return { ...state, colName, contextMenuOpen: true, contextMenuPosition, colHeaderContext };
-		}
+		// EVENT: Context menu closed
 		case CLOSE_CONTEXT_MENU: {
 			return { ...state, contextMenuOpen: false };
 		}
+		// EVENT: Analysis Modal opened/closed
 		case TOGGLE_ANALYSIS_MODAL: {
 			return { ...state, analysisModalOpen, activeCell: null };
 		}
+		// EVENT: Column Type Modal opened/closed
 		case TOGGLE_COLUMN_TYPE_MODAL: {
 			return {
 				...state,
@@ -441,6 +519,7 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: [],
 			};
 		}
+		// EVENT: Distribution Modal opened/closed
 		case TOGGLE_DISTRIBUTION_MODAL: {
 			return {
 				...state,
@@ -451,26 +530,34 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: [],
 			};
 		}
+		// EVENT: Filter Modal opened/closed
 		case TOGGLE_FILTER_MODAL: {
 			return { ...state, filterModalOpen, selectedColumn: null, activeCell: null, selectedColumns };
 		}
 		case SET_SELECTED_COLUMN: {
-			return { ...state, selectedColumns: action.selectedColumns };
+			return { ...state, selectedColumns };
 		}
+		// EVENT: Selected Cell translated
 		case TRANSLATE_SELECTED_CELL: {
 			const newCellSelectionRanges = [ { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex } ];
 			return { ...state, cellSelectionRanges: newCellSelectionRanges, currentCellSelectionRange: null };
 		}
+		// EVENT: Cell updated
 		case UPDATE_CELL: {
-			const { rows, columns } = state;
+			const { activeCell, rows, columns } = state;
+			// TODO: If active cell, use that, if selected cells, use top left corner of it
+			if (!activeCell && !state.cellSelectionRanges.length > 0) return state;
 			// row from action or last row from state
-			const originalRow = row || rows[rows.length - 1];
+			const column = columns[columnIndex];
+			const row = rows[rowIndex] || rows[rows.length - 1];
 			const newRows = rows.slice();
 			const { id: columnID } = column || columns[columns.length - 1];
+			let rowCopy = Object.assign({}, row, { [columnID]: cellValue });
+
 			const dependentColumns = columns.filter(({ type, formula }) => {
 				return type === 'Formula' && formula.includes(columnID);
 			});
-			let rowCopy = Object.assign({}, originalRow, { [columnID]: cellValue });
+			// If formula present
 			if (dependentColumns.length) {
 				const formulaParser = new Parser();
 				formulaParser.on('callVariable', function(name, done) {
@@ -483,21 +570,24 @@ function spreadsheetReducer(state, action) {
 					return { ...acc, [column.id]: formulaParser.parse(column.formula).result };
 				}, rowCopy);
 			}
+
 			const changedRows = newRows.map((newRow) => (newRow.id !== rowCopy.id ? newRow : rowCopy));
 			return { ...state, rows: changedRows };
 		}
+
 		case SORT_COLUMN: {
 			const columnID = getCol(action.colName).id;
-			const sortedRows = state.rows.sort(
+			state.rows.sort(
 				(a, b) => (action.descending ? [ b[columnID] ] - [ a[columnID] ] : [ a[columnID] ] - [ b[columnID] ]),
 			);
-			const sortedPositions = sortedRows.reduce((obj, item, i) => Object.assign(obj, { [item.id]: i }), {});
-			return { ...state, rowPositions: sortedPositions };
+			return { ...state };
 		}
+
 		case FILTER_COLUMN: {
-			const selectedRowIDs = filterRowsByColumnRange(action.selectedColumns, state.rows).map(({ id }) => id);
-			return { ...state, selectedRowIDs, selectedColumns: action.selectedColumns };
+			const selectedRowIDs = filterRowsByColumnRange(selectedColumns, state.rows).map(({ id }) => id);
+			return { ...state, selectedRowIDs, selectedColumns };
 		}
+
 		case UPDATE_COLUMN: {
 			// TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
 			const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
@@ -516,30 +606,23 @@ function spreadsheetReducer(state, action) {
 				rows = rows.map((row) => {
 					const formulaColumnsToUpdate = [ columnCopy ].concat(
 						state.columns.filter(({ type, formula }) => {
-							console.log('type', type, 'formula', formula);
 							return type === 'Formula' && formula.includes(columnCopy.id);
 						}),
 					);
-					console.log('formulaColumnsToUpdate', formulaColumnsToUpdate);
 					const formulaParser = new Parser();
 					// Not getting called
 					formulaParser.on('callVariable', function(name, done) {
-						console.log(name, 'name');
 						const selectedColumn = state.columns.find((column) => column.id === name);
-						console.log('selectedColumn', selectedColumn);
 						if (selectedColumn) {
-							console.log(row[selectedColumn.id]);
 							done(row[selectedColumn.id]);
 						}
 					});
 					return formulaColumnsToUpdate.reduce((acc, column) => {
-						console.log(column);
 						row = acc;
 						const {
 							result,
 							// error
 						} = formulaParser.parse(column.formula);
-						console.log('result', result);
 						return { ...acc, [column.id]: result };
 					}, row);
 				});
@@ -567,109 +650,125 @@ export function useSpreadsheetDispatch() {
 	return context;
 }
 
-export function SpreadsheetProvider({ children }) {
+export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
-	// const statsColumns = [
-	// 	{ modelingType: 'Continuous', type: 'Number', label: 'Distance' },
-	// 	{ modelingType: 'Nominal', type: 'Number', label: 'Trial' },
-	// 	{ modelingType: 'Continuous', type: 'Number', label: 'Bubbles' },
-	// 	// {modelingType: 'Continuous', type: 'Formula', label: 'Trial * Bubbles', formula: 'Trial * Bubbles'},
-	// ];
+	const statsColumns = [
+		{ id: '_abc1_', modelingType: 'Continuous', type: 'String', label: 'Distance' },
+		{ id: '_abc2_', modelingType: 'Nominal', type: 'String', label: 'Trial' },
+		{ id: '_abc3_', modelingType: 'Continuous', type: 'String', label: 'Bubbles' },
+	];
 
-	const startingColumn = [];
-
+	// const startingColumn = [ { modelingType: 'Continuous', type: 'String', label: 'Column 1' } ];
 	// Starting columns
-	const columns = startingColumn
-		.map((metadata) => ({ id: metadata.id || createRandomLetterString(), ...metadata }))
-		.map((column, _, array) => {
-			const { formula, ...rest } = column;
-			if (formula) {
-				const newFormula = array
-					.filter((someColumn) => formula.includes(someColumn.label))
-					.reduce((changedFormula, someColumn) => {
-						return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
-					}, formula);
-				return { ...rest, formula: newFormula };
-			}
-			return column;
-		});
+	// const columns = statsColumns
+	// 	.map((metadata) => ({ id: metadata.id || createRandomLetterString(), ...metadata }))
+	// 	.map((column, _, array) => {
+	// 		const { formula, ...rest } = column;
+	// 		if (formula) {
+	// 			const newFormula = array
+	// 				.filter((someColumn) => formula.includes(someColumn.label))
+	// 				.reduce((changedFormula, someColumn) => {
+	// 					return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
+	// 				}, formula);
+	// 			return { ...rest, formula: newFormula };
+	// 		}
+	// 		return column;
+	// 	});
 
-	// dummy data
-	// const pondEcologyRows = [
-	// 	[ 10, 1, 12 ],
-	// 	[ 20, 1, 10 ],
-	// 	[ 30, 1, 7 ],
-	// 	[ 40, 1, 6 ],
-	// 	[ 50, 1, 2 ],
-	// 	[ 10, 2, 10 ],
-	// 	[ 20, 2, 9 ],
-	// 	[ 30, 2, 6 ],
-	// 	[ 40, 2, 4 ],
-	// 	[ 50, 2, 4 ],
-	// 	[ 10, 3, 12 ],
-	// 	[ 20, 3, 9 ],
-	// 	[ 30, 3, 8 ],
-	// 	[ 40, 3, 5 ],
-	// 	[ 50, 3, 3 ],
-	// 	[ 10, 4, 11 ],
-	// 	[ 20, 4, 8 ],
-	// 	[ 30, 4, 7 ],
-	// 	[ 40, 4, 6 ],
-	// 	[ 50, 4, 2 ],
-	// 	[ 10, 5, 11 ],
-	// 	[ 20, 5, 10 ],
-	// 	[ 30, 5, 7 ],
-	// 	[ 40, 5, 5 ],
-	// 	[ 50, 5, 3 ],
+	// const rows = [
+	// 	{ id: 'TAuW6mThoE', _abc1_: 10, _abc2_: 1, _abc3_: 12 },
+	// 	{ id: 'M8nnC1HOtZ', _abc1_: 20, _abc2_: 1, _abc3_: 10 },
+	// 	{ id: '40M1CkzXjf', _abc1_: 30, _abc2_: 1, _abc3_: 7 },
+	// 	{ id: 'k4iHEVoqwH', _abc1_: 40, _abc2_: 1, _abc3_: 6 },
+	// 	{ id: 'ClJ3vuN1sm', _abc1_: 50, _abc2_: 1, _abc3_: 2 },
+	// 	{ id: 'P8QKAfq0p3', _abc1_: 10, _abc2_: 2, _abc3_: 10 },
+	// 	{ id: 'BwbMIyqR02', _abc1_: 20, _abc2_: 2, _abc3_: 9 },
+	// 	{ id: '1jQEPLCQG5', _abc1_: 30, _abc2_: 2, _abc3_: 6 },
+	// 	{ id: 'CpbYoyqKLu', _abc1_: 40, _abc2_: 2, _abc3_: 4 },
+	// 	{ id: '6aqCyUXGCz', _abc1_: 50, _abc2_: 2, _abc3_: 4 },
+	// 	{ id: 'v8CTMPmxTH', _abc1_: 10, _abc2_: 3, _abc3_: 12 },
+	// 	{ id: 'BurrXxh2Hr', _abc1_: 20, _abc2_: 3, _abc3_: 9 },
+	// 	{ id: 'Sncc15wqAZ', _abc1_: 30, _abc2_: 3, _abc3_: 8 },
+	// 	{ id: 'HQyQ6fNRr4', _abc1_: 40, _abc2_: 3, _abc3_: 5 },
+	// 	{ id: 'E6C3iDxM6x', _abc1_: 50, _abc2_: 3, _abc3_: 3 },
+	// 	{ id: 'fhcDfTfBN6', _abc1_: 10, _abc2_: 4, _abc3_: 11 },
+	// 	{ id: '20c5IrknI5', _abc1_: 20, _abc2_: 4, _abc3_: 8 },
+	// 	{ id: 'mqvjLZ3FNy', _abc1_: 30, _abc2_: 4, _abc3_: 7 },
+	// 	{ id: 'vroRsjPJxn', _abc1_: 40, _abc2_: 4, _abc3_: 6 },
+	// 	{ id: '5B0FbggMZw', _abc1_: 50, _abc2_: 4, _abc3_: 2 },
+	// 	{ id: 'vsLMcp9h1V', _abc1_: 10, _abc2_: 5, _abc3_: 11 },
+	// 	{ id: 'fX5eXO2VrP', _abc1_: 20, _abc2_: 5, _abc3_: 10 },
+	// 	{ id: 'MxrCy4Ssa0', _abc1_: 30, _abc2_: 5, _abc3_: 7 },
+	// 	{ id: 'cgFBU9cf2i', _abc1_: 40, _abc2_: 5, _abc3_: 5 },
+	// 	{ id: 'AaD3W8solA', _abc1_: 50, _abc2_: 5, _abc3_: 3 },
 	// ];
 
-	// normal starting condition
-	const startingRow = [ [] ];
-
-	const columnPositions = columns.reduce((acc, column, index) => ({ ...acc, [column.id]: index }), {});
-
-	const rows = startingRow
-		.map((tuple) => ({
-			id: createRandomID(),
-			...tuple.reduce((acc, value, index) => ({ ...acc, [columns[index].id]: value }), {}),
-		}))
-		.map((originalRow) => {
-			const formulaColumns = columns.filter(({ type }) => type === 'Formula');
-			let rowCopy = Object.assign({}, originalRow);
-			if (formulaColumns.length) {
-				const formulaParser = new Parser();
-				formulaParser.on('callVariable', function(name, done) {
-					const selectedColumn = columns.find((column) => column.id === name);
-					if (selectedColumn) {
-						done(originalRow[selectedColumn.id]);
-					}
-				});
-				rowCopy = formulaColumns.reduce((acc, column) => {
-					return { ...acc, [column.id]: formulaParser.parse(column.formula).result };
-				}, rowCopy);
-			}
-
-			return rowCopy;
-		});
-	// const rowPositions = rows.reduce((acc, row, index) => ({ ...acc, [row.id]: index }), {});
-
-	const rowPositions = {};
-	for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-		const rowID = rows[rowIndex].id;
-		rowPositions[rowID] = rowIndex;
-	}
+	const rows = [
+		{ id: 'TAuW6mThoE', _abc1_: 37, _abc2_: 48, _abc3_: 1 },
+		{ id: 'M8nnC1HOtZ', _abc1_: 46, _abc2_: 56, _abc3_: 1 },
+		{ id: '40M1CkzXjf', _abc1_: 36, _abc2_: 44, _abc3_: 2 },
+		{ id: 'k4iHEVoqwH', _abc1_: 41, _abc2_: 82, _abc3_: 2 },
+		{ id: 'ClJ3vuN1sm', _abc1_: 40, _abc2_: 62, _abc3_: 1 },
+		{ id: 'P8QKAfq0p3', _abc1_: 39, _abc2_: 79, _abc3_: 2 },
+		{ id: 'BwbMIyqR02', _abc1_: 38, _abc2_: 64, _abc3_: 2 },
+		{ id: '1jQEPLCQG5', _abc1_: 44, _abc2_: 51, _abc3_: 1 },
+		{ id: 'CpbYoyqKLu', _abc1_: 42, _abc2_: 48, _abc3_: 1 },
+		{ id: '6aqCyUXGCz', _abc1_: 38, _abc2_: 51, _abc3_: 1 },
+		{ id: 'v8CTMPmxTH', _abc1_: 37, _abc2_: 75, _abc3_: 1 },
+		{ id: 'BurrXxh2Hr', _abc1_: 26, _abc2_: 53, _abc3_: 2 },
+		{ id: 'Sncc15wqAZ', _abc1_: 39, _abc2_: 65, _abc3_: 2 },
+		{ id: 'HQyQ6fNRr4', _abc1_: 34, _abc2_: 83, _abc3_: 2 },
+		{ id: 'E6C3iDxM6x', _abc1_: 33, _abc2_: 44, _abc3_: 2 },
+		{ id: 'fhcDfTfBN6', _abc1_: 42, _abc2_: 42, _abc3_: 2 },
+		{ id: '20c5IrknI5', _abc1_: 38, _abc2_: 78, _abc3_: 1 },
+		{ id: 'mqvjLZ3FNy', _abc1_: 45, _abc2_: 64, _abc3_: 1 },
+		{ id: 'vroRsjPJxn', _abc1_: 33, _abc2_: 33, _abc3_: 2 },
+		{ id: '5B0FbggMZw', _abc1_: 43, _abc2_: 87, _abc3_: 1 },
+		{ id: 'vsLMcp9h1V', _abc1_: 36, _abc2_: 75, _abc3_: 1 },
+		{ id: 'fX5eXO2VrP', _abc1_: 36, _abc2_: 84, _abc3_: 1 },
+		{ id: 'MxrCy4Ssa0', _abc1_: 39, _abc2_: 57, _abc3_: 2 },
+		{ id: 'cgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 2 },
+		{ id: 'AaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 2 },
+		//
+		// { id: 'AAuW6mThoE', _abc1_: 37, _abc2_: 48, _abc3_: 1 },
+		// { id: 'B8nnC1HOtZ', _abc1_: 46, _abc2_: 56, _abc3_: 1 },
+		// { id: 'C0M1CkzXjf', _abc1_: 36, _abc2_: 44, _abc3_: 2 },
+		// { id: 'D4iHEVoqwH', _abc1_: 41, _abc2_: 82, _abc3_: 2 },
+		// { id: 'ElJ3vuN1sm', _abc1_: 40, _abc2_: 62, _abc3_: 1 },
+		// { id: 'F8QKAfq0p3', _abc1_: 39, _abc2_: 79, _abc3_: 2 },
+		// { id: 'GwbMIyqR02', _abc1_: 38, _abc2_: 64, _abc3_: 2 },
+		// { id: 'HjQEPLCQG5', _abc1_: 44, _abc2_: 51, _abc3_: 1 },
+		// { id: 'IpbYoyqKLu', _abc1_: 42, _abc2_: 48, _abc3_: 1 },
+		// { id: 'JaqCyUXGCz', _abc1_: 38, _abc2_: 51, _abc3_: 1 },
+		// { id: 'K8CTMPmxTH', _abc1_: 37, _abc2_: 75, _abc3_: 1 },
+		// { id: 'LurrXxh2Hr', _abc1_: 26, _abc2_: 53, _abc3_: 2 },
+		// { id: 'Mncc15wqAZ', _abc1_: 39, _abc2_: 65, _abc3_: 2 },
+		// { id: 'NQyQ6fNRr4', _abc1_: 34, _abc2_: 83, _abc3_: 2 },
+		// { id: 'O6C3iDxM6x', _abc1_: 33, _abc2_: 44, _abc3_: 2 },
+		// { id: 'PhcDfTfBN6', _abc1_: 42, _abc2_: 42, _abc3_: 2 },
+		// { id: 'Q0c5IrknI5', _abc1_: 38, _abc2_: 78, _abc3_: 1 },
+		// { id: 'RqvjLZ3FNy', _abc1_: 45, _abc2_: 64, _abc3_: 1 },
+		// { id: 'SroRsjPJxn', _abc1_: 33, _abc2_: 33, _abc3_: 2 },
+		// { id: 'TB0FbggMZw', _abc1_: 43, _abc2_: 87, _abc3_: 1 },
+		// { id: 'UsLMcp9h1V', _abc1_: 36, _abc2_: 75, _abc3_: 1 },
+		// { id: 'VX5eXO2VrP', _abc1_: 36, _abc2_: 84, _abc3_: 1 },
+		// { id: 'WxrCy4Ssa0', _abc1_: 39, _abc2_: 57, _abc3_: 2 },
+		// { id: 'XgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 2 },
+		// { id: 'YaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 2 },
+	];
 
 	const initialState = {
+		eventBus,
 		analysisModalOpen: false,
 		analysisWindowOpen: false,
 		columnTypeModalOpen: false,
 		activeCell: null,
 		cellSelectionRanges: [],
 		contextMenuPosition: null,
+		contextMenuRowIndex: null,
 		currentCellSelectionRange: null,
 		colHeaderContext: false,
-		columns,
-		columnPositions,
+		columns: statsColumns,
 		colName: null,
 		contextMenuOpen: false,
 		distributionModalOpen: false,
@@ -677,10 +776,8 @@ export function SpreadsheetProvider({ children }) {
 		layout: true,
 		selectedColumns: [],
 		selectDisabled: false,
-		xColData: null,
-		yColData: null,
+		selectedRowIDs: [],
 		lastSelection: { row: 1, column: 1 },
-		rowPositions,
 		rows,
 	};
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);

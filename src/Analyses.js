@@ -2,7 +2,8 @@ import axios from 'axios';
 
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabel, colYLabel, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
+	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
+	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
 	const result = await axios.post(
 		gcloud,
 		{
@@ -15,44 +16,40 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 	);
 	// console.log(result.data) // gcloud
 	// console.log(result.data.body); // Lambda
-	// function mapBand(position) {
-	//   return result.data.predictions.map(point => {
-	//     return [point.x, point[position]]
-	//   })
-	// }
-
-	function receiveMessage(event) {
-		// target window is ready, time to send data.
-		if (event.data === 'ready') {
-			popup.postMessage(outputData, '*');
-			window.removeEventListener('message', receiveMessage);
-		}
-	}
-	const popup = window.open(
-		window.location.href + 'linear_regression.html',
-		'',
-		'left=9999,top=100,width=450,height=850',
-	);
-	// set event listener and wait for target to be ready
-	window.addEventListener('message', receiveMessage, false);
-	console.log(result.data);
-
-	const matrixToFixed = (arr) => arr.map((first) => first.map((second) => second.toFixed(4) / 1));
-
 	const {
+		conf_low,
+		conf_upp,
 		mean_x,
 		mean_y,
 		std_x,
 		std_y,
 		pvalues,
-		fitted_values,
 		rsquared,
 		corrcoef,
 		cov,
+		degree_2_poly,
+		degree_3_poly,
+		degree_4_poly,
+		degree_5_poly,
+		degree_6_poly,
 		slope,
 		intercept,
+		mean_ci_low,
+		mean_ci_upp,
+		centered_2_poly,
+		centered_3_poly,
+		centered_4_poly,
+		centered_5_poly,
+		centered_6_poly,
 	} = result.data;
-	const outputData = {
+
+	console.log(result.data);
+
+	return {
+		confLow: conf_low,
+		confUpp: conf_upp,
+		meanCiLow: mean_ci_low,
+		meanCiUpp: mean_ci_upp,
 		corrcoef: corrcoef[1][0].toFixed(4) / 1,
 		covariance: cov[1][0].toFixed(4) / 1,
 		colXLabel,
@@ -62,12 +59,21 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		colBMean: mean_y.toFixed(4) / 1,
 		colBStdev: std_y.toFixed(4) / 1,
 		pValue: pvalues[1].toFixed(4) / 1,
-		tempABVals: XYCols,
-		linearRegressionLinePoints: matrixToFixed(fitted_values),
+		degree2Poly: degree_2_poly,
+		degree3Poly: degree_3_poly,
+		degree4Poly: degree_4_poly,
+		degree5Poly: degree_5_poly,
+		degree6Poly: degree_6_poly,
+		centeredDegree2Poly: centered_2_poly,
+		centeredDegree3Poly: centered_3_poly,
+		centeredDegree4Poly: centered_4_poly,
+		centeredDegree5Poly: centered_5_poly,
+		centeredDegree6Poly: centered_6_poly,
+		coordinates: XYCols,
 		linearRegressionLineR2: rsquared.toFixed(4) / 1,
 		linearRegressionLineSlope: slope.toFixed(4) / 1,
 		linearRegressionLineYIntercept: intercept.toFixed(4) / 1,
-		linearRegressionLineEquation: `${colYLabel} = ${slope.toFixed(4) / 1}*(${colXLabel}) + ${intercept.toFixed(4) / 1}`,
+		linearRegressionLineEquation: `${colYLabel} = ${slope.toFixed(4) / 1} * ${colXLabel} + ${intercept.toFixed(4) / 1}`,
 	};
 }
 

@@ -2,16 +2,13 @@ import React from 'react';
 import './App.css';
 import Spreadsheet from './Spreadsheet';
 import { SpreadsheetProvider } from './SpreadsheetProvider';
-import EventBus from './eventbus.js';
-
-const eventBus = new EventBus('spreadsheet-events', console.debug);
-eventBus.subscribe('select-cell', function handlingCellSelection() {});
+import eventBus from './EventBusSubscriptions.js';
 
 function App() {
 	return (
-		<div className="App">
-			<SpreadsheetProvider>
-				<Spreadsheet eventBus={eventBus} />
+		<div style={{ height: '100%' }} className="App">
+			<SpreadsheetProvider eventBus={eventBus}>
+				<Spreadsheet />
 			</SpreadsheetProvider>
 		</div>
 	);

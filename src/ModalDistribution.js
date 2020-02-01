@@ -12,6 +12,7 @@ export default function DistributionModal() {
 	const [ error, setError ] = useState('');
 	const [ numberOfBins, setNumberOfBins ] = useState(10);
 	const [ yColData, setYColData ] = useState([]);
+	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
 
 	function handleModalClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
@@ -22,13 +23,16 @@ export default function DistributionModal() {
 			setError('Please add a valid column');
 			return;
 		}
+
 		// TODO: Better error handling here
-		const colVals = rows.map((row) => row[yColData.id]).filter((x) => x);
+		const colVals = rows.map((row) => row[yColData.id]).filter((x) => Number(x));
 		if (colVals.length < 3) {
 			setError('Column must have at least 3 valid values');
 			return;
 		}
+		setPerformingAnalysis(true);
 		const results = await performDistributionAnalysis(yColData, rows, numberOfBins);
+		const popup = window.open(window.location.href + 'distribution.html', '', 'left=9999,top=100,width=500,height=850');
 		function receiveMessage(event) {
 			if (event.data === 'ready') {
 				popup.postMessage(results, '*');
@@ -40,6 +44,7 @@ export default function DistributionModal() {
 			if (event.data === 'closed') {
 				console.log('target closed');
 				window.removeEventListener('message', targetClickEvent);
+				window.removeEventListener('message', removeTargetClickEvent);
 			}
 		}
 
@@ -58,12 +63,11 @@ export default function DistributionModal() {
 				dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
 			}
 		}
-
-		const popup = window.open(window.location.href + 'distribution.html', '', 'left=9999,top=100,width=450,height=850');
 		// set event listener and wait for target to be ready
 		window.addEventListener('message', receiveMessage, false);
 		window.addEventListener('message', targetClickEvent);
 		window.addEventListener('message', removeTargetClickEvent);
+		setPerformingAnalysis(false);
 		dispatchSpreadsheetAction({ type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
 	}
 
@@ -84,6 +88,9 @@ export default function DistributionModal() {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
+				okButtonProps={{ disabled: performingAnalysis }}
+				cancelButtonProps={{ disabled: performingAnalysis }}
+				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
 				title="Distribution"
 				visible={distributionModalOpen}

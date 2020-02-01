@@ -2,37 +2,79 @@
 	text-align: center;
 }
 
-table {
+/* table {
 	border: 1px solid #ddd;
 	border-collapse: collapse;
 	table-layout: fixed;
 	width: 100%;
-}
+} */
 
-td,
+/* td,
 th {
 	white-space: nowrap;
 	border: 1px solid #ddd;
 	height: 30px;
 	width: 40px;
-	overflow: hidden;
+} */
+
+/* Create a simple white box, and add the shadow for the initial state */
+.hamburger {
+	position: relative;
+	display: inline-block;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	transition: all 0.1s ease-in-out;
 }
 
-thead th {
+/* Create the hidden pseudo-element */
+/* include the shadow for the end state */
+.hamburger::after {
+	content: '';
+	position: absolute;
+	z-index: -1;
+	opacity: 0;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+	transition: opacity 0.1s ease-in-out;
+}
+
+/* Scale up the box */
+.hamburger:hover {
+	transform: scale(1.4, 1.4);
+}
+
+/* Fade in the pseudo-element with the bigger shadow */
+.hamburger:hover::after {
+	opacity: 1;
+}
+
+.non-interactive-cell:hover {
+	cursor: not-allowed;
+}
+
+/* .virtualized-cell {
+	white-space: nowrap;
+	border: 1px solid #ddd;
+	height: 30px;
+	width: 40px;
+	overflow: hidden;
+} */
+
+/* thead th {
 	background-color: #eee;
 	position: sticky;
 	top: -1px;
 	z-index: 1;
-}
+} */
 
-td input {
+/* td input {
 	width: 95%;
 	height: 95%;
 	font-size: 1em;
-}
+} */
 
 .row-number-cell {
 	background-color: #eee;
+	height: 100%;
+	width: 100%;
 	position: sticky;
 	left: -1px;
 	z-index: 1;
@@ -85,13 +127,13 @@ td input {
 	display: flex;
 }
 
-.move-row-up {
+/* .move-row-up {
 	transform: translateY(-30px);
 }
 
 .move-row-down {
 	transform: translateY(30px);
-}
+} */
 
 .border-right {
 	border-right: 1px solid black;
@@ -116,3 +158,59 @@ td input {
 /* .header-handle:hover {
   background-color: blue;
 } */
+
+.ReactVirtualized__Table {
+	display: inline-block;
+	border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* .ReactVirtualized__Table__rowColumn {
+	overflow: 'hidden';
+} */
+
+.ReactVirtualized__Table__headerColumn {
+	display: flex;
+	flex-direction: row;
+	justify-content: left;
+	padding: 0;
+	margin-right: 0 !important;
+}
+
+.ReactVirtualized__Table__headerColumn:first-of-type {
+	margin-left: 0 !important;
+}
+
+.ReactVirtualized__Table__headerTruncatedText {
+	line-height: 2;
+	flex: auto;
+	cursor: pointer;
+}
+
+.DragHandle {
+	flex: 0 0 16px;
+	z-index: 2;
+	cursor: col-resize;
+	color: #0085ff;
+}
+.DragHandle:hover {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+
+.DragHandleActive,
+.DragHandleActive:hover {
+	color: #0b6fcc;
+	z-index: 3;
+}
+
+.DragHandleIcon {
+	flex: 0 0 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.ReactVirtualized__Grid:focus {
+	outline: 0;
+	box-shadow: none !important;
+}
