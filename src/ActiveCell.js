@@ -6,68 +6,8 @@ import {
 } from './SpreadsheetProvider';
 import { UPDATE_CELL } from './constants';
 
-const cursorKeyToRowColMapper = {
-	ArrowUp: function(row, column) {
-		// rows should never go less than index 0 (top row header)
-		return { row: Math.max(row - 1, 0), column };
-	},
-	ArrowDown: function(row, column, numberOfRows) {
-		return { row: Math.min(row + 1, numberOfRows), column };
-	},
-	Enter: function(row, column, numberOfRows) {
-		return { row: Math.min(row + 1, numberOfRows), column };
-	},
-	Tab: function(row, column, numberOfRows, numberOfColumns, shiftKey) {
-		if (shiftKey) {
-			if (column !== 1) return { row, column: column - 1 };
-			else if (column === 1 && row === 0) return { row: numberOfRows - 1, column: numberOfColumns };
-			else if (column === 1 && row !== 0) return { row: row - 1, column: numberOfColumns };
-		} else {
-			if (column < numberOfColumns) return { row, column: column + 1 };
-			else if (column === numberOfColumns && row === numberOfRows - 1) return { row: 0, column: 1 };
-			else if (column === numberOfColumns) return { row: row + 1, column: 1 };
-		}
-	},
-};
-
-export default function ActiveCell({
-	changeActiveCell,
-	columnIndex,
-	row,
-	rows,
-	columns,
-	createNewColumns,
-	createNewRows,
-	columnId,
-	handleContextMenu,
-	rowIndex,
-	value,
-}) {
+export default function ActiveCell({ columnIndex, rows, createNewRows, handleContextMenu, rowIndex, value }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	// const { selectDisabled } = useSpreadsheetState();
-
-	const onKeyDown = (event) => {
-		switch (event.key) {
-			// TODO: implement key shortcuts from: https://www.ddmcomputing.com/excel/keys/xlsk05.html
-			case 'ArrowDown':
-			case 'ArrowUp':
-			case 'Enter':
-			case 'Tab':
-				event.preventDefault();
-				const { row, column } = cursorKeyToRowColMapper[event.key](
-					rowIndex,
-					columnIndex,
-					rows.length,
-					columns.length,
-					event.shiftKey,
-				);
-				changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
-				break;
-
-			default:
-				break;
-		}
-	};
 
 	// const inputEl = useRef(null);
 	// useEffect(() => {
@@ -100,13 +40,10 @@ export default function ActiveCell({
 				if (rowIndex + 1 > rows.length) {
 					createNewRows(rowIndex + 1 - rows.length);
 				}
-				if (columnIndex > columns.length) {
-					createNewColumns(columnIndex - columns.length);
-				}
 				dispatchSpreadsheetAction({
 					type: UPDATE_CELL,
-					row: row,
-					columnId: columnId,
+					rowIndex,
+					columnIndex: columnIndex - 1,
 					cellValue: currentValue,
 				});
 				setOldValue(currentValue);
@@ -122,7 +59,6 @@ export default function ActiveCell({
 				type="text"
 				style={{ height: '100%', width: '100%' }}
 				value={currentValue}
-				onKeyDown={onKeyDown}
 				onChange={(e) => {
 					e.preventDefault();
 					setCurrentValue(e.target.value);

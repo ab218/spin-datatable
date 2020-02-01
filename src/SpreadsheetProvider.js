@@ -104,6 +104,7 @@ function spreadsheetReducer(state, action) {
 		colName,
 		column,
 		columnCount,
+		columnId,
 		columnIndex,
 		columnTypeModalOpen,
 		distributionModalOpen,
@@ -117,18 +118,19 @@ function spreadsheetReducer(state, action) {
 		rowCount,
 		selectionActive,
 		selectedColumns,
-		type,
 		updatedColumn,
 	} = action;
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
+	const { type, ...event } = action;
+	state.eventBus.fire(type, event);
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
 		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
-			const activeCell = { row, column };
+			const activeCell = { row, column, columnId };
 			return { ...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] };
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
@@ -542,16 +544,20 @@ function spreadsheetReducer(state, action) {
 		}
 		// EVENT: Cell updated
 		case UPDATE_CELL: {
-			const { rows, columns } = state;
+			const { activeCell, rows, columns } = state;
+			// TODO: If active cell, use that, if selected cells, use top left corner of it
+			if (!activeCell && !state.cellSelectionRanges.length > 0) return state;
 			// row from action or last row from state
-			const originalRow = Object.keys(row).length > 0 ? row : rows[rows.length - 1];
+			const column = columns[columnIndex];
+			const row = rows[rowIndex] || rows[rows.length - 1];
 			const newRows = rows.slice();
-			const column = columns.find((col) => action.columnId === col.id);
 			const { id: columnID } = column || columns[columns.length - 1];
+			let rowCopy = Object.assign({}, row, { [columnID]: cellValue });
+
 			const dependentColumns = columns.filter(({ type, formula }) => {
 				return type === 'Formula' && formula.includes(columnID);
 			});
-			let rowCopy = Object.assign({}, originalRow, { [columnID]: cellValue });
+			// If formula present
 			if (dependentColumns.length) {
 				const formulaParser = new Parser();
 				formulaParser.on('callVariable', function(name, done) {
@@ -644,7 +650,7 @@ export function useSpreadsheetDispatch() {
 	return context;
 }
 
-export function SpreadsheetProvider({ children }) {
+export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
 	const statsColumns = [
 		{ id: '_abc1_', modelingType: 'Continuous', type: 'String', label: 'Distance' },
@@ -698,34 +704,61 @@ export function SpreadsheetProvider({ children }) {
 	// ];
 
 	const rows = [
-		{ id: 'TAuW6mThoE', _abc1_: 37, _abc2_: 48, _abc3_: 12 },
-		{ id: 'M8nnC1HOtZ', _abc1_: 46, _abc2_: 56, _abc3_: 10 },
-		{ id: '40M1CkzXjf', _abc1_: 36, _abc2_: 44, _abc3_: 7 },
-		{ id: 'k4iHEVoqwH', _abc1_: 41, _abc2_: 82, _abc3_: 6 },
-		{ id: 'ClJ3vuN1sm', _abc1_: 40, _abc2_: 62, _abc3_: 2 },
-		{ id: 'P8QKAfq0p3', _abc1_: 39, _abc2_: 79, _abc3_: 10 },
-		{ id: 'BwbMIyqR02', _abc1_: 38, _abc2_: 64, _abc3_: 9 },
-		{ id: '1jQEPLCQG5', _abc1_: 44, _abc2_: 51, _abc3_: 6 },
-		{ id: 'CpbYoyqKLu', _abc1_: 42, _abc2_: 48, _abc3_: 4 },
-		{ id: '6aqCyUXGCz', _abc1_: 38, _abc2_: 51, _abc3_: 4 },
-		{ id: 'v8CTMPmxTH', _abc1_: 37, _abc2_: 75, _abc3_: 12 },
-		{ id: 'BurrXxh2Hr', _abc1_: 26, _abc2_: 53, _abc3_: 9 },
-		{ id: 'Sncc15wqAZ', _abc1_: 39, _abc2_: 65, _abc3_: 8 },
-		{ id: 'HQyQ6fNRr4', _abc1_: 34, _abc2_: 83, _abc3_: 5 },
-		{ id: 'E6C3iDxM6x', _abc1_: 33, _abc2_: 44, _abc3_: 3 },
-		{ id: 'fhcDfTfBN6', _abc1_: 42, _abc2_: 42, _abc3_: 11 },
-		{ id: '20c5IrknI5', _abc1_: 38, _abc2_: 78, _abc3_: 8 },
-		{ id: 'mqvjLZ3FNy', _abc1_: 45, _abc2_: 64, _abc3_: 7 },
-		{ id: 'vroRsjPJxn', _abc1_: 33, _abc2_: 33, _abc3_: 6 },
-		{ id: '5B0FbggMZw', _abc1_: 43, _abc2_: 87, _abc3_: 2 },
-		{ id: 'vsLMcp9h1V', _abc1_: 36, _abc2_: 75, _abc3_: 11 },
-		{ id: 'fX5eXO2VrP', _abc1_: 36, _abc2_: 84, _abc3_: 10 },
-		{ id: 'MxrCy4Ssa0', _abc1_: 39, _abc2_: 57, _abc3_: 7 },
-		{ id: 'cgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 5 },
-		{ id: 'AaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 3 },
+		{ id: 'TAuW6mThoE', _abc1_: 37, _abc2_: 48, _abc3_: 1 },
+		{ id: 'M8nnC1HOtZ', _abc1_: 46, _abc2_: 56, _abc3_: 1 },
+		{ id: '40M1CkzXjf', _abc1_: 36, _abc2_: 44, _abc3_: 2 },
+		{ id: 'k4iHEVoqwH', _abc1_: 41, _abc2_: 82, _abc3_: 2 },
+		{ id: 'ClJ3vuN1sm', _abc1_: 40, _abc2_: 62, _abc3_: 1 },
+		{ id: 'P8QKAfq0p3', _abc1_: 39, _abc2_: 79, _abc3_: 2 },
+		{ id: 'BwbMIyqR02', _abc1_: 38, _abc2_: 64, _abc3_: 2 },
+		{ id: '1jQEPLCQG5', _abc1_: 44, _abc2_: 51, _abc3_: 1 },
+		{ id: 'CpbYoyqKLu', _abc1_: 42, _abc2_: 48, _abc3_: 1 },
+		{ id: '6aqCyUXGCz', _abc1_: 38, _abc2_: 51, _abc3_: 1 },
+		{ id: 'v8CTMPmxTH', _abc1_: 37, _abc2_: 75, _abc3_: 1 },
+		{ id: 'BurrXxh2Hr', _abc1_: 26, _abc2_: 53, _abc3_: 2 },
+		{ id: 'Sncc15wqAZ', _abc1_: 39, _abc2_: 65, _abc3_: 2 },
+		{ id: 'HQyQ6fNRr4', _abc1_: 34, _abc2_: 83, _abc3_: 2 },
+		{ id: 'E6C3iDxM6x', _abc1_: 33, _abc2_: 44, _abc3_: 2 },
+		{ id: 'fhcDfTfBN6', _abc1_: 42, _abc2_: 42, _abc3_: 2 },
+		{ id: '20c5IrknI5', _abc1_: 38, _abc2_: 78, _abc3_: 1 },
+		{ id: 'mqvjLZ3FNy', _abc1_: 45, _abc2_: 64, _abc3_: 1 },
+		{ id: 'vroRsjPJxn', _abc1_: 33, _abc2_: 33, _abc3_: 2 },
+		{ id: '5B0FbggMZw', _abc1_: 43, _abc2_: 87, _abc3_: 1 },
+		{ id: 'vsLMcp9h1V', _abc1_: 36, _abc2_: 75, _abc3_: 1 },
+		{ id: 'fX5eXO2VrP', _abc1_: 36, _abc2_: 84, _abc3_: 1 },
+		{ id: 'MxrCy4Ssa0', _abc1_: 39, _abc2_: 57, _abc3_: 2 },
+		{ id: 'cgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 2 },
+		{ id: 'AaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 2 },
+		//
+		// { id: 'AAuW6mThoE', _abc1_: 37, _abc2_: 48, _abc3_: 1 },
+		// { id: 'B8nnC1HOtZ', _abc1_: 46, _abc2_: 56, _abc3_: 1 },
+		// { id: 'C0M1CkzXjf', _abc1_: 36, _abc2_: 44, _abc3_: 2 },
+		// { id: 'D4iHEVoqwH', _abc1_: 41, _abc2_: 82, _abc3_: 2 },
+		// { id: 'ElJ3vuN1sm', _abc1_: 40, _abc2_: 62, _abc3_: 1 },
+		// { id: 'F8QKAfq0p3', _abc1_: 39, _abc2_: 79, _abc3_: 2 },
+		// { id: 'GwbMIyqR02', _abc1_: 38, _abc2_: 64, _abc3_: 2 },
+		// { id: 'HjQEPLCQG5', _abc1_: 44, _abc2_: 51, _abc3_: 1 },
+		// { id: 'IpbYoyqKLu', _abc1_: 42, _abc2_: 48, _abc3_: 1 },
+		// { id: 'JaqCyUXGCz', _abc1_: 38, _abc2_: 51, _abc3_: 1 },
+		// { id: 'K8CTMPmxTH', _abc1_: 37, _abc2_: 75, _abc3_: 1 },
+		// { id: 'LurrXxh2Hr', _abc1_: 26, _abc2_: 53, _abc3_: 2 },
+		// { id: 'Mncc15wqAZ', _abc1_: 39, _abc2_: 65, _abc3_: 2 },
+		// { id: 'NQyQ6fNRr4', _abc1_: 34, _abc2_: 83, _abc3_: 2 },
+		// { id: 'O6C3iDxM6x', _abc1_: 33, _abc2_: 44, _abc3_: 2 },
+		// { id: 'PhcDfTfBN6', _abc1_: 42, _abc2_: 42, _abc3_: 2 },
+		// { id: 'Q0c5IrknI5', _abc1_: 38, _abc2_: 78, _abc3_: 1 },
+		// { id: 'RqvjLZ3FNy', _abc1_: 45, _abc2_: 64, _abc3_: 1 },
+		// { id: 'SroRsjPJxn', _abc1_: 33, _abc2_: 33, _abc3_: 2 },
+		// { id: 'TB0FbggMZw', _abc1_: 43, _abc2_: 87, _abc3_: 1 },
+		// { id: 'UsLMcp9h1V', _abc1_: 36, _abc2_: 75, _abc3_: 1 },
+		// { id: 'VX5eXO2VrP', _abc1_: 36, _abc2_: 84, _abc3_: 1 },
+		// { id: 'WxrCy4Ssa0', _abc1_: 39, _abc2_: 57, _abc3_: 2 },
+		// { id: 'XgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 2 },
+		// { id: 'YaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 2 },
 	];
 
 	const initialState = {
+		eventBus,
 		analysisModalOpen: false,
 		analysisWindowOpen: false,
 		columnTypeModalOpen: false,

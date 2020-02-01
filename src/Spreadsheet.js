@@ -10,7 +10,7 @@ import DistributionModal from './ModalDistribution';
 import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import AnalysisMenu from './AnalysisMenu';
-import { Column, Table, AutoSizer } from 'react-virtualized';
+import { Column, Table, AutoSizer, WindowScroller } from 'react-virtualized';
 import Draggable from 'react-draggable';
 import { SelectedCell, NormalCell } from './Cell';
 import {
@@ -21,16 +21,19 @@ import {
 	COPY_VALUES,
 	CREATE_COLUMNS,
 	CREATE_ROWS,
+	DELETE_VALUES,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	MODIFY_CURRENT_SELECTION_ROW_RANGE,
+	OPEN_CONTEXT_MENU,
+	PASTE_VALUES,
+	REMOVE_SELECTED_CELLS,
+	SELECT_ALL_CELLS,
 	SELECT_CELL,
 	SELECT_COLUMN,
 	SELECT_ROW,
-	OPEN_CONTEXT_MENU,
-	PASTE_VALUES,
-	SELECT_ALL_CELLS,
 	TOGGLE_COLUMN_TYPE_MODAL,
-	REMOVE_SELECTED_CELLS,
-	MODIFY_CURRENT_SELECTION_ROW_RANGE,
+	TRANSLATE_SELECTED_CELL,
+	UPDATE_CELL,
 } from './constants';
 
 export const checkIfValidNumber = (str) => {
@@ -175,8 +178,8 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: CREATE_COLUMNS, columnCount });
 	}
 
-	function changeActiveCell(row, column, selectionActive) {
-		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row, column, selectionActive });
+	function changeActiveCell(row, column, selectionActive, columnId) {
+		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnId });
 	}
 
 	function selectCell(row, column, selectionActive) {
@@ -222,7 +225,10 @@ function Spreadsheet({ eventBus }) {
 		return (
 			<React.Fragment key={props.dataKey}>
 				<div
-					style={{ userSelect: 'none', backgroundColor: isSelectedCell(null, columnIndex + 1) && 'rgb(160,185,225)' }}
+					style={{
+						// userSelect: 'none',
+						backgroundColor: isSelectedCell(null, columnIndex + 1) && 'rgb(160,185,225)',
+					}}
 					onClick={(e) => {
 						if (columnIndex < columns.length) {
 							if (contextMenuOpen) {
@@ -269,7 +275,10 @@ function Spreadsheet({ eventBus }) {
 					zIndex={999}
 				>
 					<span
-						style={{ userSelect: 'none', backgroundColor: isSelectedCell(null, columnIndex + 1) && 'rgb(160,185,225)' }}
+						style={{
+							userSelect: 'none',
+							backgroundColor: isSelectedCell(null, columnIndex + 1) && 'rgb(160,185,225)',
+						}}
 						className="DragHandleIcon"
 					>
 						⋮
@@ -487,15 +496,67 @@ function Spreadsheet({ eventBus }) {
 		return total;
 	}
 
+	const cursorKeyToRowColMapper = {
+		ArrowUp: function(row, column) {
+			// rows should never go less than index 0 (top row header)
+			return { row: Math.max(row - 1, 0), column };
+		},
+		ArrowDown: function(row, column, numberOfRows) {
+			return { row: Math.min(row + 1, numberOfRows - 1), column };
+		},
+		ArrowLeft: function(row, column) {
+			// Column should be minimum of 1 due to side row header
+			return { row, column: Math.max(column - 1, 1) };
+		},
+		ArrowRight: function(row, column, _, numberOfColumns) {
+			return { row, column: Math.min(column + 1, numberOfColumns) };
+		},
+		Enter: function(row, column, numberOfRows) {
+			return { row: Math.min(row + 1, numberOfRows), column };
+		},
+		Tab: function(row, column, numberOfRows, numberOfColumns, shiftKey) {
+			if (shiftKey) {
+				if (column !== 1) return { row, column: column - 1 };
+				else if (column === 1 && row === 0) return { row: numberOfRows - 1, column: numberOfColumns };
+				else if (column === 1 && row !== 0) return { row: row - 1, column: numberOfColumns };
+			} else {
+				if (column < numberOfColumns) return { row, column: column + 1 };
+				else if (column === numberOfColumns && row === numberOfRows - 1) return { row: 0, column: 1 };
+				else if (column === numberOfColumns) return { row: row + 1, column: 1 };
+			}
+		},
+	};
+
 	useEffect(() => {
 		function onKeyDown(event) {
-			if (event.key === 'Escape') {
-				dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+			if (!activeCell && cellSelectionRanges.length === 0) {
+				return;
 			}
+			const columnIndex = activeCell ? activeCell.column - 1 : cellSelectionRanges[0].left - 1;
+			const rowIndex = activeCell ? activeCell.row : cellSelectionRanges[0].top;
 			if (activeCell) {
+				switch (event.key) {
+					case 'ArrowDown':
+					case 'ArrowUp':
+					case 'Enter':
+					case 'Tab':
+						event.preventDefault();
+						const { row, column } = cursorKeyToRowColMapper[event.key](
+							rowIndex,
+							columnIndex + 1,
+							rows.length,
+							columns.length,
+							event.shiftKey,
+						);
+						changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
+						break;
+					default:
+						break;
+				}
 				return;
 			}
 			if (event.metaKey || event.ctrlKey) {
+				// prevent cell input if holding ctrl/meta
 				if (event.key === 'c') {
 					dispatchSpreadsheetAction({ type: COPY_VALUES });
 					return;
@@ -505,6 +566,40 @@ function Spreadsheet({ eventBus }) {
 				} else if (event.key === 'a') {
 					dispatchSpreadsheetAction({ type: SELECT_ALL_CELLS });
 					return;
+				}
+				return;
+			}
+			// if the key pressed is not a non-character key (arrow key etc)
+			if (event.key.length === 1) {
+				if (rowIndex + 1 > rows.length) {
+					createNewRows(rows);
+				}
+				dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
+				// dispatchSpreadsheetAction({ type: 'DISABLE_SELECT' });
+				dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: rowIndex, column: columnIndex + 1 });
+			} else {
+				switch (event.key) {
+					case 'Backspace':
+						dispatchSpreadsheetAction({ type: DELETE_VALUES });
+						break;
+					case 'Escape':
+						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+						break;
+					case 'ArrowDown':
+					case 'ArrowUp':
+					case 'ArrowLeft':
+					case 'ArrowRight':
+						event.preventDefault();
+						const { row, column } = cursorKeyToRowColMapper[event.key](
+							rowIndex,
+							columnIndex + 1,
+							rows.length,
+							columns.length,
+						);
+						dispatchSpreadsheetAction({ type: TRANSLATE_SELECTED_CELL, rowIndex: row, columnIndex: column });
+						break;
+					default:
+						break;
 				}
 			}
 		}
@@ -523,7 +618,8 @@ function Spreadsheet({ eventBus }) {
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
-				<AutoSizer>
+				<WindowScroller>
+					{/* <AutoSizer> */}
 					{({ height }) => (
 						<Table
 							overscanRowCount={0}
@@ -546,7 +642,8 @@ function Spreadsheet({ eventBus }) {
 							{renderColumns(visibleColumns)}
 						</Table>
 					)}
-				</AutoSizer>
+					{/* </AutoSizer> */}
+				</WindowScroller>
 			)}
 		</div>
 	);

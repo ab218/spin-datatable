@@ -36,6 +36,11 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		intercept,
 		mean_ci_low,
 		mean_ci_upp,
+		centered_2_poly,
+		centered_3_poly,
+		centered_4_poly,
+		centered_5_poly,
+		centered_6_poly,
 	} = result.data;
 
 	console.log(result.data);
@@ -59,6 +64,11 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		degree4Poly: degree_4_poly,
 		degree5Poly: degree_5_poly,
 		degree6Poly: degree_6_poly,
+		centeredDegree2Poly: centered_2_poly,
+		centeredDegree3Poly: centered_3_poly,
+		centeredDegree4Poly: centered_4_poly,
+		centeredDegree5Poly: centered_5_poly,
+		centeredDegree6Poly: centered_6_poly,
 		coordinates: XYCols,
 		linearRegressionLineR2: rsquared.toFixed(4) / 1,
 		linearRegressionLineSlope: slope.toFixed(4) / 1,
