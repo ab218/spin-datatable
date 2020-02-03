@@ -70,6 +70,10 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		centeredDegree5Poly: centered_5_poly,
 		centeredDegree6Poly: centered_6_poly,
 		coordinates: XYCols,
+		linearRegression: {
+			coefficients: [ slope.toFixed(4) / 1, intercept.toFixed(4) / 1 ],
+			determination: rsquared.toFixed(4) / 1,
+		},
 		linearRegressionLineR2: rsquared.toFixed(4) / 1,
 		linearRegressionLineSlope: slope.toFixed(4) / 1,
 		linearRegressionLineYIntercept: intercept.toFixed(4) / 1,
