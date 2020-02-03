@@ -592,9 +592,7 @@ function receiveMessage(event) {
 	const chartOptionsTemplate = `<details style="text-align: left;" class="analysis-details" open>
 <summary class="analysis-summary-title">Chart Options</summary>
 <div style="margin-left: 2em;">
-  <div><input id="histogram-borders-checkbox" type="checkbox" value="histogramBorders" onclick="${toggleChartElement(
-		this,
-	)}" checked>Histogram Borders</div>
+  <div><input id="histogram-borders-checkbox" type="checkbox" value="histogramBorders">Histogram Borders</div>
   <br>
   <div><input type="checkbox">Center Polynomial Regressions</div>
   <div><input id="linear-regression-checkbox" type="checkbox" value="linearRegressionLine">Linear Fit <span style="font-size: 1.5em; color: steelblue;">&#9656</span></div>
