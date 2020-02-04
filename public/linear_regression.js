@@ -1,64 +1,48 @@
-/*global d3 generateTemplate generateEquationTemplate addOrSubtract*/
-/*eslint no-undef: "error"*/
-function unload(e) {
-	e.preventDefault();
-	// Chrome requires returnValue to be set
-	e.returnValue = '';
-	window.opener.postMessage('closed', '*');
-}
-
+/*global d3 createPoints reversedLine valueLine drawBasicPath toggleChartElement generateTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
 window.addEventListener('unload', unload);
-
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue);
-
-function onClickSelectCells(thisBar, bar, col) {
-	let metaKeyPressed = false;
-	if (d3.event.metaKey) {
-		metaKeyPressed = true;
-	} else {
-		// If meta key is not held down, remove other highlighted bars
-		d3.selectAll('rect').style('fill', '#69b3a2');
-	}
-	// TODO: If holding meta key and click on bar again, deselect cells
-	// if (metaKeyPressed && thisBar.style("fill") === 'red') {
-	//   thisBar.style("fill", "#69b3a2");
-	//   window.opener.postMessage({
-	//     message: 'unclicked',
-	//     metaKeyPressed,
-	//     vals: bar,
-	//   }, '*');
-	//   return;
-	// }
-	thisBar.style('fill', 'red');
-	d3
-		.selectAll('.point')
-		.style('fill', 'black')
-		.filter((d) => {
-			const binMin = bar.x0;
-			const binMax = bar.x1;
-			if (!d) {
-				return null;
-			}
-			if (col === 'x') {
-				return d[0] >= binMin && d[0] < binMax;
-			}
-			return d[1] >= binMin && d[1] < binMax;
-		})
-		.style('fill', 'red');
-	window.opener.postMessage(
-		{
-			message: 'clicked',
-			metaKeyPressed,
-			vals: bar,
-			col,
-		},
-		'*',
-	);
-}
-
 window.opener.postMessage('ready', '*');
 
+// magic globals
+const normalBarFill = '#69b3a2';
+const clickedBarFill = 'red';
+const normalPointFill = 'black';
+const normalPointSize = 2;
+const clickedBarPointSize = normalPointSize * 2;
+const highlightedPointColor = 'red';
+const highlightedPointSize = normalPointSize * 2.5;
+const margin = { top: 100, right: 50, bottom: 20, left: 50 };
+const width = 400;
+const height = 400;
+const svgWidth = width + margin.left + margin.right + 100;
+const svgHeight = height + margin.top + margin.bottom + 100;
 const container = document.getElementById('container');
+
+const svg = d3
+	.select('.chart')
+	.append('svg')
+	.attr('width', svgWidth)
+	.attr('height', svgHeight)
+	.append('g')
+	.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+// So that lines stay within the bounds of the graph
+svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
+
+const histogramBinTooltip = d3
+	.select('body')
+	.append('div')
+	.attr('class', 'histogram-border tooltip')
+	.style('opacity', 0);
+const pointTooltip = d3.select('body').append('div').attr('class', 'point tooltip').style('opacity', 0);
+const x = d3.scaleLinear().range([ 0, width ]);
+const y = d3.scaleLinear().range([ height, 0 ]);
+// define the line
+const valueLine = d3.line().x((d) => x(d[1])).y((d) => y(d[0]));
+const reversedLine = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
+
+const xAxis = d3.axisBottom().scale(x).ticks(10, 's');
+const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
+
 function receiveMessage(event) {
 	console.log('TARGET', event);
 	const {
@@ -89,27 +73,6 @@ function receiveMessage(event) {
 		linearRegression,
 	} = event.data;
 
-	function toggleCenteredPoly(e) {
-		const centeredEls = document.getElementsByClassName('centered');
-		const uncenteredEls = document.getElementsByClassName('uncentered');
-		console.log(centeredEls, uncenteredEls);
-		if (e.target.checked) {
-			for (let i = 0; i < centeredEls.length; i++) {
-				centeredEls[i].style.display = 'block';
-			}
-			for (let i = 0; i < uncenteredEls.length; i++) {
-				uncenteredEls[i].style.display = 'none';
-			}
-		} else {
-			for (let i = 0; i < centeredEls.length; i++) {
-				centeredEls[i].style.display = 'none';
-			}
-			for (let i = 0; i < uncenteredEls.length; i++) {
-				uncenteredEls[i].style.display = 'block';
-			}
-		}
-	}
-
 	const linearRegressionCoefficients = linearRegression['coefficients'];
 	const degree2PolyCoefficients = degree2Poly['polynomial'];
 	const degree3PolyCoefficients = degree3Poly['polynomial'];
@@ -128,41 +91,9 @@ function receiveMessage(event) {
 	titleEl.appendChild(titleText);
 	const chartsContainer = document.getElementById('chart');
 	document.body.insertBefore(titleEl, chartsContainer);
-	// set the dimensions and margins of the graph
-	const margin = { top: 100, right: 50, bottom: 20, left: 50 };
-	const width = 400;
-	const height = 400;
-	const svgWidth = width + margin.left + margin.right + 100;
-	const svgHeight = height + margin.top + margin.bottom + 100;
 
 	const colA = coordinates.map((a) => a[1]).sort(d3.ascending);
 	const colB = coordinates.map((a) => a[0]).sort(d3.ascending);
-
-	const histogramBinTooltip = d3
-		.select('body')
-		.append('div')
-		.attr('class', 'histogram-border tooltip')
-		.style('opacity', 0);
-	// TODO: Points don't know what row they are in right now. They should.
-	const pointTooltip = d3.select('body').append('div').attr('class', 'point tooltip').style('opacity', 0);
-	const regressionTooltip = d3
-		.select('body')
-		.append('div')
-		.attr('class', 'regression-line tooltip')
-		.style('opacity', 0);
-
-	const svg = d3
-		.select('.chart')
-		.append('svg')
-		.attr('width', svgWidth)
-		.attr('height', svgHeight)
-		.append('g')
-		.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-	const x = d3.scaleLinear().range([ 0, width ]);
-	const y = d3.scaleLinear().range([ height, 0 ]);
-	const xAxis = d3.axisBottom().scale(x).ticks(10, 's');
-	const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
 
 	// get extents and range
 	const xExtent = d3.extent(coordinates, function(d) {
@@ -221,11 +152,8 @@ function receiveMessage(event) {
 	const colABins = histogramY(colA);
 	const colBBins = histogramX(colB);
 
-	// So that lines stay within the bounds of the graph
-	svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
-
 	function drawHistogramBorders() {
-		// Histogram Bars
+		// Histogram Bar X axis
 		svg
 			.selectAll('xHistBars')
 			.data(colBBins)
@@ -247,7 +175,7 @@ function receiveMessage(event) {
 				histogramBinTooltip.transition().duration(500).style('opacity', 0);
 			})
 			.attr('class', 'histogramBorders')
-			.attr('fill', '#69b3a2')
+			.attr('fill', normalBarFill)
 			.attr('width', (d) => x(d.x1) - x(d.x0) - 1)
 			.attr('x', (d) => x(d.x0))
 			.transition()
@@ -257,7 +185,8 @@ function receiveMessage(event) {
 			})
 			.attr('y', (d) => barsY(d.length) - height)
 			.attr('height', (d) => height - barsY(d.length));
-		// Histogram Bars
+
+		// Histogram Bar Y Axis
 		svg
 			.selectAll('yHistBars')
 			.data(colABins)
@@ -288,19 +217,7 @@ function receiveMessage(event) {
 				return i * 100;
 			})
 			.attr('width', (d) => barsX(d.length))
-			.attr('fill', '#69b3a2');
-	}
-
-	// define the line
-	const valueLine = d3.line().x((d) => x(d[1])).y((d) => y(d[0]));
-	const reversedLine = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
-
-	//generate n (step) points given some range and equation (ie: y = ax^2+bx+c)
-	function createPoints(rangeX, step, equation) {
-		return Array.from({ length: Math.round((rangeX[1] - rangeX[0]) / step) || 1 }, function(_, i) {
-			const x = rangeX[0] + i * step;
-			return [ x, equation(x) ];
-		});
+			.attr('fill', normalBarFill);
 	}
 
 	const linearRegressionEquation = (x) => linearRegressionCoefficients[1] + linearRegressionCoefficients[0] * x;
@@ -361,54 +278,18 @@ function receiveMessage(event) {
 	const centeredDegree5EquationTemplate = generateEquationTemplate(centered5PolyCoefficients, colXLabel, colYLabel);
 	const centeredDegree6EquationTemplate = generateEquationTemplate(centered6PolyCoefficients, colXLabel, colYLabel);
 
-	const drawBasicPath = (points, line, name, title) => {
-		const path = svg
-			.append('path')
-			.data([ points ])
-			.style('fill', 'none')
-			.attr('clip-path', 'url(#clip)')
-			.attr('class', name)
-			.attr('d', line);
-		//find total length of all points of the line chart line
-		const totalLength = path.node().getTotalLength();
-
-		//animate the line chart line drawing using path information
-		path
-			.attr('stroke-dasharray', totalLength + ' ' + totalLength)
-			.attr('stroke-dashoffset', totalLength)
-			.transition()
-			.duration(500)
-			.ease(d3.easeLinear)
-			.attr('stroke-dashoffset', 0);
-
-		// invisible hitbox
-		svg
-			.append('path')
-			.data([ points ])
-			.style('fill', 'none')
-			.attr('clip-path', 'url(#clip)')
-			.attr('class', `${name}-hitbox`)
-			.attr('d', reversedLine)
-			.on(`mouseenter`, function() {
-				regressionTooltip.transition().duration(200).style('opacity', 0.9);
-				regressionTooltip.html(title).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
-			})
-			.on(`mouseleave`, function() {
-				regressionTooltip.transition().duration(500).style('opacity', 0);
-			});
-	};
-
+	// TODO remove "magic numbers"
 	svg
 		.selectAll('.point')
 		.data(coordinates)
 		.enter()
 		.append('circle')
 		.attr('class', 'point')
-		.attr('r', 2)
+		.attr('r', normalPointSize)
 		.attr('cy', (d) => y(d[1]))
 		.attr('cx', (d) => x(d[0]))
 		.on(`mouseenter`, function(d) {
-			d3.select(this).transition().duration(50).attr('r', 5);
+			d3.select(this).transition().duration(50).attr('r', highlightedPointSize);
 			pointTooltip.transition().duration(200).style('opacity', 0.9);
 			pointTooltip
 				.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
@@ -416,7 +297,11 @@ function receiveMessage(event) {
 				.style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function() {
-			d3.select(this).transition().duration(50).attr('r', 2);
+			if (d3.select(this).style('fill') === highlightedPointColor) {
+				d3.select(this).transition().duration(50).attr('r', clickedBarPointSize);
+			} else {
+				d3.select(this).transition().duration(50).attr('r', normalPointSize);
+			}
 			pointTooltip.transition().duration(500).style('opacity', 0);
 		});
 
@@ -577,37 +462,6 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	// various chart options checkboxes show/hide fit lines and output
-	function toggleChartElement(ele, drawLine) {
-		const outputElement = d3.selectAll(`.${ele.value}`);
-		const outputElementHitbox = d3.selectAll(`.${ele.value}-hitbox`);
-		if (ele.checked) {
-			drawLine();
-		} else {
-			if (outputElement) {
-				outputElement.remove();
-				outputElementHitbox.remove();
-			}
-		}
-	}
-
-	const chartOptionsTemplate = `<details style="text-align: left;" class="analysis-details" open>
-<summary class="analysis-summary-title">Chart Options</summary>
-<div style="margin-left: 2em;">
-  <div><input id="histogram-borders-checkbox" type="checkbox" value="histogramBorders">Histogram Borders</div>
-  <br>
-  <div><input id="center-poly-checkbox" type="checkbox">Center Polynomial Regressions</div>
-  <div><input id="linear-regression-checkbox" type="checkbox" value="linearRegressionLine">Linear Fit <span style="font-size: 1.5em; color: steelblue;">&#9656</span></div>
-  <div style="margin-left: 2em;"><input id="confidence-bands-fit-checkbox" type="checkbox" value="confidenceBandsFit">Confid Curves Fit <span style="font-size: 1.5em; color: red;">&#9656</span></div>
-  <div style="margin-left: 2em;"><input id="confidence-bands-checkbox" type="checkbox" value="confidenceBands">Confid Curves Indiv <span style="font-size: 1.5em; color: red;">&#9656</span></div>
-  <div><input id="degree2-checkbox" type="checkbox" value="degree2PolyLine">Quadratic Fit <span style="font-size: 1.5em; color: green;">&#9656</span></div>
-  <div><input id="degree3-checkbox" type="checkbox" value="degree3PolyLine">Cubic Fit <span style="font-size: 1.5em; color: darkmagenta;">&#9656</span></div>
-  <div><input id="degree4-checkbox" type="checkbox" value="degree4PolyLine">Quartic Fit <span style="font-size: 1.5em; color: saddlebrown;">&#9656</span></div>
-  <div><input id="degree5-checkbox" type="checkbox" value="degree5PolyLine">5th Degree Fit <span style="font-size: 1.5em; color: goldenrod;">&#9656</span></div>
-  <div><input id="degree6-checkbox" type="checkbox" value="degree6PolyLine">6th Degree Fit <span style="font-size: 1.5em; color: thistle;">&#9656</span></div>
-</div>
-</details>`;
-
 	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
 	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
 	const quadraticFitParsed = new DOMParser().parseFromString(quadraticFitTemplate, 'text/html');
@@ -713,5 +567,8 @@ function receiveMessage(event) {
 		.addEventListener('click', (e) =>
 			toggleChartElement(e.target, () => drawBasicPath(meanCiLow, valueLine, 'confidenceBandsFit', null)),
 		);
+
+	drawHistogramBorders();
+	drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line');
 }
 window.addEventListener('message', receiveMessage, false);
