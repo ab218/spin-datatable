@@ -32,8 +32,8 @@ const paramEstimateTable = (coeffs, xLabel, centered) => `
           </table>
           `;
 
-const generateTemplate = (title, id, equation, polyDegree, coeffs, xLabel, centered) => `
-        <details class="analysis-details" open id="${id}">
+const generateTemplate = (title, id, className, equation, polyDegree, coeffs, xLabel, centered) => `
+        <details class="analysis-details ${className}" open id="${id}">
           <summary class="analysis-summary-title">Summary of ${title}</summary>
           <table style="width: 100%;">
             <tr>

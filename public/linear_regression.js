@@ -87,10 +87,28 @@ function receiveMessage(event) {
 		centeredDegree5Poly,
 		centeredDegree6Poly,
 		linearRegression,
-		linearRegressionLineSlope,
-		linearRegressionLineR2,
-		linearRegressionLineYIntercept,
 	} = event.data;
+
+	function toggleCenteredPoly(e) {
+		const centeredEls = document.getElementsByClassName('centered');
+		const uncenteredEls = document.getElementsByClassName('uncentered');
+		console.log(centeredEls, uncenteredEls);
+		if (e.target.checked) {
+			for (let i = 0; i < centeredEls.length; i++) {
+				centeredEls[i].style.display = 'block';
+			}
+			for (let i = 0; i < uncenteredEls.length; i++) {
+				uncenteredEls[i].style.display = 'none';
+			}
+		} else {
+			for (let i = 0; i < centeredEls.length; i++) {
+				centeredEls[i].style.display = 'none';
+			}
+			for (let i = 0; i < uncenteredEls.length; i++) {
+				uncenteredEls[i].style.display = 'block';
+			}
+		}
+	}
 
 	const linearRegressionCoefficients = linearRegression['coefficients'];
 	const degree2PolyCoefficients = degree2Poly['polynomial'];
@@ -285,12 +303,6 @@ function receiveMessage(event) {
 		});
 	}
 
-	// const centeredX = x - colAMean;
-
-	// const centered2equation = (x) =>
-	// 	centered2PolyCoefficients[2] +
-	// 	centered2PolyCoefficients[1] * centeredX +
-	// 	centered2PolyCoefficients[0] * centeredX * centeredX;
 	const linearRegressionEquation = (x) => linearRegressionCoefficients[1] + linearRegressionCoefficients[0] * x;
 	const poly2equation = (x) =>
 		degree2PolyCoefficients[2] + degree2PolyCoefficients[1] * x + degree2PolyCoefficients[0] * x * x;
@@ -335,10 +347,9 @@ function receiveMessage(event) {
 
 	const centeredX = `(${colXLabel} - ${colAMean})`;
 
-	const linearEquationTemplate = `${colYLabel} = ${linearRegressionLineYIntercept.toFixed(6) / 1} ${addOrSubtract(
-		linearRegressionLineSlope.toFixed(6) / 1,
-	)} ${Math.abs(linearRegressionLineSlope.toFixed(6) / 1)} * ${colXLabel}`;
-
+	const linearEquationTemplate = `${colYLabel} = ${linearRegressionCoefficients[1].toFixed(6) / 1} ${addOrSubtract(
+		linearRegressionCoefficients[0].toFixed(6) / 1,
+	)} ${Math.abs(linearRegressionCoefficients[0].toFixed(6) / 1)} * ${colXLabel}`;
 	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colXLabel, colYLabel);
 	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colXLabel, colYLabel);
 	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colXLabel, colYLabel);
@@ -451,9 +462,20 @@ function receiveMessage(event) {
     </div>
   </details>`;
 
+	const linearFitTemplate = generateTemplate(
+		'Linear Fit',
+		'linearRegressionLine',
+		null,
+		linearEquationTemplate,
+		linearRegression,
+		linearRegressionCoefficients,
+		colXLabel,
+	);
+
 	const quadraticFitTemplate = generateTemplate(
 		'Quadratic Fit',
 		'degree2PolyLine',
+		'uncentered',
 		quadraticEquationTemplate,
 		degree2Poly,
 		degree2PolyCoefficients,
@@ -463,6 +485,7 @@ function receiveMessage(event) {
 	const cubicFitTemplate = generateTemplate(
 		'Cubic Fit',
 		'degree3PolyLine',
+		'uncentered',
 		cubicEquationTemplate,
 		degree3Poly,
 		degree3PolyCoefficients,
@@ -472,6 +495,7 @@ function receiveMessage(event) {
 	const quarticFitTemplate = generateTemplate(
 		'Quartic Fit',
 		'degree4PolyLine',
+		'uncentered',
 		quarticEquationTemplate,
 		degree4Poly,
 		degree4PolyCoefficients,
@@ -481,6 +505,7 @@ function receiveMessage(event) {
 	const fifthDegreeFitTemplate = generateTemplate(
 		'Fifth Degree Fit',
 		'degree5PolyLine',
+		'uncentered',
 		degree5EquationTemplate,
 		degree5Poly,
 		degree5PolyCoefficients,
@@ -490,6 +515,7 @@ function receiveMessage(event) {
 	const sixthDegreeFitTemplate = generateTemplate(
 		'Sixth Degree Fit',
 		'degree6PolyLine',
+		'uncentered',
 		degree6EquationTemplate,
 		degree6Poly,
 		degree6PolyCoefficients,
@@ -499,6 +525,7 @@ function receiveMessage(event) {
 	const centered2DegreeFitTemplate = generateTemplate(
 		'Quadratic Fit (centered)',
 		'degree2CenteredPolyLine',
+		'centered',
 		centeredQuadraticEquationTemplate,
 		centeredDegree2Poly,
 		centered2PolyCoefficients,
@@ -509,6 +536,7 @@ function receiveMessage(event) {
 	const centered3DegreeFitTemplate = generateTemplate(
 		'Cubic Fit (centered)',
 		'degree3CenteredPolyLine',
+		'centered',
 		centeredCubicEquationTemplate,
 		centeredDegree3Poly,
 		centered3PolyCoefficients,
@@ -519,6 +547,7 @@ function receiveMessage(event) {
 	const centered4DegreeFitTemplate = generateTemplate(
 		'Quartic Fit (centered)',
 		'degree4CenteredPolyLine',
+		'centered',
 		centeredQuarticEquationTemplate,
 		centeredDegree4Poly,
 		centered4PolyCoefficients,
@@ -529,6 +558,7 @@ function receiveMessage(event) {
 	const centered5DegreeFitTemplate = generateTemplate(
 		'Fifth Degree Fit (centered)',
 		'degree5CenteredPolyLine',
+		'centered',
 		centeredDegree5EquationTemplate,
 		centeredDegree5Poly,
 		centered5PolyCoefficients,
@@ -539,41 +569,13 @@ function receiveMessage(event) {
 	const centered6DegreeFitTemplate = generateTemplate(
 		'Sixth Degree Fit (centered)',
 		'degree6CenteredPolyLine',
+		'centered',
 		centeredDegree6EquationTemplate,
 		centeredDegree6Poly,
 		centered6PolyCoefficients,
 		colXLabel,
 		centeredX,
 	);
-
-	const linearFitTemplate = `<details class="analysis-details" open id="linearRegressionLine">
-  <summary class="analysis-summary-title">Summary of Linear Fit</summary>
-  <table style="width: 100%;">
-    <tr>
-      <td style="width: 34%;">Equation:</td>
-      <td style="width: 66%;">${linearEquationTemplate}</td>
-    </tr>
-    <tr>
-      <td style="width: 34%;">R-squared:</td>
-      <td style="width: 66%;">${linearRegressionLineR2}</td>
-    </tr>
-  </table>
-  <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
-  <table style="width: 100%;">
-    <tr>
-      <td style="width: 34%; font-weight: bold;">Term</td>
-      <td style="width: 66%; font-weight: bold;">Estimate</td>
-    </tr>
-    <tr>
-      <td style="width: 34%; white-space: nowrap;">Intercept:</td>
-      <td style="width: 66%;">${linearRegressionLineYIntercept}</td>
-    </tr>
-    <tr>
-      <td style="width: 34%;">${colXLabel}</td>
-      <td style="width: 66%;">${linearRegressionLineSlope.toFixed(6) / 1}</td>
-    </tr>
-  </table>
-</details>`;
 
 	// various chart options checkboxes show/hide fit lines and output
 	function toggleChartElement(ele, drawLine) {
@@ -594,7 +596,7 @@ function receiveMessage(event) {
 <div style="margin-left: 2em;">
   <div><input id="histogram-borders-checkbox" type="checkbox" value="histogramBorders">Histogram Borders</div>
   <br>
-  <div><input type="checkbox">Center Polynomial Regressions</div>
+  <div><input id="center-poly-checkbox" type="checkbox">Center Polynomial Regressions</div>
   <div><input id="linear-regression-checkbox" type="checkbox" value="linearRegressionLine">Linear Fit <span style="font-size: 1.5em; color: steelblue;">&#9656</span></div>
   <div style="margin-left: 2em;"><input id="confidence-bands-fit-checkbox" type="checkbox" value="confidenceBandsFit">Confid Curves Fit <span style="font-size: 1.5em; color: red;">&#9656</span></div>
   <div style="margin-left: 2em;"><input id="confidence-bands-checkbox" type="checkbox" value="confidenceBands">Confid Curves Indiv <span style="font-size: 1.5em; color: red;">&#9656</span></div>
@@ -634,6 +636,8 @@ function receiveMessage(event) {
 	container.appendChild(centeredFifthDegreeFitParsed.body.firstChild);
 	container.appendChild(centeredSixthDegreeFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
+
+	document.getElementById('center-poly-checkbox').addEventListener('click', (e) => toggleCenteredPoly(e));
 
 	document
 		.getElementById('histogram-borders-checkbox')
