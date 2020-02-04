@@ -1,15 +1,8 @@
-/*global d3 createPoints reversedLine valueLine drawBasicPath toggleChartElement generateTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
+/*global d3 clickedBarPointSize highlightedPointColor highlightedPointSize normalPointSize normalBarFill createPoints reversedLine valueLine drawBasicPath toggleChartElement generateTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
 window.addEventListener('unload', unload);
 window.opener.postMessage('ready', '*');
 
-// magic globals
-const normalBarFill = '#69b3a2';
-const clickedBarFill = 'red';
-const normalPointFill = 'black';
-const normalPointSize = 2;
-const clickedBarPointSize = normalPointSize * 2;
-const highlightedPointColor = 'red';
-const highlightedPointSize = normalPointSize * 2.5;
+// magic linear regression globals
 const margin = { top: 100, right: 50, bottom: 20, left: 50 };
 const width = 400;
 const height = 400;
@@ -262,8 +255,6 @@ function receiveMessage(event) {
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
 
-	const centeredX = `(${colXLabel} - ${colAMean})`;
-
 	const linearEquationTemplate = `${colYLabel} = ${linearRegressionCoefficients[1].toFixed(6) / 1} ${addOrSubtract(
 		linearRegressionCoefficients[0].toFixed(6) / 1,
 	)} ${Math.abs(linearRegressionCoefficients[0].toFixed(6) / 1)} * ${colXLabel}`;
@@ -406,6 +397,8 @@ function receiveMessage(event) {
 		degree6PolyCoefficients,
 		colXLabel,
 	);
+
+	const centeredX = `(${colXLabel} - ${colAMean})`;
 
 	const centered2DegreeFitTemplate = generateTemplate(
 		'Quadratic Fit (centered)',

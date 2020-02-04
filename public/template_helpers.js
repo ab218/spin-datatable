@@ -1,5 +1,14 @@
 /*global d3 svg, reversedLine normalBarFill clickedBarFill normalPointFill normalPointSize clickedBarPointSize*/
 
+// magic shared globals
+const normalBarFill = '#69b3a2';
+const clickedBarFill = 'red';
+const normalPointFill = 'black';
+const normalPointSize = 2;
+const clickedBarPointSize = normalPointSize * 2;
+const highlightedPointColor = 'red';
+const highlightedPointSize = normalPointSize * 2.5;
+
 const regressionTooltip = d3.select('body').append('div').attr('class', 'regression-line tooltip').style('opacity', 0);
 
 //generate n (step) points given some range and equation (ie: y = ax^2+bx+c)
