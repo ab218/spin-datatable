@@ -584,8 +584,24 @@ function spreadsheetReducer(state, action) {
 		}
 
 		case FILTER_COLUMN: {
-			const selectedRowIDs = filterRowsByColumnRange(selectedColumns, state.rows).map(({ id }) => id);
-			return { ...state, selectedRowIDs, selectedColumns };
+			const selectedRowIndexes = filterRowsByColumnRange(selectedColumns, state.rows).map((row) =>
+				state.rows.findIndex((stateRow) => stateRow.id === row.id),
+			);
+			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
+				return {
+					top: rowIndex,
+					left: 1,
+					bottom: rowIndex,
+					right: state.columns.length,
+				};
+			});
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: selectedRowObjects,
+				cellSelectionRanges: selectedRowObjects,
+				selectedColumns,
+			};
 		}
 
 		case UPDATE_COLUMN: {

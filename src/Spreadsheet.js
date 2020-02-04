@@ -307,7 +307,7 @@ function Spreadsheet({ eventBus }) {
 					value={cellData}
 				/>
 			);
-		} else if (selectedRowIDs.includes(rowData.id) || isSelectedCell(rowIndex, columnIndex)) {
+		} else if ((selectedRowIDs.includes(rowData.id) && dataKey) || isSelectedCell(rowIndex, columnIndex)) {
 			return (
 				<SelectedCell
 					handleContextMenu={handleContextMenu}
