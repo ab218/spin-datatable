@@ -3,12 +3,15 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import {
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
+	DELETE_ROW,
+	DELETE_VALUES,
+	EXCLUDE_ROWS,
 	REMOVE_SELECTED_CELLS,
 	// SET_GROUPED_COLUMNS,
 	SORT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	// TOGGLE_LAYOUT,
-	DELETE_VALUES,
+	UNEXCLUDE_ROWS,
 } from './constants';
 import { Menu } from 'antd';
 import './App.css';
@@ -102,11 +105,27 @@ export default function ContextMenu({ paste }) {
 				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: 'DELETE_ROW', rowIndex: contextMenuRowIndex });
+							dispatchSpreadsheetAction({ type: DELETE_ROW, rowIndex: contextMenuRowIndex });
 						}}
 						key="19"
 					>
 						Delete Row
+					</Menu.Item>
+					<Menu.Item
+						onClick={() => {
+							dispatchSpreadsheetAction({ type: EXCLUDE_ROWS });
+						}}
+						key="20"
+					>
+						Exclude Row(s)
+					</Menu.Item>
+					<Menu.Item
+						onClick={() => {
+							dispatchSpreadsheetAction({ type: UNEXCLUDE_ROWS });
+						}}
+						key="21"
+					>
+						Unexclude Row(s)
 					</Menu.Item>
 				</Menu>
 			</div>

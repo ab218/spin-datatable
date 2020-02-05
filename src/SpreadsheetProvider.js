@@ -11,6 +11,7 @@ import {
 	DELETE_ROW,
 	DELETE_COLUMN,
 	DELETE_VALUES,
+	EXCLUDE_ROWS,
 	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	MODIFY_CURRENT_SELECTION_ROW_RANGE,
@@ -30,6 +31,7 @@ import {
 	TOGGLE_FILTER_MODAL,
 	TOGGLE_LAYOUT,
 	TRANSLATE_SELECTED_CELL,
+	UNEXCLUDE_ROWS,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 } from './constants';
@@ -141,54 +143,6 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: null,
 			};
 		}
-		case CREATE_COLUMNS: {
-			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
-				const id = createRandomLetterString();
-				return { id, type: 'String', label: `Column ${state.columns.length + i + 1}` };
-			});
-			const columns = state.columns.concat(newColumns);
-			return { ...state, columns };
-		}
-
-		case CREATE_ROWS: {
-			const newRows = Array(rowCount).fill(undefined).map((_) => {
-				return { id: createRandomID() };
-			});
-			return { ...state, rows: state.rows.concat(newRows) };
-		}
-		case 'ENABLE_SELECT': {
-			return { ...state, selectDisabled: false };
-		}
-		case 'DISABLE_SELECT': {
-			return { ...state, selectDisabled: true };
-		}
-		case DELETE_COLUMN: {
-			const { rows } = state;
-			const columnID = getCol(action.colName).id;
-			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
-			for (let i = 0; i < rows.length; i++) {
-				delete rows[i][columnID];
-			}
-			return {
-				...state,
-				columns: filteredColumns,
-				currentCellSelectionRange: null,
-				cellSelectionRanges: [],
-				selectedRowIDs: [],
-				activeCell: null,
-			};
-		}
-		case DELETE_ROW: {
-			const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
-			return {
-				...state,
-				rows: slicedRows,
-				currentCellSelectionRange: null,
-				cellSelectionRanges: [],
-				selectedRowIDs: [],
-				activeCell: null,
-			};
-		}
 		case COPY_VALUES: {
 			// TODO: There should be a line break if the row is undefined values
 			// TODO: There should be no line break for the first row when you copy
@@ -249,6 +203,74 @@ function spreadsheetReducer(state, action) {
 				.then(() => console.log('wrote to clipboard', clipboardContents))
 				.catch((args) => console.error('did not copy to clipboard:', args));
 			return { ...state };
+		}
+		case CREATE_COLUMNS: {
+			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
+				const id = createRandomLetterString();
+				return { id, type: 'String', label: `Column ${state.columns.length + i + 1}` };
+			});
+			const columns = state.columns.concat(newColumns);
+			return { ...state, columns };
+		}
+
+		case CREATE_ROWS: {
+			const newRows = Array(rowCount).fill(undefined).map((_) => {
+				return { id: createRandomID() };
+			});
+			return { ...state, rows: state.rows.concat(newRows) };
+		}
+		case 'ENABLE_SELECT': {
+			return { ...state, selectDisabled: false };
+		}
+		case 'DISABLE_SELECT': {
+			return { ...state, selectDisabled: true };
+		}
+		case DELETE_COLUMN: {
+			const { rows } = state;
+			const columnID = getCol(action.colName).id;
+			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
+			for (let i = 0; i < rows.length; i++) {
+				delete rows[i][columnID];
+			}
+			return {
+				...state,
+				columns: filteredColumns,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
+		}
+		case DELETE_ROW: {
+			const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
+			return {
+				...state,
+				rows: slicedRows,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
+		}
+		case EXCLUDE_ROWS: {
+			const { cellSelectionRanges, excludedRows } = state;
+			const range = (start, end) => Array(end - start + 1).fill().map((_, idx) => start + idx);
+			const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
+			const flattenedUniqueRowIndexes = [ ...new Set(selectedRows.flat()) ];
+			return {
+				...state,
+				excludedRows: excludedRows.concat(flattenedUniqueRowIndexes),
+			};
+		}
+		case UNEXCLUDE_ROWS: {
+			const { cellSelectionRanges, excludedRows } = state;
+			const range = (start, end) => Array(end - start + 1).fill().map((_, idx) => start + idx);
+			const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
+			const flattenedUniqueRowIndexes = [ ...new Set(selectedRows.flat()) ];
+			return {
+				...state,
+				excludedRows: excludedRows.filter((row) => !flattenedUniqueRowIndexes.includes(row)),
+			};
 		}
 		// EVENT: Paste
 		case PASTE_VALUES: {
@@ -364,7 +386,6 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: selectedCell,
 			};
 		}
-		// TODO: Rename this action to be REPLACE_CELL_SELECTION??
 		case SELECT_CELLS: {
 			const { cellSelectionRanges = [] } = state;
 			const columnIndexOffset = 1;
@@ -775,26 +796,27 @@ export function SpreadsheetProvider({ eventBus, children }) {
 
 	const initialState = {
 		eventBus,
+		activeCell: null,
 		analysisModalOpen: false,
 		analysisWindowOpen: false,
-		columnTypeModalOpen: false,
-		activeCell: null,
 		cellSelectionRanges: [],
-		contextMenuPosition: null,
-		contextMenuRowIndex: null,
-		currentCellSelectionRange: null,
+		columnTypeModalOpen: false,
 		colHeaderContext: false,
 		columns: statsColumns,
 		colName: null,
 		contextMenuOpen: false,
+		contextMenuPosition: null,
+		contextMenuRowIndex: null,
+		currentCellSelectionRange: null,
 		distributionModalOpen: false,
+		excludedRows: [ 5, 10, 15 ],
 		filterModalOpen: false,
+		lastSelection: { row: 1, column: 1 },
 		layout: true,
+		rows,
 		selectedColumns: [],
 		selectDisabled: false,
 		selectedRowIDs: [],
-		lastSelection: { row: 1, column: 1 },
-		rows,
 	};
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);
 	return (

@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Icon } from 'antd';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalFitXY';
@@ -61,12 +62,12 @@ function Spreadsheet({ eventBus }) {
 		columns,
 		contextMenuOpen,
 		cellSelectionRanges,
-		distributionModalOpen,
 		currentCellSelectionRange,
+		excludedRows,
+		distributionModalOpen,
 		filterModalOpen,
 		rows,
 		selectedColumn,
-		selectedRowIDs,
 	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ widths, setWidths ] = useState({});
@@ -307,7 +308,7 @@ function Spreadsheet({ eventBus }) {
 					value={cellData}
 				/>
 			);
-		} else if ((selectedRowIDs.includes(rowData.id) && dataKey) || isSelectedCell(rowIndex, columnIndex)) {
+		} else if (isSelectedCell(rowIndex, columnIndex)) {
 			return (
 				<SelectedCell
 					handleContextMenu={handleContextMenu}
@@ -414,10 +415,12 @@ function Spreadsheet({ eventBus }) {
 				onContextMenu={(e) => {
 					if (rowIndex < rows.length) {
 						e.preventDefault();
-						dispatchSpreadsheetAction({
-							type: SELECT_ROW,
-							rowIndex,
-						});
+						// if (e.target.style.backgroundColor !== 'rgb(160,185,225)') {
+						// 	dispatchSpreadsheetAction({
+						// 		type: SELECT_ROW,
+						// 		rowIndex,
+						// 	});
+						// }
 						dispatchSpreadsheetAction({
 							type: OPEN_CONTEXT_MENU,
 							contextMenuType: 'row',
@@ -427,7 +430,8 @@ function Spreadsheet({ eventBus }) {
 					}
 				}}
 				onMouseDown={(e) => {
-					if (rowIndex < rows.length) {
+					// if defined row and left click
+					if (rowIndex < rows.length && e.button === 0) {
 						if (contextMenuOpen) {
 							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 						}
@@ -453,7 +457,10 @@ function Spreadsheet({ eventBus }) {
 					backgroundColor: isSelectedCell(rowIndex, null) && 'rgb(160,185,225)',
 				}}
 			>
-				{rows.length > rowIndex && rowIndex + 1}
+				<span style={{ minWidth: 80 }}>
+					{excludedRows.includes(rowIndex) && <Icon type="stop" style={{ color: 'red', marginRight: '30%' }} />}
+				</span>
+				<span style={{ minWidth: 20 }}>{rows.length > rowIndex && rowIndex + 1}</span>
 			</div>
 		);
 	}
@@ -633,12 +640,12 @@ function Spreadsheet({ eventBus }) {
 							rowStyle={{ alignItems: 'stretch' }}
 						>
 							<Column
-								width={50}
+								width={100}
 								label={''}
 								dataKey={'rowHeaderColumn'}
 								headerRenderer={() => <AnalysisMenu />}
 								cellRenderer={rowHeaders}
-								style={{ margin: 0 }}
+								style={{ margin: 0, textAlign: 'right' }}
 							/>
 							{renderColumns(visibleColumns)}
 						</Table>

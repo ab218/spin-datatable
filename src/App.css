@@ -71,19 +71,19 @@ th {
 	font-size: 1em;
 } */
 
+.selected-cell {
+	background-color: '#f0f0f0' !important;
+}
+
 .row-number-cell {
 	background-color: #eee;
 	height: 100%;
 	width: 100%;
+	padding-right: 10px;
 	position: sticky;
 	left: -1px;
 	z-index: 1;
 }
-
-.selected-cell {
-	background-color: '#f0f0f0';
-}
-
 .menu {
 	z-index: 2;
 	text-align: left;
