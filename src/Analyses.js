@@ -77,20 +77,16 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 	};
 }
 
-export async function performDistributionAnalysis(colY, rows, numberOfBins) {
+export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	const colYLabel = colY.label;
-	function mapColumnValues(colID) {
-		return rows.map((row) => Number(row[colID])).filter((x) => Number(x));
-	}
-	const colB = mapColumnValues(colY.id);
 	// TODO: Add some error here
-	if (colB.length === 0) return;
+	if (vals.length === 0) return;
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
 	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
 	const result = await axios.post(
 		gcloud,
 		{
-			y: colB,
+			y: vals,
 		},
 		{
 			crossDomain: true,
@@ -104,7 +100,7 @@ export async function performDistributionAnalysis(colY, rows, numberOfBins) {
 		colYLabel,
 		colBMean: mean_y,
 		colBStdev: std_y,
-		colB,
+		colB: vals,
 		boxPlotData: quantiles,
 		histogram,
 		skew,

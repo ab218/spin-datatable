@@ -12,7 +12,7 @@ export default function AnalysisModal() {
 	const [ yColData, setYColData ] = useState([]);
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
-	const { analysisModalOpen, columns, rows } = useSpreadsheetState();
+	const { excludedRows, analysisModalOpen, columns, rows } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {
@@ -39,8 +39,9 @@ export default function AnalysisModal() {
 		setPerformingAnalysis(true);
 		const colX = xColData[0] || columns[0];
 		const colY = yColData[0] || columns[2];
+		// TODO: combine this with makeXYCols
 		function mapColumnValues(colID) {
-			return rows.map((row) => Number(row[colID]));
+			return rows.map((row, i) => !excludedRows.includes(i) && Number(row[colID]));
 		}
 		const colA = mapColumnValues(colX.id);
 		const colB = mapColumnValues(colY.id);
@@ -98,7 +99,9 @@ export default function AnalysisModal() {
 
 					const rowIndices = rows.reduce((acc, row, rowIndex) => {
 						// TODO Shouldn't be using Number here?
-						return event.data.vals.includes(Number(row[selectedColumn.id])) ? acc.concat(rowIndex) : acc;
+						return !excludedRows.includes(rowIndex) && event.data.vals.includes(Number(row[selectedColumn.id]))
+							? acc.concat(rowIndex)
+							: acc;
 					}, []);
 					dispatchSpreadsheetAction({ type: 'SELECT_CELLS', rows: rowIndices, column: columnIndex });
 				}

@@ -7,7 +7,7 @@ import { performDistributionAnalysis } from './Analyses';
 import { SelectColumn, styles } from './ModalShared';
 
 export default function DistributionModal() {
-	const { distributionModalOpen, columns, rows } = useSpreadsheetState();
+	const { distributionModalOpen, columns, excludedRows, rows } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ error, setError ] = useState('');
 	const [ numberOfBins, setNumberOfBins ] = useState(10);
@@ -25,13 +25,14 @@ export default function DistributionModal() {
 		}
 
 		// TODO: Better error handling here
-		const colVals = rows.map((row) => row[yColData.id]).filter((x) => Number(x));
+		const colVals = rows.map((row) => row[yColData.id]).filter((x, i) => !excludedRows.includes(i) && Number(x));
+		console.log(colVals, yColData);
 		if (colVals.length < 3) {
 			setError('Column must have at least 3 valid values');
 			return;
 		}
 		setPerformingAnalysis(true);
-		const results = await performDistributionAnalysis(yColData, rows, numberOfBins);
+		const results = await performDistributionAnalysis(yColData, colVals, numberOfBins);
 		const popup = window.open(window.location.href + 'distribution.html', '', 'left=9999,top=100,width=500,height=850');
 		function receiveMessage(event) {
 			if (event.data === 'ready') {
@@ -58,7 +59,9 @@ export default function DistributionModal() {
 
 				const rowIndices = rows.reduce((acc, row, rowIndex) => {
 					// TODO Shouldn't be using Number here?
-					return event.data.vals.includes(Number(row[selectedColumn.id])) ? acc.concat(rowIndex) : acc;
+					return !excludedRows.includes(rowIndex) && event.data.vals.includes(Number(row[selectedColumn.id]))
+						? acc.concat(rowIndex)
+						: acc;
 				}, []);
 				dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
 			}
