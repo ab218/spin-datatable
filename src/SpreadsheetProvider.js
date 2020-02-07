@@ -36,6 +36,14 @@ import {
 	UPDATE_COLUMN,
 } from './constants';
 
+function generateUniqueRowIDs(cellSelectionRanges, rows) {
+	const range = (start, end) => Array(end - start + 1).fill().map((_, idx) => start + idx);
+	const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
+	const flattenedUniqueRowIndexes = [ ...new Set(selectedRows.flat()) ];
+	const excludedRowIDs = rows.map((row, i) => flattenedUniqueRowIndexes.includes(i) && row.id).filter((x) => x);
+	return excludedRowIDs;
+}
+
 function rowValueWithinTheseColumnRanges(row) {
 	const columns = this;
 	return columns.every(
@@ -253,26 +261,17 @@ function spreadsheetReducer(state, action) {
 			};
 		}
 		case EXCLUDE_ROWS: {
-			const { cellSelectionRanges, excludedRows } = state;
-			const range = (start, end) => Array(end - start + 1).fill().map((_, idx) => start + idx);
-			const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
-			const flattenedUniqueRowIndexes = [ ...new Set(selectedRows.flat()) ];
-			const excludedRowIDs = state.rows
-				.map((row, i) => flattenedUniqueRowIndexes.includes(i) && row.id)
-				.filter((x) => x);
+			const { cellSelectionRanges, excludedRows, rows } = state;
 			return {
 				...state,
-				excludedRows: excludedRows.concat(excludedRowIDs),
+				excludedRows: excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows)),
 			};
 		}
 		case UNEXCLUDE_ROWS: {
-			const { cellSelectionRanges, excludedRows } = state;
-			const range = (start, end) => Array(end - start + 1).fill().map((_, idx) => start + idx);
-			const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
-			const flattenedUniqueRowIndexes = [ ...new Set(selectedRows.flat()) ];
+			const { cellSelectionRanges, excludedRows, rows } = state;
 			return {
 				...state,
-				excludedRows: excludedRows.filter((row) => !flattenedUniqueRowIndexes.includes(row)),
+				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
 			};
 		}
 		// EVENT: Paste
