@@ -296,13 +296,8 @@ function Spreadsheet({ eventBus }) {
 				<ActiveCell
 					handleContextMenu={handleContextMenu}
 					key={`row${rowIndex}col${columnIndex}`}
-					changeActiveCell={changeActiveCell}
 					columnIndex={columnIndex}
-					columnId={dataKey}
-					columns={columns}
-					createNewColumns={createNewColumns}
 					createNewRows={createNewRows}
-					row={rowData}
 					rowIndex={rowIndex}
 					rows={rows}
 					value={cellData}
@@ -315,17 +310,10 @@ function Spreadsheet({ eventBus }) {
 					key={`Row${rowIndex}Col${columnIndex}`}
 					changeActiveCell={changeActiveCell}
 					columnId={dataKey}
-					columns={columns}
 					columnIndex={columnIndex}
-					createNewColumns={createNewColumns}
-					createNewRows={createNewRows}
-					finishCurrentSelectionRange={finishCurrentSelectionRange}
-					modifyCellSelectionRange={modifyCellSelectionRange}
-					paste={paste}
-					row={rowData}
-					rows={rows}
 					rowIndex={rowIndex}
 					cellValue={cellData}
+					modifyCellSelectionRange={modifyCellSelectionRange}
 				/>
 			);
 		} else if (rowIndex === rows.length) {
@@ -369,13 +357,10 @@ function Spreadsheet({ eventBus }) {
 			return (
 				<NormalCell
 					key={`Row${rowIndex}Col${columnIndex}`}
-					changeActiveCell={changeActiveCell}
 					columns={columns}
 					columnId={dataKey}
 					columnIndex={columnIndex}
-					finishCurrentSelectionRange={finishCurrentSelectionRange}
 					modifyCellSelectionRange={modifyCellSelectionRange}
-					row={rowData}
 					rowIndex={rowIndex}
 					selectCell={selectCell}
 					cellValue={cellData}
@@ -408,7 +393,7 @@ function Spreadsheet({ eventBus }) {
 		}
 	}
 
-	function rowHeaders({ rowIndex }) {
+	function rowHeaders({ rowIndex, rowData }) {
 		// only show row numbers of existing rows
 		return (
 			<div
@@ -447,7 +432,6 @@ function Spreadsheet({ eventBus }) {
 						modifyRowSelectionRange(rowIndex);
 					}
 				}}
-				onMouseUp={finishCurrentSelectionRange}
 				onDoubleClick={(e) => rowHeadersOnDoubleClick(e, rowIndex)}
 				className={'row-number-cell'}
 				style={{
@@ -457,10 +441,13 @@ function Spreadsheet({ eventBus }) {
 					backgroundColor: isSelectedCell(rowIndex, null) && 'rgb(160,185,225)',
 				}}
 			>
-				<span style={{ minWidth: 80 }}>
-					{excludedRows.includes(rowIndex) && <Icon type="stop" style={{ color: 'red', marginRight: '30%' }} />}
+				{/* Fix this */}
+				<span>
+					{excludedRows.includes(rowData.id) && <Icon type="stop" style={{ color: 'red', marginRight: 20 }} />}
 				</span>
-				<span style={{ minWidth: 20 }}>{rows.length > rowIndex && rowIndex + 1}</span>
+				<span style={{ position: 'absolute', right: 0, marginRight: 10 }}>
+					{rows.length > rowIndex && rowIndex + 1}
+				</span>
 			</div>
 		);
 	}
@@ -626,32 +613,34 @@ function Spreadsheet({ eventBus }) {
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
-				<WindowScroller>
-					{/* <AutoSizer> */}
-					{({ height }) => (
-						<Table
-							overscanRowCount={0}
-							width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
-							height={height}
-							headerHeight={25}
-							rowHeight={30}
-							rowCount={visibleRows}
-							rowGetter={({ index }) => rows[index] || emptyRow}
-							rowStyle={{ alignItems: 'stretch' }}
-						>
-							<Column
-								width={100}
-								label={''}
-								dataKey={'rowHeaderColumn'}
-								headerRenderer={() => <AnalysisMenu />}
-								cellRenderer={rowHeaders}
-								style={{ margin: 0, textAlign: 'right' }}
-							/>
-							{renderColumns(visibleColumns)}
-						</Table>
-					)}
-					{/* </AutoSizer> */}
-				</WindowScroller>
+				<div onMouseUp={finishCurrentSelectionRange}>
+					<WindowScroller>
+						{/* <AutoSizer> */}
+						{({ height }) => (
+							<Table
+								overscanRowCount={0}
+								width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
+								height={height}
+								headerHeight={25}
+								rowHeight={30}
+								rowCount={visibleRows}
+								rowGetter={({ index }) => rows[index] || emptyRow}
+								rowStyle={{ alignItems: 'stretch' }}
+							>
+								<Column
+									width={100}
+									label={''}
+									dataKey={'rowHeaderColumn'}
+									headerRenderer={() => <AnalysisMenu />}
+									cellRenderer={rowHeaders}
+									style={{ margin: 0 }}
+								/>
+								{renderColumns(visibleColumns)}
+							</Table>
+						)}
+						{/* </AutoSizer> */}
+					</WindowScroller>
+				</div>
 			)}
 		</div>
 	);

@@ -13,9 +13,8 @@ export function SelectedCell({
 	changeActiveCell,
 	columnIndex,
 	columnId,
-	finishCurrentSelectionRange,
 	handleContextMenu,
-	isFormulaColumn,
+	modifyCellSelectionRange,
 	rowIndex,
 	cellValue,
 }) {
@@ -28,8 +27,14 @@ export function SelectedCell({
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
 		dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
-		if (!isFormulaColumn && event.button === 0) {
+		if (event.button === 0) {
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnId);
+		}
+	}
+
+	function onMouseEnter(event) {
+		if (typeof event.buttons === 'number' && event.buttons > 0) {
+			modifyCellSelectionRange(rowIndex, columnIndex, true);
 		}
 	}
 
@@ -45,8 +50,8 @@ export function SelectedCell({
 				padding: '0 5px',
 			}}
 			onContextMenu={handleContextMenu}
+			onMouseEnter={onMouseEnter}
 			onMouseDown={onMouseDown}
-			onMouseUp={finishCurrentSelectionRange}
 		>
 			{cellValue || ''}
 		</div>
@@ -58,7 +63,6 @@ export function NormalCell({
 	columnIndex,
 	columns,
 	columnId,
-	finishCurrentSelectionRange,
 	modifyCellSelectionRange,
 	rowIndex,
 	selectCell,
@@ -88,7 +92,6 @@ export function NormalCell({
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
-				onMouseUp={finishCurrentSelectionRange}
 				style={{
 					backgroundColor: 'pink',
 					height: '100%',
@@ -112,7 +115,6 @@ export function NormalCell({
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
-			onMouseUp={finishCurrentSelectionRange}
 		>
 			{cellValue || '\u2022'}
 		</div>

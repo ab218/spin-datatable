@@ -257,9 +257,12 @@ function spreadsheetReducer(state, action) {
 			const range = (start, end) => Array(end - start + 1).fill().map((_, idx) => start + idx);
 			const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
 			const flattenedUniqueRowIndexes = [ ...new Set(selectedRows.flat()) ];
+			const excludedRowIDs = state.rows
+				.map((row, i) => flattenedUniqueRowIndexes.includes(i) && row.id)
+				.filter((x) => x);
 			return {
 				...state,
-				excludedRows: excludedRows.concat(flattenedUniqueRowIndexes),
+				excludedRows: excludedRows.concat(excludedRowIDs),
 			};
 		}
 		case UNEXCLUDE_ROWS: {
@@ -384,11 +387,13 @@ function spreadsheetReducer(state, action) {
 			// track lastSelection to know where to begin range selection on drag
 			const lastSelection = { row, column };
 			const selectedCell = { top: row, bottom: row, left: column, right: column };
-			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(
-				cellSelectionRanges.some((cell) => cell.top === selectedCell.top && cell.right === selectedCell.right)
-					? []
-					: selectedCell,
-			);
+			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(selectedCell);
+			// AB: This kind of feels like unnecessary work to me
+			// const addSelectedCellToSelectionArray = cellSelectionRanges.concat(
+			// 	cellSelectionRanges.some((cell) => cell.top === selectedCell.top && cell.right === selectedCell.right)
+			// 		? []
+			// 		: selectedCell,
+			// );
 			return {
 				...state,
 				activeCell: null,
@@ -398,6 +403,7 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: selectedCell,
 			};
 		}
+		// This is used when a rows array is supplied. Histogram bar clicks.
 		case SELECT_CELLS: {
 			const { cellSelectionRanges = [] } = state;
 			const columnIndexOffset = 1;
@@ -412,7 +418,6 @@ function spreadsheetReducer(state, action) {
 			return {
 				...state,
 				activeCell: null,
-				selectedRowIDs: newCellSelectionRanges,
 				cellSelectionRanges: newCellSelectionRanges,
 			};
 		}
@@ -779,31 +784,31 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		{ id: 'cgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 2 },
 		{ id: 'AaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 2 },
 		//
-		{ id: 'AAuW6mThoE', _abc1_: 37, _abc2_: 48, _abc3_: 1 },
-		{ id: 'B8nnC1HOtZ', _abc1_: 46, _abc2_: 56, _abc3_: 1 },
-		{ id: 'C0M1CkzXjf', _abc1_: 36, _abc2_: 44, _abc3_: 2 },
-		{ id: 'D4iHEVoqwH', _abc1_: 41, _abc2_: 82, _abc3_: 2 },
-		{ id: 'ElJ3vuN1sm', _abc1_: 40, _abc2_: 62, _abc3_: 1 },
-		{ id: 'F8QKAfq0p3', _abc1_: 39, _abc2_: 79, _abc3_: 2 },
-		{ id: 'GwbMIyqR02', _abc1_: 38, _abc2_: 64, _abc3_: 2 },
-		{ id: 'HjQEPLCQG5', _abc1_: 44, _abc2_: 51, _abc3_: 1 },
-		{ id: 'IpbYoyqKLu', _abc1_: 42, _abc2_: 48, _abc3_: 1 },
-		{ id: 'JaqCyUXGCz', _abc1_: 38, _abc2_: 51, _abc3_: 1 },
-		{ id: 'K8CTMPmxTH', _abc1_: 37, _abc2_: 75, _abc3_: 1 },
-		{ id: 'LurrXxh2Hr', _abc1_: 26, _abc2_: 53, _abc3_: 2 },
-		{ id: 'Mncc15wqAZ', _abc1_: 39, _abc2_: 65, _abc3_: 2 },
-		{ id: 'NQyQ6fNRr4', _abc1_: 34, _abc2_: 83, _abc3_: 2 },
-		{ id: 'O6C3iDxM6x', _abc1_: 33, _abc2_: 44, _abc3_: 2 },
-		{ id: 'PhcDfTfBN6', _abc1_: 42, _abc2_: 42, _abc3_: 2 },
-		{ id: 'Q0c5IrknI5', _abc1_: 38, _abc2_: 78, _abc3_: 1 },
-		{ id: 'RqvjLZ3FNy', _abc1_: 45, _abc2_: 64, _abc3_: 1 },
-		{ id: 'SroRsjPJxn', _abc1_: 33, _abc2_: 33, _abc3_: 2 },
-		{ id: 'TB0FbggMZw', _abc1_: 43, _abc2_: 87, _abc3_: 1 },
-		{ id: 'UsLMcp9h1V', _abc1_: 36, _abc2_: 75, _abc3_: 1 },
-		{ id: 'VX5eXO2VrP', _abc1_: 36, _abc2_: 84, _abc3_: 1 },
-		{ id: 'WxrCy4Ssa0', _abc1_: 39, _abc2_: 57, _abc3_: 2 },
-		{ id: 'XgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 2 },
-		{ id: 'YaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 2 },
+		// { id: 'AAuW6mThoE', _abc1_: 37, _abc2_: 48, _abc3_: 1 },
+		// { id: 'B8nnC1HOtZ', _abc1_: 46, _abc2_: 56, _abc3_: 1 },
+		// { id: 'C0M1CkzXjf', _abc1_: 36, _abc2_: 44, _abc3_: 2 },
+		// { id: 'D4iHEVoqwH', _abc1_: 41, _abc2_: 82, _abc3_: 2 },
+		// { id: 'ElJ3vuN1sm', _abc1_: 40, _abc2_: 62, _abc3_: 1 },
+		// { id: 'F8QKAfq0p3', _abc1_: 39, _abc2_: 79, _abc3_: 2 },
+		// { id: 'GwbMIyqR02', _abc1_: 38, _abc2_: 64, _abc3_: 2 },
+		// { id: 'HjQEPLCQG5', _abc1_: 44, _abc2_: 51, _abc3_: 1 },
+		// { id: 'IpbYoyqKLu', _abc1_: 42, _abc2_: 48, _abc3_: 1 },
+		// { id: 'JaqCyUXGCz', _abc1_: 38, _abc2_: 51, _abc3_: 1 },
+		// { id: 'K8CTMPmxTH', _abc1_: 37, _abc2_: 75, _abc3_: 1 },
+		// { id: 'LurrXxh2Hr', _abc1_: 26, _abc2_: 53, _abc3_: 2 },
+		// { id: 'Mncc15wqAZ', _abc1_: 39, _abc2_: 65, _abc3_: 2 },
+		// { id: 'NQyQ6fNRr4', _abc1_: 34, _abc2_: 83, _abc3_: 2 },
+		// { id: 'O6C3iDxM6x', _abc1_: 33, _abc2_: 44, _abc3_: 2 },
+		// { id: 'PhcDfTfBN6', _abc1_: 42, _abc2_: 42, _abc3_: 2 },
+		// { id: 'Q0c5IrknI5', _abc1_: 38, _abc2_: 78, _abc3_: 1 },
+		// { id: 'RqvjLZ3FNy', _abc1_: 45, _abc2_: 64, _abc3_: 1 },
+		// { id: 'SroRsjPJxn', _abc1_: 33, _abc2_: 33, _abc3_: 2 },
+		// { id: 'TB0FbggMZw', _abc1_: 43, _abc2_: 87, _abc3_: 1 },
+		// { id: 'UsLMcp9h1V', _abc1_: 36, _abc2_: 75, _abc3_: 1 },
+		// { id: 'VX5eXO2VrP', _abc1_: 36, _abc2_: 84, _abc3_: 1 },
+		// { id: 'WxrCy4Ssa0', _abc1_: 39, _abc2_: 57, _abc3_: 2 },
+		// { id: 'XgFBU9cf2i', _abc1_: 49, _abc2_: 79, _abc3_: 2 },
+		// { id: 'YaD3W8solA', _abc1_: 45, _abc2_: 55, _abc3_: 2 },
 	];
 
 	const initialState = {
@@ -821,7 +826,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		contextMenuRowIndex: null,
 		currentCellSelectionRange: null,
 		distributionModalOpen: false,
-		excludedRows: [ 5, 10, 15 ],
+		excludedRows: [ 'P8QKAfq0p3' ],
 		filterModalOpen: false,
 		lastSelection: { row: 1, column: 1 },
 		layout: true,

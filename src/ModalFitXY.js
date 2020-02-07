@@ -4,6 +4,7 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import { performLinearRegressionAnalysis } from './Analyses';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
 import { SelectColumn, styles } from './ModalShared';
+import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from './constants';
 
 export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -41,7 +42,7 @@ export default function AnalysisModal() {
 		const colY = yColData[0] || columns[2];
 		// TODO: combine this with makeXYCols
 		function mapColumnValues(colID) {
-			return rows.map((row, i) => !excludedRows.includes(i) && Number(row[colID]));
+			return rows.map((row) => !excludedRows.includes(row.id) && Number(row[colID]));
 		}
 		const colA = mapColumnValues(colX.id);
 		const colB = mapColumnValues(colY.id);
@@ -82,8 +83,6 @@ export default function AnalysisModal() {
 
 			function removeTargetClickEvent(event) {
 				if (event.data === 'closed') {
-					console.log(event);
-					console.log('target closed');
 					window.removeEventListener('message', targetClickEvent);
 					window.removeEventListener('message', removeTargetClickEvent);
 				}
@@ -94,16 +93,16 @@ export default function AnalysisModal() {
 					const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
 					const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
 					if (!event.data.metaKeyPressed) {
-						dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
+						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 					}
 
 					const rowIndices = rows.reduce((acc, row, rowIndex) => {
 						// TODO Shouldn't be using Number here?
-						return !excludedRows.includes(rowIndex) && event.data.vals.includes(Number(row[selectedColumn.id]))
+						return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
 							? acc.concat(rowIndex)
 							: acc;
 					}, []);
-					dispatchSpreadsheetAction({ type: 'SELECT_CELLS', rows: rowIndices, column: columnIndex });
+					dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
 				}
 			}
 			setPerformingAnalysis(false);
