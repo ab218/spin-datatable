@@ -39,8 +39,8 @@ import {
 function generateUniqueRowIDs(cellSelectionRanges, rows) {
 	const range = (start, end) => Array(end - start + 1).fill().map((_, idx) => start + idx);
 	const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
-	const flattenedUniqueRowIndexes = [ ...new Set(selectedRows.flat()) ];
-	const excludedRowIDs = rows.map((row, i) => flattenedUniqueRowIndexes.includes(i) && row.id).filter((x) => x);
+	const flattenedRowIndexes = selectedRows.flat();
+	const excludedRowIDs = rows.map((row, i) => flattenedRowIndexes.includes(i) && row.id).filter((x) => x);
 	return excludedRowIDs;
 }
 
@@ -128,6 +128,7 @@ function spreadsheetReducer(state, action) {
 		rowCount,
 		selectionActive,
 		selectedColumns,
+		totalSelectedRows,
 		updatedColumn,
 	} = action;
 	function getCol(colName) {
@@ -264,7 +265,7 @@ function spreadsheetReducer(state, action) {
 			const { cellSelectionRanges, excludedRows, rows } = state;
 			return {
 				...state,
-				excludedRows: excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows)),
+				excludedRows: [ ...new Set(excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows))) ],
 			};
 		}
 		case UNEXCLUDE_ROWS: {
@@ -356,21 +357,21 @@ function spreadsheetReducer(state, action) {
 					}
 				: state;
 		}
-		case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
-			const { lastSelection } = state;
-			// Note: In this case I am checking the cellSelectionRanges directly instead of currentCellSelectionRange
-			return state.cellSelectionRanges
-				? {
-						...state,
-						currentCellSelectionRange: getRangeBoundaries({
-							startRangeRow: lastSelection.row,
-							endRangeRow,
-							startRangeColumn: 1,
-							endRangeColumn: state.columns.length,
-						}),
-					}
-				: state;
-		}
+		// case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
+		// 	const { lastSelection } = state;
+		// 	// Note: In this case I am checking the cellSelectionRanges directly instead of currentCellSelectionRange
+		// 	return state.currentCellSelectionRange
+		// 		? {
+		// 				...state,
+		// 				currentCellSelectionRange: getRangeBoundaries({
+		// 					startRangeRow: lastSelection.row,
+		// 					endRangeRow,
+		// 					startRangeColumn: 1,
+		// 					endRangeColumn: state.columns.length,
+		// 				}),
+		// 			}
+		// 		: state;
+		// }
 		case REMOVE_SELECTED_CELLS: {
 			return {
 				...state,
@@ -402,6 +403,22 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: selectedCell,
 			};
 		}
+		case SELECT_ROW: {
+			const { cellSelectionRanges } = state;
+			const allCellsInRow = {
+				top: rowIndex,
+				left: 1,
+				bottom: rowIndex,
+				right: state.columns.length,
+			};
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: allCellsInRow,
+				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
+				lastSelection: { column: state.columns.length, row: rowIndex },
+			};
+		}
 		// This is used when a rows array is supplied. Histogram bar clicks.
 		case SELECT_CELLS: {
 			const { cellSelectionRanges = [] } = state;
@@ -428,22 +445,6 @@ function spreadsheetReducer(state, action) {
 				right: state.columns.length,
 			};
 			return { ...state, activeCell: null, currentCellSelectionRange: null, cellSelectionRanges: [ allCells ] };
-		}
-		case SELECT_ROW: {
-			const { cellSelectionRanges } = state;
-			const allCellsInRow = {
-				top: rowIndex,
-				left: 1,
-				bottom: rowIndex,
-				right: state.columns.length,
-			};
-			return {
-				...state,
-				activeCell: null,
-				currentCellSelectionRange: allCellsInRow,
-				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
-				lastSelection: { row: rowIndex },
-			};
 		}
 		case SELECT_COLUMN: {
 			const { cellSelectionRanges } = state;
@@ -640,7 +641,9 @@ function spreadsheetReducer(state, action) {
 				selectedColumns,
 			};
 		}
-
+		case 'TOTAL_SELECTED_ROWS': {
+			return { ...state, totalSelectedRows: rows };
+		}
 		case UPDATE_COLUMN: {
 			// TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
 			const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
@@ -833,6 +836,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		selectedColumns: [],
 		selectDisabled: false,
 		selectedRowIDs: [],
+		totalSelectedRows: 0,
 	};
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);
 	return (

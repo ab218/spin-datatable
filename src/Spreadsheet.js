@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Icon } from 'antd';
+import { Divider, Icon, Layout } from 'antd';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalFitXY';
@@ -29,7 +29,7 @@ import {
 	CREATE_ROWS,
 	DELETE_VALUES,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
-	MODIFY_CURRENT_SELECTION_ROW_RANGE,
+	// MODIFY_CURRENT_SELECTION_ROW_RANGE,
 	OPEN_CONTEXT_MENU,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
@@ -68,6 +68,7 @@ function Spreadsheet({ eventBus }) {
 		filterModalOpen,
 		rows,
 		selectedColumn,
+		totalSelectedRows,
 	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ widths, setWidths ] = useState({});
@@ -100,6 +101,16 @@ function Spreadsheet({ eventBus }) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	// useEffect(
+	// 	() => {
+	// 		dispatchSpreadsheetAction({
+	// 			type: 'TOTAL_SELECTED_ROWS',
+	// 			rows: document.getElementsByClassName('selected-row-number-cell').length,
+	// 		});
+	// 	},
+	// 	[ currentCellSelectionRange ],
+	// );
+
 	// When a new column is created, set the default width to 100px;
 	useEffect(
 		() => {
@@ -125,19 +136,20 @@ function Spreadsheet({ eventBus }) {
 			};
 		});
 
-	function isSelectedCell(row, column) {
+	function isSelectedCell(rowIndex, columnIndex) {
 		function withinRange(value) {
 			const { top, right, bottom, left } = value;
-			if (column === null) {
-				return row >= top && row <= bottom;
-			} else if (row === null) {
-				return column >= left && column <= right;
+			if (columnIndex === null) {
+				return rowIndex >= top && rowIndex <= bottom;
+			} else if (rowIndex === null) {
+				return columnIndex >= left && columnIndex <= right;
 			} else {
-				return row >= top && row <= bottom && column >= left && column <= right;
+				return rowIndex >= top && rowIndex <= bottom && columnIndex >= left && columnIndex <= right;
 			}
 		}
-		const withinASelectedRange = cellSelectionRanges.some(withinRange);
-		return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
+		// const withinASelectedRange = cellSelectionRanges.some(withinRange);
+		// return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
+		return cellSelectionRanges.concat(currentCellSelectionRange || []).some(withinRange);
 	}
 
 	async function paste() {
@@ -196,9 +208,13 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: MODIFY_CURRENT_SELECTION_CELL_RANGE, endRangeRow: row, endRangeColumn: col });
 	}
 
-	function modifyRowSelectionRange(row) {
-		dispatchSpreadsheetAction({ type: MODIFY_CURRENT_SELECTION_ROW_RANGE, endRangeRow: row });
-	}
+	// function modifyRowSelectionRange(row) {
+	// 	dispatchSpreadsheetAction({
+	// 		type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	// 		endRangeRow: row,
+	// 		endRangeColumn: columns.length,
+	// 	});
+	// }
 
 	function finishCurrentSelectionRange() {
 		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
@@ -227,9 +243,15 @@ function Spreadsheet({ eventBus }) {
 		return (
 			<React.Fragment key={props.dataKey}>
 				<div
+					className={
+						isSelectedCell(null, columnIndex + 1) ? (
+							'column-header-selected'
+						) : (
+							'ReactVirtualized__Table__headerTruncatedText'
+						)
+					}
 					style={{
-						// userSelect: 'none',
-						backgroundColor: isSelectedCell(null, columnIndex + 1) && 'rgb(160,185,225)',
+						userSelect: 'none',
 					}}
 					onClick={(e) => {
 						if (columnIndex < columns.length) {
@@ -260,7 +282,6 @@ function Spreadsheet({ eventBus }) {
 							});
 						}
 					}}
-					className="ReactVirtualized__Table__headerTruncatedText"
 				>
 					{props.label}
 				</div>
@@ -277,11 +298,8 @@ function Spreadsheet({ eventBus }) {
 					zIndex={999}
 				>
 					<span
-						style={{
-							userSelect: 'none',
-							backgroundColor: isSelectedCell(null, columnIndex + 1) && 'rgb(160,185,225)',
-						}}
-						className="DragHandleIcon"
+						style={{ userSelect: 'none' }}
+						className={isSelectedCell(null, columnIndex + 1) ? 'DragHandleIcon-selected' : 'DragHandleIcon'}
 					>
 						⋮
 					</span>
@@ -386,6 +404,10 @@ function Spreadsheet({ eventBus }) {
 		}
 	}
 
+	// function totalSelectedRows() {
+	// 	const rowHeaders = document.getElementsByClassName('selected-row-number-cell');
+	// }
+
 	function rowHeadersOnDoubleClick(e, rowIndex) {
 		e.preventDefault();
 		if (rowIndex + 1 > rows.length) {
@@ -429,16 +451,15 @@ function Spreadsheet({ eventBus }) {
 				}}
 				onMouseEnter={(e) => {
 					if (typeof e.buttons === 'number' && e.buttons > 0) {
-						modifyRowSelectionRange(rowIndex);
+						modifyCellSelectionRange(rowIndex, 1);
 					}
 				}}
 				onDoubleClick={(e) => rowHeadersOnDoubleClick(e, rowIndex)}
-				className={'row-number-cell'}
+				className={isSelectedCell(rowIndex, null) ? 'selected-row-number-cell' : 'row-number-cell'}
 				style={{
 					borderBottom: '1px solid rgb(221, 221, 221)',
 					userSelect: 'none',
 					lineHeight: 2,
-					backgroundColor: isSelectedCell(rowIndex, null) && 'rgb(160,185,225)',
 				}}
 			>
 				{/* Fix this */}
@@ -613,7 +634,55 @@ function Spreadsheet({ eventBus }) {
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
-				<div onMouseUp={finishCurrentSelectionRange}>
+				<div style={{ display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>
+					<Layout.Sider style={{ textAlign: 'left' }} collapsible collapsedWidth={20} theme={'light'}>
+						<table style={{ marginTop: '100px', marginLeft: '10px', width: '100%' }}>
+							<tbody>
+								<tr>
+									<td style={{ width: '34%', fontWeight: 'bold' }}>Columns</td>
+									<td style={{ width: '66%', fontWeight: 'bold' }} />
+								</tr>
+								{columns &&
+									columns.map((column, columnIndex) => (
+										<tr key={columnIndex}>
+											<td
+												onClick={(e) => {
+													dispatchSpreadsheetAction({
+														type: SELECT_COLUMN,
+														columnIndex,
+														selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
+													});
+												}}
+											>
+												{column.label}
+											</td>
+										</tr>
+									))}
+							</tbody>
+						</table>
+						<Divider />
+						<table style={{ marginLeft: '10px', width: '100%' }}>
+							<tbody>
+								<tr>
+									<td style={{ width: '34%', fontWeight: 'bold' }}>Rows</td>
+									<td style={{ width: '66%', fontWeight: 'bold' }} />
+								</tr>
+								<tr>
+									<td style={{ width: '34%' }}>All Rows</td>
+									<td style={{ width: '66%' }}>{rows.length}</td>
+								</tr>
+								<tr>
+									<td style={{ width: '34%' }}>Selected</td>
+									<td style={{ width: '66%' }}>{totalSelectedRows}</td>
+								</tr>
+								<tr>
+									<td style={{ width: '34%' }}>Excluded</td>
+									<td style={{ width: '66%' }}>{excludedRows.length}</td>
+								</tr>
+							</tbody>
+						</table>
+						<Divider />
+					</Layout.Sider>
 					<WindowScroller>
 						{/* <AutoSizer> */}
 						{({ height }) => (

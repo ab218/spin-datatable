@@ -14,8 +14,8 @@ function receiveMessage(event) {
 	document.body.insertBefore(titleEl, chartsSpan);
 
 	// set the dimensions and margins of the graph
-	const margin = { top: 20, right: 30, bottom: 40, left: 50 };
-	const width = 260 - margin.left - margin.right;
+	const margin = { top: 20, right: 30, bottom: 40, left: 70 };
+	const width = 300 - margin.left - margin.right;
 	const height = 300 - margin.top - margin.bottom;
 
 	function makeSvg(id, customWidth) {
@@ -48,10 +48,10 @@ function receiveMessage(event) {
 	const y = d3
 		.scaleLinear()
 		// .nice() rounds the tick values to nice numbers
-		.domain([ min - min * 0.05, max + max * 0.05 ])
+		.domain([ min, max ])
 		.nice()
 		.range([ height, 0 ]);
-	histSvg.append('g').call(d3.axisLeft(y));
+	histSvg.append('g').attr('class', 'x axis').call(d3.axisLeft().scale(y).ticks(10, 's'));
 
 	// set the parameters for the histogram
 	const histogram = d3
@@ -73,7 +73,11 @@ function receiveMessage(event) {
 	}
 
 	x.domain([ 0, maxBinLength(bins) ]);
-	histSvg.append('g').attr('transform', 'translate(0,' + height + ')').call(d3.axisBottom(x).ticks(5));
+	histSvg
+		.append('g')
+		.attr('class', 'x axis')
+		.attr('transform', 'translate(0,' + height + ')')
+		.call(d3.axisBottom().scale(x).ticks(5, 's'));
 
 	// Histogram Bars
 	histSvg

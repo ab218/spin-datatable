@@ -75,6 +75,16 @@ th {
 	background-color: '#f0f0f0' !important;
 }
 
+.selected-row-number-cell {
+	background-color: rgb(160, 185, 225) !important;
+	height: 100%;
+	width: 100%;
+	padding-right: 10px;
+	position: sticky;
+	left: -1px;
+	z-index: 1;
+}
+
 .row-number-cell {
 	background-color: #eee;
 	height: 100%;
@@ -84,6 +94,7 @@ th {
 	left: -1px;
 	z-index: 1;
 }
+
 .menu {
 	z-index: 2;
 	text-align: left;
@@ -203,11 +214,29 @@ th {
 }
 
 .DragHandleIcon {
+	user-select: 'none';
 	flex: 0 0 0;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+}
+
+.DragHandleIcon-selected {
+	user-select: 'none';
+	flex: 0 0 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	background-color: rgb(160, 185, 225) !important;
+}
+
+.column-header-selected {
+	line-height: 2;
+	flex: auto;
+	cursor: pointer;
+	background-color: rgb(160, 185, 225) !important;
 }
 
 .ReactVirtualized__Grid:focus {
