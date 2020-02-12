@@ -1,43 +1,36 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Divider, Icon, Layout } from 'antd';
+import { pingCloudFunctions } from './Analyses';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import AnalysisModal from './ModalFitXY';
-import ActiveCell from './ActiveCell';
+import CellRenderer from './CellRenderer';
 import ContextMenu from './ContextMenu';
 import DistributionModal from './ModalDistribution';
 import FilterModal from './ModalFilter';
 import ColumnTypeModal from './ModalColumnType';
 import AnalysisMenu from './AnalysisMenu';
+import Sidebar from './Sidebar';
+import RowHeaders from './RowHeaders';
+import HeaderRenderer from './HeaderRenderer';
 import {
 	Column,
 	Table,
 	// AutoSizer,
 	WindowScroller,
 } from 'react-virtualized';
-import Draggable from 'react-draggable';
-import { SelectedCell, NormalCell } from './Cell';
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
-	// ADD_CURRENT_SELECTION_TO_ROW_SELECTIONS,
-	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
 	CREATE_COLUMNS,
 	CREATE_ROWS,
 	DELETE_VALUES,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
-	// MODIFY_CURRENT_SELECTION_ROW_RANGE,
-	OPEN_CONTEXT_MENU,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
 	SELECT_ALL_CELLS,
 	SELECT_CELL,
-	SELECT_COLUMN,
-	SELECT_ROW,
-	TOGGLE_COLUMN_TYPE_MODAL,
 	TRANSLATE_SELECTED_CELL,
 	UPDATE_CELL,
 } from './constants';
@@ -60,38 +53,14 @@ function Spreadsheet({ eventBus }) {
 		activeCell,
 		analysisModalOpen,
 		columns,
-		contextMenuOpen,
 		cellSelectionRanges,
-		currentCellSelectionRange,
-		excludedRows,
 		distributionModalOpen,
 		filterModalOpen,
 		rows,
 		selectedColumn,
-		totalSelectedRows,
 	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ widths, setWidths ] = useState({});
-
-	async function pingCloudFunctions() {
-		const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
-		await axios.post(
-			linearRegression,
-			{ ping: 'ping' },
-			{
-				crossDomain: true,
-			},
-		);
-
-		const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
-		await axios.post(
-			gcloud,
-			{ ping: 'ping' },
-			{
-				crossDomain: true,
-			},
-		);
-	}
 
 	useEffect(() => {
 		// Activate cell top leftmost cell on first load
@@ -100,16 +69,6 @@ function Spreadsheet({ eventBus }) {
 		pingCloudFunctions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-
-	// useEffect(
-	// 	() => {
-	// 		dispatchSpreadsheetAction({
-	// 			type: 'TOTAL_SELECTED_ROWS',
-	// 			rows: document.getElementsByClassName('selected-row-number-cell').length,
-	// 		});
-	// 	},
-	// 	[ currentCellSelectionRange ],
-	// );
 
 	// When a new column is created, set the default width to 100px;
 	useEffect(
@@ -135,22 +94,6 @@ function Spreadsheet({ eventBus }) {
 				[dataKey]: Math.max(prevWidths[dataKey] + deltaX, 50),
 			};
 		});
-
-	function isSelectedCell(rowIndex, columnIndex) {
-		function withinRange(value) {
-			const { top, right, bottom, left } = value;
-			if (columnIndex === null) {
-				return rowIndex >= top && rowIndex <= bottom;
-			} else if (rowIndex === null) {
-				return columnIndex >= left && columnIndex <= right;
-			} else {
-				return rowIndex >= top && rowIndex <= bottom && columnIndex >= left && columnIndex <= right;
-			}
-		}
-		// const withinASelectedRange = cellSelectionRanges.some(withinRange);
-		// return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
-		return cellSelectionRanges.concat(currentCellSelectionRange || []).some(withinRange);
-	}
 
 	async function paste() {
 		// safari doesn't have navigator.clipboard
@@ -200,277 +143,16 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnId });
 	}
 
-	function selectCell(row, column, selectionActive) {
-		dispatchSpreadsheetAction({ type: SELECT_CELL, row, column, selectionActive });
+	function selectCell(row, column, selectionActive, rowId, columnId) {
+		dispatchSpreadsheetAction({ type: SELECT_CELL, row, column, selectionActive, rowId, columnId });
 	}
 
 	function modifyCellSelectionRange(row, col) {
 		dispatchSpreadsheetAction({ type: MODIFY_CURRENT_SELECTION_CELL_RANGE, endRangeRow: row, endRangeColumn: col });
 	}
 
-	// function modifyRowSelectionRange(row) {
-	// 	dispatchSpreadsheetAction({
-	// 		type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
-	// 		endRangeRow: row,
-	// 		endRangeColumn: columns.length,
-	// 	});
-	// }
-
 	function finishCurrentSelectionRange() {
 		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
-	}
-
-	function handleContextMenu(e) {
-		e.preventDefault();
-		dispatchSpreadsheetAction({ type: OPEN_CONTEXT_MENU, contextMenuPosition: { left: e.pageX, top: e.pageY } });
-	}
-
-	const headerRenderer = (props, columnIndex) => {
-		function openModal(e) {
-			if (!props.dataKey) {
-				if (columnIndex >= columns.length) {
-					createNewColumns(columnIndex + 1 - columns.length);
-					return;
-				}
-			}
-			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-			dispatchSpreadsheetAction({
-				type: TOGGLE_COLUMN_TYPE_MODAL,
-				columnTypeModalOpen: true,
-				column: columns.find((col) => col.id === props.dataKey),
-			});
-		}
-		return (
-			<React.Fragment key={props.dataKey}>
-				<div
-					className={
-						isSelectedCell(null, columnIndex + 1) ? (
-							'column-header-selected'
-						) : (
-							'ReactVirtualized__Table__headerTruncatedText'
-						)
-					}
-					style={{
-						userSelect: 'none',
-					}}
-					onClick={(e) => {
-						if (columnIndex < columns.length) {
-							if (contextMenuOpen) {
-								dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-							}
-							dispatchSpreadsheetAction({
-								type: SELECT_COLUMN,
-								columnIndex,
-								selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
-							});
-						}
-					}}
-					onDoubleClick={openModal}
-					onContextMenu={(e) => {
-						if (columnIndex < columns.length) {
-							e.preventDefault();
-							dispatchSpreadsheetAction({
-								type: SELECT_COLUMN,
-								columnIndex,
-								selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
-							});
-							dispatchSpreadsheetAction({
-								type: OPEN_CONTEXT_MENU,
-								colName: props.label,
-								contextMenuType: 'column',
-								contextMenuPosition: { left: e.pageX, top: e.pageY },
-							});
-						}
-					}}
-				>
-					{props.label}
-				</div>
-				<Draggable
-					axis="x"
-					defaultClassName="DragHandle"
-					defaultClassNameDragging="DragHandleActive"
-					onDrag={(event, { deltaX }) =>
-						resizeColumn({
-							dataKey: props.dataKey,
-							deltaX,
-						})}
-					position={{ x: 0 }}
-					zIndex={999}
-				>
-					<span
-						style={{ userSelect: 'none' }}
-						className={isSelectedCell(null, columnIndex + 1) ? 'DragHandleIcon-selected' : 'DragHandleIcon'}
-					>
-						⋮
-					</span>
-				</Draggable>
-			</React.Fragment>
-		);
-	};
-
-	function cellRenderer({ rowIndex, columnIndex, rowData, cellData, dataKey }) {
-		if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
-			return (
-				<ActiveCell
-					handleContextMenu={handleContextMenu}
-					key={`row${rowIndex}col${columnIndex}`}
-					columnIndex={columnIndex}
-					createNewRows={createNewRows}
-					rowIndex={rowIndex}
-					rows={rows}
-					value={cellData}
-				/>
-			);
-		} else if (isSelectedCell(rowIndex, columnIndex)) {
-			return (
-				<SelectedCell
-					handleContextMenu={handleContextMenu}
-					key={`Row${rowIndex}Col${columnIndex}`}
-					changeActiveCell={changeActiveCell}
-					columnId={dataKey}
-					columnIndex={columnIndex}
-					rowIndex={rowIndex}
-					cellValue={cellData}
-					modifyCellSelectionRange={modifyCellSelectionRange}
-				/>
-			);
-		} else if (rowIndex === rows.length) {
-			// This is a blank clickable row
-			if (dataKey) {
-				return (
-					<div
-						style={{ backgroundColor: 'white', height: '100%', width: '100%' }}
-						onMouseDown={(e) => {
-							e.preventDefault();
-							if (contextMenuOpen) {
-								dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-							}
-							selectCell(rowIndex, columnIndex);
-						}}
-					/>
-				);
-			} else {
-				// Cells in blank clickable row not in a defined column
-				return (
-					<div
-						onDoubleClick={(e) => {
-							e.preventDefault();
-							if (contextMenuOpen) {
-								dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-							}
-							if (columnIndex > columns.length) {
-								createNewColumns(columnIndex - columns.length);
-							}
-						}}
-						style={{ backgroundColor: '#eee', height: '100%', width: '100%' }}
-					/>
-				);
-			}
-		} else if (!rowData.id) {
-			// The cells in these rows cannot be clicked
-			return (
-				<div className="non-interactive-cell" style={{ backgroundColor: '#eee', height: '100%', width: '100%' }} />
-			);
-		} else if (dataKey) {
-			return (
-				<NormalCell
-					key={`Row${rowIndex}Col${columnIndex}`}
-					columns={columns}
-					columnId={dataKey}
-					columnIndex={columnIndex}
-					modifyCellSelectionRange={modifyCellSelectionRange}
-					rowIndex={rowIndex}
-					selectCell={selectCell}
-					cellValue={cellData}
-				/>
-			);
-		} else {
-			return (
-				// cells in defined rows but undefined columns
-				<div
-					style={{ backgroundColor: '#eee', height: '100%', width: '100%' }}
-					key={`row${rowIndex}col${columnIndex}`}
-					onDoubleClick={(e) => {
-						e.preventDefault();
-						if (contextMenuOpen) {
-							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-						}
-						if (columnIndex > columns.length) {
-							createNewColumns(columnIndex - columns.length);
-						}
-					}}
-				/>
-			);
-		}
-	}
-
-	// function totalSelectedRows() {
-	// 	const rowHeaders = document.getElementsByClassName('selected-row-number-cell');
-	// }
-
-	function rowHeadersOnDoubleClick(e, rowIndex) {
-		e.preventDefault();
-		if (rowIndex + 1 > rows.length) {
-			createNewRows(rowIndex + 1 - rows.length);
-		}
-	}
-
-	function rowHeaders({ rowIndex, rowData }) {
-		// only show row numbers of existing rows
-		return (
-			<div
-				onContextMenu={(e) => {
-					if (rowIndex < rows.length) {
-						e.preventDefault();
-						// if (e.target.style.backgroundColor !== 'rgb(160,185,225)') {
-						// 	dispatchSpreadsheetAction({
-						// 		type: SELECT_ROW,
-						// 		rowIndex,
-						// 	});
-						// }
-						dispatchSpreadsheetAction({
-							type: OPEN_CONTEXT_MENU,
-							contextMenuType: 'row',
-							rowIndex,
-							contextMenuPosition: { left: e.pageX, top: e.pageY },
-						});
-					}
-				}}
-				onMouseDown={(e) => {
-					// if defined row and left click
-					if (rowIndex < rows.length && e.button === 0) {
-						if (contextMenuOpen) {
-							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-						}
-						dispatchSpreadsheetAction({
-							type: SELECT_ROW,
-							rowIndex,
-							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
-						});
-					}
-				}}
-				onMouseEnter={(e) => {
-					if (typeof e.buttons === 'number' && e.buttons > 0) {
-						modifyCellSelectionRange(rowIndex, 1);
-					}
-				}}
-				onDoubleClick={(e) => rowHeadersOnDoubleClick(e, rowIndex)}
-				className={isSelectedCell(rowIndex, null) ? 'selected-row-number-cell' : 'row-number-cell'}
-				style={{
-					borderBottom: '1px solid rgb(221, 221, 221)',
-					userSelect: 'none',
-					lineHeight: 2,
-				}}
-			>
-				{/* Fix this */}
-				<span>
-					{excludedRows.includes(rowData.id) && <Icon type="stop" style={{ color: 'red', marginRight: 20 }} />}
-				</span>
-				<span style={{ position: 'absolute', right: 0, marginRight: 10 }}>
-					{rows.length > rowIndex && rowIndex + 1}
-				</span>
-			</div>
-		);
 	}
 
 	const emptyRow = {};
@@ -487,9 +169,20 @@ function Spreadsheet({ eventBus }) {
 			colsContainer.push(
 				<Column
 					key={columnIndex}
-					cellRenderer={cellRenderer}
+					cellRenderer={(props) => (
+						<CellRenderer
+							{...props}
+							createNewColumns={createNewColumns}
+							createNewRows={createNewRows}
+							changeActiveCell={changeActiveCell}
+							modifyCellSelectionRange={modifyCellSelectionRange}
+							selectCell={selectCell}
+						/>
+					)}
 					columnIndex={columnIndex}
-					headerRenderer={(props) => headerRenderer(props, columnIndex)}
+					headerRenderer={(props) => (
+						<HeaderRenderer {...props} createNewColumns={createNewColumns} resizeColumn={resizeColumn} />
+					)}
 					dataKey={(column && column.id) || ''}
 					label={(column && column.label) || ''}
 					width={(column && widths[column.id]) || blankColumnWidth}
@@ -580,6 +273,7 @@ function Spreadsheet({ eventBus }) {
 					paste();
 					return;
 				} else if (event.key === 'a') {
+					event.preventDefault();
 					dispatchSpreadsheetAction({ type: SELECT_ALL_CELLS });
 					return;
 				}
@@ -591,7 +285,6 @@ function Spreadsheet({ eventBus }) {
 					createNewRows(rows);
 				}
 				dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
-				// dispatchSpreadsheetAction({ type: 'DISABLE_SELECT' });
 				dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: rowIndex, column: columnIndex + 1 });
 			} else {
 				switch (event.key) {
@@ -635,77 +328,38 @@ function Spreadsheet({ eventBus }) {
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
 				<div style={{ display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>
-					<Layout.Sider style={{ textAlign: 'left' }} collapsible collapsedWidth={20} theme={'light'}>
-						<table style={{ marginTop: '100px', marginLeft: '10px', width: '100%' }}>
-							<tbody>
-								<tr>
-									<td style={{ width: '34%', fontWeight: 'bold' }}>Columns</td>
-									<td style={{ width: '66%', fontWeight: 'bold' }} />
-								</tr>
-								{columns &&
-									columns.map((column, columnIndex) => (
-										<tr key={columnIndex}>
-											<td
-												onClick={(e) => {
-													dispatchSpreadsheetAction({
-														type: SELECT_COLUMN,
-														columnIndex,
-														selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
-													});
-												}}
-											>
-												{column.label}
-											</td>
-										</tr>
-									))}
-							</tbody>
-						</table>
-						<Divider />
-						<table style={{ marginLeft: '10px', width: '100%' }}>
-							<tbody>
-								<tr>
-									<td style={{ width: '34%', fontWeight: 'bold' }}>Rows</td>
-									<td style={{ width: '66%', fontWeight: 'bold' }} />
-								</tr>
-								<tr>
-									<td style={{ width: '34%' }}>All Rows</td>
-									<td style={{ width: '66%' }}>{rows.length}</td>
-								</tr>
-								<tr>
-									<td style={{ width: '34%' }}>Selected</td>
-									<td style={{ width: '66%' }}>{totalSelectedRows}</td>
-								</tr>
-								<tr>
-									<td style={{ width: '34%' }}>Excluded</td>
-									<td style={{ width: '66%' }}>{excludedRows.length}</td>
-								</tr>
-							</tbody>
-						</table>
-						<Divider />
-					</Layout.Sider>
 					<WindowScroller>
 						{/* <AutoSizer> */}
 						{({ height }) => (
-							<Table
-								overscanRowCount={0}
-								width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
-								height={height}
-								headerHeight={25}
-								rowHeight={30}
-								rowCount={visibleRows}
-								rowGetter={({ index }) => rows[index] || emptyRow}
-								rowStyle={{ alignItems: 'stretch' }}
-							>
-								<Column
-									width={100}
-									label={''}
-									dataKey={'rowHeaderColumn'}
-									headerRenderer={() => <AnalysisMenu />}
-									cellRenderer={rowHeaders}
-									style={{ margin: 0 }}
-								/>
-								{renderColumns(visibleColumns)}
-							</Table>
+							<div style={{ display: 'flex' }}>
+								<Sidebar />
+								<Table
+									overscanRowCount={0}
+									width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
+									height={height}
+									headerHeight={25}
+									rowHeight={30}
+									rowCount={visibleRows}
+									rowGetter={({ index }) => rows[index] || emptyRow}
+									rowStyle={{ alignItems: 'stretch' }}
+								>
+									<Column
+										width={100}
+										label={''}
+										dataKey={'rowHeaderColumn'}
+										headerRenderer={() => <AnalysisMenu />}
+										cellRenderer={(props) => (
+											<RowHeaders
+												{...props}
+												createNewRows={createNewRows}
+												modifyCellSelectionRange={modifyCellSelectionRange}
+											/>
+										)}
+										style={{ margin: 0 }}
+									/>
+									{renderColumns(visibleColumns)}
+								</Table>
+							</div>
 						)}
 						{/* </AutoSizer> */}
 					</WindowScroller>

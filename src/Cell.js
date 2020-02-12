@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU } from './constants';
+import { CLOSE_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants';
 import { formatForNumberColumn } from './Spreadsheet';
 import { Tooltip } from 'antd';
 import './App.css';
@@ -26,8 +26,8 @@ export function SelectedCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
 		if (event.button === 0) {
+			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnId);
 		}
 	}
@@ -62,6 +62,7 @@ export function NormalCell({
 	cellValue,
 	columnIndex,
 	columns,
+	rowId,
 	columnId,
 	modifyCellSelectionRange,
 	rowIndex,
@@ -76,7 +77,7 @@ export function NormalCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, rowId, columnId);
 	}
 
 	function onMouseEnter(event) {
@@ -96,7 +97,10 @@ export function NormalCell({
 					backgroundColor: 'pink',
 					height: '100%',
 					width: '100%',
-					userSelect: cellValue ? '' : 'none',
+					lineHeight: 2,
+					padding: '0 5px',
+					overflow: 'hidden',
+					userSelect: 'none',
 				}}
 			>
 				{cellValue || '\u2022'}

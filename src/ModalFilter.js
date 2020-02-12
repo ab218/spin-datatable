@@ -90,7 +90,7 @@ export default function AntModal() {
 					<AddColumnButton />
 					{selectedColumns &&
 						selectedColumns.length > 0 &&
-						selectedColumns.map((col) => <FilterColumnSlider column={col} />)}
+						selectedColumns.map((col, i) => <FilterColumnSlider key={i} column={col} />)}
 				</div>
 			</Modal>
 		</div>

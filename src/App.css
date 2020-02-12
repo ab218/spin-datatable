@@ -243,3 +243,7 @@ th {
 	outline: 0;
 	box-shadow: none !important;
 }
+
+.sidebar-column-selected {
+	background-color: rgb(160, 185, 225) !important;
+}

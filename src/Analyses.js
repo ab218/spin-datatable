@@ -1,5 +1,25 @@
 import axios from 'axios';
 
+export async function pingCloudFunctions() {
+	const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
+	await axios.post(
+		linearRegression,
+		{ ping: 'ping' },
+		{
+			crossDomain: true,
+		},
+	);
+
+	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
+	await axios.post(
+		gcloud,
+		{ ping: 'ping' },
+		{
+			crossDomain: true,
+		},
+	);
+}
+
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabel, colYLabel, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
 	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';

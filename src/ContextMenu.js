@@ -106,6 +106,7 @@ export default function ContextMenu({ paste }) {
 					<Menu.Item
 						onClick={() => {
 							dispatchSpreadsheetAction({ type: DELETE_ROW, rowIndex: contextMenuRowIndex });
+							dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 						}}
 						key="19"
 					>
