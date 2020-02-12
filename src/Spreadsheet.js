@@ -181,7 +181,12 @@ function Spreadsheet({ eventBus }) {
 					)}
 					columnIndex={columnIndex}
 					headerRenderer={(props) => (
-						<HeaderRenderer {...props} createNewColumns={createNewColumns} resizeColumn={resizeColumn} />
+						<HeaderRenderer
+							{...props}
+							columnIndex={columnIndex}
+							createNewColumns={createNewColumns}
+							resizeColumn={resizeColumn}
+						/>
 					)}
 					dataKey={(column && column.id) || ''}
 					label={(column && column.label) || ''}
