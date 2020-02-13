@@ -113,26 +113,6 @@ body {
 	z-index: 1;
 }
 
-#degree2PolyLine {
-	display: none;
-}
-
-#degree3PolyLine {
-	display: none;
-}
-
-#degree4PolyLine {
-	display: none;
-}
-
-#degree5PolyLine {
-	display: none;
-}
-
-#degree6PolyLine {
-	display: none;
-}
-
 .tooltip {
 	position: absolute;
 	min-width: 60px;
@@ -164,4 +144,12 @@ body {
 	font-size: 12px;
 	margin-top: 10px;
 	text-align: center;
+}
+
+.centered {
+	display: none;
+}
+
+.uncentered {
+	display: block;
 }

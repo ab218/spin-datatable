@@ -1,82 +1,41 @@
-/*global d3 generateTemplate generateEquationTemplate addOrSubtract*/
-/*eslint no-undef: "error"*/
-function unload(e) {
-	e.preventDefault();
-	// Chrome requires returnValue to be set
-	e.returnValue = '';
-	window.opener.postMessage('closed', '*');
-}
-
+/*global d3 clickedBarPointSize highlightedPointColor highlightedPointSize normalPointSize normalBarFill createPoints reversedLine valueLine drawBasicPath toggleChartElement generateTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
 window.addEventListener('unload', unload);
-
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue);
-
-// various chart options checkboxes show/hide fit lines and output
-function toggleChartElement(ele) {
-	const outputElement = document.getElementById(ele.value);
-	if (ele.checked) {
-		d3.selectAll(`.${ele.value}`).attr('display', 'block');
-		d3.selectAll(`.${ele.value}-hitbox`).attr('display', 'block');
-		if (outputElement) {
-			outputElement.style.display = 'block';
-		}
-	} else {
-		d3.selectAll(`.${ele.value}`).attr('display', 'none');
-		d3.selectAll(`.${ele.value}-hitbox`).attr('display', 'none');
-		if (outputElement) {
-			outputElement.style.display = 'none';
-		}
-	}
-}
-
-function onClickSelectCells(thisBar, bar, col) {
-	let metaKeyPressed = false;
-	if (d3.event.metaKey) {
-		metaKeyPressed = true;
-	} else {
-		// If meta key is not held down, remove other highlighted bars
-		d3.selectAll('rect').style('fill', '#69b3a2');
-	}
-	// TODO: If holding meta key and click on bar again, deselect cells
-	// if (metaKeyPressed && thisBar.style("fill") === 'red') {
-	//   thisBar.style("fill", "#69b3a2");
-	//   window.opener.postMessage({
-	//     message: 'unclicked',
-	//     metaKeyPressed,
-	//     vals: bar,
-	//   }, '*');
-	//   return;
-	// }
-	thisBar.style('fill', 'red');
-	d3
-		.selectAll('.point')
-		.style('fill', 'black')
-		.filter((d) => {
-			const binMin = bar.x0;
-			const binMax = bar.x1;
-			if (!d) {
-				return null;
-			}
-			if (col === 'x') {
-				return d[0] >= binMin && d[0] < binMax;
-			}
-			return d[1] >= binMin && d[1] < binMax;
-		})
-		.style('fill', 'red');
-	window.opener.postMessage(
-		{
-			message: 'clicked',
-			metaKeyPressed,
-			vals: bar,
-			col,
-		},
-		'*',
-	);
-}
-
 window.opener.postMessage('ready', '*');
 
+// magic linear regression globals
+const margin = { top: 100, right: 50, bottom: 20, left: 50 };
+const width = 400;
+const height = 400;
+const svgWidth = width + margin.left + margin.right + 100;
+const svgHeight = height + margin.top + margin.bottom + 100;
 const container = document.getElementById('container');
+
+const svg = d3
+	.select('.chart')
+	.append('svg')
+	.attr('width', svgWidth)
+	.attr('height', svgHeight)
+	.append('g')
+	.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+// So that lines stay within the bounds of the graph
+svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
+
+const histogramBinTooltip = d3
+	.select('body')
+	.append('div')
+	.attr('class', 'histogram-border tooltip')
+	.style('opacity', 0);
+const pointTooltip = d3.select('body').append('div').attr('class', 'point tooltip').style('opacity', 0);
+const x = d3.scaleLinear().range([ 0, width ]);
+const y = d3.scaleLinear().range([ height, 0 ]);
+// define the line
+const valueLine = d3.line().x((d) => x(d[1])).y((d) => y(d[0]));
+const reversedLine = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
+
+const xAxis = d3.axisBottom().scale(x).ticks(10, 's');
+const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
+
 function receiveMessage(event) {
 	console.log('TARGET', event);
 	const {
@@ -104,11 +63,10 @@ function receiveMessage(event) {
 		centeredDegree4Poly,
 		centeredDegree5Poly,
 		centeredDegree6Poly,
-		linearRegressionLineSlope,
-		linearRegressionLineR2,
-		linearRegressionLineYIntercept,
+		linearRegression,
 	} = event.data;
 
+	const linearRegressionCoefficients = linearRegression['coefficients'];
 	const degree2PolyCoefficients = degree2Poly['polynomial'];
 	const degree3PolyCoefficients = degree3Poly['polynomial'];
 	const degree4PolyCoefficients = degree4Poly['polynomial'];
@@ -126,41 +84,9 @@ function receiveMessage(event) {
 	titleEl.appendChild(titleText);
 	const chartsContainer = document.getElementById('chart');
 	document.body.insertBefore(titleEl, chartsContainer);
-	// set the dimensions and margins of the graph
-	const margin = { top: 100, right: 50, bottom: 20, left: 50 };
-	const width = 400;
-	const height = 400;
-	const svgWidth = width + margin.left + margin.right + 100;
-	const svgHeight = height + margin.top + margin.bottom + 100;
 
 	const colA = coordinates.map((a) => a[1]).sort(d3.ascending);
 	const colB = coordinates.map((a) => a[0]).sort(d3.ascending);
-
-	const histogramBinTooltip = d3
-		.select('body')
-		.append('div')
-		.attr('class', 'histogram-border tooltip')
-		.style('opacity', 0);
-	// TODO: Points don't know what row they are in right now. They should.
-	const pointTooltip = d3.select('body').append('div').attr('class', 'point tooltip').style('opacity', 0);
-	const regressionTooltip = d3
-		.select('body')
-		.append('div')
-		.attr('class', 'regression-line tooltip')
-		.style('opacity', 0);
-
-	const svg = d3
-		.select('.chart')
-		.append('svg')
-		.attr('width', svgWidth)
-		.attr('height', svgHeight)
-		.append('g')
-		.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-	const x = d3.scaleLinear().range([ 0, width ]);
-	const y = d3.scaleLinear().range([ height, 0 ]);
-	const xAxis = d3.axisBottom().scale(x).ticks(10, 's');
-	const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
 
 	// get extents and range
 	const xExtent = d3.extent(coordinates, function(d) {
@@ -219,77 +145,75 @@ function receiveMessage(event) {
 	const colABins = histogramY(colA);
 	const colBBins = histogramX(colB);
 
-	// So that lines stay within the bounds of the graph
-	svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
+	function drawHistogramBorders() {
+		// Histogram Bar X axis
+		svg
+			.selectAll('xHistBars')
+			.data(colBBins)
+			.enter()
+			.append('rect')
+			.on('click', function(d) {
+				onClickSelectCells(d3.select(this), d, 'x');
+			})
+			.on(`mouseover`, function(d) {
+				d3.select(this).transition().duration(50).attr('opacity', 0.6);
+				histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
+				histogramBinTooltip
+					.html(d.length)
+					.style('left', d3.event.pageX + 'px')
+					.style('top', d3.event.pageY - 28 + 'px');
+			})
+			.on(`mouseout`, function(d) {
+				d3.select(this).transition().duration(50).attr('opacity', 1);
+				histogramBinTooltip.transition().duration(500).style('opacity', 0);
+			})
+			.attr('class', 'histogramBorders')
+			.attr('fill', normalBarFill)
+			.attr('width', (d) => x(d.x1) - x(d.x0) - 1)
+			.attr('x', (d) => x(d.x0))
+			.transition()
+			.duration(500)
+			.delay(function(d, i) {
+				return i * 100;
+			})
+			.attr('y', (d) => barsY(d.length) - height)
+			.attr('height', (d) => height - barsY(d.length));
 
-	// Histogram Bars
-	svg
-		.selectAll('xHistBars')
-		.data(colBBins)
-		.enter()
-		.append('rect')
-		.attr('class', 'histogramBorders')
-		.attr('x', (d) => x(d.x0))
-		.attr('y', (d) => barsY(d.length) - height)
-		.attr('height', (d) => height - barsY(d.length))
-		.attr('width', (d) => x(d.x1) - x(d.x0) - 1)
-		.attr('fill', '#69b3a2')
-		.on(`mouseenter`, function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 0.6);
-			histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
-			histogramBinTooltip.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
-		})
-		.on(`mouseleave`, function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 1);
-			histogramBinTooltip.transition().duration(500).style('opacity', 0);
-		})
-		.on('click', function(d) {
-			onClickSelectCells(d3.select(this), d, 'x');
-		});
-
-	// Histogram Bars
-	svg
-		.selectAll('yHistBars')
-		.data(colABins)
-		.enter()
-		.append('rect')
-		.attr('class', 'histogramBorders')
-		.attr('x', 405)
-		.attr('y', (d) => y(d.x1))
-		.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
-		.attr('width', (d) => barsX(d.length))
-		.attr('fill', '#69b3a2')
-		.on('mouseover', function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 0.6);
-			histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
-			histogramBinTooltip.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
-		})
-		.on('mouseout', function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 1);
-			histogramBinTooltip.transition().duration(500).style('opacity', 0);
-		})
-		.on('click', function(d) {
-			onClickSelectCells(d3.select(this), d, 'y');
-		});
-
-	// define the line
-	const valueLine = d3.line().x((d) => x(d[1])).y((d) => y(d[0]));
-	const reversedLine = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
-
-	//generate n (step) points given some range and equation (ie: y = ax^2+bx+c)
-	function createPoints(rangeX, step, equation) {
-		return Array.from({ length: Math.round((rangeX[1] - rangeX[0]) / step) || 1 }, function(_, i) {
-			const x = rangeX[0] + i * step;
-			return [ x, equation(x) ];
-		});
+		// Histogram Bar Y Axis
+		svg
+			.selectAll('yHistBars')
+			.data(colABins)
+			.enter()
+			.append('rect')
+			.on('mouseover', function(d) {
+				d3.select(this).transition().duration(50).attr('opacity', 0.6);
+				histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
+				histogramBinTooltip
+					.html(d.length)
+					.style('left', d3.event.pageX + 'px')
+					.style('top', d3.event.pageY - 28 + 'px');
+			})
+			.on('mouseout', function(d) {
+				d3.select(this).transition().duration(50).attr('opacity', 1);
+				histogramBinTooltip.transition().duration(500).style('opacity', 0);
+			})
+			.on('click', function(d) {
+				onClickSelectCells(d3.select(this), d, 'y');
+			})
+			.attr('class', 'histogramBorders')
+			.attr('x', 405)
+			.attr('y', (d) => y(d.x1))
+			.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
+			.transition()
+			.duration(500)
+			.delay(function(d, i) {
+				return i * 100;
+			})
+			.attr('width', (d) => barsX(d.length))
+			.attr('fill', normalBarFill);
 	}
 
-	// const centeredX = x - colAMean;
-
-	// const centered2equation = (x) =>
-	// 	centered2PolyCoefficients[2] +
-	// 	centered2PolyCoefficients[1] * centeredX +
-	// 	centered2PolyCoefficients[0] * centeredX * centeredX;
+	const linearRegressionEquation = (x) => linearRegressionCoefficients[1] + linearRegressionCoefficients[0] * x;
 	const poly2equation = (x) =>
 		degree2PolyCoefficients[2] + degree2PolyCoefficients[1] * x + degree2PolyCoefficients[0] * x * x;
 	const poly3equation = (x) =>
@@ -324,19 +248,16 @@ function receiveMessage(event) {
 	const step = (xDomainMax - xDomainMin) / 200;
 
 	//points
-	// const centered2Points = createPoints(x.domain(), step, centered2equation);
+	const linearRegressionPoints = createPoints(x.domain(), step, linearRegressionEquation);
 	const degree2Points = createPoints(x.domain(), step, poly2equation);
 	const degree3Points = createPoints(x.domain(), step, poly3equation);
 	const degree4Points = createPoints(x.domain(), step, poly4equation);
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
 
-	const centeredX = `(${colXLabel} - ${colAMean})`;
-
-	const linearEquationTemplate = `${colYLabel} = ${linearRegressionLineYIntercept.toFixed(6) / 1} ${addOrSubtract(
-		linearRegressionLineSlope.toFixed(6) / 1,
-	)} ${Math.abs(linearRegressionLineSlope.toFixed(6) / 1)} * ${colXLabel}`;
-
+	const linearEquationTemplate = `${colYLabel} = ${linearRegressionCoefficients[1].toFixed(6) / 1} ${addOrSubtract(
+		linearRegressionCoefficients[0].toFixed(6) / 1,
+	)} ${Math.abs(linearRegressionCoefficients[0].toFixed(6) / 1)} * ${colXLabel}`;
 	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colXLabel, colYLabel);
 	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colXLabel, colYLabel);
 	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colXLabel, colYLabel);
@@ -348,86 +269,18 @@ function receiveMessage(event) {
 	const centeredDegree5EquationTemplate = generateEquationTemplate(centered5PolyCoefficients, colXLabel, colYLabel);
 	const centeredDegree6EquationTemplate = generateEquationTemplate(centered6PolyCoefficients, colXLabel, colYLabel);
 
-	const drawBasicPath = (points, line, name, title) => {
-		svg
-			.append('path')
-			.data([ points ])
-			.style('fill', 'none')
-			.attr('clip-path', 'url(#clip)')
-			.attr('class', name)
-			.attr('d', line);
-
-		// invisible hitbox
-		svg
-			.append('path')
-			.data([ points ])
-			.style('fill', 'none')
-			.attr('clip-path', 'url(#clip)')
-			.attr('class', `${name}-hitbox`)
-			.attr('d', reversedLine)
-			.on(`mouseenter`, function() {
-				regressionTooltip.transition().duration(200).style('opacity', 0.9);
-				regressionTooltip.html(title).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
-			})
-			.on(`mouseleave`, function() {
-				regressionTooltip.transition().duration(500).style('opacity', 0);
-			});
-	};
-
-	drawBasicPath(degree2Points, reversedLine, 'degree2PolyLine', 'Quadratic Regression Line');
-	drawBasicPath(degree3Points, reversedLine, 'degree3PolyLine', 'Cubic Regression Line');
-	drawBasicPath(degree4Points, reversedLine, 'degree4PolyLine', 'Quartic Regression Line');
-	drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine', 'Fifth Degree Regression Line');
-	drawBasicPath(degree6Points, reversedLine, 'degree6PolyLine', 'Sixth Degree Regression Line');
-	drawBasicPath(confUpp, valueLine, 'confidenceBands');
-	drawBasicPath(confLow, valueLine, 'confidenceBands');
-	drawBasicPath(meanCiUpp, valueLine, 'confidenceBandsFit');
-	drawBasicPath(meanCiLow, valueLine, 'confidenceBandsFit');
-
-	// get points to draw linear regression line
-	const y1 = xDomainMin * linearRegressionLineSlope + linearRegressionLineYIntercept;
-	const y2 = xDomainMax * linearRegressionLineSlope + linearRegressionLineYIntercept;
-
-	svg
-		.append('line')
-		.attr('class', 'linearRegressionLine')
-		.attr('clip-path', 'url(#clip)')
-		.attr('x1', x(xDomainMin))
-		.attr('y1', y(y1))
-		.attr('x2', x(xDomainMax))
-		.attr('y2', y(y2));
-
-	// Hidden line with a big hitbox
-	svg
-		.append('line')
-		.attr('class', 'linearRegressionLine-hitbox')
-		.attr('clip-path', 'url(#clip)')
-		.attr('x1', x(xDomainMin))
-		.attr('y1', y(y1))
-		.attr('x2', x(xDomainMax))
-		.attr('y2', y(y2))
-		.on(`mouseenter`, function() {
-			regressionTooltip.transition().duration(200).style('opacity', 0.9);
-			regressionTooltip
-				.html('Linear Regression Line')
-				.style('left', d3.event.pageX + 'px')
-				.style('top', d3.event.pageY - 28 + 'px');
-		})
-		.on(`mouseleave`, function() {
-			regressionTooltip.transition().duration(500).style('opacity', 0);
-		});
-
+	// TODO remove "magic numbers"
 	svg
 		.selectAll('.point')
 		.data(coordinates)
 		.enter()
 		.append('circle')
 		.attr('class', 'point')
-		.attr('r', 2)
+		.attr('r', normalPointSize)
 		.attr('cy', (d) => y(d[1]))
 		.attr('cx', (d) => x(d[0]))
 		.on(`mouseenter`, function(d) {
-			d3.select(this).transition().duration(50).attr('r', 5);
+			d3.select(this).transition().duration(50).attr('r', highlightedPointSize);
 			pointTooltip.transition().duration(200).style('opacity', 0.9);
 			pointTooltip
 				.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
@@ -435,7 +288,11 @@ function receiveMessage(event) {
 				.style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function() {
-			d3.select(this).transition().duration(50).attr('r', 2);
+			if (d3.select(this).style('fill') === highlightedPointColor) {
+				d3.select(this).transition().duration(50).attr('r', clickedBarPointSize);
+			} else {
+				d3.select(this).transition().duration(50).attr('r', normalPointSize);
+			}
 			pointTooltip.transition().duration(500).style('opacity', 0);
 		});
 
@@ -481,9 +338,20 @@ function receiveMessage(event) {
     </div>
   </details>`;
 
+	const linearFitTemplate = generateTemplate(
+		'Linear Fit',
+		'linearRegressionLine',
+		null,
+		linearEquationTemplate,
+		linearRegression,
+		linearRegressionCoefficients,
+		colXLabel,
+	);
+
 	const quadraticFitTemplate = generateTemplate(
 		'Quadratic Fit',
 		'degree2PolyLine',
+		'uncentered',
 		quadraticEquationTemplate,
 		degree2Poly,
 		degree2PolyCoefficients,
@@ -493,6 +361,7 @@ function receiveMessage(event) {
 	const cubicFitTemplate = generateTemplate(
 		'Cubic Fit',
 		'degree3PolyLine',
+		'uncentered',
 		cubicEquationTemplate,
 		degree3Poly,
 		degree3PolyCoefficients,
@@ -502,6 +371,7 @@ function receiveMessage(event) {
 	const quarticFitTemplate = generateTemplate(
 		'Quartic Fit',
 		'degree4PolyLine',
+		'uncentered',
 		quarticEquationTemplate,
 		degree4Poly,
 		degree4PolyCoefficients,
@@ -511,6 +381,7 @@ function receiveMessage(event) {
 	const fifthDegreeFitTemplate = generateTemplate(
 		'Fifth Degree Fit',
 		'degree5PolyLine',
+		'uncentered',
 		degree5EquationTemplate,
 		degree5Poly,
 		degree5PolyCoefficients,
@@ -520,15 +391,19 @@ function receiveMessage(event) {
 	const sixthDegreeFitTemplate = generateTemplate(
 		'Sixth Degree Fit',
 		'degree6PolyLine',
+		'uncentered',
 		degree6EquationTemplate,
 		degree6Poly,
 		degree6PolyCoefficients,
 		colXLabel,
 	);
 
+	const centeredX = `(${colXLabel} - ${colAMean})`;
+
 	const centered2DegreeFitTemplate = generateTemplate(
 		'Quadratic Fit (centered)',
 		'degree2CenteredPolyLine',
+		'centered',
 		centeredQuadraticEquationTemplate,
 		centeredDegree2Poly,
 		centered2PolyCoefficients,
@@ -539,6 +414,7 @@ function receiveMessage(event) {
 	const centered3DegreeFitTemplate = generateTemplate(
 		'Cubic Fit (centered)',
 		'degree3CenteredPolyLine',
+		'centered',
 		centeredCubicEquationTemplate,
 		centeredDegree3Poly,
 		centered3PolyCoefficients,
@@ -549,6 +425,7 @@ function receiveMessage(event) {
 	const centered4DegreeFitTemplate = generateTemplate(
 		'Quartic Fit (centered)',
 		'degree4CenteredPolyLine',
+		'centered',
 		centeredQuarticEquationTemplate,
 		centeredDegree4Poly,
 		centered4PolyCoefficients,
@@ -559,6 +436,7 @@ function receiveMessage(event) {
 	const centered5DegreeFitTemplate = generateTemplate(
 		'Fifth Degree Fit (centered)',
 		'degree5CenteredPolyLine',
+		'centered',
 		centeredDegree5EquationTemplate,
 		centeredDegree5Poly,
 		centered5PolyCoefficients,
@@ -569,41 +447,13 @@ function receiveMessage(event) {
 	const centered6DegreeFitTemplate = generateTemplate(
 		'Sixth Degree Fit (centered)',
 		'degree6CenteredPolyLine',
+		'centered',
 		centeredDegree6EquationTemplate,
 		centeredDegree6Poly,
 		centered6PolyCoefficients,
 		colXLabel,
 		centeredX,
 	);
-
-	const linearFitTemplate = `<details class="analysis-details" open id="linearRegressionLine">
-  <summary class="analysis-summary-title">Summary of Linear Fit</summary>
-  <table style="width: 100%;">
-    <tr>
-      <td style="width: 34%;">Equation:</td>
-      <td style="width: 66%;">${linearEquationTemplate}</td>
-    </tr>
-    <tr>
-      <td style="width: 34%;">R-squared:</td>
-      <td style="width: 66%;">${linearRegressionLineR2}</td>
-    </tr>
-  </table>
-  <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
-  <table style="width: 100%;">
-    <tr>
-      <td style="width: 34%; font-weight: bold;">Term</td>
-      <td style="width: 66%; font-weight: bold;">Estimate</td>
-    </tr>
-    <tr>
-      <td style="width: 34%; white-space: nowrap;">Intercept:</td>
-      <td style="width: 66%;">${linearRegressionLineYIntercept}</td>
-    </tr>
-    <tr>
-      <td style="width: 34%;">${colXLabel}</td>
-      <td style="width: 66%;">${linearRegressionLineSlope.toFixed(6) / 1}</td>
-    </tr>
-  </table>
-</details>`;
 
 	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
 	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
@@ -617,8 +467,10 @@ function receiveMessage(event) {
 	const centeredQuarticFitParsed = new DOMParser().parseFromString(centered4DegreeFitTemplate, 'text/html');
 	const centeredFifthDegreeFitParsed = new DOMParser().parseFromString(centered5DegreeFitTemplate, 'text/html');
 	const centeredSixthDegreeFitParsed = new DOMParser().parseFromString(centered6DegreeFitTemplate, 'text/html');
+	const chartOptionsParsed = new DOMParser().parseFromString(chartOptionsTemplate, 'text/html');
 
 	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
+	container.appendChild(chartOptionsParsed.body.firstChild);
 	container.appendChild(linearFitParsed.body.firstChild);
 	container.appendChild(quadraticFitParsed.body.firstChild);
 	container.appendChild(cubicFitParsed.body.firstChild);
@@ -632,21 +484,84 @@ function receiveMessage(event) {
 	container.appendChild(centeredSixthDegreeFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
 
-	// hide unchecked chart options
-	d3.selectAll('.confidenceBands').attr('display', 'none');
-	d3.selectAll('.confidenceBandsFit').attr('display', 'none');
-	d3.selectAll('.linearRegressionLine').attr('display', 'none');
-	d3.selectAll('.linearRegressionLine-hitbox').attr('display', 'none');
-	d3.selectAll('.degree2PolyLine').attr('display', 'none');
-	d3.selectAll('.degree2PolyLine-hitbox').attr('display', 'none');
-	d3.selectAll('.degree3PolyLine').attr('display', 'none');
-	d3.selectAll('.degree3PolyLine-hitbox').attr('display', 'none');
-	d3.selectAll('.degree4PolyLine').attr('display', 'none');
-	d3.selectAll('.degree4PolyLine-hitbox').attr('display', 'none');
-	d3.selectAll('.degree5PolyLine').attr('display', 'none');
-	d3.selectAll('.degree5PolyLine-hitbox').attr('display', 'none');
-	d3.selectAll('.degree6PolyLine').attr('display', 'none');
-	d3.selectAll('.degree6PolyLine-hitbox').attr('display', 'none');
-}
+	document.getElementById('center-poly-checkbox').addEventListener('click', (e) => toggleCenteredPoly(e));
 
+	document
+		.getElementById('histogram-borders-checkbox')
+		.addEventListener('click', (e) => toggleChartElement(e.target, () => drawHistogramBorders()));
+
+	document
+		.getElementById('linear-regression-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () =>
+				drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line'),
+			),
+		);
+
+	document
+		.getElementById('degree2-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () =>
+				drawBasicPath(degree2Points, reversedLine, 'degree2PolyLine', 'Quadratic Regression Line'),
+			),
+		);
+
+	document
+		.getElementById('degree3-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () =>
+				drawBasicPath(degree3Points, reversedLine, 'degree3PolyLine', 'Cubic Regression Line'),
+			),
+		);
+
+	document
+		.getElementById('degree4-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () =>
+				drawBasicPath(degree4Points, reversedLine, 'degree4PolyLine', 'Quartic Regression Line'),
+			),
+		);
+
+	document
+		.getElementById('degree5-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () =>
+				drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine', 'Fifth Degree Regression Line'),
+			),
+		);
+
+	document
+		.getElementById('degree6-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () =>
+				drawBasicPath(degree6Points, reversedLine, 'degree6PolyLine', 'Sixth Degree Regression Line'),
+			),
+		);
+
+	document
+		.getElementById('confidence-bands-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () => drawBasicPath(confUpp, valueLine, 'confidenceBands', null)),
+		);
+	document
+		.getElementById('confidence-bands-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () => drawBasicPath(confLow, valueLine, 'confidenceBands', null)),
+		);
+
+	document
+		.getElementById('confidence-bands-fit-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () => drawBasicPath(meanCiUpp, valueLine, 'confidenceBandsFit', null)),
+		);
+
+	document
+		.getElementById('confidence-bands-fit-checkbox')
+		.addEventListener('click', (e) =>
+			toggleChartElement(e.target, () => drawBasicPath(meanCiLow, valueLine, 'confidenceBandsFit', null)),
+		);
+
+	drawHistogramBorders();
+	drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line');
+}
 window.addEventListener('message', receiveMessage, false);

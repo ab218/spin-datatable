@@ -1,42 +1,5 @@
-function unload(e) {
-	e.preventDefault();
-	// Chrome requires returnValue to be set
-	e.returnValue = '';
-	window.opener.postMessage('closed', '*');
-}
-
+/*global d3 unload onClickSelectCells*/
 window.addEventListener('unload', unload);
-
-function onClickSelectCells(thisBar, bar, col) {
-	let metaKeyPressed = false;
-	if (d3.event.metaKey) {
-		metaKeyPressed = true;
-	} else {
-		// If meta key is not held down, remove other highlighted bars
-		d3.selectAll('rect').style('fill', '#69b3a2');
-	}
-	// TODO: If holding meta key and click on bar again, deselect cells
-	// if (metaKeyPressed && thisBar.style("fill") === 'red') {
-	//   thisBar.style("fill", "#69b3a2");
-	//   window.opener.postMessage({
-	//     message: 'unclicked',
-	//     metaKeyPressed,
-	//     vals: bar,
-	//   }, '*');
-	//   return;
-	// }
-	thisBar.style('fill', 'red');
-	window.opener.postMessage(
-		{
-			message: 'clicked',
-			metaKeyPressed,
-			vals: bar,
-			col,
-		},
-		'*',
-	);
-}
-
 window.opener.postMessage('ready', '*');
 const container = document.getElementById('container');
 function receiveMessage(event) {
@@ -51,8 +14,8 @@ function receiveMessage(event) {
 	document.body.insertBefore(titleEl, chartsSpan);
 
 	// set the dimensions and margins of the graph
-	const margin = { top: 20, right: 30, bottom: 40, left: 50 };
-	const width = 260 - margin.left - margin.right;
+	const margin = { top: 20, right: 30, bottom: 40, left: 70 };
+	const width = 300 - margin.left - margin.right;
 	const height = 300 - margin.top - margin.bottom;
 
 	function makeSvg(id, customWidth) {
@@ -85,10 +48,10 @@ function receiveMessage(event) {
 	const y = d3
 		.scaleLinear()
 		// .nice() rounds the tick values to nice numbers
-		.domain([ min - min * 0.05, max + max * 0.05 ])
+		.domain([ min, max ])
 		.nice()
 		.range([ height, 0 ]);
-	histSvg.append('g').call(d3.axisLeft(y));
+	histSvg.append('g').attr('class', 'x axis').call(d3.axisLeft().scale(y).ticks(10, 's'));
 
 	// set the parameters for the histogram
 	const histogram = d3
@@ -110,7 +73,11 @@ function receiveMessage(event) {
 	}
 
 	x.domain([ 0, maxBinLength(bins) ]);
-	histSvg.append('g').attr('transform', 'translate(0,' + height + ')').call(d3.axisBottom(x).ticks(5));
+	histSvg
+		.append('g')
+		.attr('class', 'x axis')
+		.attr('transform', 'translate(0,' + height + ')')
+		.call(d3.axisBottom().scale(x).ticks(5, 's'));
 
 	// Histogram Bars
 	histSvg
@@ -118,17 +85,6 @@ function receiveMessage(event) {
 		.data(bins)
 		.enter()
 		.append('rect')
-		.attr('x', 1)
-		.attr('y', function(d) {
-			return y(d.x1);
-		})
-		.attr('width', function(d) {
-			return x(d.length);
-		})
-		.attr('height', function(d) {
-			// The -1 adds a little bit of padding between bars
-			return y(d.x0) - y(d.x1) - 1;
-		})
 		.attr('fill', '#69b3a2')
 		.on(`mouseenter`, function() {
 			d3.select(this).transition().duration(50).attr('opacity', 0.6);
@@ -138,7 +94,15 @@ function receiveMessage(event) {
 		})
 		.on('click', function(d) {
 			onClickSelectCells(d3.select(this), d, 'y');
-		});
+		})
+		.attr('x', 1)
+		.attr('y', (d) => y(d.x1))
+		// The -1 adds a little bit of padding between bars
+		.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
+		.transition()
+		.duration(500)
+		.delay((_, i) => i * 100)
+		.attr('width', (d) => x(d.length));
 
 	// Boxplot
 	// Show the main vertical line
@@ -172,12 +136,8 @@ function receiveMessage(event) {
 		.append('line')
 		.attr('x1', center - boxWidth / 2)
 		.attr('x2', center + boxWidth / 2)
-		.attr('y1', function(d) {
-			return y(d);
-		})
-		.attr('y2', function(d) {
-			return y(d);
-		})
+		.attr('y1', (d) => y(d))
+		.attr('y2', (d) => y(d))
 		.attr('stroke', 'black');
 
 	const jitterWidth = 10;
@@ -188,12 +148,8 @@ function receiveMessage(event) {
 		.data(boxDataSorted)
 		.enter()
 		.append('circle')
-		.attr('cx', function(d) {
-			return center - boxWidth / 10;
-		})
-		.attr('cy', function(d) {
-			return y(d) - jitter;
-		})
+		.attr('cx', () => center - boxWidth / 10)
+		.attr('cy', (d) => y(d) - jitter)
 		.attr('r', 4)
 		.style('fill', 'white')
 		.attr('stroke', 'black');
