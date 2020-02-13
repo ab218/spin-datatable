@@ -180,6 +180,7 @@ function Spreadsheet({ eventBus }) {
 						/>
 					)}
 					columnIndex={columnIndex}
+					dataKey={(column && column.id) || ''}
 					headerRenderer={(props) => (
 						<HeaderRenderer
 							{...props}
@@ -188,7 +189,6 @@ function Spreadsheet({ eventBus }) {
 							resizeColumn={resizeColumn}
 						/>
 					)}
-					dataKey={(column && column.id) || ''}
 					label={(column && column.label) || ''}
 					width={(column && widths[column.id]) || blankColumnWidth}
 					style={{
