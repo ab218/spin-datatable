@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU } from './constants';
+import { CLOSE_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants';
 import { formatForNumberColumn } from './Spreadsheet';
 import { Tooltip } from 'antd';
 import './App.css';
@@ -13,9 +13,8 @@ export function SelectedCell({
 	changeActiveCell,
 	columnIndex,
 	columnId,
-	finishCurrentSelectionRange,
 	handleContextMenu,
-	isFormulaColumn,
+	modifyCellSelectionRange,
 	rowIndex,
 	cellValue,
 }) {
@@ -27,9 +26,15 @@ export function SelectedCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
-		if (!isFormulaColumn && event.button === 0) {
+		if (event.button === 0) {
+			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnId);
+		}
+	}
+
+	function onMouseEnter(event) {
+		if (typeof event.buttons === 'number' && event.buttons > 0) {
+			modifyCellSelectionRange(rowIndex, columnIndex, true);
 		}
 	}
 
@@ -45,8 +50,8 @@ export function SelectedCell({
 				padding: '0 5px',
 			}}
 			onContextMenu={handleContextMenu}
+			onMouseEnter={onMouseEnter}
 			onMouseDown={onMouseDown}
-			onMouseUp={finishCurrentSelectionRange}
 		>
 			{cellValue || ''}
 		</div>
@@ -57,8 +62,8 @@ export function NormalCell({
 	cellValue,
 	columnIndex,
 	columns,
+	rowId,
 	columnId,
-	finishCurrentSelectionRange,
 	modifyCellSelectionRange,
 	rowIndex,
 	selectCell,
@@ -72,7 +77,7 @@ export function NormalCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey);
+		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, rowId, columnId);
 	}
 
 	function onMouseEnter(event) {
@@ -88,12 +93,14 @@ export function NormalCell({
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
-				onMouseUp={finishCurrentSelectionRange}
 				style={{
 					backgroundColor: 'pink',
 					height: '100%',
 					width: '100%',
-					userSelect: cellValue ? '' : 'none',
+					lineHeight: 2,
+					padding: '0 5px',
+					overflow: 'hidden',
+					userSelect: 'none',
 				}}
 			>
 				{cellValue || '\u2022'}
@@ -112,7 +119,6 @@ export function NormalCell({
 			key={`row${rowIndex}col${columnIndex}`}
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
-			onMouseUp={finishCurrentSelectionRange}
 		>
 			{cellValue || '\u2022'}
 		</div>

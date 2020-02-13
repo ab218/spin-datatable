@@ -57,7 +57,6 @@ export default function AntModal() {
 
 	function FilterColumnSlider({ column }) {
 		const { id, colMin, colMax, label, min, max } = column;
-		console.log(column);
 		return (
 			<div style={{ display: 'flex' }}>
 				<IntegerStep
@@ -91,7 +90,7 @@ export default function AntModal() {
 					<AddColumnButton />
 					{selectedColumns &&
 						selectedColumns.length > 0 &&
-						selectedColumns.map((col) => <FilterColumnSlider column={col} />)}
+						selectedColumns.map((col, i) => <FilterColumnSlider key={i} column={col} />)}
 				</div>
 			</Modal>
 		</div>

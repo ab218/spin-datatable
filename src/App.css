@@ -71,17 +71,28 @@ th {
 	font-size: 1em;
 } */
 
-.row-number-cell {
-	background-color: #eee;
+.selected-cell {
+	background-color: '#f0f0f0' !important;
+}
+
+.selected-row-number-cell {
+	background-color: rgb(160, 185, 225) !important;
 	height: 100%;
 	width: 100%;
+	padding-right: 10px;
 	position: sticky;
 	left: -1px;
 	z-index: 1;
 }
 
-.selected-cell {
-	background-color: '#f0f0f0';
+.row-number-cell {
+	background-color: #eee;
+	height: 100%;
+	width: 100%;
+	padding-right: 10px;
+	position: sticky;
+	left: -1px;
+	z-index: 1;
 }
 
 .menu {
@@ -203,6 +214,7 @@ th {
 }
 
 .DragHandleIcon {
+	user-select: 'none';
 	flex: 0 0 0;
 	display: flex;
 	flex-direction: column;
@@ -210,7 +222,28 @@ th {
 	align-items: center;
 }
 
+.DragHandleIcon-selected {
+	user-select: 'none';
+	flex: 0 0 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	background-color: rgb(160, 185, 225) !important;
+}
+
+.column-header-selected {
+	line-height: 2;
+	flex: auto;
+	cursor: pointer;
+	background-color: rgb(160, 185, 225) !important;
+}
+
 .ReactVirtualized__Grid:focus {
 	outline: 0;
 	box-shadow: none !important;
+}
+
+.sidebar-column-selected {
+	background-color: rgb(160, 185, 225) !important;
 }

@@ -11,9 +11,9 @@ import {
 	DELETE_ROW,
 	DELETE_COLUMN,
 	DELETE_VALUES,
+	EXCLUDE_ROWS,
 	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
-	MODIFY_CURRENT_SELECTION_ROW_RANGE,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
 	SET_SELECTED_COLUMN,
@@ -30,9 +30,26 @@ import {
 	TOGGLE_FILTER_MODAL,
 	TOGGLE_LAYOUT,
 	TRANSLATE_SELECTED_CELL,
+	UNEXCLUDE_ROWS,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 } from './constants';
+
+function generateUniqueRowIDs(cellSelectionRanges, rows) {
+	const range = (start, end) => Array(end - start + 1).fill().map((_, i) => start + i);
+	const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
+	const flattenedRowIndexes = selectedRows.flat();
+	const rowIDs = rows.map((row, i) => flattenedRowIndexes.includes(i) && row.id).filter((x) => x);
+	return rowIDs;
+}
+
+function generateUniqueColumnIDs(cellSelectionRanges, columns) {
+	const range = (start, end) => Array(end - start).fill().map((_, i) => start + i);
+	const selectedColumns = cellSelectionRanges.map((column) => range(column.left - 1, column.right));
+	const flattenedColumnIndexes = selectedColumns.flat();
+	const columnIDs = columns.map((column, i) => flattenedColumnIndexes.includes(i) && column.id).filter((x) => x);
+	return columnIDs;
+}
 
 function rowValueWithinTheseColumnRanges(row) {
 	const columns = this;
@@ -131,7 +148,7 @@ function spreadsheetReducer(state, action) {
 		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column, columnId };
-			return { ...state, activeCell, cellSelectionRanges: [], selectedRowIDs: [] };
+			return { ...state, activeCell, cellSelectionRanges: [], uniqueRowIDs: [], uniqueColumnIDs: [] };
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
@@ -139,54 +156,6 @@ function spreadsheetReducer(state, action) {
 				...state,
 				cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []),
 				currentCellSelectionRange: null,
-			};
-		}
-		case CREATE_COLUMNS: {
-			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
-				const id = createRandomLetterString();
-				return { id, type: 'String', label: `Column ${state.columns.length + i + 1}` };
-			});
-			const columns = state.columns.concat(newColumns);
-			return { ...state, columns };
-		}
-
-		case CREATE_ROWS: {
-			const newRows = Array(rowCount).fill(undefined).map((_) => {
-				return { id: createRandomID() };
-			});
-			return { ...state, rows: state.rows.concat(newRows) };
-		}
-		case 'ENABLE_SELECT': {
-			return { ...state, selectDisabled: false };
-		}
-		case 'DISABLE_SELECT': {
-			return { ...state, selectDisabled: true };
-		}
-		case DELETE_COLUMN: {
-			const { rows } = state;
-			const columnID = getCol(action.colName).id;
-			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
-			for (let i = 0; i < rows.length; i++) {
-				delete rows[i][columnID];
-			}
-			return {
-				...state,
-				columns: filteredColumns,
-				currentCellSelectionRange: null,
-				cellSelectionRanges: [],
-				selectedRowIDs: [],
-				activeCell: null,
-			};
-		}
-		case DELETE_ROW: {
-			const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
-			return {
-				...state,
-				rows: slicedRows,
-				currentCellSelectionRange: null,
-				cellSelectionRanges: [],
-				selectedRowIDs: [],
-				activeCell: null,
 			};
 		}
 		case COPY_VALUES: {
@@ -250,6 +219,68 @@ function spreadsheetReducer(state, action) {
 				.catch((args) => console.error('did not copy to clipboard:', args));
 			return { ...state };
 		}
+		case CREATE_COLUMNS: {
+			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
+				const id = createRandomLetterString();
+				return { id, type: 'String', label: `Column ${state.columns.length + i + 1}` };
+			});
+			const columns = state.columns.concat(newColumns);
+			return { ...state, columns };
+		}
+
+		case CREATE_ROWS: {
+			const newRows = Array(rowCount).fill(undefined).map((_) => {
+				return { id: createRandomID() };
+			});
+			return { ...state, rows: state.rows.concat(newRows) };
+		}
+		case 'ENABLE_SELECT': {
+			return { ...state, selectDisabled: false };
+		}
+		case 'DISABLE_SELECT': {
+			return { ...state, selectDisabled: true };
+		}
+		case DELETE_COLUMN: {
+			const { rows } = state;
+			const columnID = getCol(action.colName).id;
+			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
+			for (let i = 0; i < rows.length; i++) {
+				delete rows[i][columnID];
+			}
+			return {
+				...state,
+				columns: filteredColumns,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
+		}
+		case DELETE_ROW: {
+			const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
+			return {
+				...state,
+				rows: slicedRows,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
+			};
+		}
+		case EXCLUDE_ROWS: {
+			const { cellSelectionRanges, excludedRows, rows } = state;
+			return {
+				...state,
+				excludedRows: [ ...new Set(excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows))) ],
+			};
+		}
+		case UNEXCLUDE_ROWS: {
+			const { cellSelectionRanges, excludedRows, rows } = state;
+			return {
+				...state,
+				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
+			};
+		}
 		// EVENT: Paste
 		case PASTE_VALUES: {
 			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
@@ -277,7 +308,21 @@ function spreadsheetReducer(state, action) {
 				state.columns,
 				state.rows,
 			);
-			return { ...state, rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs) };
+
+			return {
+				...state,
+				uniqueColumnIDs: selectedColumnIDs,
+				uniqueRowIDs: selectedRowIDs,
+				cellSelectionRanges: [
+					{
+						top: action.top,
+						left: action.left,
+						bottom: action.top + action.height - 1,
+						right: action.left + action.width - 1,
+					},
+				],
+				rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs),
+			};
 		}
 		// EVENT: Delete values
 		case DELETE_VALUES: {
@@ -307,39 +352,47 @@ function spreadsheetReducer(state, action) {
 			return { ...state, rows: newRows };
 		}
 		case MODIFY_CURRENT_SELECTION_CELL_RANGE: {
-			const { currentCellSelectionRange, lastSelection } = state;
-			return currentCellSelectionRange
-				? {
-						...state,
-						currentCellSelectionRange: getRangeBoundaries({
-							startRangeRow: lastSelection.row,
-							startRangeColumn: lastSelection.column,
-							endRangeRow,
-							endRangeColumn,
-						}),
-					}
-				: state;
-		}
-		case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
 			const { lastSelection } = state;
-			// Note: In this case I am modifying the cellSelectionRanges directly instead of currentCellSelectionRange
-			return state.cellSelectionRanges
+			const currentCellSelectionRange = getRangeBoundaries({
+				startRangeRow: lastSelection.row,
+				startRangeColumn: lastSelection.column,
+				endRangeRow,
+				endRangeColumn,
+			});
+			const totalCellSelectionRanges = state.cellSelectionRanges.concat(currentCellSelectionRange);
+			const uniqueRowIDs = generateUniqueRowIDs(totalCellSelectionRanges, state.rows);
+			const uniqueColumnIDs = generateUniqueColumnIDs(totalCellSelectionRanges, state.columns);
+			return state.currentCellSelectionRange
 				? {
 						...state,
-						currentCellSelectionRange: getRangeBoundaries({
-							startRangeRow: lastSelection.row,
-							endRangeRow,
-							startRangeColumn: 1,
-							endRangeColumn: state.columns.length,
-						}),
+						currentCellSelectionRange,
+						uniqueRowIDs,
+						uniqueColumnIDs,
 					}
 				: state;
 		}
+		// case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
+		// 	const { lastSelection } = state;
+		// 	// Note: In this case I am checking the cellSelectionRanges directly instead of currentCellSelectionRange
+		// 	return state.currentCellSelectionRange
+		// 		? {
+		// 				...state,
+		// 				currentCellSelectionRange: getRangeBoundaries({
+		// 					startRangeRow: lastSelection.row,
+		// 					endRangeRow,
+		// 					startRangeColumn: 1,
+		// 					endRangeColumn: state.columns.length,
+		// 				}),
+		// 			}
+		// 		: state;
+		// }
 		case REMOVE_SELECTED_CELLS: {
 			return {
 				...state,
 				currentCellSelectionRange: null,
 				cellSelectionRanges: [],
+				uniqueRowIDs: [],
+				uniqueColumnIDs: [],
 				selectedRowIDs: [],
 				activeCell: null,
 			};
@@ -350,21 +403,53 @@ function spreadsheetReducer(state, action) {
 			// track lastSelection to know where to begin range selection on drag
 			const lastSelection = { row, column };
 			const selectedCell = { top: row, bottom: row, left: column, right: column };
-			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(
-				cellSelectionRanges.some((cell) => cell.top === selectedCell.top && cell.right === selectedCell.right)
-					? []
-					: selectedCell,
-			);
+			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(selectedCell);
+			const currentRowIDs = selectionActive
+				? !state.uniqueRowIDs.includes(action.rowId) ? state.uniqueRowIDs.concat(action.rowId) : state.uniqueRowIDs
+				: [ action.rowId ];
+			const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(action.columnId) : [ action.columnId ];
+			// const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(action.columnId) : [ action.columnId ];
+			// const totalCellSelectionRanges = selectionActive
+			// 	? state.cellSelectionRanges.concat(selectedCell)
+			// 	: [ selectedCell ];
+			// const uniqueRowIDs = [ ...new Set(generateUniqueRowIDs(totalCellSelectionRanges, state.rows)) ];
+			// AB: This kind of feels like unnecessary work to me
+			// const addSelectedCellToSelectionArray = cellSelectionRanges.concat(
+			// 	cellSelectionRanges.some((cell) => cell.top === selectedCell.top && cell.right === selectedCell.right)
+			// 		? []
+			// 		: selectedCell,
+			// );
 			return {
 				...state,
 				activeCell: null,
 				lastSelection,
-				selectedRowIDs: selectionActive ? addSelectedCellToSelectionArray : [],
+				currentRowIDs,
+				// currentColumnIDs,
 				cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [],
 				currentCellSelectionRange: selectedCell,
+				uniqueRowIDs: currentRowIDs,
+				uniqueColumnIDs: currentColumnIDs,
 			};
 		}
-		// TODO: Rename this action to be REPLACE_CELL_SELECTION??
+		case SELECT_ROW: {
+			const { cellSelectionRanges, columns } = state;
+			const allCellsInRow = {
+				top: rowIndex,
+				left: 1,
+				bottom: rowIndex,
+				right: state.columns.length,
+			};
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: allCellsInRow,
+				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
+				lastSelection: { column: state.columns.length, row: rowIndex },
+				uniqueRowIDs: [ action.rowId ],
+				uniqueColumnIDs: columns.map((col) => col.id),
+			};
+		}
+		// This is used when a rows array is supplied. Histogram bar clicks.
 		case SELECT_CELLS: {
 			const { cellSelectionRanges = [] } = state;
 			const columnIndexOffset = 1;
@@ -379,7 +464,6 @@ function spreadsheetReducer(state, action) {
 			return {
 				...state,
 				activeCell: null,
-				selectedRowIDs: newCellSelectionRanges,
 				cellSelectionRanges: newCellSelectionRanges,
 			};
 		}
@@ -390,26 +474,17 @@ function spreadsheetReducer(state, action) {
 				bottom: state.rows.length - 1,
 				right: state.columns.length,
 			};
-			return { ...state, activeCell: null, currentCellSelectionRange: null, cellSelectionRanges: [ allCells ] };
-		}
-		case SELECT_ROW: {
-			const { cellSelectionRanges } = state;
-			const allCellsInRow = {
-				top: rowIndex,
-				left: 1,
-				bottom: rowIndex,
-				right: state.columns.length,
-			};
 			return {
 				...state,
 				activeCell: null,
-				currentCellSelectionRange: allCellsInRow,
-				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
-				lastSelection: { row: rowIndex },
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [ allCells ],
+				uniqueColumnIDs: state.columns.map((column) => column.id),
+				uniqueRowIDs: state.rows.map((row) => row.id),
 			};
 		}
 		case SELECT_COLUMN: {
-			const { cellSelectionRanges } = state;
+			const { cellSelectionRanges, rows } = state;
 			const allCellsInColumn = {
 				top: 0,
 				left: columnIndex + 1,
@@ -421,6 +496,8 @@ function spreadsheetReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: allCellsInColumn,
 				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
+				uniqueColumnIDs: [ action.columnId ],
+				uniqueRowIDs: rows.map((row) => row.id),
 			};
 		}
 		// EVENT: Change layout
@@ -515,7 +592,6 @@ function spreadsheetReducer(state, action) {
 				columnTypeModalOpen,
 				selectedColumn: colName ? getCol(colName) : column,
 				cellSelectionRanges: [],
-				selectedRowIDs: [],
 				currentCellSelectionRange: [],
 			};
 		}
@@ -526,7 +602,6 @@ function spreadsheetReducer(state, action) {
 				distributionModalOpen,
 				activeCell: null,
 				cellSelectionRanges: [],
-				selectedRowIDs: [],
 				currentCellSelectionRange: [],
 			};
 		}
@@ -584,10 +659,27 @@ function spreadsheetReducer(state, action) {
 		}
 
 		case FILTER_COLUMN: {
-			const selectedRowIDs = filterRowsByColumnRange(selectedColumns, state.rows).map(({ id }) => id);
-			return { ...state, selectedRowIDs, selectedColumns };
+			const filteredRows = filterRowsByColumnRange(selectedColumns, state.rows);
+			const selectedRowIDs = filteredRows.map((row) => row.id);
+			const selectedRowIndexes = filteredRows.map((row) => state.rows.findIndex((stateRow) => stateRow.id === row.id));
+			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
+				return {
+					top: rowIndex,
+					left: 1,
+					bottom: rowIndex,
+					right: state.columns.length,
+				};
+			});
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: selectedRowObjects,
+				cellSelectionRanges: selectedRowObjects,
+				selectedColumns,
+				uniqueRowIDs: selectedRowIDs,
+				uniqueColumnIDs: state.columns.map((col) => col.id),
+			};
 		}
-
 		case UPDATE_COLUMN: {
 			// TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
 			const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
@@ -759,26 +851,30 @@ export function SpreadsheetProvider({ eventBus, children }) {
 
 	const initialState = {
 		eventBus,
+		activeCell: null,
 		analysisModalOpen: false,
 		analysisWindowOpen: false,
-		columnTypeModalOpen: false,
-		activeCell: null,
 		cellSelectionRanges: [],
-		contextMenuPosition: null,
-		contextMenuRowIndex: null,
-		currentCellSelectionRange: null,
+		columnTypeModalOpen: false,
 		colHeaderContext: false,
 		columns: statsColumns,
 		colName: null,
 		contextMenuOpen: false,
+		contextMenuPosition: null,
+		contextMenuRowIndex: null,
+		currentCellSelectionRange: null,
 		distributionModalOpen: false,
+		excludedRows: [ 'P8QKAfq0p3' ],
 		filterModalOpen: false,
+		lastSelection: { row: 1, column: 1 },
 		layout: true,
+		rows,
 		selectedColumns: [],
 		selectDisabled: false,
 		selectedRowIDs: [],
-		lastSelection: { row: 1, column: 1 },
-		rows,
+		totalSelectedRows: 0,
+		uniqueRowIDs: [],
+		uniqueColumnIDs: [],
 	};
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);
 	return (
