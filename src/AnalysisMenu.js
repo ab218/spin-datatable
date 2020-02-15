@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Menu, Icon, Dropdown } from 'antd';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_ANALYSIS_MODAL, TOGGLE_DISTRIBUTION_MODAL, TOGGLE_FILTER_MODAL } from './constants';
+import {
+	TOGGLE_ANALYSIS_MODAL,
+	TOGGLE_BAR_CHART_MODAL,
+	TOGGLE_DISTRIBUTION_MODAL,
+	TOGGLE_FILTER_MODAL,
+} from './constants';
 
 export default function HamburgerMenu() {
 	const [ collapsed, setCollapsed ] = useState(false);
@@ -22,6 +27,12 @@ export default function HamburgerMenu() {
 					dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })}
 			>
 				Filter
+			</Menu.Item>
+			<Menu.Item
+				onClick={() =>
+					dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: true, selectedColumns: [] })}
+			>
+				Bar Chart
 			</Menu.Item>
 		</Menu>
 	);

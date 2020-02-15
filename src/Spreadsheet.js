@@ -13,6 +13,7 @@ import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
 import RowHeaders from './RowHeaders';
 import HeaderRenderer from './HeaderRenderer';
+import BarChartModal from './ModalBarChart';
 import {
 	Column,
 	Table,
@@ -52,6 +53,7 @@ function Spreadsheet({ eventBus }) {
 	const {
 		activeCell,
 		analysisModalOpen,
+		barChartModalOpen,
 		columns,
 		cellSelectionRanges,
 		distributionModalOpen,
@@ -328,6 +330,7 @@ function Spreadsheet({ eventBus }) {
 		<div style={{ height: '100%', width: '100%' }}>
 			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
+			{barChartModalOpen && <BarChartModal />}
 			{distributionModalOpen && <DistributionModal />}
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}

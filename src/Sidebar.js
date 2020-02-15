@@ -9,7 +9,7 @@ export default function Sidebar() {
 	const { columns, excludedRows, rows, uniqueColumnIDs, uniqueRowIDs } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	return (
-		<Layout.Sider width={'17%'} style={{ textAlign: 'left' }} collapsible collapsedWidth={20} theme={'light'}>
+		<Layout.Sider width={'20em'} style={{ textAlign: 'left' }} collapsible collapsedWidth={20} theme={'light'}>
 			<table style={{ marginTop: '100px', marginLeft: '10px', width: '100%' }}>
 				<tbody>
 					<tr>
