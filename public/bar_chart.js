@@ -113,9 +113,7 @@ function receiveMessage(event) {
 			.attr('fill', (d) => color(d['group']));
 
 		svg.append('g').call(xAxis);
-
 		svg.append('g').call(yAxis);
-
 		svg.append('g').call(legend);
 
 		// text label for the x axis

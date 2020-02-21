@@ -8,7 +8,7 @@ import {
 	COPY_VALUES,
 	CREATE_COLUMNS,
 	CREATE_ROWS,
-	DELETE_ROW,
+	DELETE_ROWS,
 	DELETE_COLUMN,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
@@ -259,11 +259,12 @@ function spreadsheetReducer(state, action) {
 				activeCell: null,
 			};
 		}
-		case DELETE_ROW: {
-			const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
+		case DELETE_ROWS: {
+			// const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
+			const filteredRows = state.rows.filter((row) => !state.uniqueRowIDs.includes(row.id));
 			return {
 				...state,
-				rows: slicedRows,
+				rows: filteredRows,
 				currentCellSelectionRange: null,
 				cellSelectionRanges: [],
 				selectedRowIDs: [],
