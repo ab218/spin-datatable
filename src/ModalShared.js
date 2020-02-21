@@ -10,7 +10,7 @@ export const styles = {
 	flexColumn: {
 		display: 'flex',
 		flexDirection: 'column',
-		width: 100,
+		width: 125,
 	},
 	flexSpaced: {
 		display: 'flex',

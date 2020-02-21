@@ -336,38 +336,36 @@ function Spreadsheet({ eventBus }) {
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
 				<div style={{ display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>
+					<Sidebar />
 					<WindowScroller>
 						{/* <AutoSizer> */}
 						{({ height }) => (
-							<div style={{ display: 'flex' }}>
-								<Sidebar />
-								<Table
-									overscanRowCount={0}
-									width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
-									height={height}
-									headerHeight={25}
-									rowHeight={30}
-									rowCount={visibleRows}
-									rowGetter={({ index }) => rows[index] || emptyRow}
-									rowStyle={{ alignItems: 'stretch' }}
-								>
-									<Column
-										width={100}
-										label={''}
-										dataKey={'rowHeaderColumn'}
-										headerRenderer={() => <AnalysisMenu />}
-										cellRenderer={(props) => (
-											<RowHeaders
-												{...props}
-												createNewRows={createNewRows}
-												modifyCellSelectionRange={modifyCellSelectionRange}
-											/>
-										)}
-										style={{ margin: 0 }}
-									/>
-									{renderColumns(visibleColumns)}
-								</Table>
-							</div>
+							<Table
+								overscanRowCount={0}
+								width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
+								height={height}
+								headerHeight={25}
+								rowHeight={30}
+								rowCount={visibleRows}
+								rowGetter={({ index }) => rows[index] || emptyRow}
+								rowStyle={{ alignItems: 'stretch' }}
+							>
+								<Column
+									width={100}
+									label={''}
+									dataKey={'rowHeaderColumn'}
+									headerRenderer={() => <AnalysisMenu />}
+									cellRenderer={(props) => (
+										<RowHeaders
+											{...props}
+											createNewRows={createNewRows}
+											modifyCellSelectionRange={modifyCellSelectionRange}
+										/>
+									)}
+									style={{ margin: 0 }}
+								/>
+								{renderColumns(visibleColumns)}
+							</Table>
 						)}
 						{/* </AutoSizer> */}
 					</WindowScroller>

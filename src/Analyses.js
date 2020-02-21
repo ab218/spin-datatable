@@ -129,14 +129,14 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	};
 }
 
-export async function createBarChart(colXArr, colYArr, colZArr, colXLabel, colYLabel, colZLabel, XYZCols) {
+export async function createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols) {
 	return {
 		colXArr,
 		colYArr,
 		colZArr,
-		colXLabel,
-		colYLabel,
-		colZLabel,
+		colX,
+		colY,
+		colZ,
 		coordinates: XYZCols,
 	};
 }

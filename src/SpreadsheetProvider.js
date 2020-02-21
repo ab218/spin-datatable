@@ -129,6 +129,7 @@ function spreadsheetReducer(state, action) {
 		distributionModalOpen,
 		endRangeRow,
 		endRangeColumn,
+		filters,
 		filterModalOpen,
 		layout,
 		row,
@@ -612,7 +613,14 @@ function spreadsheetReducer(state, action) {
 		}
 		// EVENT: Filter Modal opened/closed
 		case TOGGLE_FILTER_MODAL: {
-			return { ...state, filterModalOpen, selectedColumn: null, activeCell: null, selectedColumns };
+			return {
+				...state,
+				filterModalOpen,
+				selectedColumn: null,
+				activeCell: null,
+				selectedColumns,
+				filters: { numberFilters: [], stringFilters: [] },
+			};
 		}
 		case SET_SELECTED_COLUMN: {
 			return { ...state, selectedColumns };
@@ -662,11 +670,33 @@ function spreadsheetReducer(state, action) {
 			);
 			return { ...state };
 		}
-
+		case 'SET_FILTERS': {
+			return {
+				...state,
+				selectedColumns: selectedColumns || state.selectedColumns,
+				filters: {
+					stringFilters: filters.stringFilters || state.filters.stringFilters,
+					numberFilters: filters.numberFilters || state.filters.numberFilters,
+				},
+			};
+		}
 		case FILTER_COLUMN: {
-			const filteredRows = filterRowsByColumnRange(selectedColumns, state.rows);
-			const selectedRowIDs = filteredRows.map((row) => row.id);
-			const selectedRowIndexes = filteredRows.map((row) => state.rows.findIndex((stateRow) => stateRow.id === row.id));
+			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
+			const filteredRowsByString = state.filters.stringFilters
+				.map((t) => state.rows.filter((row) => Object.values(row).includes(t)))
+				.flat();
+			const findIntersectionOfTwoArrays = (arr1 = [], arr2 = []) => {
+				if (state.filters.numberFilters.length === 0) return arr1;
+				if (state.filters.stringFilters.length === 0) return arr2;
+				return arr1.filter((a) => arr2.some((b) => a.id === b.id));
+			};
+			const intersectionOfFilteredRows = findIntersectionOfTwoArrays(filteredRowsByString, filteredRowsByRange);
+			const selectedRangeRowIDs = intersectionOfFilteredRows.map((row) => row.id);
+			const selectedStringRowIDs = filteredRowsByString.map((row) => row.id);
+			const intersectionOfRowIDs = selectedRangeRowIDs.filter((rangeID) => selectedStringRowIDs.includes(rangeID));
+			const selectedRowIndexes = intersectionOfFilteredRows.map((row) =>
+				state.rows.findIndex((stateRow) => stateRow.id === row.id),
+			);
 			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
 				return {
 					top: rowIndex,
@@ -680,8 +710,7 @@ function spreadsheetReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: selectedRowObjects,
 				cellSelectionRanges: selectedRowObjects,
-				selectedColumns,
-				uniqueRowIDs: selectedRowIDs,
+				uniqueRowIDs: intersectionOfRowIDs,
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
@@ -825,7 +854,11 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		contextMenuRowIndex: null,
 		currentCellSelectionRange: null,
 		distributionModalOpen: false,
-		excludedRows: [ 'P8QKAfq0p3' ],
+		excludedRows: [],
+		filters: {
+			stringFilters: [],
+			numberFilters: [],
+		},
 		filterModalOpen: false,
 		lastSelection: { row: 1, column: 1 },
 		layout: true,

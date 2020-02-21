@@ -17,7 +17,12 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 		const newCopy = selectedColumns.slice();
 		const index = newCopy.findIndex((col) => col.id === columnId);
 		newCopy[index] = { ...selectedColumns[index], min, max };
-		dispatchSpreadsheetAction({ type: FILTER_COLUMN, selectedColumns: newCopy });
+		dispatchSpreadsheetAction({
+			type: 'SET_FILTERS',
+			selectedColumns: newCopy,
+			filters: { numberFilters: newCopy.filter((col) => col.type === 'Number') },
+		});
+		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 	};
 
 	return (
@@ -32,6 +37,7 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 					range
 					value={[ min, max ]}
 					onChange={onChange}
+					step={(colMax / 100).toFixed(2)}
 					onAfterChange={onAfterChange}
 				/>
 			</Col>

@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { Button, Modal, Icon, Tooltip } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Select } from 'antd';
 import IntegerStep from './IntegerStep';
+import AddColumnButton from './AddColumnButton';
+import RemoveColumnButton from './RemoveColumnButton';
 import { SelectColumn } from './ModalShared';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { SET_SELECTED_COLUMN, TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from './constants';
+import { TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from './constants';
 
 export default function AntModal() {
 	const [ clickedColumn, setClickedColumn ] = useState(null);
 
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { filterModalOpen, columns, rows, selectedColumns } = useSpreadsheetState();
+	const { filterModalOpen, columns, selectedColumns } = useSpreadsheetState();
 
 	function handleClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumns: [] });
@@ -18,60 +20,6 @@ export default function AntModal() {
 	function handleCancel() {
 		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumns: [] });
-	}
-
-	function addColumn() {
-		if (!selectedColumns.some(({ id }) => id === clickedColumn.id)) {
-			const colVals = rows.map((row) => Number(row[clickedColumn.id])).filter((x) => x);
-			const colMax = Math.max(...colVals);
-			const colMin = Math.min(...colVals);
-			const columnObject = {
-				...clickedColumn,
-				colMin,
-				colMax,
-			};
-			dispatchSpreadsheetAction({ type: SET_SELECTED_COLUMN, selectedColumns: selectedColumns.concat(columnObject) });
-		}
-	}
-
-	function removeColumn(columnId) {
-		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnId);
-		dispatchSpreadsheetAction({ type: SET_SELECTED_COLUMN, selectedColumns: filteredColumns });
-	}
-
-	function AddColumnButton() {
-		return (
-			<Button disabled={!clickedColumn} style={{ width: 100, marginTop: 10 }} onClick={addColumn}>
-				Add
-			</Button>
-		);
-	}
-
-	function RemoveColumnButton({ columnId }) {
-		return (
-			<Tooltip onClick={() => removeColumn(columnId)} className="pointer" title="Remove Column">
-				<Icon type="close" style={{ color: 'red', marginTop: 20 }} />
-			</Tooltip>
-		);
-	}
-
-	function FilterColumnSlider({ column }) {
-		const { id, colMin, colMax, label, min, max } = column;
-		return (
-			<div style={{ display: 'flex' }}>
-				<IntegerStep
-					currentMin={min}
-					currentMax={max}
-					key={id}
-					columnId={id}
-					label={label}
-					colMin={colMin}
-					colMax={colMax}
-					selectedColumns={selectedColumns}
-				/>
-				<RemoveColumnButton columnId={id} />
-			</div>
-		);
 	}
 
 	return (
@@ -87,12 +35,86 @@ export default function AntModal() {
 			>
 				<div style={{ width: 300, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 					<SelectColumn columns={columns} setSelectedColumn={setClickedColumn} style={{ width: '300px' }} />
-					<AddColumnButton />
+					<AddColumnButton clickedColumn={clickedColumn} />
 					{selectedColumns &&
 						selectedColumns.length > 0 &&
-						selectedColumns.map((col, i) => <FilterColumnSlider key={i} column={col} />)}
+						selectedColumns.map(
+							(col, i) =>
+								col.type === 'String' ? (
+									<FilterColumnPicker key={i} column={col} />
+								) : (
+									<FilterColumnSlider key={i} column={col} />
+								),
+						)}
 				</div>
 			</Modal>
+		</div>
+	);
+}
+
+function FilterColumnSlider({ column }) {
+	const { selectedColumns } = useSpreadsheetState();
+	const { id, colMin, colMax, label, min, max } = column;
+
+	return (
+		<div style={{ display: 'flex' }}>
+			<IntegerStep
+				currentMin={min}
+				currentMax={max}
+				key={id}
+				columnId={id}
+				label={label}
+				colMin={colMin}
+				colMax={colMax}
+				selectedColumns={selectedColumns}
+			/>
+			<RemoveColumnButton columnId={id} />
+		</div>
+	);
+}
+
+function FilterColumnPicker({ column }) {
+	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const { rows } = useSpreadsheetState();
+	const [ checkedText, setCheckedText ] = useState([]);
+
+	useEffect(
+		() => {
+			dispatchSpreadsheetAction({ type: 'SET_FILTERS', filters: { stringFilters: checkedText } });
+			dispatchSpreadsheetAction({ type: 'FILTER_COLUMN' });
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ checkedText ],
+	);
+	const { id } = column;
+	const uniqueColumnValues = [ ...new Set(rows.map((row) => row[id])) ];
+	const { Option } = Select;
+	function handleChange(text) {
+		setCheckedText(text);
+	}
+	return (
+		<div style={{ display: 'flex' }}>
+			<Select mode="multiple" style={{ width: 300 }} placeholder="Please select" onChange={handleChange}>
+				{uniqueColumnValues.map((text) => (
+					<Option style={{ width: 300 }} key={text}>
+						{text}
+					</Option>
+				))}
+			</Select>
+			{/* {uniqueColumnValues.map((text) => (
+				<Checkbox
+					id={`#${text}`}
+					key={text}
+					checked={checkedText.includes(text)}
+					onClick={(e) =>
+						e.target.checked
+							? setCheckedText((prev) => prev.concat(text))
+							: setCheckedText((prev) => prev.filter((currentTextArray) => !currentTextArray.includes(text)))}
+				>
+					{text}
+				</Checkbox>
+			))} */}
+			<RemoveColumnButton columnId={id} />
 		</div>
 	);
 }

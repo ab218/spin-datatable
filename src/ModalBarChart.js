@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Button, Card, Modal, Radio } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { createBarChart } from './Analyses';
-import { TOGGLE_BAR_CHART_MODAL } from './constants';
+import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
 import { SelectColumn, styles } from './ModalShared';
-import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from './constants';
+import { REMOVE_SELECTED_CELLS, FILTER_COLUMN } from './constants';
 
 export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -52,10 +52,18 @@ export default function AnalysisModal() {
 		function makeXYZCols(colA, colB, colC) {
 			const arr = [];
 			for (let i = 0; i < maxColLength; i++) {
-				const row = i + 1;
+				const rowNumber = i + 1;
 				// Filter out NaN, undefined, null values
 				if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
-					arr.push({ x: colA[i], y: colB[i], group: colC[i], row });
+					arr.push({
+						x: colA[i],
+						y: colB[i],
+						group: colC[i],
+						row: {
+							rowID: rows[i]['id'],
+							rowNumber,
+						},
+					});
 				}
 			}
 			return arr.sort();
@@ -65,8 +73,8 @@ export default function AnalysisModal() {
 		const colYArr = XYZCols.map((a) => a.y);
 		const colZArr = XYZCols.map((a) => a.group);
 
-		if (colXArr.length >= 3 && colYArr.length >= 3 && colZArr.length >= 3) {
-			const results = await createBarChart(colXArr, colYArr, colZArr, colX.label, colY.label, colZ.label, XYZCols);
+		if (colXArr.length >= 1 && colYArr.length >= 1 && colZArr.length >= 1) {
+			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols);
 			const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=850,height=800');
 			function receiveMessage(event) {
 				// target window is ready, time to send data.
@@ -89,19 +97,20 @@ export default function AnalysisModal() {
 
 			function targetClickEvent(event) {
 				if (event.data.message === 'clicked') {
-					const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
-					const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
 					if (!event.data.metaKeyPressed) {
 						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 					}
-
-					const rowIndices = rows.reduce((acc, row, rowIndex) => {
-						// TODO Shouldn't be using Number here?
-						return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
-							? acc.concat(rowIndex)
-							: acc;
-					}, []);
-					dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
+					if (event.data.label && event.data.colZ) {
+						dispatchSpreadsheetAction({ type: 'SET_FILTERS', filters: { stringFilters: [ event.data.colZ.text ] } });
+						dispatchSpreadsheetAction({ type: FILTER_COLUMN });
+						return;
+					}
+					const selectedRow = event.data.rowID;
+					dispatchSpreadsheetAction({
+						type: SELECT_ROW,
+						rowId: selectedRow,
+						rowIndex: rows.findIndex((row) => row.id === selectedRow),
+					});
 				}
 			}
 			setPerformingAnalysis(false);
@@ -159,7 +168,7 @@ export default function AnalysisModal() {
 				onOk={performAnalysis}
 				title="Bar Chart"
 				visible={barChartModalOpen}
-				width={600}
+				width={650}
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={styles.flexSpaced}>
@@ -167,7 +176,7 @@ export default function AnalysisModal() {
 						Select Column
 						<SelectColumn columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
 					</div>
-					<div style={{ width: 310 }}>
+					<div style={{ width: 360 }}>
 						Cast Selected Columns into Roles
 						<div style={{ marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
 							<CaratButtons data={yColData} setData={setYColData} label="Y" />
@@ -178,7 +187,7 @@ export default function AnalysisModal() {
 							<RadioGroup data={xColData} setData={setSelectedRightColumn} />
 						</div>
 						<div style={styles.flexSpaced}>
-							<CaratButtons data={groupingColData} setData={setGroupingColData} label="Color" />
+							<CaratButtons data={groupingColData} setData={setGroupingColData} label="Group" />
 							<RadioGroup data={groupingColData} setData={setSelectedRightColumn} />
 						</div>
 					</div>

@@ -1,37 +1,4 @@
 /*global d3 clickedBarPointSize highlightedPointColor highlightedPointSize normalPointSize normalBarFill createPoints reversedLine valueLine drawBasicPath toggleChartElement generateTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
-
-// magic linear regression globals
-const margin = { top: 40, right: 30, bottom: 30, left: 30 };
-const width = 650;
-const height = 650;
-const svgWidth = width + margin.left + margin.right + 100;
-const svgHeight = height + margin.top + margin.bottom;
-
-const svg = d3
-	.select('.chart')
-	.append('svg')
-	.attr('width', svgWidth)
-	.attr('height', svgHeight)
-	.append('g')
-	.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-// So that lines stay within the bounds of the graph
-// svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
-// const x = d3.scaleLinear().range([ 0, width ]);
-// const y = d3.scaleLinear().range([ height, 0 ]);
-
-// const xAxis = d3.axisBottom().scale(x).ticks(10, 's');
-// const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
-
-const titleEl = document.createElement('div');
-const titleText = document.createTextNode(`Rate (ml/sec) vs. Time (sec)`);
-titleEl.classList.add('analysis-title');
-titleEl.appendChild(titleText);
-const chartsContainer = document.getElementById('chart');
-document.body.insertBefore(titleEl, chartsContainer);
-
-const keys = [ 'Potato', 'Liver' ];
-
 const yData = [
 	11.66,
 	5.42,
@@ -101,6 +68,36 @@ const groupData = [
 	'Potato',
 ];
 
+let linear = true;
+
+document.addEventListener('DOMContentLoaded', function() {
+	document.getElementById('x-axis-scale').addEventListener('click', (e) => {
+		if (e.target.checked) {
+			linear = false;
+			d3.select('svg').remove();
+			chart();
+		} else {
+			linear = true;
+			d3.select('svg').remove();
+			chart();
+		}
+	});
+});
+
+// magic linear regression globals
+const margin = { top: 40, right: 30, bottom: 30, left: 30 };
+const width = 650;
+const height = 650;
+const svgWidth = width + margin.left + margin.right + 100;
+const svgHeight = height + margin.top + margin.bottom;
+
+const titleEl = document.createElement('div');
+const titleText = document.createTextNode(`Rate (ml/sec) vs. Time (sec)`);
+titleEl.classList.add('analysis-title');
+titleEl.appendChild(titleText);
+const chartsContainer = document.getElementById('chart');
+document.body.insertBefore(titleEl, chartsContainer);
+
 const makeData = (x, y, group) => {
 	const data = [];
 	for (let i = 0; i < x.length; i++) {
@@ -108,6 +105,7 @@ const makeData = (x, y, group) => {
 			x: x[i],
 			y: y[i],
 			group: group[i],
+			row: i + 1,
 		});
 	}
 	return data;
@@ -115,26 +113,78 @@ const makeData = (x, y, group) => {
 
 const potatoData = makeData(xData, yData, groupData);
 
+const barTooltip = d3.select('body').append('div').attr('class', 'bar tooltip').style('opacity', 0);
+
+function onMouseOverBars(d, thisBar) {
+	d3.select(thisBar).transition().duration(50).style('opacity', 0.6);
+	barTooltip.transition().duration(200).style('opacity', 0.9);
+	barTooltip
+		.html(`Group: ${d.group}<br>Rate (ml/sec): ${d.y}<br>Time (sec): ${d.x}<br>row: ${d.row}`)
+		.style('left', `${d3.event.pageX}px`)
+		.style('top', `${d3.event.pageY - 28}px`);
+}
+
+function onMouseOutBars(_, thisBar) {
+	d3.select(thisBar).transition().duration(50).style('opacity', 1);
+	barTooltip.transition().duration(500).style('opacity', 0);
+}
+
 const chart = () => {
+	const svg = d3
+		.select('.chart')
+		.append('svg')
+		.attr('width', svgWidth)
+		.attr('height', svgHeight)
+		.append('g')
+		.attr('transform', `translate(${margin.left},${margin.top})`);
+
+	const x = linear
+		? d3
+				.scaleLinear()
+				.range([ 0 + margin.left, width - margin.right ])
+				.domain([ Math.min(...xData), Math.max(...xData) ])
+				.nice()
+		: d3
+				.scaleBand()
+				.domain(potatoData.sort((a, b) => a.x - b.x).map((d) => d.x))
+				.rangeRound([ margin.left, width - margin.right ])
+				.paddingInner(0.1);
+
+	const xAxis = (g) =>
+		linear
+			? g
+					.attr('class', 'x-axis')
+					.attr('transform', `translate(0,${height - margin.bottom})`)
+					.call(d3.axisBottom(x).ticks(20, 's'))
+			: g
+					.attr('class', 'x-axis')
+					.attr('transform', `translate(0,${height - margin.bottom})`)
+					.call(d3.axisBottom(x).tickSize(0))
+					.selectAll('text')
+					.style('text-anchor', 'end')
+					.attr('dx', '-.8em')
+					.attr('dy', '.15em')
+					.attr('transform', 'rotate(-65)');
+
 	svg
 		.append('g')
 		.selectAll('rect')
 		.data(potatoData)
 		.join('rect')
 		.on(`mouseover`, function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 0.6);
+			onMouseOverBars(d, this);
 		})
 		.on(`mouseout`, function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 1);
+			onMouseOutBars(d, this);
 		})
-		.attr('x', (d) => x0(d.x))
+		.attr('x', (d) => x(d.x))
 		.attr('y', (d) => y(d.y))
 		.transition()
 		.duration(100)
 		.delay(function(d, i) {
 			return i * 50;
 		})
-		.attr('width', x0.bandwidth())
+		.attr('width', linear ? 3 : x.bandwidth())
 		.attr('height', (d) => y(0) - y(d.y))
 		.attr('fill', (d) => color(d['group']));
 
@@ -147,7 +197,7 @@ const chart = () => {
 	// text label for the x axis
 	svg
 		.append('text')
-		.attr('transform', 'translate(' + width / 2 + ' ,' + (height + 20) + ')')
+		.attr('transform', `translate(${width / 2},${height + 20})`)
 		.style('text-anchor', 'middle')
 		.text('Time (sec)');
 
@@ -161,17 +211,25 @@ const chart = () => {
 		.style('text-anchor', 'middle')
 		.text('Rate (ml/sec)');
 
+	svg
+		.append('text')
+		.attr('text-anchor', 'middle')
+		.attr('text-decoration', 'underline')
+		.attr('transform', `translate(${width},50)`)
+		.attr('font-size', 18)
+		.text('Catalase Solution');
+
 	return svg.node();
 };
 
-const color = d3.scaleOrdinal().range([ '#98abc5', '#a05d56', '#d0743c', '#ff8c00' ]);
+const color = d3.scaleOrdinal().range([ '#F78888', '#F3D250', '#ECECEC', '#90CCF4', '#5DA2D5' ]);
 
 const legend = (svg) => {
 	const g = svg
-		.attr('transform', `translate(${width},0)`)
+		.attr('transform', `translate(${width},80)`)
 		.attr('text-anchor', 'end')
 		.attr('font-family', 'sans-serif')
-		.attr('font-size', 18)
+		.attr('font-size', 16)
 		.selectAll('g')
 		.data(color.domain().slice().reverse())
 		.join('g')
@@ -193,22 +251,11 @@ const legend = (svg) => {
 	g.append('text').attr('x', -10).attr('y', 30).text((d) => d);
 };
 
-const x0 = d3
-	.scaleBand()
-	.domain(potatoData.sort((a, b) => a.x - b.x).map((d) => d.x))
-	.rangeRound([ margin.left, width - margin.right ])
-	.paddingInner(0.1);
-
-// const x1 = d3.scaleBand().domain(keys).rangeRound([ 0, x0.bandwidth() ]).padding(0.1);
-
 const y = d3
 	.scaleLinear()
 	.domain([ 0, d3.max(potatoData, (d) => d.y) ])
 	.nice()
 	.rangeRound([ height - margin.bottom, margin.top ]);
-
-const xAxis = (g) =>
-	g.attr('transform', `translate(0,${height - margin.bottom})`).call(d3.axisBottom(x0).tickSizeOuter(0));
 
 const yAxis = (g) => g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(null, 's'));
 chart();

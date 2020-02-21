@@ -140,6 +140,12 @@ body {
 	background: lightyellow;
 }
 
+.bar {
+	text-align: left;
+	height: 60px;
+	background: lightyellow;
+}
+
 .equation {
 	font-size: 12px;
 	margin-top: 10px;
