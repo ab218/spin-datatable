@@ -67,6 +67,9 @@ const groupData = [
 	'Potato',
 	'Potato',
 ];
+const colXLabel = 'Time (sec)';
+const colYLabel = 'Rate (ml/sec)';
+const colZLabel = 'Catalase Solution';
 
 let linear = true;
 
@@ -74,25 +77,20 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('x-axis-scale').addEventListener('click', (e) => {
 		if (e.target.checked) {
 			linear = false;
-			d3.select('svg').remove();
-			chart();
+			d3.selectAll('svg').remove();
+			chart(potatoData, 650, 650, false);
+			uniqueGroups.forEach((group) => chart(separateGroups(potatoData, group), 400, 400, true, group));
 		} else {
 			linear = true;
-			d3.select('svg').remove();
-			chart();
+			d3.selectAll('svg').remove();
+			chart(potatoData, 650, 650, false);
+			uniqueGroups.forEach((group) => chart(separateGroups(potatoData, group), 400, 400, true, group));
 		}
 	});
 });
 
-// magic linear regression globals
-const margin = { top: 40, right: 30, bottom: 30, left: 30 };
-const width = 650;
-const height = 650;
-const svgWidth = width + margin.left + margin.right + 100;
-const svgHeight = height + margin.top + margin.bottom;
-
 const titleEl = document.createElement('div');
-const titleText = document.createTextNode(`Rate (ml/sec) vs. Time (sec)`);
+const titleText = document.createTextNode(`${colXLabel} vs. ${colYLabel}`);
 titleEl.classList.add('analysis-title');
 titleEl.appendChild(titleText);
 const chartsContainer = document.getElementById('chart');
@@ -112,6 +110,7 @@ const makeData = (x, y, group) => {
 };
 
 const potatoData = makeData(xData, yData, groupData);
+const uniqueGroups = [ ...new Set(potatoData.map((row) => row.group)) ];
 
 const barTooltip = d3.select('body').append('div').attr('class', 'bar tooltip').style('opacity', 0);
 
@@ -129,24 +128,69 @@ function onMouseOutBars(_, thisBar) {
 	barTooltip.transition().duration(500).style('opacity', 0);
 }
 
-const chart = () => {
+const chart = (data, height, width, subGraph, title) => {
+	const margin = { top: 40, right: 30, bottom: 70, left: 30 };
+	const svgWidth = width + margin.left + margin.right;
+	const svgHeight = height + margin.top + margin.bottom;
+
 	const svg = d3
-		.select('.chart')
+		.select(subGraph ? '#sub-graphs' : '#chart')
 		.append('svg')
-		.attr('width', svgWidth)
+		.attr('width', subGraph ? svgWidth : svgWidth + 300)
 		.attr('height', svgHeight)
 		.append('g')
 		.attr('transform', `translate(${margin.left},${margin.top})`);
+
+	const legend = (svg) => {
+		const g = svg
+			.attr('transform', `translate(${width + 80},60)`)
+			.attr('text-anchor', 'start')
+			.attr('font-family', 'sans-serif')
+			.attr('font-size', 14)
+			.selectAll('g')
+			.data(color.domain().slice().reverse())
+			.join('g')
+			.attr('transform', (d, i) => `translate(0,${i * 30})`);
+
+		g
+			.append('rect')
+			.attr('x', -50)
+			.attr('y', 10)
+			.attr('width', 25)
+			.attr('height', 25)
+			.attr('fill', color)
+			.on(`mouseover`, function(d) {
+				d3.select(this).transition().duration(50).attr('opacity', 0.6);
+			})
+			.on(`mouseout`, function(d) {
+				d3.select(this).transition().duration(50).attr('opacity', 1);
+			});
+
+		g.append('text').attr('x', -10).attr('y', 30).text((d) => {
+			return d;
+		});
+	};
+
+	const y = d3
+		.scaleLinear()
+		.domain([ 0, d3.max(data, (d) => d.y) ])
+		.nice()
+		.rangeRound([ height - margin.bottom, margin.top ]);
+
+	const yAxis = (g) => g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(15, 'f'));
 
 	const x = linear
 		? d3
 				.scaleLinear()
 				.range([ 0 + margin.left, width - margin.right ])
-				.domain([ Math.min(...xData), Math.max(...xData) ])
+				.domain([
+					d3.min(data, (d) => d.x) - d3.min(data, (d) => d.x) * 0.05,
+					d3.max(data, (d) => d.x) + d3.max(data, (d) => d.x) * 0.05,
+				])
 				.nice()
 		: d3
 				.scaleBand()
-				.domain(potatoData.sort((a, b) => a.x - b.x).map((d) => d.x))
+				.domain(data.sort((a, b) => a.x - b.x).map((d) => d.x))
 				.rangeRound([ margin.left, width - margin.right ])
 				.paddingInner(0.1);
 
@@ -155,7 +199,7 @@ const chart = () => {
 			? g
 					.attr('class', 'x-axis')
 					.attr('transform', `translate(0,${height - margin.bottom})`)
-					.call(d3.axisBottom(x).ticks(20, 's'))
+					.call(subGraph ? d3.axisBottom(x).ticks(10, 'f') : d3.axisBottom(x).ticks(15, 'f'))
 			: g
 					.attr('class', 'x-axis')
 					.attr('transform', `translate(0,${height - margin.bottom})`)
@@ -169,7 +213,7 @@ const chart = () => {
 	svg
 		.append('g')
 		.selectAll('rect')
-		.data(potatoData)
+		.data(data)
 		.join('rect')
 		.on(`mouseover`, function(d) {
 			onMouseOverBars(d, this);
@@ -189,17 +233,7 @@ const chart = () => {
 		.attr('fill', (d) => color(d['group']));
 
 	svg.append('g').call(xAxis);
-
 	svg.append('g').call(yAxis);
-
-	svg.append('g').call(legend);
-
-	// text label for the x axis
-	svg
-		.append('text')
-		.attr('transform', `translate(${width / 2},${height + 20})`)
-		.style('text-anchor', 'middle')
-		.text('Time (sec)');
 
 	// text label for the y axis
 	svg
@@ -209,53 +243,41 @@ const chart = () => {
 		.attr('x', 0 - height / 2)
 		.attr('dy', '1em')
 		.style('text-anchor', 'middle')
-		.text('Rate (ml/sec)');
+		.text(colYLabel);
 
+	// text label for the x axis
 	svg
 		.append('text')
-		.attr('text-anchor', 'middle')
-		.attr('text-decoration', 'underline')
-		.attr('transform', `translate(${width},50)`)
-		.attr('font-size', 18)
-		.text('Catalase Solution');
+		.attr('transform', `translate(${width / 2},${height + 20})`)
+		.style('text-anchor', 'middle')
+		.text(colXLabel);
+
+	// text label for subgraph title
+	if (subGraph) {
+		svg
+			.append('text')
+			.attr('text-decoration', 'underline')
+			.attr('font-size', 16)
+			.attr('transform', `translate(${width / 2},${20})`)
+			.style('text-anchor', 'middle')
+			.text(`${colZLabel}: ${title}`);
+	} else {
+		// legend for main graph
+		svg
+			.append('text')
+			.attr('text-anchor', 'middle')
+			.attr('text-decoration', 'underline')
+			.attr('transform', `translate(${width + 90},50)`)
+			.attr('font-size', 16)
+			.text(colZLabel);
+		svg.append('g').call(legend);
+	}
 
 	return svg.node();
 };
 
-const color = d3.scaleOrdinal().range([ '#F78888', '#F3D250', '#ECECEC', '#90CCF4', '#5DA2D5' ]);
-
-const legend = (svg) => {
-	const g = svg
-		.attr('transform', `translate(${width},80)`)
-		.attr('text-anchor', 'end')
-		.attr('font-family', 'sans-serif')
-		.attr('font-size', 16)
-		.selectAll('g')
-		.data(color.domain().slice().reverse())
-		.join('g')
-		.attr('transform', (d, i) => `translate(0,${i * 60})`);
-
-	g
-		.append('rect')
-		.attr('x', 10)
-		.attr('width', 40)
-		.attr('height', 40)
-		.attr('fill', color)
-		.on(`mouseover`, function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 0.6);
-		})
-		.on(`mouseout`, function(d) {
-			d3.select(this).transition().duration(50).attr('opacity', 1);
-		});
-
-	g.append('text').attr('x', -10).attr('y', 30).text((d) => d);
-};
-
-const y = d3
-	.scaleLinear()
-	.domain([ 0, d3.max(potatoData, (d) => d.y) ])
-	.nice()
-	.rangeRound([ height - margin.bottom, margin.top ]);
-
-const yAxis = (g) => g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(null, 's'));
-chart();
+const color = d3.scaleOrdinal().range([ '#A569BD', '#A93226', '#2980B9', '#16A085', '#2ECC71', '#F1C40F', '#CA6F1E' ]);
+// data, height, width, subGraph, title
+chart(potatoData, 650, 650, false, false);
+const separateGroups = (data, group) => data.filter((data) => data.group.includes(group));
+uniqueGroups.forEach((group) => chart(separateGroups(potatoData, group), 400, 400, true, group));

@@ -75,7 +75,7 @@ export default function AnalysisModal() {
 
 		if (colXArr.length >= 1 && colYArr.length >= 1 && colZArr.length >= 1) {
 			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols);
-			const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=850,height=800');
+			const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=1000,height=800');
 			function receiveMessage(event) {
 				// target window is ready, time to send data.
 				if (event.data === 'ready') {
