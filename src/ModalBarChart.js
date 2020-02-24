@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Button, Card, Modal, Radio } from 'antd';
+import { Button, Card, Modal, Radio, Typography } from 'antd';
+import RemoveColumnButton from './RemoveColumnButton';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { createBarChart } from './Analyses';
 import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
 import { SelectColumn, styles } from './ModalShared';
-import { REMOVE_SELECTED_CELLS, FILTER_COLUMN } from './constants';
+import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from './constants';
 
 export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
-	const [ selectedRightColumn, setSelectedRightColumn ] = useState(null);
 	const [ xColData, setXColData ] = useState([]);
 	const [ yColData, setYColData ] = useState([]);
 	const [ groupingColData, setGroupingColData ] = useState([]);
@@ -23,14 +23,11 @@ export default function AnalysisModal() {
 
 	function addColumnToList(col, setCol) {
 		if (!selectedColumn || col.length > 0) return;
-		setSelectedRightColumn(selectedColumn);
 		setCol((prevState) => prevState.concat(selectedColumn));
 	}
 
-	function removeColumnFromList(setCol) {
-		if (!selectedRightColumn) return;
-		setSelectedRightColumn(null);
-		setCol((prevState) => prevState.filter((col) => col !== selectedRightColumn));
+	function removeColumnFromList(setCol, column) {
+		setCol((prevState) => prevState.filter((col) => col !== column));
 	}
 
 	async function performAnalysis() {
@@ -101,7 +98,7 @@ export default function AnalysisModal() {
 						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 					}
 					if (event.data.label && event.data.colZ) {
-						dispatchSpreadsheetAction({ type: 'SET_FILTERS', filters: { stringFilters: [ event.data.colZ.text ] } });
+						dispatchSpreadsheetAction({ type: SET_FILTERS, filters: { stringFilters: [ event.data.colZ.text ] } });
 						dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 						return;
 					}
@@ -126,15 +123,18 @@ export default function AnalysisModal() {
 		}
 	}
 
-	function RadioGroup({ data, setData, styleProps }) {
+	function RadioGroup({ data, styleProps, removeData }) {
 		return (
 			<Card bordered style={{ ...styles.cardWithBorder, ...styleProps }}>
 				<Radio.Group style={styles.radioGroup} buttonStyle="solid">
-					{data.length === 0 ? <em>Required</em> : <div />}
+					{data.length === 0 ? <em>Required</em> : null}
 					{data.map((column) => (
-						<Radio.Button style={styles.radioButton} key={column.id} onClick={() => setData(column)} value={column}>
-							{column.label}
-						</Radio.Button>
+						<div style={{ display: 'flex', ...styles.radioButton }} key={column.id}>
+							<Typography.Text ellipsis={true} style={{ paddingLeft: 5, margin: 'auto' }}>
+								{column.label}
+							</Typography.Text>
+							<RemoveColumnButton removeColumn={() => removeColumnFromList(removeData, column)} />
+						</div>
 					))}
 				</Radio.Group>
 			</Card>
@@ -147,7 +147,6 @@ export default function AnalysisModal() {
 				<Button disabled={data.length !== 0} style={{ marginBottom: 5 }} onClick={() => addColumnToList(data, setData)}>
 					{label}
 				</Button>
-				{data.length !== 0 && <Button onClick={() => removeColumnFromList(setData)}>Remove {label}</Button>}
 			</div>
 		);
 	}
@@ -160,7 +159,6 @@ export default function AnalysisModal() {
 		<div>
 			<Modal
 				className="ant-modal"
-				// destroyOnClose
 				onCancel={handleModalClose}
 				okButtonProps={{ disabled: performingAnalysis }}
 				cancelButtonProps={{ disabled: performingAnalysis }}
@@ -180,15 +178,15 @@ export default function AnalysisModal() {
 						Cast Selected Columns into Roles
 						<div style={{ marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
 							<CaratButtons data={yColData} setData={setYColData} label="Y" />
-							<RadioGroup data={yColData} setData={setSelectedRightColumn} />
+							<RadioGroup data={yColData} removeData={setYColData} />
 						</div>
 						<div style={{ marginBottom: 20, ...styles.flexSpaced }}>
 							<CaratButtons data={xColData} setData={setXColData} label="X" />
-							<RadioGroup data={xColData} setData={setSelectedRightColumn} />
+							<RadioGroup data={xColData} removeData={setXColData} />
 						</div>
 						<div style={styles.flexSpaced}>
 							<CaratButtons data={groupingColData} setData={setGroupingColData} label="Group" />
-							<RadioGroup data={groupingColData} setData={setSelectedRightColumn} />
+							<RadioGroup data={groupingColData} removeData={setGroupingColData} />
 						</div>
 					</div>
 				</div>

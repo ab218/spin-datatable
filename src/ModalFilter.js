@@ -5,7 +5,13 @@ import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
 import { SelectColumn } from './ModalShared';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS } from './constants';
+import {
+	FILTER_COLUMN,
+	TOGGLE_FILTER_MODAL,
+	REMOVE_SELECTED_CELLS,
+	SET_FILTERS,
+	SET_SELECTED_COLUMN,
+} from './constants';
 
 export default function AntModal() {
 	const [ clickedColumn, setClickedColumn ] = useState(null);
@@ -20,6 +26,11 @@ export default function AntModal() {
 	function handleCancel() {
 		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumns: [] });
+	}
+
+	function removeColumn(columnId) {
+		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnId);
+		dispatchSpreadsheetAction({ type: SET_SELECTED_COLUMN, selectedColumns: filteredColumns });
 	}
 
 	return (
@@ -41,9 +52,9 @@ export default function AntModal() {
 						selectedColumns.map(
 							(col, i) =>
 								col.type === 'String' ? (
-									<FilterColumnPicker key={i} column={col} />
+									<FilterColumnPicker removeColumn={removeColumn} key={i} column={col} />
 								) : (
-									<FilterColumnSlider key={i} column={col} />
+									<FilterColumnSlider removeColumn={removeColumn} key={i} column={col} />
 								),
 						)}
 				</div>
@@ -52,7 +63,7 @@ export default function AntModal() {
 	);
 }
 
-function FilterColumnSlider({ column }) {
+function FilterColumnSlider({ column, removeColumn }) {
 	const { selectedColumns } = useSpreadsheetState();
 	const { id, colMin, colMax, label, min, max } = column;
 
@@ -68,26 +79,26 @@ function FilterColumnSlider({ column }) {
 				colMax={colMax}
 				selectedColumns={selectedColumns}
 			/>
-			<RemoveColumnButton columnId={id} />
+			<RemoveColumnButton removeColumn={() => removeColumn(id)} />
 		</div>
 	);
 }
 
-function FilterColumnPicker({ column }) {
+function FilterColumnPicker({ column, removeColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { rows } = useSpreadsheetState();
 	const [ checkedText, setCheckedText ] = useState([]);
 
 	useEffect(
 		() => {
-			dispatchSpreadsheetAction({ type: 'SET_FILTERS', filters: { stringFilters: checkedText } });
-			dispatchSpreadsheetAction({ type: 'FILTER_COLUMN' });
+			dispatchSpreadsheetAction({ type: SET_FILTERS, filters: { stringFilters: checkedText } });
+			dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[ checkedText ],
 	);
 	const { id } = column;
-	const uniqueColumnValues = [ ...new Set(rows.map((row) => row[id])) ];
+	const uniqueColumnValues = [ ...new Set(rows.map((row) => row[id])) ].filter((x) => x);
 	const { Option } = Select;
 	function handleChange(text) {
 		setCheckedText(text);
@@ -114,7 +125,7 @@ function FilterColumnPicker({ column }) {
 					{text}
 				</Checkbox>
 			))} */}
-			<RemoveColumnButton columnId={id} />
+			<RemoveColumnButton removeColumn={() => removeColumn(id)} />
 		</div>
 	);
 }

@@ -17,6 +17,7 @@ export const styles = {
 		justifyContent: 'space-between',
 	},
 	radioButton: {
+		minWidth: 150,
 		fontSize: 14,
 		padding: 0,
 		margin: 0,

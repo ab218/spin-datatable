@@ -22,6 +22,7 @@ import {
 	SELECT_ALL_CELLS,
 	SELECT_ROW,
 	SELECT_COLUMN,
+	SET_FILTERS,
 	SORT_COLUMN,
 	OPEN_CONTEXT_MENU,
 	TOGGLE_ANALYSIS_MODAL,
@@ -671,7 +672,7 @@ function spreadsheetReducer(state, action) {
 			);
 			return { ...state };
 		}
-		case 'SET_FILTERS': {
+		case SET_FILTERS: {
 			return {
 				...state,
 				selectedColumns: selectedColumns || state.selectedColumns,

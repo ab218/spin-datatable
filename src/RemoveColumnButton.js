@@ -1,18 +1,20 @@
 import React from 'react';
-import { Icon, Tooltip } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { SET_SELECTED_COLUMN } from './constants';
+import { Button, Tooltip } from 'antd';
 
-export default function RemoveColumnButton({ columnId }) {
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { selectedColumns } = useSpreadsheetState();
-	function removeColumn(columnId) {
-		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnId);
-		dispatchSpreadsheetAction({ type: SET_SELECTED_COLUMN, selectedColumns: filteredColumns });
-	}
+export default function RemoveColumnButton({ removeColumn }) {
 	return (
-		<Tooltip onClick={() => removeColumn(columnId)} className="pointer" title="Remove Column">
-			<Icon type="close" style={{ color: 'red', marginTop: 20 }} />
+		<Tooltip onClick={removeColumn} className="pointer" title="Remove Column">
+			<Button
+				icon="close"
+				style={{
+					color: 'red',
+					// borderTop: 'none',
+					// borderRight: 'none',
+					// borderBottom: 'none',
+					// borderRadius: 0,
+					border: 'none',
+				}}
+			/>
 		</Tooltip>
 	);
 }
