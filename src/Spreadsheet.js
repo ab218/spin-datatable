@@ -171,16 +171,23 @@ function Spreadsheet({ eventBus }) {
 			colsContainer.push(
 				<Column
 					key={columnIndex}
-					cellRenderer={(props) => (
-						<CellRenderer
-							{...props}
-							createNewColumns={createNewColumns}
-							createNewRows={createNewRows}
-							changeActiveCell={changeActiveCell}
-							modifyCellSelectionRange={modifyCellSelectionRange}
-							selectCell={selectCell}
-						/>
-					)}
+					cellRenderer={(props) => {
+						// rowData = rowID, dataKey = columnID
+						const { dataKey: columnID, rowData } = props;
+						const rowID = rowData.id;
+						return (
+							<CellRenderer
+								{...props}
+								columnID={columnID}
+								rowID={rowID}
+								createNewColumns={createNewColumns}
+								createNewRows={createNewRows}
+								changeActiveCell={changeActiveCell}
+								modifyCellSelectionRange={modifyCellSelectionRange}
+								selectCell={selectCell}
+							/>
+						);
+					}}
 					columnIndex={columnIndex}
 					dataKey={(column && column.id) || ''}
 					headerRenderer={(props) => (

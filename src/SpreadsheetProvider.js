@@ -662,6 +662,7 @@ function spreadsheetReducer(state, action) {
 			}
 
 			const changedRows = newRows.map((newRow) => (newRow.id !== rowCopy.id ? newRow : rowCopy));
+			console.log(changedRows);
 			return { ...state, rows: changedRows };
 		}
 

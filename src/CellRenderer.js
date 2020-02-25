@@ -9,9 +9,9 @@ import { CLOSE_CONTEXT_MENU, OPEN_CONTEXT_MENU } from './constants';
 export default function CellRenderer({
 	rowIndex,
 	columnIndex,
-	rowData,
+	rowID,
 	cellData,
-	dataKey,
+	columnID,
 	createNewColumns,
 	createNewRows,
 	changeActiveCell,
@@ -63,15 +63,15 @@ export default function CellRenderer({
 			/>
 		);
 	} else if (isSelectedCell(rowIndex, columnIndex)) {
-		// } else if (uniqueColumnIDs.includes(dataKey) && uniqueRowIDs.includes(rowData.id)) {
-		// } else if (idsInclude(rowData.id, dataKey, uniqueRowIDs, uniqueColumnIDs)) {
+		// } else if (uniqueColumnIDs.includes(columnID) && uniqueRowIDs.includes(rowID)) {
+		// } else if (idsInclude(rowID, columnID, uniqueRowIDs, uniqueColumnIDs)) {
 		return (
 			<SelectedCell
 				handleContextMenu={handleContextMenu}
 				key={`Row${rowIndex}Col${columnIndex}`}
 				changeActiveCell={changeActiveCell}
-				rowId={rowData.id}
-				columnId={dataKey}
+				rowId={rowID}
+				columnId={columnID}
 				columnIndex={columnIndex}
 				rowIndex={rowIndex}
 				cellValue={cellData}
@@ -80,7 +80,7 @@ export default function CellRenderer({
 		);
 	} else if (rowIndex === rows.length) {
 		// This is a blank clickable row
-		if (dataKey) {
+		if (columnID) {
 			return (
 				<div
 					style={{ backgroundColor: 'white', height: '100%', width: '100%' }}
@@ -110,16 +110,16 @@ export default function CellRenderer({
 				/>
 			);
 		}
-	} else if (!rowData.id) {
+	} else if (!rowID) {
 		// The cells in these rows cannot be clicked
 		return <div className="non-interactive-cell" style={{ backgroundColor: '#eee', height: '100%', width: '100%' }} />;
-	} else if (dataKey) {
+	} else if (columnID) {
 		return (
 			<NormalCell
 				key={`Row${rowIndex}Col${columnIndex}`}
 				columns={columns}
-				rowId={rowData.id}
-				columnId={dataKey}
+				rowId={rowID}
+				columnId={columnID}
 				columnIndex={columnIndex}
 				modifyCellSelectionRange={modifyCellSelectionRange}
 				rowIndex={rowIndex}

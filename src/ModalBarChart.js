@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Button, Card, Modal, Radio, Typography } from 'antd';
-import RemoveColumnButton from './RemoveColumnButton';
+import { Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { createBarChart } from './Analyses';
 import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
-import { SelectColumn, styles } from './ModalShared';
+import { SelectColumn, styles, RadioGroup, CaratButtons } from './ModalShared';
 import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from './constants';
 
 export default function AnalysisModal() {
@@ -19,15 +18,6 @@ export default function AnalysisModal() {
 
 	function handleModalClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
-	}
-
-	function addColumnToList(col, setCol) {
-		if (!selectedColumn || col.length > 0) return;
-		setCol((prevState) => prevState.concat(selectedColumn));
-	}
-
-	function removeColumnFromList(setCol, column) {
-		setCol((prevState) => prevState.filter((col) => col !== column));
 	}
 
 	async function performAnalysis() {
@@ -123,34 +113,6 @@ export default function AnalysisModal() {
 		}
 	}
 
-	function RadioGroup({ data, styleProps, removeData }) {
-		return (
-			<Card bordered style={{ ...styles.cardWithBorder, ...styleProps }}>
-				<Radio.Group style={styles.radioGroup} buttonStyle="solid">
-					{data.length === 0 ? <em>Required</em> : null}
-					{data.map((column) => (
-						<div style={{ display: 'flex', ...styles.radioButton }} key={column.id}>
-							<Typography.Text ellipsis={true} style={{ paddingLeft: 5, margin: 'auto' }}>
-								{column.label}
-							</Typography.Text>
-							<RemoveColumnButton removeColumn={() => removeColumnFromList(removeData, column)} />
-						</div>
-					))}
-				</Radio.Group>
-			</Card>
-		);
-	}
-
-	function CaratButtons({ data, setData, label }) {
-		return (
-			<div style={styles.flexColumn}>
-				<Button disabled={data.length !== 0} style={{ marginBottom: 5 }} onClick={() => addColumnToList(data, setData)}>
-					{label}
-				</Button>
-			</div>
-		);
-	}
-
 	const filteredColumns = columns.filter((column) =>
 		rows.some((row) => row[column.id] || typeof row[column.id] === 'number'),
 	);
@@ -177,15 +139,20 @@ export default function AnalysisModal() {
 					<div style={{ width: 360 }}>
 						Cast Selected Columns into Roles
 						<div style={{ marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
-							<CaratButtons data={yColData} setData={setYColData} label="Y" />
+							<CaratButtons data={yColData} setData={setYColData} selectedColumn={selectedColumn} label="Y" />
 							<RadioGroup data={yColData} removeData={setYColData} />
 						</div>
 						<div style={{ marginBottom: 20, ...styles.flexSpaced }}>
-							<CaratButtons data={xColData} setData={setXColData} label="X" />
+							<CaratButtons data={xColData} setData={setXColData} selectedColumn={selectedColumn} label="X" />
 							<RadioGroup data={xColData} removeData={setXColData} />
 						</div>
 						<div style={styles.flexSpaced}>
-							<CaratButtons data={groupingColData} setData={setGroupingColData} label="Group" />
+							<CaratButtons
+								data={groupingColData}
+								setData={setGroupingColData}
+								selectedColumn={selectedColumn}
+								label="Group"
+							/>
 							<RadioGroup data={groupingColData} removeData={setGroupingColData} />
 						</div>
 					</div>
