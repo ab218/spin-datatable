@@ -96,7 +96,9 @@ function receiveMessage(event) {
 			onClickSelectCells(d3.select(this), d, 'y');
 		})
 		.attr('x', 1)
-		.attr('y', (d) => y(d.x1))
+		.attr('y', (d) => {
+			y(d.x1);
+		})
 		// The -1 adds a little bit of padding between bars
 		.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
 		.transition()

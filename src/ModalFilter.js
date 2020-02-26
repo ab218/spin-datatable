@@ -112,19 +112,6 @@ function FilterColumnPicker({ column, removeColumn }) {
 					</Option>
 				))}
 			</Select>
-			{/* {uniqueColumnValues.map((text) => (
-				<Checkbox
-					id={`#${text}`}
-					key={text}
-					checked={checkedText.includes(text)}
-					onClick={(e) =>
-						e.target.checked
-							? setCheckedText((prev) => prev.concat(text))
-							: setCheckedText((prev) => prev.filter((currentTextArray) => !currentTextArray.includes(text)))}
-				>
-					{text}
-				</Checkbox>
-			))} */}
 			<RemoveColumnButton removeColumn={() => removeColumn(id)} />
 		</div>
 	);
