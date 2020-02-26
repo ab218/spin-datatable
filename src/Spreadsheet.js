@@ -141,12 +141,12 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: CREATE_COLUMNS, columnCount });
 	}
 
-	function changeActiveCell(row, column, selectionActive, columnId) {
-		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnId });
+	function changeActiveCell(row, column, selectionActive, columnID) {
+		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
 	}
 
-	function selectCell(row, column, selectionActive, rowId, columnId) {
-		dispatchSpreadsheetAction({ type: SELECT_CELL, row, column, selectionActive, rowId, columnId });
+	function selectCell(row, column, selectionActive, rowID, columnID) {
+		dispatchSpreadsheetAction({ type: SELECT_CELL, row, column, selectionActive, rowID, columnID });
 	}
 
 	function modifyCellSelectionRange(row, col) {
@@ -178,6 +178,7 @@ function Spreadsheet({ eventBus }) {
 						return (
 							<CellRenderer
 								{...props}
+								column={column}
 								columnID={columnID}
 								rowID={rowID}
 								createNewColumns={createNewColumns}

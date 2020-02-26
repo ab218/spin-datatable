@@ -12,7 +12,7 @@ export function RowNumberCell({ rowIndex }) {
 export function SelectedCell({
 	changeActiveCell,
 	columnIndex,
-	columnId,
+	columnID,
 	handleContextMenu,
 	modifyCellSelectionRange,
 	rowIndex,
@@ -28,7 +28,7 @@ export function SelectedCell({
 		}
 		if (event.button === 0) {
 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnId);
+			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnID);
 		}
 	}
 
@@ -61,9 +61,10 @@ export function SelectedCell({
 export function NormalCell({
 	cellValue,
 	columnIndex,
+	column,
 	columns,
-	rowId,
-	columnId,
+	columnID,
+	rowID,
 	modifyCellSelectionRange,
 	rowIndex,
 	selectCell,
@@ -77,7 +78,7 @@ export function NormalCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, rowId, columnId);
+		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, rowID, columnID);
 	}
 
 	function onMouseEnter(event) {
@@ -87,7 +88,7 @@ export function NormalCell({
 	}
 
 	// this will need fixing
-	return formatForNumberColumn(cellValue, columns.find((col) => col.id === columnId)) ? (
+	return formatForNumberColumn(cellValue, columns.find((col) => col.id === columnID)) ? (
 		<Tooltip title={`Cell value is not a number`}>
 			<div
 				key={`row${rowIndex}col${columnIndex}`}

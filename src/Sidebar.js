@@ -23,7 +23,7 @@ export default function Sidebar() {
 									onClick={(e) => {
 										dispatchSpreadsheetAction({
 											type: SELECT_COLUMN,
-											columnId: column.id,
+											columnID: column.id,
 											columnIndex,
 											selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
 										});

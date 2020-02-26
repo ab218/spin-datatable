@@ -28,8 +28,8 @@ export default function AntModal() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false, selectedColumns: [] });
 	}
 
-	function removeColumn(columnId) {
-		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnId);
+	function removeColumn(columnID) {
+		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnID);
 		dispatchSpreadsheetAction({ type: SET_SELECTED_COLUMN, selectedColumns: filteredColumns });
 	}
 
@@ -73,7 +73,7 @@ function FilterColumnSlider({ column, removeColumn }) {
 				currentMin={min}
 				currentMax={max}
 				key={id}
-				columnId={id}
+				columnID={id}
 				label={label}
 				colMin={colMin}
 				colMax={colMax}

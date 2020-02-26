@@ -3,7 +3,7 @@ import { Slider, Row, Col } from 'antd';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS } from './constants';
 
-export default function IntegerStep({ columnId, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
+export default function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
@@ -15,7 +15,7 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 
 	const onAfterChange = () => {
 		const newCopy = selectedColumns.slice();
-		const index = newCopy.findIndex((col) => col.id === columnId);
+		const index = newCopy.findIndex((col) => col.id === columnID);
 		newCopy[index] = { ...selectedColumns[index], min, max };
 		dispatchSpreadsheetAction({
 			type: SET_FILTERS,

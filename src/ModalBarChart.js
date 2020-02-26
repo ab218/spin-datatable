@@ -95,7 +95,7 @@ export default function AnalysisModal() {
 					const selectedRow = event.data.rowID;
 					dispatchSpreadsheetAction({
 						type: SELECT_ROW,
-						rowId: selectedRow,
+						rowID: selectedRow,
 						rowIndex: rows.findIndex((row) => row.id === selectedRow),
 					});
 				}

@@ -124,7 +124,7 @@ function spreadsheetReducer(state, action) {
 		colName,
 		column,
 		columnCount,
-		columnId,
+		columnID,
 		columnIndex,
 		columnTypeModalOpen,
 		distributionModalOpen,
@@ -133,6 +133,7 @@ function spreadsheetReducer(state, action) {
 		filterModalOpen,
 		layout,
 		row,
+		rowID,
 		rows,
 		rowIndex,
 		rowCount,
@@ -150,7 +151,7 @@ function spreadsheetReducer(state, action) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
 		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
-			const activeCell = { row, column, columnId };
+			const activeCell = { row, column, columnID };
 			return { ...state, activeCell, cellSelectionRanges: [], uniqueRowIDs: [], uniqueColumnIDs: [] };
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
@@ -409,10 +410,10 @@ function spreadsheetReducer(state, action) {
 			const selectedCell = { top: row, bottom: row, left: column, right: column };
 			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(selectedCell);
 			const currentRowIDs = selectionActive
-				? !state.uniqueRowIDs.includes(action.rowId) ? state.uniqueRowIDs.concat(action.rowId) : state.uniqueRowIDs
-				: [ action.rowId ];
-			const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(action.columnId) : [ action.columnId ];
-			// const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(action.columnId) : [ action.columnId ];
+				? !state.uniqueRowIDs.includes(rowID) ? state.uniqueRowIDs.concat(rowID) : state.uniqueRowIDs
+				: [ rowID ];
+			const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(columnID) : [ columnID ];
+			// const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(columnID) : [ columnID ];
 			// const totalCellSelectionRanges = selectionActive
 			// 	? state.cellSelectionRanges.concat(selectedCell)
 			// 	: [ selectedCell ];
@@ -449,7 +450,7 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: allCellsInRow,
 				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
 				lastSelection: { column: state.columns.length, row: rowIndex },
-				uniqueRowIDs: [ action.rowId ],
+				uniqueRowIDs: [ rowID ],
 				uniqueColumnIDs: columns.map((col) => col.id),
 			};
 		}
@@ -500,7 +501,7 @@ function spreadsheetReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: allCellsInColumn,
 				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
-				uniqueColumnIDs: [ action.columnId ],
+				uniqueColumnIDs: [ columnID ],
 				uniqueRowIDs: rows.map((row) => row.id),
 			};
 		}

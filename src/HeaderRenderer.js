@@ -44,7 +44,7 @@ export default function HeaderRenderer({ dataKey, label, columnIndex, createNewC
 						}
 						dispatchSpreadsheetAction({
 							type: SELECT_COLUMN,
-							columnId: dataKey,
+							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
 						});
@@ -56,7 +56,7 @@ export default function HeaderRenderer({ dataKey, label, columnIndex, createNewC
 						e.preventDefault();
 						dispatchSpreadsheetAction({
 							type: SELECT_COLUMN,
-							columnId: dataKey,
+							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
 						});

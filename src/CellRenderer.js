@@ -11,6 +11,7 @@ export default function CellRenderer({
 	columnIndex,
 	rowID,
 	cellData,
+	column,
 	columnID,
 	createNewColumns,
 	createNewRows,
@@ -70,9 +71,10 @@ export default function CellRenderer({
 				handleContextMenu={handleContextMenu}
 				key={`Row${rowIndex}Col${columnIndex}`}
 				changeActiveCell={changeActiveCell}
-				rowId={rowID}
-				columnId={columnID}
+				column={column}
+				columnID={columnID}
 				columnIndex={columnIndex}
+				rowID={rowID}
 				rowIndex={rowIndex}
 				cellValue={cellData}
 				modifyCellSelectionRange={modifyCellSelectionRange}
@@ -118,10 +120,11 @@ export default function CellRenderer({
 			<NormalCell
 				key={`Row${rowIndex}Col${columnIndex}`}
 				columns={columns}
-				rowId={rowID}
-				columnId={columnID}
+				column={column}
+				columnID={columnID}
 				columnIndex={columnIndex}
 				modifyCellSelectionRange={modifyCellSelectionRange}
+				rowID={rowID}
 				rowIndex={rowIndex}
 				selectCell={selectCell}
 				cellValue={cellData}
