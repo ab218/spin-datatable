@@ -130,7 +130,6 @@ function spreadsheetReducer(state, action) {
 		distributionModalOpen,
 		endRangeRow,
 		endRangeColumn,
-		filters,
 		filterModalOpen,
 		layout,
 		row,

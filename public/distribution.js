@@ -45,12 +45,7 @@ function receiveMessage(event) {
 
 	// Add axes
 	const x = d3.scaleLinear().range([ 0, width ]);
-	const y = d3
-		.scaleLinear()
-		// .nice() rounds the tick values to nice numbers
-		.domain([ min, max ])
-		.nice()
-		.range([ height, 0 ]);
+	const y = d3.scaleLinear().domain([ min, max ]).range([ height, 0 ]).nice();
 	histSvg.append('g').attr('class', 'x axis').call(d3.axisLeft().scale(y).ticks(10, 's'));
 
 	// set the parameters for the histogram
@@ -96,9 +91,7 @@ function receiveMessage(event) {
 			onClickSelectCells(d3.select(this), d, 'y');
 		})
 		.attr('x', 1)
-		.attr('y', (d) => {
-			y(d.x1);
-		})
+		.attr('y', (d) => y(d.x1))
 		// The -1 adds a little bit of padding between bars
 		.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
 		.transition()
@@ -162,7 +155,7 @@ function receiveMessage(event) {
                 <tr>
                   <td>100.0%:</td>
                   <td>Maximum</td>
-                  <td>${boxDataSorted[boxDataSorted.length - 1]}</td>
+                  <td>${max}</td>
                 </tr>
                 <tr>
                   <td>99.5%:</td>
@@ -212,7 +205,7 @@ function receiveMessage(event) {
                 <tr>
                   <td>0.0%:</td>
                   <td>Minimum</td>
-                  <td>${boxDataSorted[0]}</td>
+                  <td>${min}</td>
                 </tr>
               </table>
             <h4>Summary Statistics</h4>
