@@ -20,7 +20,7 @@ export default function AddColumnButton({ clickedColumn }) {
 		}
 	}
 	return (
-		<Button disabled={!clickedColumn} style={{ width: 100, marginTop: 10 }} onClick={addColumn}>
+		<Button disabled={!clickedColumn} style={{ width: 100, margin: '10px 0' }} onClick={addColumn}>
 			Add
 		</Button>
 	);

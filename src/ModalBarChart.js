@@ -3,7 +3,7 @@ import { Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { createBarChart } from './Analyses';
 import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
-import { SelectColumn, styles, RadioGroup, CaratButtons } from './ModalShared';
+import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from './constants';
 
 export default function AnalysisModal() {
@@ -132,29 +132,33 @@ export default function AnalysisModal() {
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={styles.flexSpaced}>
-					<div>
-						Select Column
-						<SelectColumn columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
-					</div>
+					<SelectColumn
+						groupingColData={groupingColData[0]}
+						columns={filteredColumns}
+						setSelectedColumn={setSelectedColumn}
+					/>
 					<div style={{ width: 360 }}>
 						Cast Selected Columns into Roles
-						<div style={{ marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
-							<CaratButtons data={yColData} setData={setYColData} selectedColumn={selectedColumn} label="Y" />
-							<RadioGroup data={yColData} removeData={setYColData} />
-						</div>
-						<div style={{ marginBottom: 20, ...styles.flexSpaced }}>
-							<CaratButtons data={xColData} setData={setXColData} selectedColumn={selectedColumn} label="X" />
-							<RadioGroup data={xColData} removeData={setXColData} />
-						</div>
-						<div style={styles.flexSpaced}>
-							<CaratButtons
-								data={groupingColData}
-								setData={setGroupingColData}
-								selectedColumn={selectedColumn}
-								label="Group"
-							/>
-							<RadioGroup data={groupingColData} removeData={setGroupingColData} />
-						</div>
+						<VariableSelector
+							data={yColData}
+							label="Y"
+							setData={setYColData}
+							selectedColumn={selectedColumn}
+							styleProps={{ marginBottom: 20, marginTop: 20 }}
+						/>
+						<VariableSelector
+							data={xColData}
+							label="X"
+							setData={setXColData}
+							selectedColumn={selectedColumn}
+							styleProps={{ marginBottom: 20 }}
+						/>
+						<VariableSelector
+							data={groupingColData}
+							label="Group"
+							setData={setGroupingColData}
+							selectedColumn={selectedColumn}
+						/>
 					</div>
 				</div>
 				<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>

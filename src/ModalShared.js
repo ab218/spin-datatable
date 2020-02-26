@@ -46,11 +46,11 @@ function addColumnToList(col, setCol, selectedColumn) {
 	setCol((prevState) => prevState.concat(selectedColumn));
 }
 
-export function CaratButtons({ data, setData, label, selectedColumn }) {
+function CaratButtons({ data, setData, label, selectedColumn }) {
 	return (
 		<div style={styles.flexColumn}>
 			<Button
-				disabled={data.length !== 0}
+				disabled={!selectedColumn || data.length !== 0}
 				style={{ marginBottom: 5 }}
 				onClick={() => addColumnToList(data, setData, selectedColumn)}
 			>
@@ -60,33 +60,7 @@ export function CaratButtons({ data, setData, label, selectedColumn }) {
 	);
 }
 
-export function SelectColumn({ columns, setSelectedColumn }) {
-	const { cardWithBorder, radioButton, radioGroup } = styles;
-	return (
-		<Card bordered style={{ marginTop: 20, ...cardWithBorder }}>
-			<Radio.Group style={radioGroup} buttonStyle="solid">
-				{/* display only columns with labels and some data */}
-				{columns.length > 0 ? (
-					columns.map((column) => (
-						<Radio.Button style={radioButton} key={column.id} onClick={() => setSelectedColumn(column)} value={column}>
-							{column.label}
-						</Radio.Button>
-					))
-				) : (
-					<div style={{ color: 'red' }}>
-						There must be at least one column with at least three valid data points to run this type of analysis.
-					</div>
-				)}
-			</Radio.Group>
-		</Card>
-	);
-}
-
-function removeColumnFromList(setCol, column) {
-	setCol((prevState) => prevState.filter((col) => col !== column));
-}
-
-export function RadioGroup({ data, styleProps, removeData }) {
+function RadioGroup({ data, styleProps, removeData }) {
 	const { cardWithBorder, radioGroup, radioButton, rightColumnTypography } = styles;
 	return (
 		<Card bordered style={{ ...cardWithBorder, ...styleProps }}>
@@ -102,5 +76,51 @@ export function RadioGroup({ data, styleProps, removeData }) {
 				))}
 			</Radio.Group>
 		</Card>
+	);
+}
+
+function removeColumnFromList(setCol, column) {
+	setCol((prevState) => prevState.filter((col) => col !== column));
+}
+
+export function SelectColumn({ columns, groupingColData, setSelectedColumn }) {
+	const { cardWithBorder, radioButton, radioGroup } = styles;
+	return (
+		<div>
+			Select Column
+			<Card bordered style={{ marginTop: 20, ...cardWithBorder }}>
+				<Radio.Group style={radioGroup} buttonStyle="solid">
+					{/* display only columns with labels and some data */}
+					{columns.length > 0 ? (
+						columns.map((column) => {
+							return (
+								<Radio.Button
+									style={radioButton}
+									key={column.id}
+									onClick={() => setSelectedColumn(column)}
+									value={column}
+									disabled={groupingColData === column}
+								>
+									{column.label}
+								</Radio.Button>
+							);
+						})
+					) : (
+						<div style={{ color: 'red' }}>
+							There must be at least one column with at least three valid data points to run this type of analysis.
+						</div>
+					)}
+				</Radio.Group>
+			</Card>
+		</div>
+	);
+}
+
+export function VariableSelector({ styleProps, data, setData, selectedColumn, label }) {
+	return (
+		<div style={{ ...styles.flexSpaced, ...styleProps }}>
+			<CaratButtons data={data} setData={setData} selectedColumn={selectedColumn} label={label} />
+			<RadioGroup data={data} removeData={setData} />
+		</div>
 	);
 }

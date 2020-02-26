@@ -313,19 +313,19 @@ function receiveMessage(event) {
           <td style="width: 100px;">${coordinates.length}</td>
         </tr>
       </table>
-      <table style="width: 300px">
+      <table style="width: 400px">
         <tr>
-          <td style="width: 100px; font-weight: bold;">Variable</td>
+          <td style="width: 200px; font-weight: bold;">Variable</td>
           <td style="width: 100px; font-weight: bold;">Mean</td>
           <td style="width: 100px; font-weight: bold;">Std Dev</td>
         </tr>
         <tr>
-          <td style="width: 100px;">${colXLabel}</td>
+          <td style="width: 200px;">${colXLabel}</td>
           <td style="width: 100px;">${colAMean}</td>
           <td style="width: 100px;">${colAStdev}</td>
         </tr>
         <tr>
-          <td style="width: 100px;">${colYLabel}</td>
+          <td style="width: 200px;">${colYLabel}</td>
           <td style="width: 100px;">${colBMean}</td>
           <td style="width: 100px;">${colBStdev}</td>
         </tr>

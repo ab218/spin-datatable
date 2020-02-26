@@ -8,11 +8,12 @@ export default function RemoveColumnButton({ removeColumn }) {
 				icon="close"
 				style={{
 					color: 'red',
+					alignSelf: 'center',
+					border: 'none',
 					// borderTop: 'none',
 					// borderRight: 'none',
 					// borderBottom: 'none',
 					// borderRadius: 0,
-					border: 'none',
 				}}
 			/>
 		</Tooltip>

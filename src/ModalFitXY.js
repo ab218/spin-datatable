@@ -3,7 +3,7 @@ import { Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { performLinearRegressionAnalysis } from './Analyses';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
-import { SelectColumn, styles, RadioGroup, CaratButtons } from './ModalShared';
+import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from './constants';
 
 export default function AnalysisModal() {
@@ -54,7 +54,7 @@ export default function AnalysisModal() {
 			const popup = window.open(
 				window.location.href + 'linear_regression.html',
 				'',
-				'left=9999,top=100,width=700,height=850',
+				'left=9999,top=100,width=800,height=850',
 			);
 			function receiveMessage(event) {
 				// target window is ready, time to send data.
@@ -125,20 +125,21 @@ export default function AnalysisModal() {
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={styles.flexSpaced}>
-					<div>
-						Select Column
-						<SelectColumn columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
-					</div>
+					<SelectColumn
+						selectedColumn={selectedColumn}
+						columns={filteredColumns}
+						setSelectedColumn={setSelectedColumn}
+					/>
 					<div style={{ width: 350 }}>
 						Cast Selected Columns into Roles
-						<div style={{ marginBottom: 20, marginTop: 20, ...styles.flexSpaced }}>
-							<CaratButtons data={yColData} setData={setYColData} label="Y" selectedColumn={selectedColumn} />
-							<RadioGroup data={yColData} removeData={setYColData} />
-						</div>
-						<div style={styles.flexSpaced}>
-							<CaratButtons data={xColData} setData={setXColData} selectedColumn={selectedColumn} label="X" />
-							<RadioGroup data={xColData} removeData={setXColData} />
-						</div>
+						<VariableSelector
+							data={yColData}
+							setData={setYColData}
+							label="Y"
+							selectedColumn={selectedColumn}
+							styleProps={{ marginBottom: 20, marginTop: 20 }}
+						/>
+						<VariableSelector data={xColData} setData={setXColData} label="X" selectedColumn={selectedColumn} />
 					</div>
 				</div>
 				<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>

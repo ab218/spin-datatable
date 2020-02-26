@@ -68,7 +68,7 @@ function FilterColumnSlider({ column, removeColumn }) {
 	const { id, colMin, colMax, label, min, max } = column;
 
 	return (
-		<div style={{ display: 'flex' }}>
+		<div style={{ paddingLeft: 10, paddingBottom: 10, marginBottom: 20, display: 'flex' }}>
 			<IntegerStep
 				currentMin={min}
 				currentMax={max}
@@ -104,15 +104,18 @@ function FilterColumnPicker({ column, removeColumn }) {
 		setCheckedText({ [column.id]: text });
 	}
 	return (
-		<div style={{ display: 'flex' }}>
-			<Select mode="multiple" style={{ width: 300 }} placeholder="Please select" onChange={handleChange}>
-				{uniqueColumnValues.map((text) => (
-					<Option style={{ width: 300 }} key={text}>
-						{text}
-					</Option>
-				))}
-			</Select>
-			<RemoveColumnButton removeColumn={() => removeColumn(id)} />
+		<div style={{ marginBottom: 20, paddingBottom: 30, paddingLeft: 10, textAlign: 'center' }}>
+			{column.label} ({uniqueColumnValues.length})
+			<div style={{ display: 'flex' }}>
+				<Select mode="multiple" style={{ width: 300 }} placeholder="Please select" onChange={handleChange}>
+					{uniqueColumnValues.map((text) => (
+						<Option style={{ width: 300 }} key={text}>
+							{text}
+						</Option>
+					))}
+				</Select>
+				<RemoveColumnButton removeColumn={() => removeColumn(id)} />
+			</div>
 		</div>
 	);
 }
