@@ -91,7 +91,7 @@ function FilterColumnPicker({ column, removeColumn }) {
 
 	useEffect(
 		() => {
-			dispatchSpreadsheetAction({ type: SET_FILTERS, filters: { stringFilters: checkedText } });
+			dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: checkedText });
 			dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,7 +101,7 @@ function FilterColumnPicker({ column, removeColumn }) {
 	const uniqueColumnValues = [ ...new Set(rows.map((row) => row[id])) ].filter((x) => x);
 	const { Option } = Select;
 	function handleChange(text) {
-		setCheckedText(text);
+		setCheckedText({ [column.id]: text });
 	}
 	return (
 		<div style={{ display: 'flex' }}>

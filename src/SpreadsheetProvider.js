@@ -662,7 +662,6 @@ function spreadsheetReducer(state, action) {
 			}
 
 			const changedRows = newRows.map((newRow) => (newRow.id !== rowCopy.id ? newRow : rowCopy));
-			console.log(changedRows);
 			return { ...state, rows: changedRows };
 		}
 
@@ -674,28 +673,35 @@ function spreadsheetReducer(state, action) {
 			return { ...state };
 		}
 		case SET_FILTERS: {
+			const stringFilterCopy = { ...state.filters.stringFilters, ...action.stringFilter };
 			return {
 				...state,
 				selectedColumns: selectedColumns || state.selectedColumns,
 				filters: {
-					stringFilters: filters.stringFilters || state.filters.stringFilters,
-					numberFilters: filters.numberFilters || state.filters.numberFilters,
+					stringFilters: stringFilterCopy,
+					numberFilters: action.numberFilters || state.filters.numberFilters,
 				},
 			};
 		}
 		case FILTER_COLUMN: {
 			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
-			const filteredRowsByString = state.filters.stringFilters
-				.map((t) => state.rows.filter((row) => Object.values(row).includes(t)))
-				.flat();
+			const filteredRowsByString = () => {
+				const newFilteredRowsByStringArray = [];
+				state.rows.map((row) => {
+					return Object.keys(state.filters.stringFilters).forEach((key) => {
+						return state.filters.stringFilters[key].includes(row[key]) ? newFilteredRowsByStringArray.push(row) : null;
+					});
+				});
+				return newFilteredRowsByStringArray;
+			};
 			const findIntersectionOfTwoArrays = (arr1 = [], arr2 = []) => {
 				if (state.filters.numberFilters.length === 0) return arr1;
 				if (state.filters.stringFilters.length === 0) return arr2;
 				return arr1.filter((a) => arr2.some((b) => a.id === b.id));
 			};
-			const intersectionOfFilteredRows = findIntersectionOfTwoArrays(filteredRowsByString, filteredRowsByRange);
+			const intersectionOfFilteredRows = findIntersectionOfTwoArrays(filteredRowsByString(), filteredRowsByRange);
 			const selectedRangeRowIDs = intersectionOfFilteredRows.map((row) => row.id);
-			const selectedStringRowIDs = filteredRowsByString.map((row) => row.id);
+			const selectedStringRowIDs = filteredRowsByString().map((row) => row.id);
 			const intersectionOfRowIDs = selectedRangeRowIDs.filter((rangeID) => selectedStringRowIDs.includes(rangeID));
 			const selectedRowIndexes = intersectionOfFilteredRows.map((row) =>
 				state.rows.findIndex((stateRow) => stateRow.id === row.id),

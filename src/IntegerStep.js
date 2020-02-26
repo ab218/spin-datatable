@@ -20,7 +20,7 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 		dispatchSpreadsheetAction({
 			type: SET_FILTERS,
 			selectedColumns: newCopy,
-			filters: { numberFilters: newCopy.filter((col) => col.type === 'Number') },
+			numberFilters: newCopy.filter((col) => col.type === 'Number'),
 		});
 		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 	};

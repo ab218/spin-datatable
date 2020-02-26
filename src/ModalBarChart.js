@@ -88,7 +88,7 @@ export default function AnalysisModal() {
 						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 					}
 					if (event.data.label && event.data.colZ) {
-						dispatchSpreadsheetAction({ type: SET_FILTERS, filters: { stringFilters: [ event.data.colZ.text ] } });
+						dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: { [colZ.id]: event.data.colZ.text } });
 						dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 						return;
 					}
