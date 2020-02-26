@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, Radio } from 'antd';
+import { Button, Card, Radio, Typography } from 'antd';
+import RemoveColumnButton from './RemoveColumnButton';
 
 export const styles = {
 	cardWithBorder: {
@@ -10,13 +11,14 @@ export const styles = {
 	flexColumn: {
 		display: 'flex',
 		flexDirection: 'column',
-		width: 100,
+		width: 125,
 	},
 	flexSpaced: {
 		display: 'flex',
 		justifyContent: 'space-between',
 	},
 	radioButton: {
+		minWidth: 150,
 		fontSize: 14,
 		padding: 0,
 		margin: 0,
@@ -33,30 +35,92 @@ export const styles = {
 		padding: 0,
 		margin: 0,
 	},
+	rightColumnTypography: {
+		paddingLeft: 5,
+		margin: 'auto',
+	},
 };
 
-export function SelectColumn({ columns, setSelectedColumn }) {
+function addColumnToList(col, setCol, selectedColumn) {
+	if (!selectedColumn || col.length > 0) return;
+	setCol((prevState) => prevState.concat(selectedColumn));
+}
+
+function CaratButtons({ data, setData, label, selectedColumn }) {
 	return (
-		<Card bordered style={{ marginTop: 20, ...styles.cardWithBorder }}>
-			<Radio.Group style={styles.radioGroup} buttonStyle="solid">
-				{/* display only columns with labels and some data */}
-				{columns.length > 0 ? (
-					columns.map((column) => (
-						<Radio.Button
-							style={styles.radioButton}
-							key={column.id}
-							onClick={() => setSelectedColumn(column)}
-							value={column}
-						>
+		<div style={styles.flexColumn}>
+			<Button
+				disabled={!selectedColumn || data.length !== 0}
+				style={{ marginBottom: 5 }}
+				onClick={() => addColumnToList(data, setData, selectedColumn)}
+			>
+				{label}
+			</Button>
+		</div>
+	);
+}
+
+function RadioGroup({ data, styleProps, removeData }) {
+	const { cardWithBorder, radioGroup, radioButton, rightColumnTypography } = styles;
+	return (
+		<Card bordered style={{ ...cardWithBorder, ...styleProps }}>
+			<Radio.Group style={radioGroup} buttonStyle="solid">
+				{data.length === 0 ? <em>Required</em> : null}
+				{data.map((column) => (
+					<div style={{ display: 'flex', ...radioButton }} key={column.id}>
+						<Typography.Text ellipsis={true} style={rightColumnTypography}>
 							{column.label}
-						</Radio.Button>
-					))
-				) : (
-					<div style={{ color: 'red' }}>
-						There must be at least one column with at least three valid data points to run this type of analysis.
+						</Typography.Text>
+						<RemoveColumnButton removeColumn={() => removeColumnFromList(removeData, column)} />
 					</div>
-				)}
+				))}
 			</Radio.Group>
 		</Card>
+	);
+}
+
+function removeColumnFromList(setCol, column) {
+	setCol((prevState) => prevState.filter((col) => col !== column));
+}
+
+export function SelectColumn({ columns, groupingColData, setSelectedColumn }) {
+	const { cardWithBorder, radioButton, radioGroup } = styles;
+	return (
+		<div>
+			Select Column
+			<Card bordered style={{ marginTop: 20, ...cardWithBorder }}>
+				<Radio.Group style={radioGroup} buttonStyle="solid">
+					{/* display only columns with labels and some data */}
+					{columns.length > 0 ? (
+						columns.map((column) => {
+							return (
+								<Radio.Button
+									style={radioButton}
+									key={column.id}
+									onClick={() => setSelectedColumn(column)}
+									value={column}
+									disabled={groupingColData === column}
+								>
+									{column.label}
+								</Radio.Button>
+							);
+						})
+					) : (
+						<div style={{ color: 'red' }}>
+							There must be at least one column with at least three valid data points to run this type of analysis.
+						</div>
+					)}
+				</Radio.Group>
+			</Card>
+		</div>
+	);
+}
+
+export function VariableSelector({ styleProps, data, setData, selectedColumn, label }) {
+	return (
+		<div style={{ ...styles.flexSpaced, ...styleProps }}>
+			<CaratButtons data={data} setData={setData} selectedColumn={selectedColumn} label={label} />
+			<RadioGroup data={data} removeData={setData} />
+		</div>
 	);
 }

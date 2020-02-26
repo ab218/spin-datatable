@@ -25,7 +25,9 @@ export default function DistributionModal() {
 		}
 
 		// TODO: Better error handling here
-		const colVals = rows.map((row) => !excludedRows.includes(row.id) && row[yColData.id]).filter((x) => Number(x));
+		const colVals = rows
+			.map((row) => !excludedRows.includes(row.id) && Number(row[yColData.id]))
+			.filter((x) => Number(x));
 		if (colVals.length < 3) {
 			setError('Column must have at least 3 valid values');
 			return;

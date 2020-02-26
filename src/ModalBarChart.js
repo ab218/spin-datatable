@@ -1,61 +1,68 @@
 import React, { useState } from 'react';
 import { Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { performLinearRegressionAnalysis } from './Analyses';
-import { TOGGLE_ANALYSIS_MODAL } from './constants';
+import { createBarChart } from './Analyses';
+import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from './constants';
+import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from './constants';
 
 export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
 	const [ xColData, setXColData ] = useState([]);
 	const [ yColData, setYColData ] = useState([]);
+	const [ groupingColData, setGroupingColData ] = useState([]);
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
-	const { excludedRows, analysisModalOpen, columns, rows } = useSpreadsheetState();
+	const { excludedRows, barChartModalOpen, columns, rows } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {
-		dispatchSpreadsheetAction({ type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+		dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
 	}
 
 	async function performAnalysis() {
-		if (!yColData[0] || !xColData[0]) {
+		if (!yColData[0] || !xColData[0] || !groupingColData[0]) {
 			setError('Please add all required columns and try again');
 			return;
 		}
 		setPerformingAnalysis(true);
-		const colX = xColData[0] || columns[0];
-		const colY = yColData[0] || columns[2];
+		const colX = xColData[0];
+		const colY = yColData[0];
+		const colZ = groupingColData[0];
 		// TODO: combine this with makeXYCols
-		function mapColumnValues(colID) {
-			return rows.map((row) => !excludedRows.includes(row.id) && Number(row[colID]));
-		}
-		const colA = mapColumnValues(colX.id);
-		const colB = mapColumnValues(colY.id);
-		const maxColLength = Math.max(colA.length, colB.length);
-		function makeXYCols(colA, colB) {
+		const mapNumberColumnValues = (colID) => rows.map((row) => !excludedRows.includes(row.id) && Number(row[colID]));
+		const mapCharacterColumnValues = (colID) => rows.map((row) => !excludedRows.includes(row.id) && row[colID]);
+		const colA = mapNumberColumnValues(colX.id);
+		const colB = mapNumberColumnValues(colY.id);
+		const colC = mapCharacterColumnValues(colZ.id);
+		const maxColLength = Math.max(colA.length, colB.length, colC.length);
+		function makeXYZCols(colA, colB, colC) {
 			const arr = [];
 			for (let i = 0; i < maxColLength; i++) {
-				const row = i + 1;
+				const rowNumber = i + 1;
 				// Filter out NaN, undefined, null values
 				if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
-					arr.push([ colA[i], colB[i], row ]);
+					arr.push({
+						x: colA[i],
+						y: colB[i],
+						group: colC[i],
+						row: {
+							rowID: rows[i]['id'],
+							rowNumber,
+						},
+					});
 				}
 			}
 			return arr.sort();
 		}
-		const XYCols = makeXYCols(colA, colB);
-		const colXArr = XYCols.map((a) => a[0]);
-		const colYArr = XYCols.map((a) => a[1]);
+		const XYZCols = makeXYZCols(colA, colB, colC);
+		const colXArr = XYZCols.map((a) => a.x);
+		const colYArr = XYZCols.map((a) => a.y);
+		const colZArr = XYZCols.map((a) => a.group);
 
-		if (colXArr.length >= 3 && colYArr.length >= 3) {
-			const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols);
-			const popup = window.open(
-				window.location.href + 'linear_regression.html',
-				'',
-				'left=9999,top=100,width=800,height=850',
-			);
+		if (colXArr.length >= 1 && colYArr.length >= 1 && colZArr.length >= 1) {
+			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols);
+			const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=1000,height=800');
 			function receiveMessage(event) {
 				// target window is ready, time to send data.
 				if (event.data === 'ready') {
@@ -77,23 +84,24 @@ export default function AnalysisModal() {
 
 			function targetClickEvent(event) {
 				if (event.data.message === 'clicked') {
-					const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
-					const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
 					if (!event.data.metaKeyPressed) {
 						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 					}
-
-					const rowIndices = rows.reduce((acc, row, rowIndex) => {
-						// TODO Shouldn't be using Number here?
-						return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
-							? acc.concat(rowIndex)
-							: acc;
-					}, []);
-					dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
+					if (event.data.label && event.data.colZ) {
+						dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: { [colZ.id]: event.data.colZ.text } });
+						dispatchSpreadsheetAction({ type: FILTER_COLUMN });
+						return;
+					}
+					const selectedRow = event.data.rowID;
+					dispatchSpreadsheetAction({
+						type: SELECT_ROW,
+						rowId: selectedRow,
+						rowIndex: rows.findIndex((row) => row.id === selectedRow),
+					});
 				}
 			}
 			setPerformingAnalysis(false);
-			dispatchSpreadsheetAction({ type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+			dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
 
 			// set event listener and wait for target to be ready
 			window.addEventListener('message', receiveMessage, false);
@@ -113,33 +121,44 @@ export default function AnalysisModal() {
 		<div>
 			<Modal
 				className="ant-modal"
-				// destroyOnClose
 				onCancel={handleModalClose}
 				okButtonProps={{ disabled: performingAnalysis }}
 				cancelButtonProps={{ disabled: performingAnalysis }}
 				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
-				title="Fit Y by X"
-				visible={analysisModalOpen}
+				title="Bar Chart"
+				visible={barChartModalOpen}
 				width={650}
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={styles.flexSpaced}>
 					<SelectColumn
-						selectedColumn={selectedColumn}
+						groupingColData={groupingColData[0]}
 						columns={filteredColumns}
 						setSelectedColumn={setSelectedColumn}
 					/>
-					<div style={{ width: 350 }}>
+					<div style={{ width: 360 }}>
 						Cast Selected Columns into Roles
 						<VariableSelector
 							data={yColData}
-							setData={setYColData}
 							label="Y"
+							setData={setYColData}
 							selectedColumn={selectedColumn}
 							styleProps={{ marginBottom: 20, marginTop: 20 }}
 						/>
-						<VariableSelector data={xColData} setData={setXColData} label="X" selectedColumn={selectedColumn} />
+						<VariableSelector
+							data={xColData}
+							label="X"
+							setData={setXColData}
+							selectedColumn={selectedColumn}
+							styleProps={{ marginBottom: 20 }}
+						/>
+						<VariableSelector
+							data={groupingColData}
+							label="Group"
+							setData={setGroupingColData}
+							selectedColumn={selectedColumn}
+						/>
 					</div>
 				</div>
 				<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>

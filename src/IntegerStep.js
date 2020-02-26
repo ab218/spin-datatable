@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Slider, Row, Col } from 'antd';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { FILTER_COLUMN } from './constants';
+import { FILTER_COLUMN, SET_FILTERS } from './constants';
 
 export default function IntegerStep({ columnId, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -17,7 +17,12 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 		const newCopy = selectedColumns.slice();
 		const index = newCopy.findIndex((col) => col.id === columnId);
 		newCopy[index] = { ...selectedColumns[index], min, max };
-		dispatchSpreadsheetAction({ type: FILTER_COLUMN, selectedColumns: newCopy });
+		dispatchSpreadsheetAction({
+			type: SET_FILTERS,
+			selectedColumns: newCopy,
+			numberFilters: newCopy.filter((col) => col.type === 'Number'),
+		});
+		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 	};
 
 	return (
@@ -32,6 +37,7 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 					range
 					value={[ min, max ]}
 					onChange={onChange}
+					step={(colMax / 100).toFixed(2)}
 					onAfterChange={onAfterChange}
 				/>
 			</Col>

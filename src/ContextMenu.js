@@ -3,7 +3,7 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import {
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
-	DELETE_ROW,
+	DELETE_ROWS,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
 	REMOVE_SELECTED_CELLS,
@@ -105,12 +105,12 @@ export default function ContextMenu({ paste }) {
 				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: DELETE_ROW, rowIndex: contextMenuRowIndex });
+							dispatchSpreadsheetAction({ type: DELETE_ROWS, rowIndex: contextMenuRowIndex });
 							dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 						}}
 						key="19"
 					>
-						Delete Row
+						Delete Selected Rows
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
@@ -118,7 +118,7 @@ export default function ContextMenu({ paste }) {
 						}}
 						key="20"
 					>
-						Exclude Row(s)
+						Exclude Selected Row(s)
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
@@ -126,7 +126,7 @@ export default function ContextMenu({ paste }) {
 						}}
 						key="21"
 					>
-						Unexclude Row(s)
+						Unexclude Selected Row(s)
 					</Menu.Item>
 				</Menu>
 			</div>

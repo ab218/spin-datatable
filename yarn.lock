@@ -2415,11 +2415,6 @@ caseless@~0.12.0:
   resolved "https://registry.yarnpkg.com/caseless/-/caseless-0.12.0.tgz#1b681c21ff84033c826543090689420d187151dc"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-cephes@^1.1.2:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/cephes/-/cephes-1.2.0.tgz#4d246b622bc488ab8c982a1f702f0c9f49705d96"
-  integrity sha512-twuUuJRrIrsELHz6foJtZlqrz6FC36zoHZJvvThsrM1UWPKxyoilw1Rka6Hk0AmPFKHKUoGwGfAtvNZNtNZu0g==
-
 chalk@2.4.2, chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.1, chalk@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.4.2.tgz#cd42541677a54333cf541a49108c1432b44c9424"
@@ -3335,13 +3330,6 @@ dir-glob@2.0.0:
   dependencies:
     arrify "^1.0.1"
     path-type "^3.0.0"
-
-distributions@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/distributions/-/distributions-2.1.0.tgz#7005f01898937fbe6404abda20fa7f4aaaa058e0"
-  integrity sha512-4eov7WXRip5Tu0K7Y51W1oVt+DcvkoE0EzsvbLzgedC/n4PUpYXHqk6vo/OH1HteBHp5Vm6cmfnInf9NAXM4qQ==
-  dependencies:
-    cephes "^1.1.2"
 
 dns-equal@^1.0.0:
   version "1.0.0"
@@ -4636,16 +4624,6 @@ hex-color-regex@^1.1.0:
   resolved "https://registry.yarnpkg.com/hex-color-regex/-/hex-color-regex-1.1.0.tgz#4c06fccb4602fe2602b3c93df82d7e7dbf1a8a8e"
   integrity sha512-l9sfDFsuqtOqKDsQdqrMRk0U85RZc0RtOR9yPI7mRVOa4FsR/BVnZ0shmQRM96Ji99kYZP/7hn1cedc1+ApsTQ==
 
-highcharts-react-official@^2.2.2:
-  version "2.2.2"
-  resolved "https://registry.yarnpkg.com/highcharts-react-official/-/highcharts-react-official-2.2.2.tgz#1a83558f4501b73c99e79aa65325f7bd522d6574"
-  integrity sha512-Xj9JOOL20Vmbl8gjgF2jN89Fx5zqbonjaK6SqwiM4vCjC/ZwtwXEquk+LkymzIVcd4H9Wb/9ASKhBJn5fNtN4g==
-
-highcharts@^7.1.3:
-  version "7.1.3"
-  resolved "https://registry.yarnpkg.com/highcharts/-/highcharts-7.1.3.tgz#ea3bb16dcdd780e757ab10e90466c64a82b6d285"
-  integrity sha512-aHAzlSf/czqJlpVt96jYkirWrIV1ZNHgxsTAyk2R5CcG/0V1G8Ge65p76eFqZQp7C8+cA8e6g1xsAPj51MsJ3Q==
-
 hmac-drbg@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/hmac-drbg/-/hmac-drbg-1.0.1.tgz#d2745701025a6c775a6c545793ed502fc0c649a1"
@@ -5794,11 +5772,6 @@ js-levenshtein@^1.1.3:
   resolved "https://registry.yarnpkg.com/js-levenshtein/-/js-levenshtein-1.1.6.tgz#c6cee58eb3550372df8deb85fad5ce66ce01d59d"
   integrity sha512-X2BB11YZtrRqY4EnQcLX5Rh373zbK4alC1FW7D7MBhL2gtcC17cTnr6DmfHZeS0s2rTHjUTMMHfG7gO8SSdw+g==
 
-js-polynomial-regression@^0.9.1:
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/js-polynomial-regression/-/js-polynomial-regression-0.9.1.tgz#cf9249ad13e8c3139b7eb45582ecbd49509a1d97"
-  integrity sha512-D+eWJpP8tS3bMSLuMjOxI3qf7gNW1tu9vfST8o/mUNoR/JKIjLNRytdqf7dWi73unyCTKyHq20nyor8hWN5xNw==
-
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"
@@ -5975,11 +5948,6 @@ jsprim@^1.2.2:
     extsprintf "1.3.0"
     json-schema "0.2.3"
     verror "1.10.0"
-
-jstat@^1.9.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/jstat/-/jstat-1.9.0.tgz#96a625f5697566f6ba3b15832fb371f9451b8614"
-  integrity sha512-xSsSJ3qY4rS+u8+dAwRcJ0LQGxNdibdW6rSalNPZDbLYkW1C7b0/j79IxXtQjrweqMNI3asN7FCIPceNSIJr2g==
 
 jsx-ast-utils@^2.0.1:
   version "2.2.1"
@@ -6259,11 +6227,6 @@ mamacro@^0.0.3:
   resolved "https://registry.yarnpkg.com/mamacro/-/mamacro-0.0.3.tgz#ad2c9576197c9f1abf308d0787865bd975a3f3e4"
   integrity sha512-qMEwh+UujcQ+kbz3T6V+wAmO2U8veoq2w+3wY8MquqwVA3jChfwY+Tk52GZKDfACEPjuZ7r2oJLejwpt8jtwTA==
 
-mann-whitney-utest@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/mann-whitney-utest/-/mann-whitney-utest-1.0.5.tgz#96d2cde440dba8992d8202f81d2bfb8edd5f0909"
-  integrity sha1-ltLN5EDbqJktggL4HSv7jt1fCQk=
-
 map-age-cleaner@^0.1.1:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/map-age-cleaner/-/map-age-cleaner-0.1.3.tgz#7d583a7306434c055fe474b0f45078e6e1b4b92a"
@@ -6315,11 +6278,6 @@ mem@^4.0.0:
     map-age-cleaner "^0.1.1"
     mimic-fn "^2.0.0"
     p-is-promise "^2.0.0"
-
-"memoize-one@>=3.1.1 <6":
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/memoize-one/-/memoize-one-5.1.1.tgz#047b6e3199b508eaec03504de71229b8eb1d75c0"
-  integrity sha512-HKeeBpWvqiVJD57ZUAsJNm71eHTykffzcLZVYWiVfQeI1rJtuEaS7hQiEpWfVVk18donPwJEcFKIkCmPJNOhHA==
 
 memory-fs@^0.4.0, memory-fs@^0.4.1, memory-fs@~0.4.1:
   version "0.4.1"
@@ -8776,14 +8734,6 @@ react-virtualized@^9.21.2:
     prop-types "^15.6.0"
     react-lifecycles-compat "^3.0.4"
 
-react-window@^1.8.5:
-  version "1.8.5"
-  resolved "https://registry.yarnpkg.com/react-window/-/react-window-1.8.5.tgz#a56b39307e79979721021f5d06a67742ecca52d1"
-  integrity sha512-HeTwlNa37AFa8MDZFZOKcNEkuF2YflA0hpGPiTT9vR7OawEt+GZbfM6wqkBahD3D3pUjIabQYzsnY/BSJbgq6Q==
-  dependencies:
-    "@babel/runtime" "^7.0.0"
-    memoize-one ">=3.1.1 <6"
-
 react@^16.8.6:
   version "16.9.0"
   resolved "https://registry.yarnpkg.com/react/-/react-16.9.0.tgz#40ba2f9af13bc1a38d75dbf2f4359a5185c4f7aa"
@@ -8942,11 +8892,6 @@ regjsparser@^0.6.0:
   integrity sha512-RQ7YyokLiQBomUJuUG8iGVvkgOLxwyZM8k6d3q5SAXpg4r5TZJZigKFvC6PpD+qQ98bCDC5YelPeA3EucDoNeQ==
   dependencies:
     jsesc "~0.5.0"
-
-regression@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/regression/-/regression-2.0.1.tgz#8d29c3e8224a10850c35e337e85a8b2fac3b0c87"
-  integrity sha1-jSnD6CJKEIUMNeM36FqLL6w7DIc=
 
 relateurl@0.2.x:
   version "0.2.7"
@@ -9842,11 +9787,6 @@ stylehacks@^4.0.0:
     postcss "^7.0.0"
     postcss-selector-parser "^3.0.0"
 
-summary@0.3.x:
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/summary/-/summary-0.3.2.tgz#3d7439b30dab3449dfd66840a822838d4a4a8561"
-  integrity sha1-PXQ5sw2rNEnf1mhAqCKDjUpKhWE=
-
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
@@ -10131,14 +10071,6 @@ tsutils@^3.7.0:
   integrity sha512-kzeQ5B8H3w60nFY2g8cJIuH7JDpsALXySGtwGJ0p2LSjLgay3NdIpqq5SoOBe46bKDW2iq25irHCr8wjomUS2g==
   dependencies:
     tslib "^1.8.1"
-
-ttest@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/ttest/-/ttest-2.1.0.tgz#a9e870dc43da690ce65564965bd6771ba90cd821"
-  integrity sha512-6dj/XRHsY4lFZxzye+YgoRnGNnD6/eJvG/DVDnYbVF6T2c8TBTVXLzElKipK2BcdbDUXoDwYQBBbFQ8+SyEKVA==
-  dependencies:
-    distributions "^2.1.0"
-    summary "0.3.x"
 
 tty-browserify@0.0.0:
   version "0.0.0"

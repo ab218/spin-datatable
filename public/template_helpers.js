@@ -158,12 +158,49 @@ function onClickSelectCells(thisBar, bar, col) {
 		})
 		.attr('r', clickedBarPointSize)
 		.style('fill', clickedBarFill);
+	console.log(bar);
 	window.opener.postMessage(
 		{
 			message: 'clicked',
 			metaKeyPressed,
 			vals: bar,
 			col,
+		},
+		'*',
+	);
+}
+
+function onClickBarSelectCellsBarChart(thisBar, bar, colXId, colYId, colZId) {
+	let metaKeyPressed = false;
+	if (d3.event.metaKey) {
+		metaKeyPressed = true;
+	}
+	window.opener.postMessage(
+		{
+			message: 'clicked',
+			metaKeyPressed,
+			rowID: bar.row.rowID,
+			colXId,
+			colYId,
+			colZId,
+		},
+		'*',
+	);
+}
+
+function onClickSelectGroupBarChart(label, colZ) {
+	let metaKeyPressed = false;
+	if (d3.event.metaKey) {
+		metaKeyPressed = true;
+	}
+	const column = colZ;
+	column['text'] = label;
+	window.opener.postMessage(
+		{
+			message: 'clicked',
+			metaKeyPressed,
+			label,
+			colZ: column,
 		},
 		'*',
 	);

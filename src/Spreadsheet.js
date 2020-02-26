@@ -13,6 +13,7 @@ import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
 import RowHeaders from './RowHeaders';
 import HeaderRenderer from './HeaderRenderer';
+import BarChartModal from './ModalBarChart';
 import {
 	Column,
 	Table,
@@ -52,6 +53,7 @@ function Spreadsheet({ eventBus }) {
 	const {
 		activeCell,
 		analysisModalOpen,
+		barChartModalOpen,
 		columns,
 		cellSelectionRanges,
 		distributionModalOpen,
@@ -169,16 +171,23 @@ function Spreadsheet({ eventBus }) {
 			colsContainer.push(
 				<Column
 					key={columnIndex}
-					cellRenderer={(props) => (
-						<CellRenderer
-							{...props}
-							createNewColumns={createNewColumns}
-							createNewRows={createNewRows}
-							changeActiveCell={changeActiveCell}
-							modifyCellSelectionRange={modifyCellSelectionRange}
-							selectCell={selectCell}
-						/>
-					)}
+					cellRenderer={(props) => {
+						// rowData = rowID, dataKey = columnID
+						const { dataKey: columnID, rowData } = props;
+						const rowID = rowData.id;
+						return (
+							<CellRenderer
+								{...props}
+								columnID={columnID}
+								rowID={rowID}
+								createNewColumns={createNewColumns}
+								createNewRows={createNewRows}
+								changeActiveCell={changeActiveCell}
+								modifyCellSelectionRange={modifyCellSelectionRange}
+								selectCell={selectCell}
+							/>
+						);
+					}}
 					columnIndex={columnIndex}
 					dataKey={(column && column.id) || ''}
 					headerRenderer={(props) => (
@@ -328,43 +337,42 @@ function Spreadsheet({ eventBus }) {
 		<div style={{ height: '100%', width: '100%' }}>
 			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
+			{barChartModalOpen && <BarChartModal />}
 			{distributionModalOpen && <DistributionModal />}
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
 				<div style={{ display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>
+					<Sidebar />
 					<WindowScroller>
 						{/* <AutoSizer> */}
 						{({ height }) => (
-							<div style={{ display: 'flex' }}>
-								<Sidebar />
-								<Table
-									overscanRowCount={0}
-									width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
-									height={height}
-									headerHeight={25}
-									rowHeight={30}
-									rowCount={visibleRows}
-									rowGetter={({ index }) => rows[index] || emptyRow}
-									rowStyle={{ alignItems: 'stretch' }}
-								>
-									<Column
-										width={100}
-										label={''}
-										dataKey={'rowHeaderColumn'}
-										headerRenderer={() => <AnalysisMenu />}
-										cellRenderer={(props) => (
-											<RowHeaders
-												{...props}
-												createNewRows={createNewRows}
-												modifyCellSelectionRange={modifyCellSelectionRange}
-											/>
-										)}
-										style={{ margin: 0 }}
-									/>
-									{renderColumns(visibleColumns)}
-								</Table>
-							</div>
+							<Table
+								overscanRowCount={0}
+								width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
+								height={height}
+								headerHeight={25}
+								rowHeight={30}
+								rowCount={visibleRows}
+								rowGetter={({ index }) => rows[index] || emptyRow}
+								rowStyle={{ alignItems: 'stretch' }}
+							>
+								<Column
+									width={100}
+									label={''}
+									dataKey={'rowHeaderColumn'}
+									headerRenderer={() => <AnalysisMenu />}
+									cellRenderer={(props) => (
+										<RowHeaders
+											{...props}
+											createNewRows={createNewRows}
+											modifyCellSelectionRange={modifyCellSelectionRange}
+										/>
+									)}
+									style={{ margin: 0 }}
+								/>
+								{renderColumns(visibleColumns)}
+							</Table>
 						)}
 						{/* </AutoSizer> */}
 					</WindowScroller>
