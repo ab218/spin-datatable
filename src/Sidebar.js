@@ -13,24 +13,25 @@ export default function Sidebar() {
 			<table style={{ marginTop: '100px', marginLeft: '10px', width: '100%' }}>
 				<tbody>
 					<tr>
-						<td style={{ width: '34%', fontWeight: 'bold' }}>Columns</td>
-						<td style={{ width: '66%', fontWeight: 'bold' }} />
+						<td style={{ width: '80%', fontWeight: 'bold' }}>Columns</td>
+						<td style={{ width: '20%', fontWeight: 'bold' }} />
 					</tr>
 					{columns &&
 						columns.map((column, columnIndex) => (
-							<tr className={uniqueColumnIDs.includes(column.id) ? 'sidebar-column-selected' : ''} key={columnIndex}>
-								<td
-									onClick={(e) => {
-										dispatchSpreadsheetAction({
-											type: SELECT_COLUMN,
-											columnID: column.id,
-											columnIndex,
-											selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
-										});
-									}}
-								>
-									{column.label}
-								</td>
+							<tr
+								onClick={(e) => {
+									dispatchSpreadsheetAction({
+										type: SELECT_COLUMN,
+										columnID: column.id,
+										columnIndex,
+										selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
+									});
+								}}
+								className={uniqueColumnIDs.includes(column.id) ? 'sidebar-column-selected' : ''}
+								key={columnIndex}
+							>
+								<td>{column.label}</td>
+								<td style={{ fontStyle: 'italic' }}>{column.modelingType.slice(0, 1)}</td>
 							</tr>
 						))}
 				</tbody>
@@ -39,20 +40,20 @@ export default function Sidebar() {
 			<table style={{ marginLeft: '10px', width: '100%' }}>
 				<tbody>
 					<tr>
-						<td style={{ width: '34%', fontWeight: 'bold' }}>Rows</td>
-						<td style={{ width: '66%', fontWeight: 'bold' }} />
+						<td style={{ width: '80%', fontWeight: 'bold' }}>Rows</td>
+						<td style={{ width: '20%', fontWeight: 'bold' }} />
 					</tr>
 					<tr>
-						<td style={{ width: '34%' }}>All Rows</td>
-						<td style={{ width: '66%' }}>{rows.length}</td>
+						<td style={{ width: '80%' }}>All Rows</td>
+						<td style={{ width: '20%' }}>{rows.length}</td>
 					</tr>
 					<tr>
-						<td style={{ width: '34%' }}>Selected</td>
-						<td style={{ width: '66%' }}>{uniqueRowIDs.length}</td>
+						<td style={{ width: '80%' }}>Selected</td>
+						<td style={{ width: '20%' }}>{uniqueRowIDs.length}</td>
 					</tr>
 					<tr>
-						<td style={{ width: '34%' }}>Excluded</td>
-						<td style={{ width: '66%' }}>{excludedRows.length}</td>
+						<td style={{ width: '80%' }}>Excluded</td>
+						<td style={{ width: '20%' }}>{excludedRows.length}</td>
 					</tr>
 				</tbody>
 			</table>

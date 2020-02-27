@@ -32,7 +32,11 @@ export default function HeaderRenderer({ dataKey, label, columnIndex, createNewC
 		<React.Fragment key={dataKey}>
 			<div
 				className={
-					uniqueColumnIDs.includes(dataKey) ? 'column-header-selected' : 'ReactVirtualized__Table__headerTruncatedText'
+					uniqueColumnIDs.includes(dataKey) ? (
+						'ReactVirtualized__Table__headerTruncatedText column-header-selected'
+					) : (
+						'ReactVirtualized__Table__headerTruncatedText'
+					)
 				}
 				style={{
 					userSelect: 'none',
