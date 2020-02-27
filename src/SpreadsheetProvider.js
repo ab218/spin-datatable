@@ -237,7 +237,7 @@ function spreadsheetReducer(state, action) {
 		case CREATE_COLUMNS: {
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
-				return { id, type: 'String', label: `Column ${state.columns.length + i + 1}` };
+				return { id, modelingType: 'Continuous', type: 'String', label: `Column ${state.columns.length + i + 1}` };
 			});
 			const columns = state.columns.concat(newColumns);
 			return { ...state, columns };
