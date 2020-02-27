@@ -11,6 +11,7 @@ export function RowNumberCell({ rowIndex }) {
 
 export function SelectedCell({
 	changeActiveCell,
+	column,
 	columnIndex,
 	columnID,
 	handleContextMenu,
@@ -42,6 +43,7 @@ export function SelectedCell({
 		<div
 			key={`row${rowIndex}col${columnIndex}`}
 			style={{
+				textAlign: column.type === 'String' ? 'left' : 'right',
 				width: '100%',
 				height: '100%',
 				backgroundColor: '#C0C0C0',
@@ -110,6 +112,7 @@ export function NormalCell({
 	) : (
 		<div
 			style={{
+				textAlign: column.type === 'String' ? 'left' : 'right',
 				height: '100%',
 				width: '100%',
 				lineHeight: 2,

@@ -157,6 +157,15 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
 	}
 
+	function updateCell(currentValue, rowIndex, columnIndex) {
+		dispatchSpreadsheetAction({
+			type: 'UPDATE_CELL',
+			rowIndex,
+			columnIndex: columnIndex - 1,
+			cellValue: currentValue,
+		});
+	}
+
 	const emptyRow = {};
 	const visibleColumns = Math.max(columns.length + 3, Math.ceil(window.innerWidth / 100));
 	const visibleRows = Math.max(rows.length + 5, Math.ceil(window.innerHeight / 30));
@@ -186,6 +195,7 @@ function Spreadsheet({ eventBus }) {
 								changeActiveCell={changeActiveCell}
 								modifyCellSelectionRange={modifyCellSelectionRange}
 								selectCell={selectCell}
+								updateCell={updateCell}
 							/>
 						);
 					}}
@@ -299,8 +309,8 @@ function Spreadsheet({ eventBus }) {
 				if (rowIndex + 1 > rows.length) {
 					createNewRows(rows);
 				}
-				dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
 				dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: rowIndex, column: columnIndex + 1 });
+				dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
 			} else {
 				switch (event.key) {
 					case 'Backspace':

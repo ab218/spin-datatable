@@ -22,10 +22,7 @@ export default function HamburgerMenu() {
 			<Menu.Item onClick={() => dispatchSpreadsheetAction({ type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true })}>
 				Fit Y By X
 			</Menu.Item>
-			<Menu.Item
-				onClick={() =>
-					dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })}
-			>
+			<Menu.Item onClick={() => dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true })}>
 				Filter
 			</Menu.Item>
 			<Menu.Item

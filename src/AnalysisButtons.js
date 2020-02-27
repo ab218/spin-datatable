@@ -31,8 +31,7 @@ export default function AnalysisButtons() {
 			<div style={{ marginLeft: 1, marginTop: 3 }}>
 				<Tooltip title="Filter">
 					<Button
-						onClick={() =>
-							dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true, selectedColumns: [] })}
+						onClick={() => dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true })}
 						style={{ height: 40, fontSize: 26 }}
 						icon="filter"
 					/>

@@ -29,15 +29,15 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		<Row style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
 			<Col style={{ textAlign: 'center', width: 300 }} span={12}>
 				<span style={{ alignSelf: 'center', fontSize: '1.1em', minWidth: 100, textAlign: 'center' }}>
-					{`${colMin} ≤ ${label} ≤ ${colMax}`}
+					{`${colMin.toFixed(2)} ≤ ${label} ≤ ${colMax.toFixed(2)}`}
 				</span>
 				<Slider
-					min={colMin}
-					max={colMax}
+					min={Math.floor(colMin)}
+					max={Math.ceil(colMax)}
 					range
 					value={[ min, max ]}
 					onChange={onChange}
-					step={(colMax / 100).toFixed(2)}
+					step={(Math.ceil(colMax) / 1000).toFixed(2)}
 					onAfterChange={onAfterChange}
 				/>
 			</Col>

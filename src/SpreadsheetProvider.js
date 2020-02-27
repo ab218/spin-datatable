@@ -10,6 +10,7 @@ import {
 	CREATE_ROWS,
 	DELETE_ROWS,
 	DELETE_COLUMN,
+	DELETE_FILTER,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
 	FILTER_COLUMN,
@@ -127,19 +128,29 @@ function spreadsheetReducer(state, action) {
 		columnID,
 		columnIndex,
 		columnTypeModalOpen,
+		copiedValues2dArray,
+		descending,
 		distributionModalOpen,
 		endRangeRow,
 		endRangeColumn,
+		filters,
 		filterModalOpen,
 		layout,
+		numberFilters,
 		row,
-		rowID,
-		rows,
-		rowIndex,
 		rowCount,
+		rowID,
+		rowIndex,
+		rows,
 		selectionActive,
 		selectedColumns,
+		selectedText,
+		stringFilter,
 		updatedColumn,
+		top,
+		left,
+		height,
+		width,
 	} = action;
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
@@ -152,7 +163,7 @@ function spreadsheetReducer(state, action) {
 		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column, columnID };
-			return { ...state, activeCell, cellSelectionRanges: [], uniqueRowIDs: [], uniqueColumnIDs: [] };
+			return { ...state, activeCell, cellSelectionRanges: [], uniqueRowIDs: [], uniqueColumnIDs: [], selectedText };
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
@@ -238,15 +249,9 @@ function spreadsheetReducer(state, action) {
 			});
 			return { ...state, rows: state.rows.concat(newRows) };
 		}
-		case 'ENABLE_SELECT': {
-			return { ...state, selectDisabled: false };
-		}
-		case 'DISABLE_SELECT': {
-			return { ...state, selectDisabled: true };
-		}
 		case DELETE_COLUMN: {
 			const { rows } = state;
-			const columnID = getCol(action.colName).id;
+			const columnID = getCol(colName).id;
 			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
 			for (let i = 0; i < rows.length; i++) {
 				delete rows[i][columnID];
@@ -306,10 +311,10 @@ function spreadsheetReducer(state, action) {
 			}
 
 			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-				action.top,
-				action.left,
-				action.top + action.height - 1,
-				action.left + action.width - 1,
+				top,
+				left,
+				top + height - 1,
+				left + width - 1,
 				state.columns,
 				state.rows,
 			);
@@ -320,13 +325,13 @@ function spreadsheetReducer(state, action) {
 				uniqueRowIDs: selectedRowIDs,
 				cellSelectionRanges: [
 					{
-						top: action.top,
-						left: action.left,
-						bottom: action.top + action.height - 1,
-						right: action.left + action.width - 1,
+						top: top,
+						left: left,
+						bottom: top + height - 1,
+						right: left + width - 1,
 					},
 				],
-				rows: mapRows(state.rows, action.copiedValues2dArray, selectedColumnIDs, selectedRowIDs),
+				rows: mapRows(state.rows, copiedValues2dArray, selectedColumnIDs, selectedRowIDs),
 			};
 		}
 		// EVENT: Delete values
@@ -620,7 +625,7 @@ function spreadsheetReducer(state, action) {
 				filterModalOpen,
 				selectedColumn: null,
 				activeCell: null,
-				selectedColumns,
+				selectedColumns: [],
 				filters: { numberFilters: [], stringFilters: [] },
 			};
 		}
@@ -630,13 +635,20 @@ function spreadsheetReducer(state, action) {
 		// EVENT: Selected Cell translated
 		case TRANSLATE_SELECTED_CELL: {
 			const newCellSelectionRanges = [ { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex } ];
-			return { ...state, cellSelectionRanges: newCellSelectionRanges, currentCellSelectionRange: null };
+			const rowID = state.rows[rowIndex].id;
+			const columnID = state.columns[columnIndex - 1].id;
+			return {
+				...state,
+				cellSelectionRanges: newCellSelectionRanges,
+				currentCellSelectionRange: null,
+				uniqueColumnIDs: [ columnID ],
+				uniqueRowIDs: [ rowID ],
+			};
 		}
 		// EVENT: Cell updated
 		case UPDATE_CELL: {
-			const { activeCell, rows, columns } = state;
+			const { rows, columns } = state;
 			// TODO: If active cell, use that, if selected cells, use top left corner of it
-			if (!activeCell && !state.cellSelectionRanges.length > 0) return state;
 			// row from action or last row from state
 			const column = columns[columnIndex];
 			const row = rows[rowIndex] || rows[rows.length - 1];
@@ -666,22 +678,23 @@ function spreadsheetReducer(state, action) {
 		}
 
 		case SORT_COLUMN: {
-			const columnID = getCol(action.colName).id;
-			state.rows.sort(
-				(a, b) => (action.descending ? [ b[columnID] ] - [ a[columnID] ] : [ a[columnID] ] - [ b[columnID] ]),
-			);
+			const columnID = getCol(colName).id;
+			state.rows.sort((a, b) => (descending ? [ b[columnID] ] - [ a[columnID] ] : [ a[columnID] ] - [ b[columnID] ]));
 			return { ...state };
 		}
 		case SET_FILTERS: {
-			const stringFilterCopy = { ...state.filters.stringFilters, ...action.stringFilter };
+			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
 			return {
 				...state,
 				selectedColumns: selectedColumns || state.selectedColumns,
 				filters: {
 					stringFilters: stringFilterCopy,
-					numberFilters: action.numberFilters || state.filters.numberFilters,
+					numberFilters: numberFilters || state.filters.numberFilters,
 				},
 			};
+		}
+		case DELETE_FILTER: {
+			return { ...state, filters, selectedColumns };
 		}
 		case FILTER_COLUMN: {
 			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
@@ -695,15 +708,26 @@ function spreadsheetReducer(state, action) {
 				return newFilteredRowsByStringArray;
 			};
 			const findIntersectionOfTwoArrays = (arr1 = [], arr2 = []) => {
-				if (state.filters.numberFilters.length === 0) return arr1;
-				if (state.filters.stringFilters.length === 0) return arr2;
-				return arr1.filter((a) => arr2.some((b) => a.id === b.id));
+				return arr2.filter((a) => arr1.some((b) => a.id === b.id));
 			};
 			const intersectionOfFilteredRows = findIntersectionOfTwoArrays(filteredRowsByString(), filteredRowsByRange);
-			const selectedRangeRowIDs = intersectionOfFilteredRows.map((row) => row.id);
+			const selectedRangeRowIDs = filteredRowsByRange.map((row) => row.id);
 			const selectedStringRowIDs = filteredRowsByString().map((row) => row.id);
-			const intersectionOfRowIDs = selectedRangeRowIDs.filter((rangeID) => selectedStringRowIDs.includes(rangeID));
-			const selectedRowIndexes = intersectionOfFilteredRows.map((row) =>
+			const intersectionOfRowIDs = selectedRangeRowIDs.filter((rangeID) =>
+				selectedStringRowIDs.some((stringID) => stringID === rangeID),
+			);
+			const filteredRows = () => {
+				if (selectedRangeRowIDs.length === 0 && selectedStringRowIDs === 0) {
+					return [];
+				} else if (selectedRangeRowIDs.length === 0) {
+					return filteredRowsByString();
+				} else if (selectedStringRowIDs.length === 0) {
+					return filteredRowsByRange;
+				} else {
+					return intersectionOfFilteredRows;
+				}
+			};
+			const selectedRowIndexes = filteredRows().map((row) =>
 				state.rows.findIndex((stateRow) => stateRow.id === row.id),
 			);
 			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
@@ -719,7 +743,7 @@ function spreadsheetReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: selectedRowObjects,
 				cellSelectionRanges: selectedRowObjects,
-				uniqueRowIDs: intersectionOfRowIDs,
+				uniqueRowIDs: intersectionOfRowIDs.length > 0 ? intersectionOfRowIDs : selectedRangeRowIDs,
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
@@ -873,6 +897,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		layout: true,
 		rows: createRows(potatoLiverData),
 		selectedColumns: [],
+		selectedText: false,
 		selectDisabled: false,
 		selectedRowIDs: [],
 		totalSelectedRows: 0,

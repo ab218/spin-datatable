@@ -18,6 +18,7 @@ export default function CellRenderer({
 	changeActiveCell,
 	modifyCellSelectionRange,
 	selectCell,
+	updateCell,
 }) {
 	const {
 		activeCell,
@@ -54,6 +55,8 @@ export default function CellRenderer({
 	if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
 		return (
 			<ActiveCell
+				updateCell={updateCell}
+				column={column}
 				handleContextMenu={handleContextMenu}
 				key={`row${rowIndex}col${columnIndex}`}
 				columnIndex={columnIndex}
