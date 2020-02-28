@@ -39,6 +39,11 @@ export const styles = {
 		paddingLeft: 5,
 		margin: 'auto',
 	},
+	variableLegend: {
+		width: '40%',
+		height: '40%',
+		border: '1px solid black',
+	},
 };
 
 function addColumnToList(col, setCol, selectedColumn) {
@@ -130,26 +135,38 @@ export function VariableSelector({ styleProps, data, setData, selectedColumn, la
 	);
 }
 
+export function NominalIcon() {
+	return (
+		<Tooltip title="Nominal">
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'red' }}>N</span>
+		</Tooltip>
+	);
+}
+
+export function ContinuousIcon() {
+	return (
+		<Tooltip title="Continuous">
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'blue' }}>C</span>
+		</Tooltip>
+	);
+}
+
+export function OrdinalIcon() {
+	return (
+		<Tooltip title="Ordinal">
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'green' }}>O</span>
+		</Tooltip>
+	);
+}
+
 export function createModelingTypeIcon(modelingType) {
 	switch (modelingType) {
 		case 'Continuous':
-			return (
-				<Tooltip title="Continuous">
-					<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'blue' }}>C</span>
-				</Tooltip>
-			);
+			return <ContinuousIcon />;
 		case 'Nominal':
-			return (
-				<Tooltip title="Nominal">
-					<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'red' }}>N</span>
-				</Tooltip>
-			);
+			return <NominalIcon />;
 		case 'Ordinal':
-			return (
-				<Tooltip title="Ordinal">
-					<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'green' }}>O</span>
-				</Tooltip>
-			);
+			return <OrdinalIcon />;
 		default:
 			return;
 	}
