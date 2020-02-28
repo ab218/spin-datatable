@@ -57,6 +57,7 @@ export default function AntModal({ selectedColumn }) {
 				<span className="modal-span">
 					<h4>Type</h4>
 					<Dropdown
+						modelingTypeIcons={false}
 						menuItems={[ 'Number', 'String', 'Formula' ]}
 						setColumnType={setColumnType}
 						columnType={columnType}
@@ -65,6 +66,7 @@ export default function AntModal({ selectedColumn }) {
 				<span className="modal-span">
 					<h4>Modeling Type</h4>
 					<Dropdown
+						modelingTypeIcons={true}
 						menuItems={[ 'Continuous', 'Ordinal', 'Nominal' ]}
 						setColumnType={setColumnModelingType}
 						columnType={columnModelingType}

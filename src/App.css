@@ -71,10 +71,6 @@ th {
 	font-size: 1em;
 } */
 
-.selected-cell {
-	background-color: '#f0f0f0' !important;
-}
-
 .selected-row-number-cell {
 	background-color: rgb(160, 185, 225) !important;
 	height: 100%;
@@ -214,7 +210,7 @@ th {
 }
 
 .DragHandleIcon {
-	user-select: 'none';
+	user-select: none;
 	flex: 0 0 0;
 	display: flex;
 	flex-direction: column;
@@ -223,7 +219,7 @@ th {
 }
 
 .DragHandleIcon-selected {
-	user-select: 'none';
+	user-select: none;
 	flex: 0 0 0;
 	display: flex;
 	flex-direction: column;

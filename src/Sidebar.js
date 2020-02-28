@@ -4,6 +4,7 @@ import { Divider, Layout } from 'antd';
 import './App.css';
 import { SELECT_COLUMN } from './constants';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { createModelingTypeIcon } from './ModalShared';
 
 export default function Sidebar() {
 	const { columns, excludedRows, rows, uniqueColumnIDs, uniqueRowIDs } = useSpreadsheetState();
@@ -13,8 +14,7 @@ export default function Sidebar() {
 			<table style={{ marginTop: '100px', marginLeft: '10px', width: '100%' }}>
 				<tbody>
 					<tr>
-						<td style={{ width: '80%', fontWeight: 'bold' }}>Columns</td>
-						<td style={{ width: '20%', fontWeight: 'bold' }} />
+						<td style={{ fontWeight: 'bold' }}>Columns</td>
 					</tr>
 					{columns &&
 						columns.map((column, columnIndex) => (
@@ -27,11 +27,12 @@ export default function Sidebar() {
 										selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
 									});
 								}}
-								className={uniqueColumnIDs.includes(column.id) ? 'sidebar-column-selected' : ''}
 								key={columnIndex}
 							>
-								<td>{column.label}</td>
-								<td style={{ fontStyle: 'italic' }}>{column.modelingType.slice(0, 1)}</td>
+								<td className={uniqueColumnIDs.includes(column.id) ? 'sidebar-column-selected' : ''}>
+									{createModelingTypeIcon(column.modelingType)}
+									<span>{column.label}</span>
+								</td>
 							</tr>
 						))}
 				</tbody>

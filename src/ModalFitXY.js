@@ -24,7 +24,6 @@ export default function AnalysisModal() {
 			setError('Please add all required columns and try again');
 			return;
 		}
-		setPerformingAnalysis(true);
 		const colX = xColData[0] || columns[0];
 		const colY = yColData[0] || columns[2];
 		// TODO: combine this with makeXYCols
@@ -50,6 +49,7 @@ export default function AnalysisModal() {
 		const colYArr = XYCols.map((a) => a[1]);
 
 		if (colXArr.length >= 3 && colYArr.length >= 3) {
+			setPerformingAnalysis(true);
 			const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols);
 			const popup = window.open(
 				window.location.href + 'linear_regression.html',
@@ -115,13 +115,13 @@ export default function AnalysisModal() {
 				className="ant-modal"
 				// destroyOnClose
 				onCancel={handleModalClose}
-				okButtonProps={{ disabled: performingAnalysis }}
+				okButtonProps={{ disabled: xColData.length === 0 || yColData.length === 0 || performingAnalysis }}
 				cancelButtonProps={{ disabled: performingAnalysis }}
 				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
 				title="Fit Y by X"
 				visible={analysisModalOpen}
-				width={650}
+				width={750}
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={styles.flexSpaced}>
@@ -130,7 +130,7 @@ export default function AnalysisModal() {
 						columns={filteredColumns}
 						setSelectedColumn={setSelectedColumn}
 					/>
-					<div style={{ width: 350 }}>
+					<div style={{ width: 400 }}>
 						Cast Selected Columns into Roles
 						<VariableSelector
 							data={yColData}
@@ -142,6 +142,18 @@ export default function AnalysisModal() {
 						<VariableSelector data={xColData} setData={setXColData} label="X" selectedColumn={selectedColumn} />
 					</div>
 				</div>
+				<table style={{ textAlign: 'center', width: 175, height: 175 }}>
+					<tbody>
+						<tr>
+							<td style={{ width: '50%', border: '1px solid black' }}>Bivariate</td>
+							<td style={{ width: '50%', border: '1px solid black' }}>Oneway</td>
+						</tr>
+						<tr style={{ opacity: 0.3 }}>
+							<td style={{ width: '50%', border: '1px solid black' }}>Logistic</td>
+							<td style={{ width: '50%', border: '1px solid black' }}>Contingency</td>
+						</tr>
+					</tbody>
+				</table>
 				<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>
 			</Modal>
 		</div>
