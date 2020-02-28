@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { pingCloudFunctions } from './Analyses';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import AnalysisModal from './ModalFitXY';
+import AnalysisModal from './ModalFitYX';
 import CellRenderer from './CellRenderer';
 import ContextMenu from './ContextMenu';
 import DistributionModal from './ModalDistribution';

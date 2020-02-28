@@ -41,6 +41,14 @@ const UPDATE_CELL = 'UPDATE_CELL';
 const UPDATE_COLUMN = 'UPDATE_COLUMN';
 const UNEXCLUDE_ROWS = 'UNEXCLUDE_ROWS';
 
+const ORDINAL = 'Ordinal';
+const CONTINUOUS = 'Continuous';
+const NOMINAL = 'Nominal';
+const BIVARIATE = 'Bivariate';
+const LOGISTIC = 'Logistic';
+const ONEWAY = 'Oneway';
+const CONTINGENCY = 'Contingency';
+
 export {
 	ACTIVATE_CELL,
 	ADD_CELL_TO_SELECTIONS,
@@ -84,4 +92,11 @@ export {
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 	UNEXCLUDE_ROWS,
+	ORDINAL,
+	CONTINUOUS,
+	NOMINAL,
+	BIVARIATE,
+	LOGISTIC,
+	ONEWAY,
+	CONTINGENCY,
 };

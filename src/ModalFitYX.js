@@ -3,8 +3,19 @@ import { Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { performLinearRegressionAnalysis } from './Analyses';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
-import { SelectColumn, styles, VariableSelector, OrdinalIcon, ContinuousIcon, NominalIcon } from './ModalShared';
-import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from './constants';
+import { SelectColumn, styles, VariableSelector } from './ModalShared';
+import {
+	REMOVE_SELECTED_CELLS,
+	SELECT_CELLS,
+	ORDINAL,
+	CONTINUOUS,
+	NOMINAL,
+	BIVARIATE,
+	LOGISTIC,
+	ONEWAY,
+	CONTINGENCY,
+} from './constants';
+import VariableLegend from './FitYXLegend';
 
 export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -109,74 +120,15 @@ export default function AnalysisModal() {
 		rows.some((row) => row[column.id] || typeof row[column.id] === 'number'),
 	);
 
-	function VariableLegendQuadrant({ analysisType, label }) {
-		return (
-			<td
-				style={{
-					opacity: analysisType === label || analysisType === 'None' ? 1 : 0.3,
-					...styles.variableLegend,
-				}}
-			>
-				{label}
-			</td>
-		);
-	}
-
-	function VariableLegend() {
-		const analysisType =
-			xColData.length !== 0 && yColData.length !== 0
-				? determineAnalysisType(yColData[0].modelingType, xColData[0].modelingType)
-				: 'None';
-		return (
-			<table style={{ marginTop: 30, textAlign: 'center', width: 200, height: 200 }}>
-				<tbody>
-					<tr>
-						<td style={{ width: '10%', height: '40%' }}>
-							<ContinuousIcon />
-						</td>
-						<VariableLegendQuadrant analysisType={analysisType} label={'Bivariate'} />
-						<VariableLegendQuadrant analysisType={analysisType} label={'Oneway'} />
-					</tr>
-					<tr>
-						<td
-							style={{
-								width: '10%',
-								height: '100%',
-								display: 'flex',
-								flexDirection: 'column',
-								justifyContent: 'center',
-							}}
-						>
-							<OrdinalIcon />
-							<NominalIcon />
-						</td>
-						<VariableLegendQuadrant analysisType={analysisType} label={'Logistic'} />
-						<VariableLegendQuadrant analysisType={analysisType} label={'Contingency'} />
-					</tr>
-					<tr style={{ opacity: 1 }}>
-						<td style={{ width: '10%', height: '10%' }} />
-						<td style={{ width: '40%', height: '10%' }}>
-							<ContinuousIcon />
-						</td>
-						<td style={{ width: '40%', height: '10%' }}>
-							<OrdinalIcon />
-							<NominalIcon />
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		);
-	}
-
 	function determineAnalysisType(yData, xData) {
-		if (yData === 'Continuous' && xData === 'Continuous') {
-			return 'Bivariate';
-		} else if (yData === 'Continuous' && (xData === 'Ordinal' || xData === 'Nominal')) {
-			return 'Oneway';
-		} else if ((yData === 'Ordinal' || yData === 'Nominal') && xData === 'Continuous') {
-			return 'Logistic';
+		if (yData === CONTINUOUS && xData === CONTINUOUS) {
+			return BIVARIATE;
+		} else if (yData === CONTINUOUS && (xData === ORDINAL || xData === NOMINAL)) {
+			return ONEWAY;
+		} else if ((yData === ORDINAL || yData === NOMINAL) && xData === CONTINUOUS) {
+			return LOGISTIC;
 		} else {
-			return 'Contingency';
+			return CONTINGENCY;
 		}
 	}
 
@@ -202,7 +154,7 @@ export default function AnalysisModal() {
 							columns={filteredColumns}
 							setSelectedColumn={setSelectedColumn}
 						/>
-						<VariableLegend />
+						<VariableLegend yColData={yColData} xColData={xColData} />
 					</div>
 					<div style={{ width: 400 }}>
 						Cast Selected Columns into Roles

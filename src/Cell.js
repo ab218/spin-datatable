@@ -55,7 +55,7 @@ export function SelectedCell({
 			onMouseEnter={onMouseEnter}
 			onMouseDown={onMouseDown}
 		>
-			{cellValue || ''}
+			{cellValue}
 		</div>
 	);
 }
@@ -106,7 +106,7 @@ export function NormalCell({
 					userSelect: 'none',
 				}}
 			>
-				{cellValue || '\u2022'}
+				{cellValue || (column.type === 'Number' && '\u2022')}
 			</div>
 		</Tooltip>
 	) : (
@@ -124,7 +124,7 @@ export function NormalCell({
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 		>
-			{cellValue || '\u2022'}
+			{cellValue || (column.type === 'Number' && '\u2022')}
 		</div>
 	);
 }

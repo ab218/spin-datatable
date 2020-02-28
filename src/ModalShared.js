@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Card, Icon, Radio, Tooltip, Typography } from 'antd';
 import RemoveColumnButton from './RemoveColumnButton';
+import { ORDINAL, CONTINUOUS, NOMINAL } from './constants';
 
 export const styles = {
 	cardWithBorder: {
@@ -135,37 +136,43 @@ export function VariableSelector({ styleProps, data, setData, selectedColumn, la
 	);
 }
 
-export function NominalIcon() {
+export function NominalIcon({ styleProps }) {
 	return (
-		<Tooltip title="Nominal">
-			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'red' }}>N</span>
+		<Tooltip title={NOMINAL}>
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'red', ...styleProps }}>
+				N
+			</span>
 		</Tooltip>
 	);
 }
 
-export function ContinuousIcon() {
+export function ContinuousIcon({ styleProps }) {
 	return (
-		<Tooltip title="Continuous">
-			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'blue' }}>C</span>
+		<Tooltip title={CONTINUOUS}>
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'blue', ...styleProps }}>
+				C
+			</span>
 		</Tooltip>
 	);
 }
 
-export function OrdinalIcon() {
+export function OrdinalIcon({ styleProps }) {
 	return (
-		<Tooltip title="Ordinal">
-			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'green' }}>O</span>
+		<Tooltip title={ORDINAL}>
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'green', ...styleProps }}>
+				O
+			</span>
 		</Tooltip>
 	);
 }
 
 export function createModelingTypeIcon(modelingType) {
 	switch (modelingType) {
-		case 'Continuous':
+		case CONTINUOUS:
 			return <ContinuousIcon />;
-		case 'Nominal':
+		case NOMINAL:
 			return <NominalIcon />;
-		case 'Ordinal':
+		case ORDINAL:
 			return <OrdinalIcon />;
 		default:
 			return;
