@@ -93,7 +93,6 @@ export default function AnalysisModal() {
 					if (!event.data.metaKeyPressed) {
 						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 					}
-
 					const rowIndices = rows.reduce((acc, row, rowIndex) => {
 						// TODO Shouldn't be using Number here?
 						return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))

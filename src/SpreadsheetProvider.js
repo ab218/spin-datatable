@@ -488,6 +488,7 @@ function spreadsheetReducer(state, action) {
 			const { cellSelectionRanges = [] } = state;
 			const columnIndexOffset = 1;
 			const computedColumnIndex = column + columnIndexOffset;
+			const rowIDs = rows.map((row) => state.rows[row].id);
 			const newSelectedCells = rows.map((rowIndex) => ({
 				top: rowIndex,
 				bottom: rowIndex,
@@ -499,6 +500,8 @@ function spreadsheetReducer(state, action) {
 				...state,
 				activeCell: null,
 				cellSelectionRanges: newCellSelectionRanges,
+				uniqueRowIDs: rowIDs,
+				uniqueColumnIDs: [ state.columns[column].id ],
 			};
 		}
 		case SELECT_ALL_CELLS: {
