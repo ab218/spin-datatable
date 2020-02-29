@@ -89,7 +89,7 @@ function FilterColumnSlider({ column, removeColumn }) {
 function FilterColumnPicker({ column, removeColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { rows } = useSpreadsheetState();
-	const [ checkedText, setCheckedText ] = useState([]);
+	const [ checkedText, setCheckedText ] = useState();
 
 	useEffect(
 		() => {

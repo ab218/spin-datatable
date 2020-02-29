@@ -65,6 +65,30 @@ function filterRowsByColumnRange(selectedColumns, rows) {
 	return rows.filter(rowValueWithinTheseColumnRanges, selectedColumns);
 }
 
+function filterRowsByString(rows, filters) {
+	const newFilteredRowsByStringArray = [];
+	rows.map((row) => {
+		return Object.keys(filters.stringFilters).forEach((key) => {
+			return filters.stringFilters[key].includes(row[key]) ? newFilteredRowsByStringArray.push(row) : null;
+		});
+	});
+	return newFilteredRowsByStringArray;
+}
+function findIntersectionOfTwoArrays(arr1, arr2) {
+	return arr2.filter((a) => arr1.some((b) => a === b));
+}
+
+function returnIntersectionOrNonEmptyArray(arr1, arr2) {
+	const intersectionOfArr1AndArr2 = findIntersectionOfTwoArrays(arr1, arr2);
+	if (arr1.length !== 0 && arr2.length !== 0) {
+		return intersectionOfArr1AndArr2;
+	} else if (arr1.length === 0) {
+		return arr2;
+	} else if (arr2.length === 0) {
+		return arr1;
+	}
+}
+
 function translateLabelToID(columns, formula) {
 	return columns.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
 		return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
@@ -698,38 +722,10 @@ function spreadsheetReducer(state, action) {
 		}
 		case FILTER_COLUMN: {
 			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
-			const filteredRowsByString = () => {
-				const newFilteredRowsByStringArray = [];
-				state.rows.map((row) => {
-					return Object.keys(state.filters.stringFilters).forEach((key) => {
-						return state.filters.stringFilters[key].includes(row[key]) ? newFilteredRowsByStringArray.push(row) : null;
-					});
-				});
-				return newFilteredRowsByStringArray;
-			};
-			const findIntersectionOfTwoArrays = (arr1 = [], arr2 = []) => {
-				return arr2.filter((a) => arr1.some((b) => a.id === b.id));
-			};
-			const intersectionOfFilteredRows = findIntersectionOfTwoArrays(filteredRowsByString(), filteredRowsByRange);
-			const selectedRangeRowIDs = filteredRowsByRange.map((row) => row.id);
-			const selectedStringRowIDs = filteredRowsByString().map((row) => row.id);
-			const intersectionOfRowIDs = selectedRangeRowIDs.filter((rangeID) =>
-				selectedStringRowIDs.some((stringID) => stringID === rangeID),
-			);
-			const filteredRows = () => {
-				if (selectedRangeRowIDs.length === 0 && selectedStringRowIDs === 0) {
-					return [];
-				} else if (selectedRangeRowIDs.length === 0) {
-					return filteredRowsByString();
-				} else if (selectedStringRowIDs.length === 0) {
-					return filteredRowsByRange;
-				} else {
-					return intersectionOfFilteredRows;
-				}
-			};
-			const selectedRowIndexes = filteredRows().map((row) =>
-				state.rows.findIndex((stateRow) => stateRow.id === row.id),
-			);
+			const filteredRowsByString = filterRowsByString(state.rows, state.filters);
+			const filteredRows = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
+			const filteredRowIDs = filteredRows.map((row) => row.id);
+			const selectedRowIndexes = filteredRows.map((row) => state.rows.findIndex((stateRow) => stateRow.id === row.id));
 			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
 				return {
 					top: rowIndex,
@@ -743,7 +739,7 @@ function spreadsheetReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: selectedRowObjects,
 				cellSelectionRanges: selectedRowObjects,
-				uniqueRowIDs: intersectionOfRowIDs.length > 0 ? intersectionOfRowIDs : selectedRangeRowIDs,
+				uniqueRowIDs: filteredRowIDs,
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
@@ -817,23 +813,6 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		{ id: '_abc3_', modelingType: 'Continuous', type: 'Number', label: 'Rate (ml/sec)' },
 		{ id: '_abc4_', modelingType: 'Nominal', type: 'String', label: 'Catalase solution' },
 	];
-
-	// const startingColumn = [ { modelingType: 'Continuous', type: 'String', label: 'Column 1' } ];
-	// Starting columns
-	// const columns = statsColumns
-	// 	.map((metadata) => ({ id: metadata.id || createRandomLetterString(), ...metadata }))
-	// 	.map((column, _, array) => {
-	// 		const { formula, ...rest } = column;
-	// 		if (formula) {
-	// 			const newFormula = array
-	// 				.filter((someColumn) => formula.includes(someColumn.label))
-	// 				.reduce((changedFormula, someColumn) => {
-	// 					return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
-	// 				}, formula);
-	// 			return { ...rest, formula: newFormula };
-	// 		}
-	// 		return column;
-	// 	});
 
 	const potatoLiverData = `35	3	1.0606060606	Liver
     32	5.9	5.4237288136	Liver

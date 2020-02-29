@@ -97,6 +97,7 @@ export function NormalCell({
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				style={{
+					textAlign: column.type === 'String' ? 'left' : 'right',
 					backgroundColor: 'pink',
 					height: '100%',
 					width: '100%',
