@@ -32,7 +32,11 @@ export default function HeaderRenderer({ dataKey, label, columnIndex, createNewC
 		<React.Fragment key={dataKey}>
 			<div
 				className={
-					uniqueColumnIDs.includes(dataKey) ? 'column-header-selected' : 'ReactVirtualized__Table__headerTruncatedText'
+					uniqueColumnIDs.includes(dataKey) ? (
+						'ReactVirtualized__Table__headerTruncatedText column-header-selected'
+					) : (
+						'ReactVirtualized__Table__headerTruncatedText'
+					)
 				}
 				style={{
 					userSelect: 'none',
@@ -44,7 +48,7 @@ export default function HeaderRenderer({ dataKey, label, columnIndex, createNewC
 						}
 						dispatchSpreadsheetAction({
 							type: SELECT_COLUMN,
-							columnId: dataKey,
+							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
 						});
@@ -56,7 +60,7 @@ export default function HeaderRenderer({ dataKey, label, columnIndex, createNewC
 						e.preventDefault();
 						dispatchSpreadsheetAction({
 							type: SELECT_COLUMN,
-							columnId: dataKey,
+							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
 						});

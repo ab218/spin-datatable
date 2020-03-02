@@ -12,17 +12,19 @@ export default function AntModal({ selectedColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { columns, columnTypeModalOpen } = useSpreadsheetState();
 
-	function handleClose() {
-		dispatchSpreadsheetAction({
-			type: UPDATE_COLUMN,
-			updatedColumn: {
-				label: columnName,
-				modelingType: columnModelingType,
-				type: columnType,
-				formula: columnFormula,
-				id: selectedColumn.id,
-			},
-		});
+	function handleClose(cancel) {
+		if (!cancel) {
+			dispatchSpreadsheetAction({
+				type: UPDATE_COLUMN,
+				updatedColumn: {
+					label: columnName,
+					modelingType: columnModelingType,
+					type: columnType,
+					formula: columnFormula,
+					id: selectedColumn.id,
+				},
+			});
+		}
 		dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, modalOpen: false, selectedColumn: null });
 	}
 
@@ -38,18 +40,24 @@ export default function AntModal({ selectedColumn }) {
 			<Modal
 				className="ant-modal"
 				destroyOnClose
-				onCancel={handleClose}
-				onOk={handleClose}
+				onCancel={() => handleClose(true)}
+				onOk={() => handleClose(false)}
 				title={columnName}
 				visible={columnTypeModalOpen}
 			>
 				<span className="modal-span">
 					<h4>Column Name</h4>
-					<Input style={{ width: 200 }} value={columnName} onChange={(e) => setColumnName(e.target.value)} />
+					<Input
+						style={{ width: 200 }}
+						maxLength={20}
+						value={columnName}
+						onChange={(e) => setColumnName(e.target.value)}
+					/>
 				</span>
 				<span className="modal-span">
 					<h4>Type</h4>
 					<Dropdown
+						modelingTypeIcons={false}
 						menuItems={[ 'Number', 'String', 'Formula' ]}
 						setColumnType={setColumnType}
 						columnType={columnType}
@@ -58,6 +66,7 @@ export default function AntModal({ selectedColumn }) {
 				<span className="modal-span">
 					<h4>Modeling Type</h4>
 					<Dropdown
+						modelingTypeIcons={true}
 						menuItems={[ 'Continuous', 'Ordinal', 'Nominal' ]}
 						setColumnType={setColumnModelingType}
 						columnType={columnModelingType}

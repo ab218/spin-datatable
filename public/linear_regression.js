@@ -145,14 +145,14 @@ function receiveMessage(event) {
 	const colABins = histogramY(colA);
 	const colBBins = histogramX(colB);
 
-	function onMouseOverHistogramBar(d) {
-		d3.select(this).transition().duration(50).attr('opacity', 0.6);
+	function onMouseOverHistogramBar(d, thisBar) {
+		d3.select(thisBar).transition().duration(50).attr('opacity', 0.6);
 		histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
 		histogramBinTooltip.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
 	}
 
-	function onMouseOutHistogramBar(d) {
-		d3.select(this).transition().duration(50).attr('opacity', 1);
+	function onMouseOutHistogramBar(d, thisBar) {
+		d3.select(thisBar).transition().duration(50).attr('opacity', 1);
 		histogramBinTooltip.transition().duration(500).style('opacity', 0);
 	}
 
@@ -166,8 +166,12 @@ function receiveMessage(event) {
 			.on('click', function(d) {
 				onClickSelectCells(d3.select(this), d, 'x');
 			})
-			.on(`mouseover`, (d) => onMouseOverHistogramBar(d))
-			.on(`mouseout`, (d) => onMouseOutHistogramBar(d))
+			.on(`mouseover`, function(d) {
+				onMouseOverHistogramBar(d, this);
+			})
+			.on(`mouseout`, function(d) {
+				onMouseOutHistogramBar(d, this);
+			})
 			.attr('class', 'histogramBorders')
 			.attr('fill', normalBarFill)
 			.attr('width', (d) => x(d.x1) - x(d.x0) - 1)
@@ -186,8 +190,12 @@ function receiveMessage(event) {
 			.data(colABins)
 			.enter()
 			.append('rect')
-			.on(`mouseover`, (d) => onMouseOverHistogramBar(d))
-			.on(`mouseout`, (d) => onMouseOutHistogramBar(d))
+			.on(`mouseover`, function(d) {
+				onMouseOverHistogramBar(d, this);
+			})
+			.on(`mouseout`, function(d) {
+				onMouseOutHistogramBar(d, this);
+			})
 			.on('click', function(d) {
 				onClickSelectCells(d3.select(this), d, 'y');
 			})
@@ -260,8 +268,8 @@ function receiveMessage(event) {
 	const centeredDegree5EquationTemplate = generateEquationTemplate(centered5PolyCoefficients, colXLabel, colYLabel);
 	const centeredDegree6EquationTemplate = generateEquationTemplate(centered6PolyCoefficients, colXLabel, colYLabel);
 
-	function onMouseEnterPoint(d) {
-		d3.select(this).transition().duration(50).attr('r', highlightedPointSize);
+	function onMouseEnterPoint(d, thisPoint) {
+		d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);
 		pointTooltip.transition().duration(200).style('opacity', 0.9);
 		pointTooltip
 			.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
@@ -269,11 +277,11 @@ function receiveMessage(event) {
 			.style('top', d3.event.pageY - 28 + 'px');
 	}
 
-	function onMouseLeavePoint(d) {
-		if (d3.select(this).style('fill') === highlightedPointColor) {
-			d3.select(this).transition().duration(50).attr('r', clickedBarPointSize);
+	function onMouseLeavePoint(d, thisPoint) {
+		if (d3.select(thisPoint).style('fill') === highlightedPointColor) {
+			d3.select(thisPoint).transition().duration(50).attr('r', clickedBarPointSize);
 		} else {
-			d3.select(this).transition().duration(50).attr('r', normalPointSize);
+			d3.select(thisPoint).transition().duration(50).attr('r', normalPointSize);
 		}
 		pointTooltip.transition().duration(500).style('opacity', 0);
 	}
@@ -288,8 +296,12 @@ function receiveMessage(event) {
 		.attr('r', normalPointSize)
 		.attr('cy', (d) => y(d[1]))
 		.attr('cx', (d) => x(d[0]))
-		.on(`mouseenter`, (d) => onMouseEnterPoint(d))
-		.on(`mouseleave`, (d) => onMouseLeavePoint(d));
+		.on(`mouseenter`, function(d) {
+			onMouseEnterPoint(d, this);
+		})
+		.on(`mouseleave`, function(d) {
+			onMouseLeavePoint(d, this);
+		});
 
 	const summaryStatsTemplate = `
   <details open style="padding: 10px 30px 30px; text-align: center;">

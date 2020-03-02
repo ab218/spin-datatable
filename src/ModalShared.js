@@ -1,11 +1,12 @@
 import React from 'react';
-import { Button, Card, Radio, Typography } from 'antd';
+import { Button, Card, Icon, Radio, Tooltip, Typography } from 'antd';
 import RemoveColumnButton from './RemoveColumnButton';
+import { ORDINAL, CONTINUOUS, NOMINAL } from './constants';
 
 export const styles = {
 	cardWithBorder: {
 		border: '1px solid lightgray',
-		width: 200,
+		width: 250,
 		minHeight: 100,
 	},
 	flexColumn: {
@@ -18,7 +19,7 @@ export const styles = {
 		justifyContent: 'space-between',
 	},
 	radioButton: {
-		minWidth: 150,
+		minWidth: 200,
 		fontSize: 14,
 		padding: 0,
 		margin: 0,
@@ -35,9 +36,14 @@ export const styles = {
 		padding: 0,
 		margin: 0,
 	},
-	rightColumnTypography: {
+	columnTypography: {
 		paddingLeft: 5,
 		margin: 'auto',
+	},
+	variableLegend: {
+		width: '40%',
+		height: '40%',
+		border: '1px solid black',
 	},
 };
 
@@ -55,20 +61,22 @@ function CaratButtons({ data, setData, label, selectedColumn }) {
 				onClick={() => addColumnToList(data, setData, selectedColumn)}
 			>
 				{label}
+				<Icon type="right" style={{ marginLeft: 40 }} />
 			</Button>
 		</div>
 	);
 }
 
 function RadioGroup({ data, styleProps, removeData }) {
-	const { cardWithBorder, radioGroup, radioButton, rightColumnTypography } = styles;
+	const { cardWithBorder, radioGroup, radioButton, columnTypography } = styles;
 	return (
 		<Card bordered style={{ ...cardWithBorder, ...styleProps }}>
 			<Radio.Group style={radioGroup} buttonStyle="solid">
 				{data.length === 0 ? <em>Required</em> : null}
 				{data.map((column) => (
 					<div style={{ display: 'flex', ...radioButton }} key={column.id}>
-						<Typography.Text ellipsis={true} style={rightColumnTypography}>
+						<Typography.Text ellipsis={true} style={columnTypography}>
+							{createModelingTypeIcon(column.modelingType)}
 							{column.label}
 						</Typography.Text>
 						<RemoveColumnButton removeColumn={() => removeColumnFromList(removeData, column)} />
@@ -95,13 +103,16 @@ export function SelectColumn({ columns, groupingColData, setSelectedColumn }) {
 						columns.map((column) => {
 							return (
 								<Radio.Button
-									style={radioButton}
+									style={{ display: 'flex', ...radioButton }}
 									key={column.id}
 									onClick={() => setSelectedColumn(column)}
 									value={column}
 									disabled={groupingColData === column}
 								>
-									{column.label}
+									<Typography.Text ellipsis={true} style={styles.columnTypography}>
+										{createModelingTypeIcon(column.modelingType)}
+										{column.label}
+									</Typography.Text>
 								</Radio.Button>
 							);
 						})
@@ -123,4 +134,47 @@ export function VariableSelector({ styleProps, data, setData, selectedColumn, la
 			<RadioGroup data={data} removeData={setData} />
 		</div>
 	);
+}
+
+export function NominalIcon({ styleProps }) {
+	return (
+		<Tooltip title={NOMINAL}>
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'red', ...styleProps }}>
+				N
+			</span>
+		</Tooltip>
+	);
+}
+
+export function ContinuousIcon({ styleProps }) {
+	return (
+		<Tooltip title={CONTINUOUS}>
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'blue', ...styleProps }}>
+				C
+			</span>
+		</Tooltip>
+	);
+}
+
+export function OrdinalIcon({ styleProps }) {
+	return (
+		<Tooltip title={ORDINAL}>
+			<span style={{ margin: '0 10px 0 5px', fontStyle: 'italic', fontWeight: 'bold', color: 'green', ...styleProps }}>
+				O
+			</span>
+		</Tooltip>
+	);
+}
+
+export function createModelingTypeIcon(modelingType) {
+	switch (modelingType) {
+		case CONTINUOUS:
+			return <ContinuousIcon />;
+		case NOMINAL:
+			return <NominalIcon />;
+		case ORDINAL:
+			return <OrdinalIcon />;
+		default:
+			return;
+	}
 }

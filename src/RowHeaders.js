@@ -41,7 +41,7 @@ export default function RowHeaders({ modifyCellSelectionRange, createNewRows, ro
 					}
 					dispatchSpreadsheetAction({
 						type: SELECT_ROW,
-						rowId: rowData.id,
+						rowID: rowData.id,
 						rowIndex,
 						selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
 					});

@@ -95,7 +95,7 @@ export default function AnalysisModal() {
 					const selectedRow = event.data.rowID;
 					dispatchSpreadsheetAction({
 						type: SELECT_ROW,
-						rowId: selectedRow,
+						rowID: selectedRow,
 						rowIndex: rows.findIndex((row) => row.id === selectedRow),
 					});
 				}
@@ -122,13 +122,16 @@ export default function AnalysisModal() {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				okButtonProps={{ disabled: performingAnalysis }}
+				okButtonProps={{
+					disabled:
+						xColData.length === 0 || yColData.length === 0 || groupingColData.length === 0 || performingAnalysis,
+				}}
 				cancelButtonProps={{ disabled: performingAnalysis }}
 				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
 				title="Bar Chart"
 				visible={barChartModalOpen}
-				width={650}
+				width={750}
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={styles.flexSpaced}>
@@ -137,7 +140,7 @@ export default function AnalysisModal() {
 						columns={filteredColumns}
 						setSelectedColumn={setSelectedColumn}
 					/>
-					<div style={{ width: 360 }}>
+					<div style={{ width: 410 }}>
 						Cast Selected Columns into Roles
 						<VariableSelector
 							data={yColData}

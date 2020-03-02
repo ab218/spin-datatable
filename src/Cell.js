@@ -11,8 +11,9 @@ export function RowNumberCell({ rowIndex }) {
 
 export function SelectedCell({
 	changeActiveCell,
+	column,
 	columnIndex,
-	columnId,
+	columnID,
 	handleContextMenu,
 	modifyCellSelectionRange,
 	rowIndex,
@@ -28,7 +29,7 @@ export function SelectedCell({
 		}
 		if (event.button === 0) {
 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnId);
+			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnID);
 		}
 	}
 
@@ -42,6 +43,7 @@ export function SelectedCell({
 		<div
 			key={`row${rowIndex}col${columnIndex}`}
 			style={{
+				textAlign: column.type === 'String' ? 'left' : 'right',
 				width: '100%',
 				height: '100%',
 				backgroundColor: '#C0C0C0',
@@ -53,7 +55,7 @@ export function SelectedCell({
 			onMouseEnter={onMouseEnter}
 			onMouseDown={onMouseDown}
 		>
-			{cellValue || ''}
+			{cellValue}
 		</div>
 	);
 }
@@ -61,9 +63,10 @@ export function SelectedCell({
 export function NormalCell({
 	cellValue,
 	columnIndex,
+	column,
 	columns,
-	rowId,
-	columnId,
+	columnID,
+	rowID,
 	modifyCellSelectionRange,
 	rowIndex,
 	selectCell,
@@ -77,7 +80,7 @@ export function NormalCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, rowId, columnId);
+		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, rowID, columnID);
 	}
 
 	function onMouseEnter(event) {
@@ -87,13 +90,14 @@ export function NormalCell({
 	}
 
 	// this will need fixing
-	return formatForNumberColumn(cellValue, columns.find((col) => col.id === columnId)) ? (
+	return formatForNumberColumn(cellValue, columns.find((col) => col.id === columnID)) ? (
 		<Tooltip title={`Cell value is not a number`}>
 			<div
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				style={{
+					textAlign: column.type === 'String' ? 'left' : 'right',
 					backgroundColor: 'pink',
 					height: '100%',
 					width: '100%',
@@ -103,12 +107,13 @@ export function NormalCell({
 					userSelect: 'none',
 				}}
 			>
-				{cellValue || '\u2022'}
+				{cellValue || (column.type === 'Number' && '\u2022')}
 			</div>
 		</Tooltip>
 	) : (
 		<div
 			style={{
+				textAlign: column.type === 'String' ? 'left' : 'right',
 				height: '100%',
 				width: '100%',
 				lineHeight: 2,
@@ -120,7 +125,7 @@ export function NormalCell({
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 		>
-			{cellValue || '\u2022'}
+			{cellValue || (column.type === 'Number' && '\u2022')}
 		</div>
 	);
 }

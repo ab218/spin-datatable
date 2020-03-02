@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { pingCloudFunctions } from './Analyses';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import AnalysisModal from './ModalFitXY';
+import AnalysisModal from './ModalFitYX';
 import CellRenderer from './CellRenderer';
 import ContextMenu from './ContextMenu';
 import DistributionModal from './ModalDistribution';
@@ -141,12 +141,12 @@ function Spreadsheet({ eventBus }) {
 		dispatchSpreadsheetAction({ type: CREATE_COLUMNS, columnCount });
 	}
 
-	function changeActiveCell(row, column, selectionActive, columnId) {
-		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnId });
+	function changeActiveCell(row, column, selectionActive, columnID) {
+		dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
 	}
 
-	function selectCell(row, column, selectionActive, rowId, columnId) {
-		dispatchSpreadsheetAction({ type: SELECT_CELL, row, column, selectionActive, rowId, columnId });
+	function selectCell(row, column, selectionActive, rowID, columnID) {
+		dispatchSpreadsheetAction({ type: SELECT_CELL, row, column, selectionActive, rowID, columnID });
 	}
 
 	function modifyCellSelectionRange(row, col) {
@@ -155,6 +155,15 @@ function Spreadsheet({ eventBus }) {
 
 	function finishCurrentSelectionRange() {
 		dispatchSpreadsheetAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
+	}
+
+	function updateCell(currentValue, rowIndex, columnIndex) {
+		dispatchSpreadsheetAction({
+			type: 'UPDATE_CELL',
+			rowIndex,
+			columnIndex: columnIndex - 1,
+			cellValue: currentValue,
+		});
 	}
 
 	const emptyRow = {};
@@ -178,6 +187,7 @@ function Spreadsheet({ eventBus }) {
 						return (
 							<CellRenderer
 								{...props}
+								column={column}
 								columnID={columnID}
 								rowID={rowID}
 								createNewColumns={createNewColumns}
@@ -185,6 +195,7 @@ function Spreadsheet({ eventBus }) {
 								changeActiveCell={changeActiveCell}
 								modifyCellSelectionRange={modifyCellSelectionRange}
 								selectCell={selectCell}
+								updateCell={updateCell}
 							/>
 						);
 					}}
@@ -298,8 +309,8 @@ function Spreadsheet({ eventBus }) {
 				if (rowIndex + 1 > rows.length) {
 					createNewRows(rows);
 				}
-				dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
 				dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: rowIndex, column: columnIndex + 1 });
+				dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
 			} else {
 				switch (event.key) {
 					case 'Backspace':

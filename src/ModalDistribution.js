@@ -92,20 +92,17 @@ export default function DistributionModal() {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				okButtonProps={{ disabled: performingAnalysis }}
+				okButtonProps={{ disabled: yColData.length === 0 || performingAnalysis }}
 				cancelButtonProps={{ disabled: performingAnalysis }}
 				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
 				title="Distribution"
 				visible={distributionModalOpen}
-				width={450}
+				width={550}
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={{ ...styles.flexSpaced }}>
-					<div>
-						Select Column
-						<SelectColumn columns={filteredColumns} setSelectedColumn={setYColData} />
-					</div>
+					<SelectColumn columns={filteredColumns} setSelectedColumn={setYColData} />
 					<div style={{ display: 'flex' }}>
 						<div style={{ width: 100 }}>Number of Bins</div>
 						<Input

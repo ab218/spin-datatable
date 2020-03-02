@@ -4,7 +4,7 @@ window.opener.postMessage('ready', '*');
 
 function receiveMessage(event) {
 	let linear = true;
-	const { colXArr, colX, colY, colZ, coordinates, colXId, colYId, colZId } = event.data;
+	const { colX, colY, colZ, coordinates, colXId, colYId, colZId } = event.data;
 	console.log('TARGET', event);
 	function onClickToggleXAxisScale(e) {
 		if (e.target.checked) {

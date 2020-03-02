@@ -4,7 +4,18 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import { performLinearRegressionAnalysis } from './Analyses';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from './constants';
+import {
+	REMOVE_SELECTED_CELLS,
+	SELECT_CELLS,
+	ORDINAL,
+	CONTINUOUS,
+	NOMINAL,
+	BIVARIATE,
+	LOGISTIC,
+	ONEWAY,
+	CONTINGENCY,
+} from './constants';
+import VariableLegend from './FitYXLegend';
 
 export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -24,7 +35,6 @@ export default function AnalysisModal() {
 			setError('Please add all required columns and try again');
 			return;
 		}
-		setPerformingAnalysis(true);
 		const colX = xColData[0] || columns[0];
 		const colY = yColData[0] || columns[2];
 		// TODO: combine this with makeXYCols
@@ -50,6 +60,7 @@ export default function AnalysisModal() {
 		const colYArr = XYCols.map((a) => a[1]);
 
 		if (colXArr.length >= 3 && colYArr.length >= 3) {
+			setPerformingAnalysis(true);
 			const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols);
 			const popup = window.open(
 				window.location.href + 'linear_regression.html',
@@ -82,7 +93,6 @@ export default function AnalysisModal() {
 					if (!event.data.metaKeyPressed) {
 						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 					}
-
 					const rowIndices = rows.reduce((acc, row, rowIndex) => {
 						// TODO Shouldn't be using Number here?
 						return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
@@ -109,28 +119,43 @@ export default function AnalysisModal() {
 		rows.some((row) => row[column.id] || typeof row[column.id] === 'number'),
 	);
 
+	function determineAnalysisType(yData, xData) {
+		if (yData === CONTINUOUS && xData === CONTINUOUS) {
+			return BIVARIATE;
+		} else if (yData === CONTINUOUS && (xData === ORDINAL || xData === NOMINAL)) {
+			return ONEWAY;
+		} else if ((yData === ORDINAL || yData === NOMINAL) && xData === CONTINUOUS) {
+			return LOGISTIC;
+		} else {
+			return CONTINGENCY;
+		}
+	}
+
 	return (
 		<div>
 			<Modal
 				className="ant-modal"
 				// destroyOnClose
 				onCancel={handleModalClose}
-				okButtonProps={{ disabled: performingAnalysis }}
+				okButtonProps={{ disabled: xColData.length === 0 || yColData.length === 0 || performingAnalysis }}
 				cancelButtonProps={{ disabled: performingAnalysis }}
 				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
 				title="Fit Y by X"
 				visible={analysisModalOpen}
-				width={650}
+				width={750}
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={styles.flexSpaced}>
-					<SelectColumn
-						selectedColumn={selectedColumn}
-						columns={filteredColumns}
-						setSelectedColumn={setSelectedColumn}
-					/>
-					<div style={{ width: 350 }}>
+					<div>
+						<SelectColumn
+							selectedColumn={selectedColumn}
+							columns={filteredColumns}
+							setSelectedColumn={setSelectedColumn}
+						/>
+						<VariableLegend yColData={yColData} xColData={xColData} />
+					</div>
+					<div style={{ width: 400 }}>
 						Cast Selected Columns into Roles
 						<VariableSelector
 							data={yColData}
@@ -142,7 +167,15 @@ export default function AnalysisModal() {
 						<VariableSelector data={xColData} setData={setXColData} label="X" selectedColumn={selectedColumn} />
 					</div>
 				</div>
-				<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>
+				<div style={{ display: 'flex', flexDirection: 'column', height: 30 }}>
+					<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>
+					{xColData.length !== 0 &&
+					yColData.length !== 0 && (
+						<h4 style={{ textAlign: 'right' }}>
+							Perform {determineAnalysisType(yColData[0].modelingType, xColData[0].modelingType)} Analysis
+						</h4>
+					)}
+				</div>
 			</Modal>
 		</div>
 	);

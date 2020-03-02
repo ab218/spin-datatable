@@ -121,6 +121,7 @@ function onClickSelectCells(thisBar, bar, col) {
 	if (d3.event.metaKey) {
 		metaKeyPressed = true;
 	} else {
+		d3.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
 		// if (thisBar.style('fill') === clickedBarPointFill) {
 		// 	d3.selectAll('.point').style('fill', 'black').attr('r', 2);
 		// 	thisBar.style('fill', normalBarFill);
@@ -143,8 +144,6 @@ function onClickSelectCells(thisBar, bar, col) {
 	thisBar.style('fill', clickedBarFill);
 	d3
 		.selectAll('.point')
-		.style('fill', normalPointFill)
-		.attr('r', normalPointSize)
 		.filter((d) => {
 			const binMin = bar.x0;
 			const binMax = bar.x1;
@@ -158,7 +157,6 @@ function onClickSelectCells(thisBar, bar, col) {
 		})
 		.attr('r', clickedBarPointSize)
 		.style('fill', clickedBarFill);
-	console.log(bar);
 	window.opener.postMessage(
 		{
 			message: 'clicked',

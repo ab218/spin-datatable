@@ -3,7 +3,7 @@ import { Slider, Row, Col } from 'antd';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS } from './constants';
 
-export default function IntegerStep({ columnId, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
+export default function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
@@ -15,7 +15,7 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 
 	const onAfterChange = () => {
 		const newCopy = selectedColumns.slice();
-		const index = newCopy.findIndex((col) => col.id === columnId);
+		const index = newCopy.findIndex((col) => col.id === columnID);
 		newCopy[index] = { ...selectedColumns[index], min, max };
 		dispatchSpreadsheetAction({
 			type: SET_FILTERS,
@@ -29,15 +29,15 @@ export default function IntegerStep({ columnId, colMin, colMax, currentMin, curr
 		<Row style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
 			<Col style={{ textAlign: 'center', width: 300 }} span={12}>
 				<span style={{ alignSelf: 'center', fontSize: '1.1em', minWidth: 100, textAlign: 'center' }}>
-					{`${colMin} ≤ ${label} ≤ ${colMax}`}
+					{`${colMin.toFixed(2)} ≤ ${label} ≤ ${colMax.toFixed(2)}`}
 				</span>
 				<Slider
-					min={colMin}
-					max={colMax}
+					min={Math.floor(colMin)}
+					max={Math.ceil(colMax)}
 					range
 					value={[ min, max ]}
 					onChange={onChange}
-					step={(colMax / 100).toFixed(2)}
+					step={(Math.ceil(colMax) / 1000).toFixed(2)}
 					onAfterChange={onAfterChange}
 				/>
 			</Col>
