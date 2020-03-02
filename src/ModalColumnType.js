@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Input, Modal } from 'antd';
+import { Button, Input, Modal } from 'antd';
 import Dropdown from './Dropdown';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_COLUMN_TYPE_MODAL, UPDATE_COLUMN } from './constants';
 
 export default function AntModal({ selectedColumn }) {
+	const [ error, setError ] = useState(null);
 	const [ columnName, setColumnName ] = useState(selectedColumn.label);
 	const [ columnType, setColumnType ] = useState(selectedColumn.type);
 	const [ columnModelingType, setColumnModelingType ] = useState(selectedColumn.modelingType);
@@ -14,6 +15,15 @@ export default function AntModal({ selectedColumn }) {
 
 	function handleClose(cancel) {
 		if (!cancel) {
+			if (!columnName) {
+				return setError('Column Name cannot be blank');
+			}
+			if (!columnName[0].toLowerCase().match(/[a-z]/i)) {
+				return setError('Column Name must begin with a letter');
+			}
+			if (validateColumnName(columnName)) {
+				return setError('Column Name must be unique');
+			}
 			dispatchSpreadsheetAction({
 				type: UPDATE_COLUMN,
 				updatedColumn: {
@@ -35,15 +45,34 @@ export default function AntModal({ selectedColumn }) {
 		}, formula);
 	}
 
+	const validateColumnName = (columnName) => {
+		// Remove current column from columns pool, so that if a user wants to give the column the same name then it won't throw an error
+		const filteredColumns = columns.filter((col) => col.id !== selectedColumn.id);
+		const lowerCaseColumnNames = filteredColumns.map((col) => col.label.toLowerCase());
+		return lowerCaseColumnNames.includes(columnName.toLowerCase());
+	};
+
 	return (
 		<div>
 			<Modal
 				className="ant-modal"
 				destroyOnClose
 				onCancel={() => handleClose(true)}
-				onOk={() => handleClose(false)}
-				title={columnName}
+				title={columnName || <span style={{ fontStyle: 'italic', opacity: 0.4 }}>{`<Blank>`}</span>}
 				visible={columnTypeModalOpen}
+				footer={[
+					<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+						<span style={{ color: 'red' }}>{error}</span>
+						<span>
+							<Button key="back" onClick={() => handleClose(true)}>
+								Cancel
+							</Button>
+							<Button key="submit" type="primary" onClick={() => handleClose(false)}>
+								Submit
+							</Button>
+						</span>
+					</div>,
+				]}
 			>
 				<span className="modal-span">
 					<h4>Column Name</h4>
