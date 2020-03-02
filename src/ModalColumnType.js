@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Modal } from 'antd';
+import { Alert, Button, Input, Modal } from 'antd';
 import Dropdown from './Dropdown';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_COLUMN_TYPE_MODAL, UPDATE_COLUMN } from './constants';
@@ -61,9 +61,9 @@ export default function AntModal({ selectedColumn }) {
 				title={columnName || <span style={{ fontStyle: 'italic', opacity: 0.4 }}>{`<Blank>`}</span>}
 				visible={columnTypeModalOpen}
 				footer={[
-					<div style={{ display: 'flex', justifyContent: 'space-between' }}>
-						<span style={{ color: 'red' }}>{error}</span>
-						<span>
+					<div style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
+						{error ? <Alert className="fade-in-animated" message={error} type="error" showIcon /> : <div />}
+						<span style={{ alignSelf: 'end' }}>
 							<Button key="back" onClick={() => handleClose(true)}>
 								Cancel
 							</Button>
