@@ -149,7 +149,8 @@ export default function AnalysisModal() {
 				<div style={styles.flexSpaced}>
 					<div>
 						<SelectColumn
-							selectedColumn={selectedColumn}
+							// selectedColumn={selectedColumn}
+							title={'Select Column'}
 							columns={filteredColumns}
 							setSelectedColumn={setSelectedColumn}
 						/>

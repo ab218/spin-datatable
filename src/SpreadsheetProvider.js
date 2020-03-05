@@ -1,5 +1,4 @@
 import React, { useReducer } from 'react';
-import { Parser } from 'hot-formula-parser';
 import './App.css';
 import {
 	ACTIVATE_CELL,
@@ -90,9 +89,25 @@ function returnIntersectionOrNonEmptyArray(arr1, arr2) {
 }
 
 function translateLabelToID(columns, formula) {
-	return columns.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
-		return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
-	}, formula);
+	// console.log(columns, formula);
+	// const columnsCopy = columns.slice();
+	// const formulaCopy = formula;
+	// const formulaCols = columnsCopy.filter((col) => formula.includes(col.label));
+	// const mappedCols = formulaCols.map((col) => {
+	// 	const regex = new RegExp(col.label, 'g');
+	// 	const replaced = formulaCopy.replace(`${regex}`, `${col.id}`);
+	// 	console.log(col, formulaCopy, replaced);
+	// 	return replaced;
+	// });
+	// console.log(mappedCols);
+	const filteredCols = columns
+		.filter((someColumn) => formula.includes(someColumn.label))
+		.reduce((changedFormula, someColumn) => {
+			const regex = new RegExp(someColumn.label, 'g');
+			return changedFormula.replace(regex, someColumn.id);
+		}, formula);
+	console.log(filteredCols);
+	return filteredCols;
 }
 
 const SpreadsheetStateContext = React.createContext();
@@ -195,6 +210,12 @@ function spreadsheetReducer(state, action) {
 				...state,
 				cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []),
 				currentCellSelectionRange: null,
+			};
+		}
+		case 'ADD_MAPPED_COLUMN': {
+			return {
+				...state,
+				mappedColumns: { ...state.mappedColumns, ...action.id },
 			};
 		}
 		case COPY_VALUES: {
@@ -683,22 +704,22 @@ function spreadsheetReducer(state, action) {
 			const { id: columnID } = column || columns[columns.length - 1];
 			let rowCopy = Object.assign({}, row, { [columnID]: cellValue });
 
-			const dependentColumns = columns.filter(({ type, formula }) => {
-				return type === 'Formula' && formula.includes(columnID);
-			});
+			// const dependentColumns = columns.filter(({ type, formula }) => {
+			// 	return type === 'Formula' && formula.includes(columnID);
+			// });
 			// If formula present
-			if (dependentColumns.length) {
-				const formulaParser = new Parser();
-				formulaParser.on('callVariable', function(name, done) {
-					const selectedColumn = columns.find((column) => column.id === name);
-					if (selectedColumn) {
-						done(rowCopy[selectedColumn.id]);
-					}
-				});
-				rowCopy = dependentColumns.reduce((acc, column) => {
-					return { ...acc, [column.id]: formulaParser.parse(column.formula).result };
-				}, rowCopy);
-			}
+			// if (dependentColumns.length) {
+			// 	const formulaParser = new Parser();
+			// 	formulaParser.on('callVariable', function(name, done) {
+			// 		const selectedColumn = columns.find((column) => column.id === name);
+			// 		if (selectedColumn) {
+			// 			done(rowCopy[selectedColumn.id]);
+			// 		}
+			// 	});
+			// 	rowCopy = dependentColumns.reduce((acc, column) => {
+			// 		return { ...acc, [column.id]: formulaParser.parse(column.formula).result };
+			// 	}, rowCopy);
+			// }
 
 			const changedRows = newRows.map((newRow) => (newRow.id !== rowCopy.id ? newRow : rowCopy));
 			return { ...state, rows: changedRows };
@@ -746,46 +767,17 @@ function spreadsheetReducer(state, action) {
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
+		case 'UPDATE_ROWS': {
+			return { ...state, rows };
+		}
 		case UPDATE_COLUMN: {
-			// TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
-			const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
-			const columnCopy = Object.assign(
-				{},
-				updatedColumn,
-				columnHasFormula ? { formula: translateLabelToID(state.columns, updatedColumn.formula) } : {},
-			);
+			const columnCopy = { ...updatedColumn };
 			const originalPosition = state.columns.findIndex((col) => col.id === columnCopy.id);
 			const updatedColumns = state.columns
 				.slice(0, originalPosition)
 				.concat(columnCopy)
 				.concat(state.columns.slice(originalPosition + 1));
-			let rows = state.rows;
-			if (columnHasFormula) {
-				rows = rows.map((row) => {
-					const formulaColumnsToUpdate = [ columnCopy ].concat(
-						state.columns.filter(({ type, formula }) => {
-							return type === 'Formula' && formula.includes(columnCopy.id);
-						}),
-					);
-					const formulaParser = new Parser();
-					// Not getting called
-					formulaParser.on('callVariable', function(name, done) {
-						const selectedColumn = state.columns.find((column) => column.id === name);
-						if (selectedColumn) {
-							done(row[selectedColumn.id]);
-						}
-					});
-					return formulaColumnsToUpdate.reduce((acc, column) => {
-						row = acc;
-						const {
-							result,
-							// error
-						} = formulaParser.parse(column.formula);
-						return { ...acc, [column.id]: result };
-					}, row);
-				});
-			}
-			return { ...state, columns: updatedColumns, rows };
+			return { ...state, columns: updatedColumns };
 		}
 		default: {
 			throw new Error(`Unhandled action type: ${type}`);
@@ -877,6 +869,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		filterModalOpen: false,
 		lastSelection: { row: 1, column: 1 },
 		layout: true,
+		mappedColumns: {},
 		rows: createRows(potatoLiverData),
 		selectedColumns: [],
 		selectedText: false,

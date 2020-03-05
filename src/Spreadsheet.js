@@ -158,12 +158,16 @@ function Spreadsheet({ eventBus }) {
 	}
 
 	function updateCell(currentValue, rowIndex, columnIndex) {
-		dispatchSpreadsheetAction({
-			type: 'UPDATE_CELL',
-			rowIndex,
-			columnIndex: columnIndex - 1,
-			cellValue: currentValue,
-		});
+		// Don't allow formula column cells to be edited
+		const formulaColumns = columns.map((col) => (col.type === 'Formula' ? columns.indexOf(col) : null));
+		if (!formulaColumns.includes(columnIndex - 1)) {
+			dispatchSpreadsheetAction({
+				type: 'UPDATE_CELL',
+				rowIndex,
+				columnIndex: columnIndex - 1,
+				cellValue: currentValue,
+			});
+		}
 	}
 
 	const emptyRow = {};
