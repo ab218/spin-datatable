@@ -17,6 +17,7 @@ import {
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
+	SAVE_VERSION,
 	SET_SELECTED_COLUMN,
 	SELECT_CELL,
 	SELECT_CELLS,
@@ -37,6 +38,20 @@ import {
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 } from './constants';
+// Events that will be recorded in the system
+const recordEventWhiteList = [
+	CREATE_COLUMNS,
+	CREATE_ROWS,
+	DELETE_COLUMN,
+	DELETE_VALUES,
+	DELETE_ROWS,
+	SAVE_VERSION
+];
+
+function saveVersion(eventBus, payload) {
+	const {versionLabel, columns, rows, excludedRows} = payload;
+	eventBus.fire(SAVE_VERSION, {versionLabel, columns, rows, excludedRows});
+}
 
 function generateUniqueRowIDs(cellSelectionRanges, rows) {
 	const range = (start, end) => Array(end - start + 1).fill().map((_, i) => start + i);
@@ -175,12 +190,20 @@ function spreadsheetReducer(state, action) {
 		left,
 		height,
 		width,
+		versionLabel
 	} = action;
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
 	const { type, ...event } = action;
-	state.eventBus.fire(type, event);
+	if (recordEventWhiteList.includes(type)) {
+		if (type === SAVE_VERSION) {
+			const {columns, rows, excludedRows, id} = state;
+			saveVersion(state.eventBus, {versionLabel, columns, rows, excludedRows, id});
+		} else {
+			state.eventBus.fire(type, event);
+		}
+	}
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
@@ -808,7 +831,7 @@ export function useSpreadsheetDispatch() {
 	return context;
 }
 
-export function SpreadsheetProvider({ eventBus, children }) {
+export function SpreadsheetProvider({ eventBus, children, initialTable }) {
 	// dummy data
 	const statsColumns = [
 		{ id: '_abc1_', modelingType: 'Continuous', type: 'Number', label: 'Volume displaced (ml)' },
@@ -885,8 +908,20 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		totalSelectedRows: 0,
 		uniqueRowIDs: [],
 		uniqueColumnIDs: [],
+		...initialTable
 	};
+
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);
+
+	function saveVersionBeforeClosing() {
+		const {columns, rows, excludedRows, id} = state;
+		saveVersion(eventBus, {versionLabel: `Closed on ${new Date().toString()}`, columns, rows, excludedRows, id});
+	}
+	// According to: https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Other_notes
+	// If the same event listener is added to the same element more than once, only the first one will be triggered,
+	// so we should not have to worry about adding event listeners more than once.
+	window.addEventListener('beforeunload', saveVersionBeforeClosing);
+
 	return (
 		<SpreadsheetStateContext.Provider value={state}>
 			<SpreadsheetDispatchContext.Provider value={changeSpreadsheet}>{children}</SpreadsheetDispatchContext.Provider>

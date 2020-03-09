@@ -480,6 +480,7 @@ module.exports = function(webpackEnv) {
         Object.assign(
           {},
           {
+            filename: 'dataTable.html',
             inject: true,
             template: paths.appHtml,
           },

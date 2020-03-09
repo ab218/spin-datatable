@@ -49,6 +49,9 @@ const LOGISTIC = 'Logistic';
 const ONEWAY = 'Oneway';
 const CONTINGENCY = 'Contingency';
 
+const VIEW_NAME = 'data-table';
+const SAVE_VERSION = 'SAVE_VERSION';
+
 export {
 	ACTIVATE_CELL,
 	ADD_CELL_TO_SELECTIONS,
@@ -92,6 +95,8 @@ export {
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 	UNEXCLUDE_ROWS,
+	SAVE_VERSION,
+	VIEW_NAME,
 	ORDINAL,
 	CONTINUOUS,
 	NOMINAL,

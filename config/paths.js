@@ -35,7 +35,9 @@ function getServedPath(appPackageJson) {
   const publicUrl = getPublicUrl(appPackageJson);
   const servedUrl =
     envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
-  return ensureSlash(servedUrl, true);
+  // Because we are serving the HTML pages and CSS in a Chrome extension,
+  // we want to use relative paths instead of root (/)-based paths
+  return ensureSlash(servedUrl, false);
 }
 
 const moduleFileExtensions = [

@@ -4,10 +4,11 @@ import Spreadsheet from './Spreadsheet';
 import { SpreadsheetProvider } from './SpreadsheetProvider';
 import eventBus from './EventBusSubscriptions.js';
 
-function App() {
+function App({tableData = {}}) {
+	const {columns = [], rows = [], excludedRows = [], ...rest} = tableData;
 	return (
 		<div style={{ height: '100%' }} className="App">
-			<SpreadsheetProvider eventBus={eventBus}>
+			<SpreadsheetProvider eventBus={eventBus} initialTable={{columns, rows, excludedRows, ...rest}}>
 				<Spreadsheet />
 			</SpreadsheetProvider>
 		</div>
