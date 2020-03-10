@@ -1,39 +1,37 @@
-import axios from 'axios';
+/*global chrome*/
+
+const relayRequestMessageType = 'relay-request';
 
 export async function pingCloudFunctions() {
-	const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
-	await axios.post(
-		linearRegression,
-		{ ping: 'ping' },
-		{
-			crossDomain: true,
-		},
-	);
-
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
-	await axios.post(
-		gcloud,
-		{ ping: 'ping' },
-		{
-			crossDomain: true,
-		},
-	);
+	chrome.runtime.sendMessage({
+		type: relayRequestMessageType,
+		payload: {ping: 'ping'},
+		routeKeyPath: 'analysis.statsmodels'
+	});
+	chrome.runtime.sendMessage({
+		type: relayRequestMessageType,
+		payload: {ping: 'ping'},
+		routeKeyPath: 'analysis.distribution'
+	});
 }
 
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabel, colYLabel, XYCols) {
-	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
-	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
-	const result = await axios.post(
-		gcloud,
-		{
-			x: colXArr,
-			y: colYArr,
-		},
-		{
-			crossDomain: true,
-		},
-	);
+	const result = await new Promise(function (resolve, reject) {
+		const callback = function ({error, ...rest}) {
+			if (error) {
+				reject(error);
+			} else {
+				resolve(rest);
+			}
+		};
+		chrome.runtime.sendMessage({
+			type: relayRequestMessageType,
+			payload: {x: colXArr, y: colYArr},
+			routeKeyPath: 'analysis.regression'
+		}, callback);
+	});
+	console.log('result of performLinearRegressionAnalysis:', result);
+
 	// console.log(result.data) // gcloud
 	// console.log(result.data.body); // Lambda
 	const {
@@ -101,17 +99,22 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	const colYLabel = colY.label;
 	// TODO: Add some error here
 	if (vals.length === 0) return;
-	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
-	const result = await axios.post(
-		gcloud,
-		{
-			y: vals,
-		},
-		{
-			crossDomain: true,
-		},
-	);
+
+	const result = await new Promise(function (resolve, reject) {
+		const callback = function ({error, ...rest}) {
+			if (error) {
+				reject(error);
+			} else {
+				resolve(rest);
+			}
+		};
+		chrome.runtime.sendMessage({
+			type: relayRequestMessageType,
+			payload: {y: vals},
+			routeKeyPath: 'analysis.distribution'
+		}, callback);
+	});
+	console.log('result of performDistributionAnalysis:', result);
 	console.log(result.data); // gcloud
 	// console.log(result.data.body); // Lambda
 	const { mean_y, std_y, count, quantiles, histogram, skew, kurtosis } = result.data;
