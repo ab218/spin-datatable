@@ -314,8 +314,16 @@ function Spreadsheet({ eventBus }) {
 				if (rowIndex + 1 > rows.length) {
 					createNewRows(rows);
 				}
-				dispatchSpreadsheetAction({ type: ACTIVATE_CELL, row: rowIndex, column: columnIndex + 1 });
-				dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
+				console.log(columns[columnIndex].type);
+				if (columns[columnIndex].type !== 'Formula') {
+					dispatchSpreadsheetAction({
+						type: ACTIVATE_CELL,
+						row: rowIndex,
+						column: columnIndex + 1,
+						newInputCellValue: event.key,
+					});
+					// dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
+				}
 			} else {
 				switch (event.key) {
 					case 'Backspace':

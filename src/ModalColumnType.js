@@ -27,14 +27,16 @@ export default function AntModal({ selectedColumn }) {
 
 	function swapLabelsWithIDs(formula, columns) {
 		if (!formula) return undefined;
+		const lowerCaseFormula = formula.toLowerCase();
 		let formulaWithIDs = '';
 		const IDsSet = new Set();
 		columns.forEach((col) => {
-			if (formulaWithIDs.includes(col.label) || formula.includes(col.label)) {
+			const colLabel = col.label.toLowerCase();
+			if (formulaWithIDs.includes(colLabel) || lowerCaseFormula.includes(colLabel)) {
 				IDsSet.add(col.id);
 				formulaWithIDs = formulaWithIDs
-					? formulaWithIDs.split(col.label).join(col.id)
-					: formula.split(col.label).join(col.id);
+					? formulaWithIDs.toLowerCase().split(colLabel).join(col.id)
+					: lowerCaseFormula.split(colLabel).join(col.id);
 			}
 		});
 		return { expression: formulaWithIDs || formula, IDs: [ ...IDsSet ] };
@@ -70,6 +72,7 @@ export default function AntModal({ selectedColumn }) {
 			type: UPDATE_COLUMN,
 			updatedColumn: {
 				label: columnName,
+				units: columnUnits,
 				modelingType: columnModelingType,
 				type: columnType,
 				formula: swapLabelsWithIDs(columnFormula, columns),
@@ -188,116 +191,129 @@ export default function AntModal({ selectedColumn }) {
 					/>
 				</span>
 				{columnType === 'Formula' && (
-					<div>
-						<span className="modal-span">
-							<h4>Formula</h4>
-							<Input.TextArea
-								rows={3}
-								id="formula"
-								value={columnFormula}
-								onChange={(e) => setColumnFormula(e.target.value)}
-								style={{ userSelect: 'none', width: 200, border: '1px solid blue' }}
+					<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+						<span style={{ display: 'flex', alignSelf: 'flex-end' }}>
+							<SelectColumn
+								styleProps={{ width: 200 }}
+								columns={columns.filter((column) => column.id !== selectedColumn.id)}
+								setSelectedColumn={setSelectedFormulaVariable}
 							/>
-						</span>
-						{/* <div style={{ height: 30, display: 'flex', justifyContent: 'flex-end' }}>
-							{formulaInputOpen && (
-								<Input
-									style={{ width: 200 }}
-									onChange={(e) => setFormulaInput(e.target.value)}
-									value={formulaInput}
-									onKeyDown={(e) => {
-										if (e.key === 'Enter') {
-											setColumnFormula((prev) => prev.concat(formulaInput));
-											setFormulaInput('');
-											setFormulaInputOpen(false);
+							<div style={{ margin: 'auto 10px' }}>
+								<Button
+									onClick={() => {
+										if (selectedFormulaVariable) {
+											addVariableToInput(selectedFormulaVariable);
 										}
 									}}
-								/>
-							)}
-						</div> */}
-						{/* <span style={{ margin: 'auto 10px' }}>
-							<Button
-								onClick={(e) => {
-									console.log(e);
-								}}
-							>
-								+
-							</Button>
+								>
+									<Icon type="right" />
+								</Button>
+							</div>
 						</span>
-						<span style={{ margin: 'auto 10px' }}>
-							<Button
-								onClick={(e) => {
-									console.log(e);
-								}}
-							>
-								-
-							</Button>
-						</span>
-						<span style={{ margin: 'auto 10px' }}>
-							<Button
-								onClick={(e) => {
-									console.log(e);
-								}}
-							>
-								*
-							</Button>
-						</span>
-						<span style={{ margin: 'auto 10px' }}>
-							<Button
-								onClick={(e) => {
-									console.log(e);
-								}}
-							>
-								/
-							</Button>
-						</span>
-						<span style={{ margin: 'auto 10px' }}>
-							<Button
-								onClick={(e) => {
-									console.log(e);
-								}}
-							>
-								(
-							</Button>
-						</span>
-						<span style={{ margin: 'auto 10px' }}>
-							<Button
-								onClick={(e) => {
-									console.log(e);
-								}}
-							>
-								)
-							</Button>
-						</span> */}
-						<div style={{ display: 'flex', justifyContent: 'space-between' }}>
-							<span style={{ display: 'flex' }}>
-								<SelectColumn
-									styleProps={{ width: 200 }}
-									columns={columns.filter((column) => column.id !== selectedColumn.id)}
-									setSelectedColumn={setSelectedFormulaVariable}
-								/>
-								<div style={{ margin: 'auto 10px' }}>
-									<Button
-										onClick={() => {
-											if (selectedFormulaVariable) {
-												addVariableToInput(selectedFormulaVariable);
-											}
-										}}
-									>
-										<Icon type="right" />
-									</Button>
-								</div>
-							</span>
-							{columnFormula && (
-								<div
-									style={{ overflow: 'scroll', margin: 'auto', color: formulaError ? 'red' : 'black' }}
-									id="symbolic-expression"
-								/>
-							)}
-						</div>
+						<SymbolicExpressionEditor
+							formulaError={formulaError}
+							columnFormula={columnFormula}
+							setColumnFormula={setColumnFormula}
+						/>
 					</div>
 				)}
 			</Modal>
 		</div>
+	);
+}
+
+function SymbolicExpressionEditor({ formulaError, columnFormula, setColumnFormula }) {
+	return (
+		<div
+			style={{
+				overflow: 'scroll',
+				height: 200,
+				width: 300,
+				display: 'flex',
+				alignItems: 'center',
+				flexDirection: 'column',
+			}}
+		>
+			<div
+				style={{
+					textAlign: 'center',
+					fontSize: '20px',
+					margin: '10px',
+					height: 75,
+					color: formulaError ? 'red' : 'black',
+				}}
+				id="symbolic-expression"
+			>
+				{columnFormula ? '' : 'Enter Expression Below'}
+			</div>
+			<Input.TextArea
+				rows={3}
+				id="formula"
+				value={columnFormula}
+				onChange={(e) => setColumnFormula(e.target.value)}
+				style={{ userSelect: 'none', marginTop: 0, width: 200, height: 100, border: '1px solid blue' }}
+			/>
+		</div>
+	);
+}
+
+function FormulaButtons() {
+	return (
+		<React.Fragment>
+			<span style={{ margin: 'auto 5px' }}>
+				<Button
+					onClick={(e) => {
+						console.log(e);
+					}}
+				>
+					+
+				</Button>
+			</span>
+			<span style={{ margin: 'auto 5px' }}>
+				<Button
+					onClick={(e) => {
+						console.log(e);
+					}}
+				>
+					-
+				</Button>
+			</span>
+			<span style={{ margin: 'auto 5px' }}>
+				<Button
+					onClick={(e) => {
+						console.log(e);
+					}}
+				>
+					*
+				</Button>
+			</span>
+			<span style={{ margin: 'auto 5px' }}>
+				<Button
+					onClick={(e) => {
+						console.log(e);
+					}}
+				>
+					/
+				</Button>
+			</span>
+			<span style={{ margin: 'auto 5px' }}>
+				<Button
+					onClick={(e) => {
+						console.log(e);
+					}}
+				>
+					(
+				</Button>
+			</span>
+			<span style={{ margin: 'auto 5px' }}>
+				<Button
+					onClick={(e) => {
+						console.log(e);
+					}}
+				>
+					)
+				</Button>
+			</span>
+		</React.Fragment>
 	);
 }

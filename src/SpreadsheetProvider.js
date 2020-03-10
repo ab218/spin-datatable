@@ -58,6 +58,7 @@ function updateRow(row, columnID, columns, dependencyMap) {
 		return updatedRow;
 	} catch (e) {
 		console.log('could not create row', e);
+		return { ...row };
 	}
 }
 
@@ -210,11 +211,11 @@ function spreadsheetReducer(state, action) {
 		colName,
 		column,
 		columnCount,
-		columnFormula,
 		columnID,
 		columnIndex,
 		columnTypeModalOpen,
 		copiedValues2dArray,
+		newInputCellValue,
 		descending,
 		distributionModalOpen,
 		endRangeRow,
@@ -250,7 +251,15 @@ function spreadsheetReducer(state, action) {
 		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column, columnID };
-			return { ...state, activeCell, cellSelectionRanges: [], uniqueRowIDs: [], uniqueColumnIDs: [], selectedText };
+			return {
+				...state,
+				activeCell,
+				cellSelectionRanges: [],
+				newInputCellValue,
+				uniqueRowIDs: [],
+				uniqueColumnIDs: [],
+				selectedText,
+			};
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
@@ -856,7 +865,14 @@ export function SpreadsheetProvider({ eventBus, children }) {
 	const statsColumns = [
 		{ id: '_abc1_', modelingType: 'Continuous', type: 'Number', units: 'ml', label: 'Volume Displaced' },
 		{ id: '_abc2_', modelingType: 'Continuous', type: 'Number', units: 'sec', label: 'Time' },
-		{ id: '_abc3_', modelingType: 'Continuous', type: 'Number', units: 'ml/sec', label: 'Rate' },
+		{
+			id: '_abc3_',
+			modelingType: 'Continuous',
+			formula: { expression: '_abc1_/_abc2_', IDs: [ '_abc1_, _abc2_' ] },
+			type: 'Formula',
+			units: 'ml/sec',
+			label: 'Rate',
+		},
 		{ id: '_abc4_', modelingType: 'Nominal', type: 'String', units: '', label: 'Catalase Solution' },
 	];
 
