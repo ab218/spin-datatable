@@ -254,18 +254,18 @@ function spreadsheetReducer(state, action) {
 		left,
 		height,
 		width,
-		versionLabel
+		versionLabel,
+		type
 	} = action;
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
-	const { type, ...event } = action;
 	if (recordEventWhiteList.includes(type)) {
 		if (type === SAVE_VERSION) {
 			const {columns, rows, excludedRows, id} = state;
-			saveVersion(state.eventBus, {versionLabel, columns, rows, excludedRows, id});
+			saveVersion(state.eventBus, {type, versionLabel, columns, rows, excludedRows, id});
 		} else {
-			state.eventBus.fire(type, event);
+			state.eventBus.fire(type, action);
 		}
 	}
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
