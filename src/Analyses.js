@@ -20,7 +20,7 @@ export async function pingCloudFunctions() {
 	);
 }
 
-export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabel, colYLabel, XYCols) {
+export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
 	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
 	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
@@ -72,10 +72,10 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		meanCiUpp: mean_ci_upp,
 		corrcoef: corrcoef[1][0].toFixed(4) / 1,
 		covariance: cov[1][0].toFixed(4) / 1,
-		colXLabel,
+		colX,
 		colAMean: mean_x.toFixed(4) / 1,
 		colAStdev: std_x.toFixed(4) / 1,
-		colYLabel,
+		colY,
 		colBMean: mean_y.toFixed(4) / 1,
 		colBStdev: std_y.toFixed(4) / 1,
 		pValue: pvalues[1].toFixed(4) / 1,
@@ -98,7 +98,6 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 }
 
 export async function performDistributionAnalysis(colY, vals, numberOfBins) {
-	const colYLabel = colY.label;
 	// TODO: Add some error here
 	if (vals.length === 0) return;
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
@@ -117,10 +116,10 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	const { mean_y, std_y, count, quantiles, histogram, skew, kurtosis } = result.data;
 	return {
 		count,
-		colYLabel,
-		colBMean: mean_y,
-		colBStdev: std_y,
-		colB: vals,
+		colObj: colY,
+		mean: mean_y,
+		stdev: std_y,
+		vals,
 		boxPlotData: quantiles,
 		histogram,
 		skew,

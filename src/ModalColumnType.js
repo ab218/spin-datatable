@@ -8,45 +8,74 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import { TOGGLE_COLUMN_TYPE_MODAL, UPDATE_COLUMN } from './constants';
 
 export default function AntModal({ selectedColumn }) {
-	const [ columnFormula, setColumnFormula ] = useState(selectedColumn.formula || '');
-	const [ selectedFormulaVariable, setSelectedFormulaVariable ] = useState(null);
-	const [ error, setError ] = useState(null);
-	const [ formulaError, setFormulaError ] = useState(null);
-	const [ columnName, setColumnName ] = useState(selectedColumn.label);
-	const [ columnType, setColumnType ] = useState(selectedColumn.type);
-	const [ columnModelingType, setColumnModelingType ] = useState(selectedColumn.modelingType);
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { columns, columnTypeModalOpen, rows } = useSpreadsheetState();
+	const { columns, columnTypeModalOpen, modalError } = useSpreadsheetState();
+	const { formula, label, modelingType, type, units } = selectedColumn;
+	const formulaFromState = formula && formula.expression;
+	const [ columnFormula, setColumnFormula ] = useState(swapIDsWithLabels(formulaFromState, columns) || '');
+	const [ selectedFormulaVariable, setSelectedFormulaVariable ] = useState(null);
+	const [ loaded, setLoaded ] = useState(false);
+	const [ formulaError, setFormulaError ] = useState(null);
+	const [ columnName, setColumnName ] = useState(label);
+	const [ columnType, setColumnType ] = useState(type);
+	const [ columnUnits, setColumnUnits ] = useState(units);
+	const [ columnModelingType, setColumnModelingType ] = useState(modelingType);
 
-	function handleClose(cancel) {
-		if (!cancel) {
-			if (!columnName) {
-				return setError('Column Name cannot be blank');
+	function setModalError(modalError) {
+		dispatchSpreadsheetAction({ type: 'SET_MODAL_ERROR', modalError });
+	}
+
+	function swapLabelsWithIDs(formula, columns) {
+		if (!formula) return undefined;
+		let formulaWithIDs = '';
+		const IDsSet = new Set();
+		columns.forEach((col) => {
+			if (formulaWithIDs.includes(col.label) || formula.includes(col.label)) {
+				IDsSet.add(col.id);
+				formulaWithIDs = formulaWithIDs
+					? formulaWithIDs.split(col.label).join(col.id)
+					: formula.split(col.label).join(col.id);
 			}
-			if (!columnName[0].toLowerCase().match(/[a-z]/i)) {
-				return setError('Column Name must begin with a letter');
+		});
+		return { expression: formulaWithIDs || formula, IDs: [ ...IDsSet ] };
+	}
+
+	function swapIDsWithLabels(formula, columns) {
+		if (!formula) return undefined;
+		let formulaWithLabels = '';
+		columns.forEach((col) => {
+			if (formulaWithLabels.includes(col.id) || formula.includes(col.id)) {
+				formulaWithLabels = formulaWithLabels
+					? formulaWithLabels.split(col.id).join(col.label)
+					: formula.split(col.id).join(col.label);
 			}
-			if (validateColumnName(columnName)) {
-				return setError('Column Name must be unique');
-			}
-			if (columnFormula && formulaError) {
-				return setError('Invalid formula entered');
-			}
-			if (columnType === 'Formula') {
-				dispatchSpreadsheetAction({ type: 'UPDATE_ROWS', rows: updateColumn(selectedColumn.id) });
-			}
-			dispatchSpreadsheetAction({
-				type: UPDATE_COLUMN,
-				updatedColumn: {
-					label: columnName,
-					modelingType: columnModelingType,
-					type: columnType,
-					formula: columnFormula,
-					id: selectedColumn.id,
-				},
-			});
+		});
+		return formulaWithLabels || formula;
+	}
+
+	function handleClose() {
+		if (!columnName) {
+			return setModalError('Column Name cannot be blank');
 		}
-		dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, modalOpen: false, selectedColumn: null });
+		if (!columnName[0].toLowerCase().match(/[a-z]/i)) {
+			return setModalError('Column Name must begin with a letter');
+		}
+		if (validateColumnName(columnName)) {
+			return setModalError('Column Name must be unique');
+		}
+		if (columnFormula && formulaError) {
+			return setModalError('Invalid formula entered');
+		}
+		dispatchSpreadsheetAction({
+			type: UPDATE_COLUMN,
+			updatedColumn: {
+				label: columnName,
+				modelingType: columnModelingType,
+				type: columnType,
+				formula: swapLabelsWithIDs(columnFormula, columns),
+				id: selectedColumn.id,
+			},
+		});
 	}
 
 	function formatInput(formula) {
@@ -55,55 +84,8 @@ export default function AntModal({ selectedColumn }) {
 		// .replace(/[[\]']+/g, '');
 	}
 
-	function updateColumn(columnID) {
-		const newMappedValues = evaluateColumn(columnFormula);
-		const newRows = [ ...rows ];
-		if (newMappedValues) {
-			for (let i = 0; i < newRows.length; i++) {
-				newRows[i][columnID] = newMappedValues[i];
-			}
-		}
-		return newRows;
-	}
-	function evaluateColumn(formula) {
-		const mappedExpessions = swapIDsForValues(formula);
-		try {
-			return mappedExpessions.map((expression) => {
-				return nerdamer(expression).text('decimals');
-			});
-		} catch (e) {
-			console.log(e);
-		}
-	}
-
-	function swapIDsForValues(formula) {
-		const formulaWithIDs = swapLabelsForIDs(formula);
-		const mappedExpressions = [];
-		rows.forEach((row) => {
-			let currentExpression = '';
-			Object.keys(row).forEach((rowKey) => {
-				if (currentExpression.includes(rowKey) || formulaWithIDs.includes(rowKey)) {
-					currentExpression = currentExpression
-						? currentExpression.split(rowKey).join(row[rowKey])
-						: formulaWithIDs.split(rowKey).join(row[rowKey]);
-				}
-			});
-			mappedExpressions.push(currentExpression || formulaWithIDs);
-		});
-		return mappedExpressions;
-	}
-
-	function swapLabelsForIDs(formula) {
-		let formulaWithIDs = '';
-		columns.forEach((col) => {
-			if (formulaWithIDs.includes(col.label) || formula.includes(col.label)) {
-				formulaWithIDs = formulaWithIDs
-					? formulaWithIDs.split(col.label).join(col.id)
-					: formula.split(col.label).join(col.id);
-			}
-		});
-		return formulaWithIDs || formula;
-	}
+	// hacky way to call renderFormula on component mount
+	useEffect(() => setLoaded(true), []);
 
 	useEffect(
 		() => {
@@ -117,6 +99,7 @@ export default function AntModal({ selectedColumn }) {
 					setFormulaError(false);
 					return;
 				} catch (e) {
+					console.log('FORMULA ERROR: ', e);
 					setFormulaError(true);
 				}
 			}
@@ -124,7 +107,7 @@ export default function AntModal({ selectedColumn }) {
 				renderFormula(formatInput(columnFormula));
 			}
 		},
-		[ columnFormula ],
+		[ columnFormula, loaded ],
 	);
 
 	function validateColumnName(columnName) {
@@ -138,41 +121,28 @@ export default function AntModal({ selectedColumn }) {
 		setColumnFormula((prev) => prev + column.label);
 	}
 
-	// function displayColumnFormula(columnFormula) {
-	// 	const returnArr = [];
-	// 	columnFormula.forEach((el) => {
-	// 		if (typeof el === 'object') {
-	// 			console.log(el);
-	// 			returnArr.push(
-	// 				<Tag closable color="red">
-	// 					{el.label}
-	// 				</Tag>,
-	// 			);
-	// 		}
-	// 		if (typeof el === 'string') {
-	// 			returnArr.push(el);
-	// 		}
-	// 	});
-	// 	return returnArr;
-	// }
-
 	return (
 		<div>
 			<Modal
 				width={700}
 				className="ant-modal"
 				destroyOnClose
-				onCancel={() => handleClose(true)}
+				onCancel={() =>
+					dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, modalOpen: false, selectedColumn: null })}
 				title={columnName || <span style={{ fontStyle: 'italic', opacity: 0.4 }}>{`<Blank>`}</span>}
 				visible={columnTypeModalOpen}
 				footer={[
 					<div style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
-						{error ? <Alert className="fade-in-animated" message={error} type="error" showIcon /> : <div />}
+						{modalError ? <Alert className="fade-in-animated" message={modalError} type="error" showIcon /> : <div />}
 						<span style={{ alignSelf: 'end' }}>
-							<Button key="back" onClick={() => handleClose(true)}>
+							<Button
+								key="back"
+								onClick={() =>
+									dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, modalOpen: false, selectedColumn: null })}
+							>
 								Cancel
 							</Button>
-							<Button key="submit" type="primary" onClick={() => handleClose(false)}>
+							<Button key="submit" type="primary" onClick={handleClose}>
 								Submit
 							</Button>
 						</span>
@@ -186,6 +156,17 @@ export default function AntModal({ selectedColumn }) {
 						maxLength={20}
 						value={columnName}
 						onChange={(e) => setColumnName(e.target.value)}
+					/>
+				</span>
+				<span className="modal-span">
+					<h4>
+						Units <span style={{ fontStyle: 'italic', opacity: 0.4 }}>(Optional)</span>
+					</h4>
+					<Input
+						style={{ width: 75 }}
+						maxLength={20}
+						value={columnUnits}
+						onChange={(e) => setColumnUnits(e.target.value)}
 					/>
 				</span>
 				<span className="modal-span">

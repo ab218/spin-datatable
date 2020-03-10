@@ -211,6 +211,7 @@ function Spreadsheet({ eventBus }) {
 							columnIndex={columnIndex}
 							createNewColumns={createNewColumns}
 							resizeColumn={resizeColumn}
+							units={(column && column.units) || ''}
 						/>
 					)}
 					label={(column && column.label) || ''}

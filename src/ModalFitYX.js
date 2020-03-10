@@ -61,7 +61,7 @@ export default function AnalysisModal() {
 
 		if (colXArr.length >= 3 && colYArr.length >= 3) {
 			setPerformingAnalysis(true);
-			const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX.label, colY.label, XYCols);
+			const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
 			const popup = window.open(
 				window.location.href + 'linear_regression.html',
 				'',

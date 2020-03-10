@@ -43,8 +43,8 @@ function receiveMessage(event) {
 		confLow,
 		meanCiLow,
 		meanCiUpp,
-		colXLabel,
-		colYLabel,
+		colX,
+		colY,
 		coordinates,
 		corrcoef,
 		covariance,
@@ -79,7 +79,11 @@ function receiveMessage(event) {
 	const centered6PolyCoefficients = centeredDegree6Poly['polynomial'];
 
 	const titleEl = document.createElement('div');
-	const titleText = document.createTextNode(`Bivariate Fit of ${colYLabel} By ${colXLabel}`);
+	const titleText = document.createTextNode(
+		`Bivariate Fit of ${colY.label} ${colY.units ? '(' + colY.units + ')' : ''} By ${colX.label} ${colX.units
+			? '(' + colX.units + ')'
+			: ''}`,
+	);
 	titleEl.classList.add('analysis-title');
 	titleEl.appendChild(titleText);
 	const chartsContainer = document.getElementById('chart');
@@ -111,7 +115,7 @@ function receiveMessage(event) {
 		.append('text')
 		.attr('transform', 'translate(' + width / 2 + ' ,' + (height + 50) + ')')
 		.style('text-anchor', 'middle')
-		.text(colXLabel);
+		.text(colX.label);
 
 	// text label for the y axis
 	svg
@@ -121,7 +125,7 @@ function receiveMessage(event) {
 		.attr('x', 0 - height / 2)
 		.attr('dy', '1em')
 		.style('text-anchor', 'middle')
-		.text(colYLabel);
+		.text(colY.label);
 
 	// Histogram borders. Lower number = higher bars
 	const barHeight = 150;
@@ -254,25 +258,25 @@ function receiveMessage(event) {
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
 
-	const linearEquationTemplate = `${colYLabel} = ${linearRegressionCoefficients[1].toFixed(6) / 1} ${addOrSubtract(
+	const linearEquationTemplate = `${colY.label} = ${linearRegressionCoefficients[1].toFixed(6) / 1} ${addOrSubtract(
 		linearRegressionCoefficients[0].toFixed(6) / 1,
-	)} ${Math.abs(linearRegressionCoefficients[0].toFixed(6) / 1)} * ${colXLabel}`;
-	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colXLabel, colYLabel);
-	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colXLabel, colYLabel);
-	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colXLabel, colYLabel);
-	const degree5EquationTemplate = generateEquationTemplate(degree5PolyCoefficients, colXLabel, colYLabel);
-	const degree6EquationTemplate = generateEquationTemplate(degree6PolyCoefficients, colXLabel, colYLabel);
-	const centeredQuadraticEquationTemplate = generateEquationTemplate(centered2PolyCoefficients, colXLabel, colYLabel);
-	const centeredCubicEquationTemplate = generateEquationTemplate(centered3PolyCoefficients, colXLabel, colYLabel);
-	const centeredQuarticEquationTemplate = generateEquationTemplate(centered4PolyCoefficients, colXLabel, colYLabel);
-	const centeredDegree5EquationTemplate = generateEquationTemplate(centered5PolyCoefficients, colXLabel, colYLabel);
-	const centeredDegree6EquationTemplate = generateEquationTemplate(centered6PolyCoefficients, colXLabel, colYLabel);
+	)} ${Math.abs(linearRegressionCoefficients[0].toFixed(6) / 1)} * ${colX.label}`;
+	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colX.label, colY.label);
+	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colX.label, colY.label);
+	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colX.label, colY.label);
+	const degree5EquationTemplate = generateEquationTemplate(degree5PolyCoefficients, colX.label, colY.label);
+	const degree6EquationTemplate = generateEquationTemplate(degree6PolyCoefficients, colX.label, colY.label);
+	const centeredQuadraticEquationTemplate = generateEquationTemplate(centered2PolyCoefficients, colX.label, colY.label);
+	const centeredCubicEquationTemplate = generateEquationTemplate(centered3PolyCoefficients, colX.label, colY.label);
+	const centeredQuarticEquationTemplate = generateEquationTemplate(centered4PolyCoefficients, colX.label, colY.label);
+	const centeredDegree5EquationTemplate = generateEquationTemplate(centered5PolyCoefficients, colX.label, colY.label);
+	const centeredDegree6EquationTemplate = generateEquationTemplate(centered6PolyCoefficients, colX.label, colY.label);
 
 	function onMouseEnterPoint(d, thisPoint) {
 		d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);
 		pointTooltip.transition().duration(200).style('opacity', 0.9);
 		pointTooltip
-			.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
+			.html(`row: ${d[2]}<br>${colX.label}: ${d[0]}<br>${colY.label}: ${d[1]}`)
 			.style('left', d3.event.pageX + 'px')
 			.style('top', d3.event.pageY - 28 + 'px');
 	}
@@ -332,12 +336,12 @@ function receiveMessage(event) {
           <td style="width: 100px; font-weight: bold;">Std Dev</td>
         </tr>
         <tr>
-          <td style="width: 200px;">${colXLabel}</td>
+          <td style="width: 200px;">${colX.label}</td>
           <td style="width: 100px;">${colAMean}</td>
           <td style="width: 100px;">${colAStdev}</td>
         </tr>
         <tr>
-          <td style="width: 200px;">${colYLabel}</td>
+          <td style="width: 200px;">${colY.label}</td>
           <td style="width: 100px;">${colBMean}</td>
           <td style="width: 100px;">${colBStdev}</td>
         </tr>
@@ -352,7 +356,7 @@ function receiveMessage(event) {
 		linearEquationTemplate,
 		linearRegression,
 		linearRegressionCoefficients,
-		colXLabel,
+		colX.label,
 	);
 
 	const quadraticFitTemplate = generateTemplate(
@@ -362,7 +366,7 @@ function receiveMessage(event) {
 		quadraticEquationTemplate,
 		degree2Poly,
 		degree2PolyCoefficients,
-		colXLabel,
+		colX.label,
 	);
 
 	const cubicFitTemplate = generateTemplate(
@@ -372,7 +376,7 @@ function receiveMessage(event) {
 		cubicEquationTemplate,
 		degree3Poly,
 		degree3PolyCoefficients,
-		colXLabel,
+		colX.label,
 	);
 
 	const quarticFitTemplate = generateTemplate(
@@ -382,7 +386,7 @@ function receiveMessage(event) {
 		quarticEquationTemplate,
 		degree4Poly,
 		degree4PolyCoefficients,
-		colXLabel,
+		colX.label,
 	);
 
 	const fifthDegreeFitTemplate = generateTemplate(
@@ -392,7 +396,7 @@ function receiveMessage(event) {
 		degree5EquationTemplate,
 		degree5Poly,
 		degree5PolyCoefficients,
-		colXLabel,
+		colX.label,
 	);
 
 	const sixthDegreeFitTemplate = generateTemplate(
@@ -402,10 +406,10 @@ function receiveMessage(event) {
 		degree6EquationTemplate,
 		degree6Poly,
 		degree6PolyCoefficients,
-		colXLabel,
+		colX.label,
 	);
 
-	const centeredX = `(${colXLabel} - ${colAMean})`;
+	const centeredX = `(${colX.label} - ${colAMean})`;
 
 	const centered2DegreeFitTemplate = generateTemplate(
 		'Quadratic Fit (centered)',
@@ -414,7 +418,7 @@ function receiveMessage(event) {
 		centeredQuadraticEquationTemplate,
 		centeredDegree2Poly,
 		centered2PolyCoefficients,
-		colXLabel,
+		colX.label,
 		centeredX,
 	);
 
@@ -425,7 +429,7 @@ function receiveMessage(event) {
 		centeredCubicEquationTemplate,
 		centeredDegree3Poly,
 		centered3PolyCoefficients,
-		colXLabel,
+		colX.label,
 		centeredX,
 	);
 
@@ -436,7 +440,7 @@ function receiveMessage(event) {
 		centeredQuarticEquationTemplate,
 		centeredDegree4Poly,
 		centered4PolyCoefficients,
-		colXLabel,
+		colX.label,
 		centeredX,
 	);
 
@@ -447,7 +451,7 @@ function receiveMessage(event) {
 		centeredDegree5EquationTemplate,
 		centeredDegree5Poly,
 		centered5PolyCoefficients,
-		colXLabel,
+		colX.label,
 		centeredX,
 	);
 
@@ -458,7 +462,7 @@ function receiveMessage(event) {
 		centeredDegree6EquationTemplate,
 		centeredDegree6Poly,
 		centered6PolyCoefficients,
-		colXLabel,
+		colX.label,
 		centeredX,
 	);
 
