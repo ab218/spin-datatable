@@ -15,7 +15,7 @@ export async function pingCloudFunctions() {
 	});
 }
 
-export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabel, colYLabel, XYCols) {
+export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	const result = await new Promise(function (resolve, reject) {
 		const callback = function ({error, ...rest}) {
 			if (error) {
@@ -31,7 +31,6 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		}, callback);
 	});
 	console.log('result of performLinearRegressionAnalysis:', result);
-
 	// console.log(result.data) // gcloud
 	// console.log(result.data.body); // Lambda
 	const {
@@ -70,10 +69,10 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 		meanCiUpp: mean_ci_upp,
 		corrcoef: corrcoef[1][0].toFixed(4) / 1,
 		covariance: cov[1][0].toFixed(4) / 1,
-		colXLabel,
+		colX,
 		colAMean: mean_x.toFixed(4) / 1,
 		colAStdev: std_x.toFixed(4) / 1,
-		colYLabel,
+		colY,
 		colBMean: mean_y.toFixed(4) / 1,
 		colBStdev: std_y.toFixed(4) / 1,
 		pValue: pvalues[1].toFixed(4) / 1,
@@ -96,7 +95,6 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colXLabe
 }
 
 export async function performDistributionAnalysis(colY, vals, numberOfBins) {
-	const colYLabel = colY.label;
 	// TODO: Add some error here
 	if (vals.length === 0) return;
 
@@ -120,10 +118,10 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	const { mean_y, std_y, count, quantiles, histogram, skew, kurtosis } = result.data;
 	return {
 		count,
-		colYLabel,
-		colBMean: mean_y,
-		colBStdev: std_y,
-		colB: vals,
+		colObj: colY,
+		mean: mean_y,
+		stdev: std_y,
+		vals,
 		boxPlotData: quantiles,
 		histogram,
 		skew,

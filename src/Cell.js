@@ -14,6 +14,7 @@ export function SelectedCell({
 	column,
 	columnIndex,
 	columnID,
+	columnType,
 	handleContextMenu,
 	modifyCellSelectionRange,
 	rowIndex,
@@ -27,7 +28,7 @@ export function SelectedCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		if (event.button === 0) {
+		if (event.button === 0 && column && column.type !== 'Formula') {
 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnID);
 		}

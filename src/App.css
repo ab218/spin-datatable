@@ -118,6 +118,7 @@ th {
 }
 
 .modal-span {
+	margin-top: 10px;
 	display: flex;
 	justify-content: space-between;
 }
@@ -242,4 +243,18 @@ th {
 
 .sidebar-column-selected {
 	background-color: rgb(160, 185, 225) !important;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.fade-in-animated {
+	opacity: 0;
+	animation: fadeIn 1s forwards; /* forwards (animation-fill-mode) retains the style from the last keyframe when the animation ends */
 }

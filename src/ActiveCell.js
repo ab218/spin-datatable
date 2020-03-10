@@ -4,7 +4,6 @@ export default class ActiveCell extends Component {
 		super(props);
 		this.state = {
 			currentValue: this.props.value,
-			oldValue: this.props.value,
 		};
 	}
 

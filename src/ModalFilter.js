@@ -47,7 +47,12 @@ export default function AntModal() {
 				style={{ display: 'flex', justifyContent: 'center' }}
 			>
 				<div style={{ width: 300, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-					<SelectColumn columns={columns} setSelectedColumn={setClickedColumn} style={{ width: '300px' }} />
+					<SelectColumn
+						title={'Select Column'}
+						columns={columns}
+						setSelectedColumn={setClickedColumn}
+						style={{ width: '300px' }}
+					/>
 					<AddColumnButton clickedColumn={clickedColumn} />
 					{selectedColumns &&
 						selectedColumns.length > 0 &&

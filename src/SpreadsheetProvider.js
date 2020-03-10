@@ -1,5 +1,5 @@
 import React, { useReducer } from 'react';
-import { Parser } from 'hot-formula-parser';
+import nerdamer from 'nerdamer';
 import './App.css';
 import {
 	ACTIVATE_CELL,
@@ -53,6 +53,74 @@ function saveVersion(eventBus, payload) {
 	eventBus.fire(SAVE_VERSION, {versionLabel, columns, rows, excludedRows});
 }
 
+function updateRow(row, columnID, columns, dependencyMap) {
+	const columnIDtoIndexMap = columns.reduce((acc, { id }, index) => {
+		return { ...acc, [id]: index };
+	}, {});
+	const getDependentColumns = (column) => {
+		return column ? [ column ].concat((dependencyMap[column] || []).map(getDependentColumns)) : [];
+	};
+	const dependencyList = [ columnID ].map(getDependentColumns).flat(Infinity);
+	try {
+		const updatedRow = dependencyList.reduce((rowSoFar, columnID) => {
+			const columnIndex = columnIDtoIndexMap[columnID];
+			const columnFormula = columns[columnIndex].formula.expression;
+			return {
+				...rowSoFar,
+				[columnID]: nerdamer(swapIDsForValuesInRow(columnFormula, rowSoFar)).text('decimals'),
+			};
+		}, row);
+		return updatedRow;
+	} catch (e) {
+		console.log('could not create row', e);
+		return { ...row };
+	}
+}
+
+function updateRows(rows, columnID, columns, dependencyMap) {
+	return rows
+		.map((row) => {
+			return updateRow(row, columnID, columns, dependencyMap);
+		})
+		.filter((x) => x);
+}
+
+function findCyclicDependencies(definitions, identifier) {
+	const stack = [];
+
+	// Internal search function.
+	const internalSearch = function(currentIdentifier) {
+		if (stack.indexOf(currentIdentifier) !== -1) {
+			return currentIdentifier === identifier;
+		}
+		stack.push(currentIdentifier);
+
+		// Check all of the child nodes to see if they contain the node we are looking for.
+		const found = definitions[currentIdentifier] && definitions[currentIdentifier].some(internalSearch);
+
+		// Remove the current node from the stack if it's children do not contain the node we are looking for.
+		if (!found) {
+			stack.splice(stack.indexOf(currentIdentifier), 1);
+		}
+		return found;
+	};
+
+	// If there isn't a cyclic dependency then we return an empty array, otherwise we return the stack.
+	return internalSearch(identifier) ? stack.concat(identifier) : [];
+}
+
+function swapIDsForValuesInRow(oldExpression, row) {
+	let newExpression = '';
+	Object.keys(row).forEach((rowKey) => {
+		if (newExpression.includes(rowKey) || oldExpression.includes(rowKey)) {
+			newExpression = newExpression
+				? newExpression.split(rowKey).join(row[rowKey])
+				: oldExpression.split(rowKey).join(row[rowKey]);
+		}
+	});
+	return newExpression || oldExpression;
+}
+
 function generateUniqueRowIDs(cellSelectionRanges, rows) {
 	const range = (start, end) => Array(end - start + 1).fill().map((_, i) => start + i);
 	const selectedRows = cellSelectionRanges.map((row) => range(row.top, row.bottom));
@@ -102,12 +170,6 @@ function returnIntersectionOrNonEmptyArray(arr1, arr2) {
 	} else if (arr2.length === 0) {
 		return arr1;
 	}
-}
-
-function translateLabelToID(columns, formula) {
-	return columns.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
-		return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
-	}, formula);
 }
 
 const SpreadsheetStateContext = React.createContext();
@@ -168,6 +230,7 @@ function spreadsheetReducer(state, action) {
 		columnIndex,
 		columnTypeModalOpen,
 		copiedValues2dArray,
+		newInputCellValue,
 		descending,
 		distributionModalOpen,
 		endRangeRow,
@@ -175,6 +238,7 @@ function spreadsheetReducer(state, action) {
 		filters,
 		filterModalOpen,
 		layout,
+		modalError,
 		numberFilters,
 		row,
 		rowCount,
@@ -210,7 +274,15 @@ function spreadsheetReducer(state, action) {
 		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column, columnID };
-			return { ...state, activeCell, cellSelectionRanges: [], uniqueRowIDs: [], uniqueColumnIDs: [], selectedText };
+			return {
+				...state,
+				activeCell,
+				cellSelectionRanges: [],
+				newInputCellValue,
+				uniqueRowIDs: [],
+				uniqueColumnIDs: [],
+				selectedText,
+			};
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
@@ -428,21 +500,6 @@ function spreadsheetReducer(state, action) {
 					}
 				: state;
 		}
-		// case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
-		// 	const { lastSelection } = state;
-		// 	// Note: In this case I am checking the cellSelectionRanges directly instead of currentCellSelectionRange
-		// 	return state.currentCellSelectionRange
-		// 		? {
-		// 				...state,
-		// 				currentCellSelectionRange: getRangeBoundaries({
-		// 					startRangeRow: lastSelection.row,
-		// 					endRangeRow,
-		// 					startRangeColumn: 1,
-		// 					endRangeColumn: state.columns.length,
-		// 				}),
-		// 			}
-		// 		: state;
-		// }
 		case REMOVE_SELECTED_CELLS: {
 			return {
 				...state,
@@ -465,17 +522,6 @@ function spreadsheetReducer(state, action) {
 				? !state.uniqueRowIDs.includes(rowID) ? state.uniqueRowIDs.concat(rowID) : state.uniqueRowIDs
 				: [ rowID ];
 			const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(columnID) : [ columnID ];
-			// const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(columnID) : [ columnID ];
-			// const totalCellSelectionRanges = selectionActive
-			// 	? state.cellSelectionRanges.concat(selectedCell)
-			// 	: [ selectedCell ];
-			// const uniqueRowIDs = [ ...new Set(generateUniqueRowIDs(totalCellSelectionRanges, state.rows)) ];
-			// AB: This kind of feels like unnecessary work to me
-			// const addSelectedCellToSelectionArray = cellSelectionRanges.concat(
-			// 	cellSelectionRanges.some((cell) => cell.top === selectedCell.top && cell.right === selectedCell.right)
-			// 		? []
-			// 		: selectedCell,
-			// );
 			return {
 				...state,
 				activeCell: null,
@@ -656,6 +702,7 @@ function spreadsheetReducer(state, action) {
 				selectedColumn: colName ? getCol(colName) : column,
 				cellSelectionRanges: [],
 				currentCellSelectionRange: [],
+				modalError: null,
 			};
 		}
 		// EVENT: Distribution Modal opened/closed
@@ -704,26 +751,14 @@ function spreadsheetReducer(state, action) {
 			const row = rows[rowIndex] || rows[rows.length - 1];
 			const newRows = rows.slice();
 			const { id: columnID } = column || columns[columns.length - 1];
-			let rowCopy = Object.assign({}, row, { [columnID]: cellValue });
-
-			const dependentColumns = columns.filter(({ type, formula }) => {
-				return type === 'Formula' && formula.includes(columnID);
-			});
-			// If formula present
-			if (dependentColumns.length) {
-				const formulaParser = new Parser();
-				formulaParser.on('callVariable', function(name, done) {
-					const selectedColumn = columns.find((column) => column.id === name);
-					if (selectedColumn) {
-						done(rowCopy[selectedColumn.id]);
-					}
-				});
-				rowCopy = dependentColumns.reduce((acc, column) => {
-					return { ...acc, [column.id]: formulaParser.parse(column.formula).result };
-				}, rowCopy);
+			let rowCopy = { ...row, [columnID]: cellValue };
+			if (Array.isArray(state.inverseDependencyMap[columnID])) {
+				for (const dependencyColumnID of state.inverseDependencyMap[columnID]) {
+					rowCopy = updateRow(rowCopy, dependencyColumnID, state.columns, state.inverseDependencyMap);
+				}
 			}
 
-			const changedRows = newRows.map((newRow) => (newRow.id !== rowCopy.id ? newRow : rowCopy));
+			const changedRows = Object.assign(newRows, { [rowIndex]: rowCopy });
 			return { ...state, rows: changedRows };
 		}
 
@@ -769,46 +804,63 @@ function spreadsheetReducer(state, action) {
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
+		case 'SET_MODAL_ERROR': {
+			return { ...state, modalError };
+		}
 		case UPDATE_COLUMN: {
-			// TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
-			const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
-			const columnCopy = Object.assign(
-				{},
-				updatedColumn,
-				columnHasFormula ? { formula: translateLabelToID(state.columns, updatedColumn.formula) } : {},
-			);
+			const columnCopy = { ...updatedColumn };
 			const originalPosition = state.columns.findIndex((col) => col.id === columnCopy.id);
 			const updatedColumns = state.columns
 				.slice(0, originalPosition)
 				.concat(columnCopy)
 				.concat(state.columns.slice(originalPosition + 1));
-			let rows = state.rows;
-			if (columnHasFormula) {
-				rows = rows.map((row) => {
-					const formulaColumnsToUpdate = [ columnCopy ].concat(
-						state.columns.filter(({ type, formula }) => {
-							return type === 'Formula' && formula.includes(columnCopy.id);
-						}),
-					);
-					const formulaParser = new Parser();
-					// Not getting called
-					formulaParser.on('callVariable', function(name, done) {
-						const selectedColumn = state.columns.find((column) => column.id === name);
-						if (selectedColumn) {
-							done(row[selectedColumn.id]);
-						}
-					});
-					return formulaColumnsToUpdate.reduce((acc, column) => {
-						row = acc;
-						const {
-							result,
-							// error
-						} = formulaParser.parse(column.formula);
-						return { ...acc, [column.id]: result };
-					}, row);
+
+			if (columnCopy.formula && columnCopy.formula.expression && columnCopy.formula.expression.trim()) {
+				const formulaColumns = updatedColumns.filter(({ type }) => {
+					return type === 'Formula';
 				});
+				const inverseDependencyMap = formulaColumns.reduce((invDepMap, formulaColumn) => {
+					return (
+						formulaColumn.formula &&
+						formulaColumn.formula.IDs.reduce((acc, dependentColumnID) => {
+							return { ...acc, [dependentColumnID]: (acc[dependentColumnID] || []).concat(formulaColumn.id) };
+						}, invDepMap)
+					);
+				}, {});
+
+				const cycles = findCyclicDependencies(inverseDependencyMap, columnCopy.id);
+				if (cycles.length > 0) {
+					console.log('cycle detected. stack: ', cycles);
+					return { ...state, modalError: 'Reference Error - Infinite cycle detected' };
+				}
+
+				const updatedRows = updateRows(state.rows, columnCopy.id, updatedColumns, inverseDependencyMap);
+
+				if (updatedRows.length === 0) {
+					return {
+						...state,
+						modalError: 'Invalid formula entered',
+					};
+				}
+
+				return {
+					...state,
+					columns: updatedColumns,
+					columnTypeModalOpen: false,
+					selectedColumn: null,
+					rows: updatedRows.length > 0 ? updatedRows : state.rows,
+					modalError: null,
+					inverseDependencyMap,
+				};
 			}
-			return { ...state, columns: updatedColumns, rows };
+
+			return {
+				...state,
+				columns: updatedColumns,
+				columnTypeModalOpen: false,
+				modalError: null,
+				selectedColumn: null,
+			};
 		}
 		default: {
 			throw new Error(`Unhandled action type: ${type}`);
@@ -834,10 +886,17 @@ export function useSpreadsheetDispatch() {
 export function SpreadsheetProvider({ eventBus, children, initialTable }) {
 	// dummy data
 	const statsColumns = [
-		{ id: '_abc1_', modelingType: 'Continuous', type: 'Number', label: 'Volume displaced (ml)' },
-		{ id: '_abc2_', modelingType: 'Continuous', type: 'Number', label: 'Time (sec)' },
-		{ id: '_abc3_', modelingType: 'Continuous', type: 'Number', label: 'Rate (ml/sec)' },
-		{ id: '_abc4_', modelingType: 'Nominal', type: 'String', label: 'Catalase solution' },
+		{ id: '_abc1_', modelingType: 'Continuous', type: 'Number', units: 'ml', label: 'Volume Displaced' },
+		{ id: '_abc2_', modelingType: 'Continuous', type: 'Number', units: 'sec', label: 'Time' },
+		{
+			id: '_abc3_',
+			modelingType: 'Continuous',
+			formula: { expression: '_abc1_/_abc2_', IDs: [ '_abc1_, _abc2_' ] },
+			type: 'Formula',
+			units: 'ml/sec',
+			label: 'Rate',
+		},
+		{ id: '_abc4_', modelingType: 'Nominal', type: 'String', units: '', label: 'Catalase Solution' },
 	];
 
 	const potatoLiverData = `35	3	1.0606060606	Liver
@@ -898,8 +957,11 @@ export function SpreadsheetProvider({ eventBus, children, initialTable }) {
 			numberFilters: [],
 		},
 		filterModalOpen: false,
+		inverseDependencyMap: {},
 		lastSelection: { row: 1, column: 1 },
 		layout: true,
+		mappedColumns: {},
+		modalError: false,
 		rows: createRows(potatoLiverData),
 		selectedColumns: [],
 		selectedText: false,

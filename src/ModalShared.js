@@ -6,7 +6,7 @@ import { ORDINAL, CONTINUOUS, NOMINAL } from './constants';
 export const styles = {
 	cardWithBorder: {
 		border: '1px solid lightgray',
-		width: 250,
+		width: 220,
 		minHeight: 100,
 	},
 	flexColumn: {
@@ -19,7 +19,7 @@ export const styles = {
 		justifyContent: 'space-between',
 	},
 	radioButton: {
-		minWidth: 200,
+		minWidth: 150,
 		fontSize: 14,
 		padding: 0,
 		margin: 0,
@@ -52,7 +52,7 @@ function addColumnToList(col, setCol, selectedColumn) {
 	setCol((prevState) => prevState.concat(selectedColumn));
 }
 
-function CaratButtons({ data, setData, label, selectedColumn }) {
+export function CaratButtons({ data, setData, label, selectedColumn }) {
 	return (
 		<div style={styles.flexColumn}>
 			<Button
@@ -91,11 +91,11 @@ function removeColumnFromList(setCol, column) {
 	setCol((prevState) => prevState.filter((col) => col !== column));
 }
 
-export function SelectColumn({ columns, groupingColData, setSelectedColumn }) {
+export function SelectColumn({ columns, groupingColData, setSelectedColumn, styleProps, title }) {
 	const { cardWithBorder, radioButton, radioGroup } = styles;
 	return (
 		<div>
-			Select Column
+			{title}
 			<Card bordered style={{ marginTop: 20, ...cardWithBorder }}>
 				<Radio.Group style={radioGroup} buttonStyle="solid">
 					{/* display only columns with labels and some data */}
