@@ -15,5 +15,5 @@ body,
 #root {
 	height: 100%;
 	/* overflow: hidden; */
-	overflow-x: scroll;
+	/* overflow-x: scroll; */
 }

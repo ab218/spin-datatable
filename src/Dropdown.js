@@ -2,12 +2,12 @@ import React from 'react';
 import { Menu, Dropdown, Icon } from 'antd';
 import { createModelingTypeIcon } from './ModalShared';
 
-export default function DropdownMenu({ columnType, setColumnType, menuItems, modelingTypeIcons }) {
+export default function DropdownMenu({ columnType, setColumnType, menuItems, modelingTypeIcons, disabledType }) {
 	const mapMenu = (arr, i) => {
 		return (
 			<Menu>
 				{arr.map((menuItem) => (
-					<Menu.Item key={menuItem} onClick={() => setColumnType(menuItem)}>
+					<Menu.Item disabled={menuItem === disabledType} key={menuItem} onClick={() => setColumnType(menuItem)}>
 						{modelingTypeIcons && createModelingTypeIcon(menuItem)}
 						{menuItem}
 					</Menu.Item>

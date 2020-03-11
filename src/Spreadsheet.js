@@ -17,8 +17,8 @@ import BarChartModal from './ModalBarChart';
 import {
 	Column,
 	Table,
-	// AutoSizer,
-	WindowScroller,
+	AutoSizer,
+	// WindowScroller,
 } from 'react-virtualized';
 import {
 	ACTIVATE_CELL,
@@ -34,6 +34,8 @@ import {
 	SELECT_CELL,
 	TRANSLATE_SELECTED_CELL,
 	UPDATE_CELL,
+	NUMBER,
+	FORMULA,
 } from './constants';
 
 export const checkIfValidNumber = (str) => {
@@ -44,7 +46,7 @@ export const checkIfValidNumber = (str) => {
 };
 
 export function formatForNumberColumn(cellValue, column) {
-	if (cellValue && column.type === 'Number') {
+	if (cellValue && column.type === NUMBER) {
 		return isNaN(cellValue);
 	}
 }
@@ -159,10 +161,10 @@ function Spreadsheet({ eventBus }) {
 
 	function updateCell(currentValue, rowIndex, columnIndex) {
 		// Don't allow formula column cells to be edited
-		const formulaColumns = columns.map((col) => (col.type === 'Formula' ? columns.indexOf(col) : null));
+		const formulaColumns = columns.map((col) => (col.type === FORMULA ? columns.indexOf(col) : null));
 		if (!formulaColumns.includes(columnIndex - 1)) {
 			dispatchSpreadsheetAction({
-				type: 'UPDATE_CELL',
+				type: UPDATE_CELL,
 				rowIndex,
 				columnIndex: columnIndex - 1,
 				cellValue: currentValue,
@@ -314,15 +316,13 @@ function Spreadsheet({ eventBus }) {
 				if (rowIndex + 1 > rows.length) {
 					createNewRows(rows);
 				}
-				console.log(columns[columnIndex].type);
-				if (columns[columnIndex].type !== 'Formula') {
+				if (columns[columnIndex].type !== FORMULA) {
 					dispatchSpreadsheetAction({
 						type: ACTIVATE_CELL,
 						row: rowIndex,
 						column: columnIndex + 1,
 						newInputCellValue: event.key,
 					});
-					// dispatchSpreadsheetAction({ type: UPDATE_CELL, columnIndex, rowIndex, cellValue: event.key });
 				}
 			} else {
 				switch (event.key) {
@@ -366,10 +366,10 @@ function Spreadsheet({ eventBus }) {
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
-				<div style={{ display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>
+				<div style={{ height: '100%', display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>
 					<Sidebar />
-					<WindowScroller>
-						{/* <AutoSizer> */}
+					{/* <WindowScroller> */}
+					<AutoSizer>
 						{({ height }) => (
 							<Table
 								overscanRowCount={0}
@@ -398,8 +398,8 @@ function Spreadsheet({ eventBus }) {
 								{renderColumns(visibleColumns)}
 							</Table>
 						)}
-						{/* </AutoSizer> */}
-					</WindowScroller>
+					</AutoSizer>
+					{/* </WindowScroller> */}
 				</div>
 			)}
 		</div>

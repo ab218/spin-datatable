@@ -5,7 +5,17 @@ import { Alert, Button, Icon, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
 import Dropdown from './Dropdown';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_COLUMN_TYPE_MODAL, UPDATE_COLUMN } from './constants';
+import {
+	SET_MODAL_ERROR,
+	TOGGLE_COLUMN_TYPE_MODAL,
+	UPDATE_COLUMN,
+	NUMBER,
+	STRING,
+	FORMULA,
+	CONTINUOUS,
+	ORDINAL,
+	NOMINAL,
+} from './constants';
 
 export default function AntModal({ selectedColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -22,21 +32,19 @@ export default function AntModal({ selectedColumn }) {
 	const [ columnModelingType, setColumnModelingType ] = useState(modelingType);
 
 	function setModalError(modalError) {
-		dispatchSpreadsheetAction({ type: 'SET_MODAL_ERROR', modalError });
+		dispatchSpreadsheetAction({ type: SET_MODAL_ERROR, modalError });
 	}
 
 	function swapLabelsWithIDs(formula, columns) {
 		if (!formula) return undefined;
-		const lowerCaseFormula = formula.toLowerCase();
 		let formulaWithIDs = '';
 		const IDsSet = new Set();
 		columns.forEach((col) => {
-			const colLabel = col.label.toLowerCase();
-			if (formulaWithIDs.includes(colLabel) || lowerCaseFormula.includes(colLabel)) {
+			if (formulaWithIDs.includes(col.label) || formula.includes(col.label)) {
 				IDsSet.add(col.id);
 				formulaWithIDs = formulaWithIDs
-					? formulaWithIDs.toLowerCase().split(colLabel).join(col.id)
-					: lowerCaseFormula.split(colLabel).join(col.id);
+					? formulaWithIDs.split(col.label).join(col.id)
+					: formula.split(col.label).join(col.id);
 			}
 		});
 		return { expression: formulaWithIDs || formula, IDs: [ ...IDsSet ] };
@@ -92,6 +100,15 @@ export default function AntModal({ selectedColumn }) {
 
 	useEffect(
 		() => {
+			if (columnType === STRING && columnModelingType === CONTINUOUS) {
+				setColumnModelingType(NOMINAL);
+			}
+		},
+		[ columnModelingType, columnType ],
+	);
+
+	useEffect(
+		() => {
 			function renderFormula(formula) {
 				const symExp = document.getElementById('symbolic-expression');
 				try {
@@ -106,11 +123,11 @@ export default function AntModal({ selectedColumn }) {
 					setFormulaError(true);
 				}
 			}
-			if (columnFormula) {
+			if (loaded && columnType === FORMULA && columnFormula) {
 				renderFormula(formatInput(columnFormula));
 			}
 		},
-		[ columnFormula, loaded ],
+		[ columnFormula, columnType, loaded ],
 	);
 
 	function validateColumnName(columnName) {
@@ -120,8 +137,14 @@ export default function AntModal({ selectedColumn }) {
 		return lowerCaseColumnNames.includes(columnName.toLowerCase());
 	}
 
-	function addVariableToInput(column) {
-		setColumnFormula((prev) => prev + column.label);
+	function addTextToInput(text) {
+		setColumnFormula((prev) => prev + text);
+		document.getElementById('formula-input').focus();
+	}
+
+	function addBracketsToInput() {
+		setColumnFormula((prev) => '(' + prev + ')');
+		document.getElementById('formula-input').focus();
 	}
 
 	return (
@@ -135,7 +158,7 @@ export default function AntModal({ selectedColumn }) {
 				title={columnName || <span style={{ fontStyle: 'italic', opacity: 0.4 }}>{`<Blank>`}</span>}
 				visible={columnTypeModalOpen}
 				footer={[
-					<div style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
+					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
 						{modalError ? <Alert className="fade-in-animated" message={modalError} type="error" showIcon /> : <div />}
 						<span style={{ alignSelf: 'end' }}>
 							<Button
@@ -176,7 +199,7 @@ export default function AntModal({ selectedColumn }) {
 					<h4>Type</h4>
 					<Dropdown
 						modelingTypeIcons={false}
-						menuItems={[ 'Number', 'String', 'Formula' ]}
+						menuItems={[ NUMBER, STRING, FORMULA ]}
 						setColumnType={setColumnType}
 						columnType={columnType}
 					/>
@@ -185,36 +208,43 @@ export default function AntModal({ selectedColumn }) {
 					<h4>Modeling Type</h4>
 					<Dropdown
 						modelingTypeIcons={true}
-						menuItems={[ 'Continuous', 'Ordinal', 'Nominal' ]}
+						disabledType={columnType === STRING ? CONTINUOUS : ''}
+						menuItems={[ CONTINUOUS, ORDINAL, NOMINAL ]}
 						setColumnType={setColumnModelingType}
 						columnType={columnModelingType}
 					/>
 				</span>
-				{columnType === 'Formula' && (
-					<div style={{ display: 'flex', justifyContent: 'space-between' }}>
-						<span style={{ display: 'flex', alignSelf: 'flex-end' }}>
-							<SelectColumn
-								styleProps={{ width: 200 }}
-								columns={columns.filter((column) => column.id !== selectedColumn.id)}
-								setSelectedColumn={setSelectedFormulaVariable}
+				{columnType === FORMULA && (
+					<div>
+						<h3 style={{ textAlign: 'center', margin: 30 }}>Formula Editor</h3>
+						<div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between' }}>
+							<span style={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-end' }}>
+								<FormulaButtons addTextToInput={addTextToInput} addBracketsToInput={addBracketsToInput} />
+								<div style={{ display: 'flex' }}>
+									<SelectColumn
+										styleProps={{ width: 200 }}
+										columns={columns.filter((column) => column.id !== selectedColumn.id)}
+										setSelectedColumn={setSelectedFormulaVariable}
+									/>
+									<div style={{ margin: 'auto 10px' }}>
+										<Button
+											onClick={(e) => {
+												if (selectedFormulaVariable) {
+													addTextToInput(selectedFormulaVariable.label);
+												}
+											}}
+										>
+											<Icon type="right" />
+										</Button>
+									</div>
+								</div>
+							</span>
+							<SymbolicExpressionEditor
+								formulaError={formulaError}
+								columnFormula={columnFormula}
+								setColumnFormula={setColumnFormula}
 							/>
-							<div style={{ margin: 'auto 10px' }}>
-								<Button
-									onClick={() => {
-										if (selectedFormulaVariable) {
-											addVariableToInput(selectedFormulaVariable);
-										}
-									}}
-								>
-									<Icon type="right" />
-								</Button>
-							</div>
-						</span>
-						<SymbolicExpressionEditor
-							formulaError={formulaError}
-							columnFormula={columnFormula}
-							setColumnFormula={setColumnFormula}
-						/>
+						</div>
 					</div>
 				)}
 			</Modal>
@@ -244,76 +274,49 @@ function SymbolicExpressionEditor({ formulaError, columnFormula, setColumnFormul
 				}}
 				id="symbolic-expression"
 			>
-				{columnFormula ? '' : 'Enter Expression Below'}
+				{columnFormula ? '' : 'Enter Formula Below'}
 			</div>
 			<Input.TextArea
+				allowClear
 				rows={3}
-				id="formula"
+				id="formula-input"
 				value={columnFormula}
 				onChange={(e) => setColumnFormula(e.target.value)}
-				style={{ userSelect: 'none', marginTop: 0, width: 200, height: 100, border: '1px solid blue' }}
+				style={{ resize: 'none', userSelect: 'none', marginTop: 0, width: 200, height: 100, border: '1px solid blue' }}
 			/>
 		</div>
 	);
 }
 
-function FormulaButtons() {
+function FormulaButtons({ addTextToInput, addBracketsToInput }) {
+	function FormulaButton({ buttonText }) {
+		return (
+			<span style={{ margin: 'auto 5px' }}>
+				<Button
+					onClick={() => {
+						addTextToInput(buttonText);
+					}}
+				>
+					{buttonText}
+				</Button>
+			</span>
+		);
+	}
 	return (
-		<React.Fragment>
+		<div>
+			<FormulaButton buttonText={'+'} />
+			<FormulaButton buttonText={'-'} />
+			<FormulaButton buttonText={'*'} />
+			<FormulaButton buttonText={'/'} />
 			<span style={{ margin: 'auto 5px' }}>
 				<Button
-					onClick={(e) => {
-						console.log(e);
+					onClick={() => {
+						addBracketsToInput();
 					}}
 				>
-					+
+					{`( )`}
 				</Button>
 			</span>
-			<span style={{ margin: 'auto 5px' }}>
-				<Button
-					onClick={(e) => {
-						console.log(e);
-					}}
-				>
-					-
-				</Button>
-			</span>
-			<span style={{ margin: 'auto 5px' }}>
-				<Button
-					onClick={(e) => {
-						console.log(e);
-					}}
-				>
-					*
-				</Button>
-			</span>
-			<span style={{ margin: 'auto 5px' }}>
-				<Button
-					onClick={(e) => {
-						console.log(e);
-					}}
-				>
-					/
-				</Button>
-			</span>
-			<span style={{ margin: 'auto 5px' }}>
-				<Button
-					onClick={(e) => {
-						console.log(e);
-					}}
-				>
-					(
-				</Button>
-			</span>
-			<span style={{ margin: 'auto 5px' }}>
-				<Button
-					onClick={(e) => {
-						console.log(e);
-					}}
-				>
-					)
-				</Button>
-			</span>
-		</React.Fragment>
+		</div>
 	);
 }

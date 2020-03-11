@@ -5,7 +5,14 @@ import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
 import { SelectColumn } from './ModalShared';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { FILTER_COLUMN, TOGGLE_FILTER_MODAL, REMOVE_SELECTED_CELLS, SET_FILTERS, DELETE_FILTER } from './constants';
+import {
+	FILTER_COLUMN,
+	TOGGLE_FILTER_MODAL,
+	REMOVE_SELECTED_CELLS,
+	SET_FILTERS,
+	DELETE_FILTER,
+	STRING,
+} from './constants';
 
 export default function AntModal() {
 	const [ clickedColumn, setClickedColumn ] = useState(null);
@@ -58,7 +65,7 @@ export default function AntModal() {
 						selectedColumns.length > 0 &&
 						selectedColumns.map(
 							(col, i) =>
-								col.type === 'String' ? (
+								col.type === STRING ? (
 									<FilterColumnPicker removeColumn={removeColumn} key={i} column={col} />
 								) : (
 									<FilterColumnSlider removeColumn={removeColumn} key={i} column={col} />

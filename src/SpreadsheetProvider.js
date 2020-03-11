@@ -15,6 +15,7 @@ import {
 	EXCLUDE_ROWS,
 	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	OPEN_CONTEXT_MENU,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
 	SET_SELECTED_COLUMN,
@@ -25,7 +26,7 @@ import {
 	SELECT_COLUMN,
 	SET_FILTERS,
 	SORT_COLUMN,
-	OPEN_CONTEXT_MENU,
+	SET_MODAL_ERROR,
 	TOGGLE_ANALYSIS_MODAL,
 	TOGGLE_BAR_CHART_MODAL,
 	TOGGLE_COLUMN_TYPE_MODAL,
@@ -36,6 +37,11 @@ import {
 	UNEXCLUDE_ROWS,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
+	CONTINUOUS,
+	NOMINAL,
+	STRING,
+	FORMULA,
+	NUMBER,
 } from './constants';
 
 function updateRow(row, columnID, columns, dependencyMap) {
@@ -333,7 +339,7 @@ function spreadsheetReducer(state, action) {
 		case CREATE_COLUMNS: {
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
-				return { id, modelingType: 'Continuous', type: 'String', label: `Column ${state.columns.length + i + 1}` };
+				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${state.columns.length + i + 1}` };
 			});
 			const columns = state.columns.concat(newColumns);
 			return { ...state, columns };
@@ -781,7 +787,7 @@ function spreadsheetReducer(state, action) {
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
-		case 'SET_MODAL_ERROR': {
+		case SET_MODAL_ERROR: {
 			return { ...state, modalError };
 		}
 		case UPDATE_COLUMN: {
@@ -794,7 +800,7 @@ function spreadsheetReducer(state, action) {
 
 			if (columnCopy.formula && columnCopy.formula.expression && columnCopy.formula.expression.trim()) {
 				const formulaColumns = updatedColumns.filter(({ type }) => {
-					return type === 'Formula';
+					return type === FORMULA;
 				});
 				const inverseDependencyMap = formulaColumns.reduce((invDepMap, formulaColumn) => {
 					return (
@@ -863,17 +869,17 @@ export function useSpreadsheetDispatch() {
 export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
 	const statsColumns = [
-		{ id: '_abc1_', modelingType: 'Continuous', type: 'Number', units: 'ml', label: 'Volume Displaced' },
-		{ id: '_abc2_', modelingType: 'Continuous', type: 'Number', units: 'sec', label: 'Time' },
+		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced' },
+		{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time' },
 		{
 			id: '_abc3_',
-			modelingType: 'Continuous',
+			modelingType: CONTINUOUS,
 			formula: { expression: '_abc1_/_abc2_', IDs: [ '_abc1_, _abc2_' ] },
-			type: 'Formula',
+			type: FORMULA,
 			units: 'ml/sec',
 			label: 'Rate',
 		},
-		{ id: '_abc4_', modelingType: 'Nominal', type: 'String', units: '', label: 'Catalase Solution' },
+		{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution' },
 	];
 
 	const potatoLiverData = `35	3	1.0606060606	Liver

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { STRING } from './constants';
 export default class ActiveCell extends Component {
 	constructor(props) {
 		super(props);
@@ -16,13 +17,13 @@ export default class ActiveCell extends Component {
 	render() {
 		const { column, createNewRows, rows, rowIndex } = this.props;
 		return (
-			<div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => this.handleContextMenu(e)}>
+			<div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => this.props.handleContextMenu(e)}>
 				<input
 					autoFocus
 					onFocus={(e) => e.target.select()}
 					type="text"
 					style={{
-						textAlign: column.type === 'String' ? 'left' : 'right',
+						textAlign: column.type === STRING ? 'left' : 'right',
 						height: '100%',
 						width: '100%',
 					}}

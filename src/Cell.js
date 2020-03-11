@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSpreadsheetDispatch, useSpreadsheetState } from './SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU, REMOVE_SELECTED_CELLS } from './constants';
+import { CLOSE_CONTEXT_MENU, REMOVE_SELECTED_CELLS, FORMULA, NUMBER, STRING } from './constants';
 import { formatForNumberColumn } from './Spreadsheet';
 import { Tooltip } from 'antd';
 import './App.css';
@@ -28,7 +28,7 @@ export function SelectedCell({
 		if (contextMenuOpen) {
 			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		}
-		if (event.button === 0 && column && column.type !== 'Formula') {
+		if (event.button === 0 && column && column.type !== FORMULA) {
 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnID);
 		}
@@ -44,7 +44,7 @@ export function SelectedCell({
 		<div
 			key={`row${rowIndex}col${columnIndex}`}
 			style={{
-				textAlign: column.type === 'String' ? 'left' : 'right',
+				textAlign: column.type === STRING ? 'left' : 'right',
 				width: '100%',
 				height: '100%',
 				backgroundColor: '#C0C0C0',
@@ -98,7 +98,7 @@ export function NormalCell({
 				onMouseDown={onMouseDown}
 				onMouseEnter={onMouseEnter}
 				style={{
-					textAlign: column.type === 'String' ? 'left' : 'right',
+					textAlign: column.type === STRING ? 'left' : 'right',
 					backgroundColor: 'pink',
 					height: '100%',
 					width: '100%',
@@ -108,13 +108,13 @@ export function NormalCell({
 					userSelect: 'none',
 				}}
 			>
-				{cellValue || (column.type === 'Number' && '\u2022')}
+				{cellValue || (column.type === NUMBER && '\u2022')}
 			</div>
 		</Tooltip>
 	) : (
 		<div
 			style={{
-				textAlign: column.type === 'String' ? 'left' : 'right',
+				textAlign: column.type === STRING ? 'left' : 'right',
 				height: '100%',
 				width: '100%',
 				lineHeight: 2,
@@ -126,7 +126,7 @@ export function NormalCell({
 			onMouseDown={onMouseDown}
 			onMouseEnter={onMouseEnter}
 		>
-			{cellValue || (column.type === 'Number' && '\u2022')}
+			{cellValue || (column.type === NUMBER && '\u2022')}
 		</div>
 	);
 }
