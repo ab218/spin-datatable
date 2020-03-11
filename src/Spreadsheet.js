@@ -17,8 +17,8 @@ import BarChartModal from './ModalBarChart';
 import {
 	Column,
 	Table,
-	// AutoSizer,
-	WindowScroller,
+	AutoSizer,
+	// WindowScroller,
 } from 'react-virtualized';
 import {
 	ACTIVATE_CELL,
@@ -366,10 +366,9 @@ function Spreadsheet({ eventBus }) {
 			{analysisModalOpen && <AnalysisModal />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
-				<div style={{ display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>
+				<div style={{ display: 'flex', height: '100%' }} onMouseUp={finishCurrentSelectionRange}>
 					<Sidebar />
-					<WindowScroller>
-						{/* <AutoSizer> */}
+						<AutoSizer>
 						{({ height }) => (
 							<Table
 								overscanRowCount={0}
@@ -398,8 +397,7 @@ function Spreadsheet({ eventBus }) {
 								{renderColumns(visibleColumns)}
 							</Table>
 						)}
-						{/* </AutoSizer> */}
-					</WindowScroller>
+						</AutoSizer>
 				</div>
 			)}
 		</div>
