@@ -11,7 +11,10 @@ export default class ActiveCell extends Component {
 	componentWillUnmount() {
 		const { columnIndex, rowIndex, updateCell } = this.props;
 		const { currentValue } = this.state;
-		updateCell(currentValue, rowIndex, columnIndex);
+		// Don't update blank cell if nothing was changed
+		if (currentValue || this.props.value) {
+			updateCell(currentValue, rowIndex, columnIndex);
+		}
 	}
 
 	render() {
@@ -23,7 +26,7 @@ export default class ActiveCell extends Component {
 					onFocus={(e) => e.target.select()}
 					type="text"
 					style={{
-						textAlign: column.type === STRING ? 'left' : 'right',
+						textAlign: column && column.type === STRING ? 'left' : 'right',
 						height: '100%',
 						width: '100%',
 					}}

@@ -882,6 +882,16 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution' },
 	];
 
+	const startingColumn = [
+		{
+			id: '_abc1_',
+			modelingType: CONTINUOUS,
+			type: NUMBER,
+			units: '',
+			label: 'Column 1',
+		},
+	];
+
 	const potatoLiverData = `35	3	1.0606060606	Liver
     32	5.9	5.4237288136	Liver
     36	4.9	7.3469387755	Liver
@@ -927,7 +937,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		cellSelectionRanges: [],
 		columnTypeModalOpen: false,
 		colHeaderContext: false,
-		columns: statsColumns,
+		columns: startingColumn,
 		colName: null,
 		contextMenuOpen: false,
 		contextMenuPosition: null,
@@ -945,7 +955,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		layout: true,
 		mappedColumns: {},
 		modalError: false,
-		rows: createRows(potatoLiverData),
+		rows: [],
 		selectedColumns: [],
 		selectedText: false,
 		selectDisabled: false,
