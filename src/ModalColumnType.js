@@ -35,12 +35,26 @@ export default function AntModal({ selectedColumn }) {
 		dispatchSpreadsheetAction({ type: SET_MODAL_ERROR, modalError });
 	}
 
+	function checkIfValidFormula(formula, columns) {
+		if (!formula) return undefined;
+		let formulaWithIDs = '';
+		columns.forEach((col) => {
+			if (formula.includes(col.label)) {
+				formulaWithIDs = formulaWithIDs
+					? formulaWithIDs.split(col.label).join(' ')
+					: formula.split(col.label).join(' ');
+			}
+		});
+		const containsLetters = (input) => /[A-Za-z]/.test(input);
+		return containsLetters(formulaWithIDs || formula);
+	}
+
 	function swapLabelsWithIDs(formula, columns) {
 		if (!formula) return undefined;
 		let formulaWithIDs = '';
 		const IDsSet = new Set();
 		columns.forEach((col) => {
-			if (formulaWithIDs.includes(col.label) || formula.includes(col.label)) {
+			if (formula.includes(col.label)) {
 				IDsSet.add(col.id);
 				formulaWithIDs = formulaWithIDs
 					? formulaWithIDs.split(col.label).join(col.id)
@@ -54,7 +68,7 @@ export default function AntModal({ selectedColumn }) {
 		if (!formula) return undefined;
 		let formulaWithLabels = '';
 		columns.forEach((col) => {
-			if (formulaWithLabels.includes(col.id) || formula.includes(col.id)) {
+			if (formula.includes(col.id)) {
 				formulaWithLabels = formulaWithLabels
 					? formulaWithLabels.split(col.id).join(col.label)
 					: formula.split(col.id).join(col.label);
@@ -112,11 +126,15 @@ export default function AntModal({ selectedColumn }) {
 			function renderFormula(formula) {
 				const symExp = document.getElementById('symbolic-expression');
 				try {
-					const nerd = nerdamer.convertToLaTeX(formula);
-					katex.render(nerd, symExp, {
+					const nerdLatex = nerdamer.convertToLaTeX(formula);
+					katex.render(nerdLatex, symExp, {
 						throwOnError: false,
 					});
+					nerdamer(formula);
 					setFormulaError(false);
+					if (checkIfValidFormula(columnFormula, columns)) {
+						setFormulaError(true);
+					}
 					return;
 				} catch (e) {
 					console.log('FORMULA ERROR: ', e);
@@ -127,7 +145,7 @@ export default function AntModal({ selectedColumn }) {
 				renderFormula(formatInput(columnFormula));
 			}
 		},
-		[ columnFormula, columnType, loaded ],
+		[ columnFormula, columnType, columns, loaded ],
 	);
 
 	function validateColumnName(columnName) {
@@ -222,6 +240,7 @@ export default function AntModal({ selectedColumn }) {
 								<FormulaButtons addTextToInput={addTextToInput} addBracketsToInput={addBracketsToInput} />
 								<div style={{ display: 'flex' }}>
 									<SelectColumn
+										errorMessage={'There must at least two columns'}
 										styleProps={{ width: 200 }}
 										columns={columns.filter((column) => column.id !== selectedColumn.id)}
 										setSelectedColumn={setSelectedFormulaVariable}

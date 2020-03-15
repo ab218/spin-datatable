@@ -56,15 +56,29 @@ function updateRow(row, columnID, columns, dependencyMap) {
 		const updatedRow = dependencyList.reduce((rowSoFar, columnID) => {
 			const columnIndex = columnIDtoIndexMap[columnID];
 			const columnFormula = columns[columnIndex].formula.expression;
+			const updatedFormula = swapIDsForValuesInRow(columnFormula, rowSoFar, columns);
+			const containsLetters = (input) => /[A-Za-z]/.test(input);
+			if (updatedFormula === 'REFERROR') {
+				return {
+					...rowSoFar,
+					[columnID]: { error: '#REF', errorMessage: 'Variable referenced in formula is invalid' },
+				};
+			}
+			if (containsLetters(updatedFormula)) {
+				return {
+					...rowSoFar,
+					[columnID]: { error: '#FORMERR', errorMessage: 'There is a problem with the formula' },
+				};
+			}
 			return {
 				...rowSoFar,
-				[columnID]: nerdamer(swapIDsForValuesInRow(columnFormula, rowSoFar)).text('decimals'),
+				[columnID]: nerdamer(updatedFormula).text('decimals'),
 			};
 		}, row);
 		return updatedRow;
 	} catch (e) {
 		console.log('could not create row', e);
-		return { ...row };
+		return { ...row, [columnID]: { error: e.name, errorMessage: e.message } };
 	}
 }
 
@@ -100,13 +114,19 @@ function findCyclicDependencies(definitions, identifier) {
 	return internalSearch(identifier) ? stack.concat(identifier) : [];
 }
 
-function swapIDsForValuesInRow(oldExpression, row) {
+function swapIDsForValuesInRow(oldExpression, row, columns) {
 	let newExpression = '';
 	Object.keys(row).forEach((rowKey) => {
+		// console.log(oldExpression, rowKey);
 		if (newExpression.includes(rowKey) || oldExpression.includes(rowKey)) {
 			newExpression = newExpression
 				? newExpression.split(rowKey).join(row[rowKey])
 				: oldExpression.split(rowKey).join(row[rowKey]);
+		}
+	});
+	columns.forEach((col) => {
+		if (newExpression.includes(col.id)) {
+			newExpression = 'REFERROR';
 		}
 	});
 	return newExpression || oldExpression;
@@ -454,10 +474,24 @@ function spreadsheetReducer(state, action) {
 					state.rows,
 				);
 				return rows.map((row) => {
-					if (selectedRowIDs.includes(row.id)) {
-						return selectedColumnIDs.reduce(removeKeyReducer, row);
+					let rowCopy = { ...row };
+					if (selectedRowIDs.includes(rowCopy.id)) {
+						const rowWithKeysRemoved = selectedColumnIDs.reduce(removeKeyReducer, rowCopy);
+						return selectedColumnIDs.reduce((newRow, colID) => {
+							if (Array.isArray(state.inverseDependencyMap[colID])) {
+								for (const dependencyColumnID of state.inverseDependencyMap[colID]) {
+									return (rowCopy = updateRow(
+										rowWithKeysRemoved,
+										dependencyColumnID,
+										state.columns,
+										state.inverseDependencyMap,
+									));
+								}
+							}
+							return newRow;
+						}, rowWithKeysRemoved);
 					} else {
-						return row;
+						return rowCopy;
 					}
 				});
 			}, state.rows);

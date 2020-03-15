@@ -37,7 +37,6 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 					range
 					value={[ min, max ]}
 					onChange={onChange}
-					step={(Math.ceil(colMax) / 1000).toFixed(2)}
 					onAfterChange={onAfterChange}
 				/>
 			</Col>

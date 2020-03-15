@@ -14,7 +14,6 @@ export function SelectedCell({
 	column,
 	columnIndex,
 	columnID,
-	columnType,
 	handleContextMenu,
 	modifyCellSelectionRange,
 	rowIndex,
@@ -38,6 +37,28 @@ export function SelectedCell({
 		if (typeof event.buttons === 'number' && event.buttons > 0) {
 			modifyCellSelectionRange(rowIndex, columnIndex, true);
 		}
+	}
+
+	if (typeof cellValue === 'object') {
+		return (
+			<div
+				key={`row${rowIndex}col${columnIndex}`}
+				style={{
+					textAlign: column.type === STRING ? 'left' : 'right',
+					width: '100%',
+					height: '100%',
+					backgroundColor: '#C0C0C0',
+					userSelect: 'none',
+					lineHeight: 2,
+					padding: '0 5px',
+				}}
+				onContextMenu={handleContextMenu}
+				onMouseEnter={onMouseEnter}
+				onMouseDown={onMouseDown}
+			>
+				{cellValue.error}
+			</div>
+		);
 	}
 
 	return (
@@ -88,6 +109,30 @@ export function NormalCell({
 		if (typeof event.buttons === 'number' && event.buttons > 0) {
 			modifyCellSelectionRange(rowIndex, columnIndex, true);
 		}
+	}
+
+	if (typeof cellValue === 'object') {
+		return (
+			<Tooltip title={cellValue.errorMessage}>
+				<div
+					key={`row${rowIndex}col${columnIndex}`}
+					onMouseDown={onMouseDown}
+					onMouseEnter={onMouseEnter}
+					style={{
+						textAlign: column.type === STRING ? 'left' : 'right',
+						backgroundColor: 'pink',
+						height: '100%',
+						width: '100%',
+						lineHeight: 2,
+						padding: '0 5px',
+						overflow: 'hidden',
+						userSelect: 'none',
+					}}
+				>
+					{cellValue.error}
+				</div>
+			</Tooltip>
+		);
 	}
 
 	// this will need fixing

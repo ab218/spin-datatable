@@ -91,7 +91,7 @@ function removeColumnFromList(setCol, column) {
 	setCol((prevState) => prevState.filter((col) => col !== column));
 }
 
-export function SelectColumn({ columns, groupingColData, setSelectedColumn, styleProps, title }) {
+export function SelectColumn({ columns, groupingColData, setSelectedColumn, styleProps, title, errorMessage }) {
 	const { cardWithBorder, radioButton, radioGroup } = styles;
 	return (
 		<div>
@@ -118,7 +118,11 @@ export function SelectColumn({ columns, groupingColData, setSelectedColumn, styl
 						})
 					) : (
 						<div style={{ color: 'red' }}>
-							There must be at least one column with at least three valid data points to run this type of analysis.
+							{errorMessage ? (
+								errorMessage
+							) : (
+								'There must be at least one column with at least three valid data points to run this type of analysis.'
+							)}
 						</div>
 					)}
 				</Radio.Group>
