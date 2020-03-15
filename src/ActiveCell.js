@@ -4,8 +4,9 @@ export default class ActiveCell extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			currentValue: this.props.value,
+			currentValue: '',
 		};
+		this.input = React.createRef();
 	}
 
 	componentWillUnmount() {
@@ -13,7 +14,7 @@ export default class ActiveCell extends Component {
 		const { currentValue } = this.state;
 		// Don't update blank cell if nothing was changed
 		if (currentValue || this.props.value) {
-			updateCell(currentValue, rowIndex, columnIndex);
+			updateCell(this.input.current.value, rowIndex, columnIndex);
 		}
 	}
 
@@ -24,13 +25,14 @@ export default class ActiveCell extends Component {
 				<input
 					autoFocus
 					onFocus={(e) => e.target.select()}
+					defaultValue={this.props.value}
 					type="text"
 					style={{
 						textAlign: column && column.type === STRING ? 'left' : 'right',
 						height: '100%',
 						width: '100%',
 					}}
-					value={this.state.currentValue}
+					ref={this.input}
 					onChange={(e) => {
 						e.preventDefault();
 						if (rowIndex + 1 > rows.length) {
