@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Input, Slider, Row, Col } from 'antd';
+import React, { useState } from 'react';
+import { InputNumber, Slider, Row, Col } from 'antd';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER } from './constants';
 
@@ -7,7 +7,6 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
-	const refContainer = useRef([ currentMin || colMin, currentMax || colMax ]);
 
 	const onChange = (value) => {
 		setMin(value[0]);
@@ -15,7 +14,10 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 	};
 
 	const onAfterChange = () => {
-		console.log(refContainer);
+		updateSelectedRows();
+	};
+
+	function updateSelectedRows() {
 		const newCopy = selectedColumns.slice();
 		const index = newCopy.findIndex((col) => col.id === columnID);
 		newCopy[index] = { ...selectedColumns[index], min, max };
@@ -25,7 +27,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 			numberFilters: newCopy.filter((col) => col.type === NUMBER),
 		});
 		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
-	};
+	}
 
 	function findGCD(x, y) {
 		if (typeof x !== 'number' || typeof y !== 'number') return false;
@@ -39,16 +41,46 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		return x;
 	}
 
+	function handleInputChange(value, setState) {
+		if (isNaN(value)) return;
+		setState(value);
+	}
+
 	return (
-		<Row style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+		<Row style={{ maxWidth: 400, display: 'flex', justifyContent: 'center', marginTop: 10 }}>
 			<Col style={{ textAlign: 'center', width: 300 }} span={12}>
-				<span style={{ display: 'flex', alignSelf: 'center', fontSize: '1.1em', width: '100%', textAlign: 'center' }}>
-					<Input style={{ maxWidth: 80 }} defaultValue={min.toFixed(2)} />
+				<span
+					style={{
+						display: 'flex',
+						alignSelf: 'center',
+						fontSize: '1.1em',
+						width: '100%',
+						textAlign: 'center',
+						justifyContent: 'space-evenly',
+						alignItems: 'center',
+					}}
+				>
+					<InputNumber
+						onChange={(value) => handleInputChange(value, setMin)}
+						style={{ maxWidth: 60 }}
+						min={colMin}
+						max={colMax}
+						value={min}
+						onPressEnter={updateSelectedRows}
+						onBlur={updateSelectedRows}
+					/>
 					{`≤ ${label} ≤`}
-					<Input style={{ maxWidth: 80 }} defaultValue={max.toFixed(2)} />
+					<InputNumber
+						onChange={(value) => handleInputChange(value, setMax)}
+						style={{ maxWidth: 60 }}
+						min={colMin}
+						max={colMax}
+						value={max}
+						onBlur={updateSelectedRows}
+						onPressEnter={updateSelectedRows}
+					/>
 				</span>
 				<Slider
-					ref={refContainer}
 					min={colMin}
 					max={colMax}
 					step={findGCD(colMin, colMax) / 1000}
