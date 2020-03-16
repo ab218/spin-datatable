@@ -13,10 +13,6 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		setMax(value[1]);
 	};
 
-	const onAfterChange = () => {
-		updateSelectedRows();
-	};
-
 	function updateSelectedRows() {
 		const newCopy = selectedColumns.slice();
 		const index = newCopy.findIndex((col) => col.id === columnID);
@@ -87,7 +83,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 					range
 					value={[ min, max ]}
 					onChange={onChange}
-					onAfterChange={onAfterChange}
+					onAfterChange={updateSelectedRows}
 				/>
 			</Col>
 		</Row>
