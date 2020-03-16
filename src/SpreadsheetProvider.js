@@ -58,6 +58,7 @@ function updateRow(row, columnID, columns, dependencyMap) {
 			const columnFormula = columns[columnIndex].formula.expression;
 			const updatedFormula = swapIDsForValuesInRow(columnFormula, rowSoFar, columns);
 			const containsLetters = (input) => /[A-Za-z]/.test(input);
+			console.log(updatedFormula);
 			if (updatedFormula === 'REFERROR') {
 				return {
 					...rowSoFar,
@@ -357,14 +358,15 @@ function spreadsheetReducer(state, action) {
 			return { ...state };
 		}
 		case CREATE_COLUMNS: {
+			let columnCounter = state.columnCounter || state.columns.length;
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
-				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${state.columns.length + i + 1}` };
+				columnCounter++;
+				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${columnCounter}` };
 			});
 			const columns = state.columns.concat(newColumns);
-			return { ...state, columns };
+			return { ...state, columns, columnCounter };
 		}
-
 		case CREATE_ROWS: {
 			const newRows = Array(rowCount).fill(undefined).map((_) => {
 				return { id: createRandomID() };
@@ -373,13 +375,27 @@ function spreadsheetReducer(state, action) {
 		}
 		case DELETE_COLUMN: {
 			const { rows } = state;
-			const columnID = getCol(colName).id;
+			const column = getCol(colName);
+			const columnID = column.id;
 			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
-			for (let i = 0; i < rows.length; i++) {
-				delete rows[i][columnID];
-			}
+
+			const newRows = rows.reduce((acc, currentRow) => {
+				const { [columnID]: value, ...rest } = currentRow;
+				return [ ...acc, rest ];
+			}, []);
+
+			const updatedFormulaRows = newRows.map((row) => {
+				let rowCopy = { ...row };
+				if (Array.isArray(state.inverseDependencyMap[columnID])) {
+					for (const dependencyColumnID of state.inverseDependencyMap[columnID]) {
+						rowCopy = updateRow(rowCopy, dependencyColumnID, state.columns, state.inverseDependencyMap);
+					}
+				}
+				return rowCopy;
+			});
 			return {
 				...state,
+				rows: updatedFormulaRows,
 				columns: filteredColumns,
 				currentCellSelectionRange: null,
 				cellSelectionRanges: [],
@@ -388,7 +404,6 @@ function spreadsheetReducer(state, action) {
 			};
 		}
 		case DELETE_ROWS: {
-			// const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
 			const filteredRows = state.rows.filter((row) => !state.uniqueRowIDs.includes(row.id));
 			return {
 				...state,
@@ -969,6 +984,8 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		analysisWindowOpen: false,
 		barChartModalOpen: false,
 		cellSelectionRanges: [],
+		// First column created will be "Column 2"
+		columnCounter: 1,
 		columnTypeModalOpen: false,
 		colHeaderContext: false,
 		columns: startingColumn,
