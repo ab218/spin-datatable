@@ -11,7 +11,7 @@ import {
 	TOGGLE_COLUMN_TYPE_MODAL,
 } from './constants';
 
-export default function HeaderRenderer({ dataKey, label, columnIndex, createNewColumns, resizeColumn }) {
+export default function HeaderRenderer({ dataKey, label, units, columnIndex, createNewColumns, resizeColumn }) {
 	const { columns, contextMenuOpen, uniqueColumnIDs } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	function openModal(e) {
@@ -74,6 +74,7 @@ export default function HeaderRenderer({ dataKey, label, columnIndex, createNewC
 				}}
 			>
 				{label}
+				{units ? ` (${units})` : ''}
 			</div>
 			<Draggable
 				axis="x"

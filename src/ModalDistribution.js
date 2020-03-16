@@ -102,7 +102,7 @@ export default function DistributionModal() {
 				bodyStyle={{ background: '#ECECEC' }}
 			>
 				<div style={{ ...styles.flexSpaced }}>
-					<SelectColumn columns={filteredColumns} setSelectedColumn={setYColData} />
+					<SelectColumn title={'Select Column'} columns={filteredColumns} setSelectedColumn={setYColData} />
 					<div style={{ display: 'flex' }}>
 						<div style={{ width: 100 }}>Number of Bins</div>
 						<Input

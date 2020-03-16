@@ -4,9 +4,11 @@ window.opener.postMessage('ready', '*');
 const container = document.getElementById('container');
 function receiveMessage(event) {
 	console.log('TARGET', event);
-	const { colB, colYLabel, kurtosis, skew, numberOfBins } = event.data;
+	const { vals, colObj, kurtosis, skew, numberOfBins } = event.data;
 
-	const titleText = document.createTextNode(`Distribution of ${colYLabel}`);
+	const titleText = document.createTextNode(
+		`Distribution of ${colObj.label} ${colObj.units ? '(' + colObj.units + ')' : ''}`,
+	);
 	const titleEl = document.createElement('div');
 	titleEl.classList.add('analysis-title');
 	titleEl.appendChild(titleText);
@@ -33,7 +35,7 @@ function receiveMessage(event) {
 	const boxSvg = makeSvg('boxplotVis', 100);
 
 	// Compute summary statistics used for the box:
-	const boxDataSorted = colB.sort(d3.ascending);
+	const boxDataSorted = vals.sort(d3.ascending);
 	const q1 = d3.quantile(boxDataSorted, 0.25);
 	const median = d3.quantile(boxDataSorted, 0.5);
 	const q3 = d3.quantile(boxDataSorted, 0.75);
@@ -216,7 +218,7 @@ function receiveMessage(event) {
                 </tr>
                 <tr>
                   <td>Std Dev:</td>
-                  <td>${d3.deviation(colB).toFixed(6) / 1}</td>
+                  <td>${d3.deviation(vals).toFixed(6) / 1}</td>
                 </tr>
                 <tr>
                   <td>Count:</td>

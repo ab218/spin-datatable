@@ -13,6 +13,7 @@ export default function CellRenderer({
 	cellData,
 	column,
 	columnID,
+	columnType,
 	createNewColumns,
 	createNewRows,
 	changeActiveCell,
@@ -26,6 +27,7 @@ export default function CellRenderer({
 		currentCellSelectionRange,
 		columns,
 		contextMenuOpen,
+		newInputCellValue,
 		rows,
 	} = useSpreadsheetState();
 
@@ -63,7 +65,7 @@ export default function CellRenderer({
 				createNewRows={createNewRows}
 				rowIndex={rowIndex}
 				rows={rows}
-				value={cellData}
+				value={newInputCellValue || cellData}
 			/>
 		);
 	} else if (isSelectedCell(rowIndex, columnIndex)) {

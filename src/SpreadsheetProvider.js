@@ -1,5 +1,5 @@
 import React, { useReducer } from 'react';
-import { Parser } from 'hot-formula-parser';
+import nerdamer from 'nerdamer';
 import './App.css';
 import {
 	ACTIVATE_CELL,
@@ -15,6 +15,7 @@ import {
 	EXCLUDE_ROWS,
 	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	OPEN_CONTEXT_MENU,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
 	SET_SELECTED_COLUMN,
@@ -25,7 +26,7 @@ import {
 	SELECT_COLUMN,
 	SET_FILTERS,
 	SORT_COLUMN,
-	OPEN_CONTEXT_MENU,
+	SET_MODAL_ERROR,
 	TOGGLE_ANALYSIS_MODAL,
 	TOGGLE_BAR_CHART_MODAL,
 	TOGGLE_COLUMN_TYPE_MODAL,
@@ -36,7 +37,101 @@ import {
 	UNEXCLUDE_ROWS,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
+	CONTINUOUS,
+	// NOMINAL,
+	// STRING,
+	FORMULA,
+	NUMBER,
 } from './constants';
+
+function updateRow(row, columnID, columns, dependencyMap) {
+	const columnIDtoIndexMap = columns.reduce((acc, { id }, index) => {
+		return { ...acc, [id]: index };
+	}, {});
+	const getDependentColumns = (column) => {
+		return column ? [ column ].concat((dependencyMap[column] || []).map(getDependentColumns)) : [];
+	};
+	const dependencyList = [ columnID ].map(getDependentColumns).flat(Infinity);
+	try {
+		const updatedRow = dependencyList.reduce((rowSoFar, columnID) => {
+			const columnIndex = columnIDtoIndexMap[columnID];
+			const columnFormula = columns[columnIndex].formula.expression;
+			const updatedFormula = swapIDsForValuesInRow(columnFormula, rowSoFar, columns);
+			const containsLetters = (input) => /[A-Za-z]/.test(input);
+			console.log(updatedFormula);
+			if (updatedFormula === 'REFERROR') {
+				return {
+					...rowSoFar,
+					[columnID]: { error: '#REF', errorMessage: 'Variable referenced in formula is invalid' },
+				};
+			}
+			if (containsLetters(updatedFormula)) {
+				return {
+					...rowSoFar,
+					[columnID]: { error: '#FORMERR', errorMessage: 'There is a problem with the formula' },
+				};
+			}
+			return {
+				...rowSoFar,
+				[columnID]: nerdamer(updatedFormula).text('decimals'),
+			};
+		}, row);
+		return updatedRow;
+	} catch (e) {
+		console.log('could not create row', e);
+		return { ...row, [columnID]: { error: e.name, errorMessage: e.message } };
+	}
+}
+
+function updateRows(rows, columnID, columns, dependencyMap) {
+	return rows
+		.map((row) => {
+			return updateRow(row, columnID, columns, dependencyMap);
+		})
+		.filter((x) => x);
+}
+
+function findCyclicDependencies(definitions, identifier) {
+	const stack = [];
+
+	// Internal search function.
+	const internalSearch = function(currentIdentifier) {
+		if (stack.indexOf(currentIdentifier) !== -1) {
+			return currentIdentifier === identifier;
+		}
+		stack.push(currentIdentifier);
+
+		// Check all of the child nodes to see if they contain the node we are looking for.
+		const found = definitions[currentIdentifier] && definitions[currentIdentifier].some(internalSearch);
+
+		// Remove the current node from the stack if it's children do not contain the node we are looking for.
+		if (!found) {
+			stack.splice(stack.indexOf(currentIdentifier), 1);
+		}
+		return found;
+	};
+
+	// If there isn't a cyclic dependency then we return an empty array, otherwise we return the stack.
+	return internalSearch(identifier) ? stack.concat(identifier) : [];
+}
+
+function swapIDsForValuesInRow(oldExpression, row, columns) {
+	let newExpression = '';
+	Object.keys(row).forEach((rowKey) => {
+		// console.log(oldExpression, rowKey);
+		if (newExpression.includes(rowKey) || oldExpression.includes(rowKey)) {
+			newExpression = newExpression
+				? newExpression.split(rowKey).join(row[rowKey])
+				: oldExpression.split(rowKey).join(row[rowKey]);
+		}
+	});
+	columns.forEach((col) => {
+		if (newExpression.includes(col.id)) {
+			newExpression = 'REFERROR';
+		}
+	});
+	return newExpression || oldExpression;
+}
 
 function generateUniqueRowIDs(cellSelectionRanges, rows) {
 	const range = (start, end) => Array(end - start + 1).fill().map((_, i) => start + i);
@@ -87,12 +182,6 @@ function returnIntersectionOrNonEmptyArray(arr1, arr2) {
 	} else if (arr2.length === 0) {
 		return arr1;
 	}
-}
-
-function translateLabelToID(columns, formula) {
-	return columns.filter((someColumn) => formula.includes(someColumn.label)).reduce((changedFormula, someColumn) => {
-		return changedFormula.replace(new RegExp(`\\b${someColumn.label}\\b`, 'g'), `${someColumn.id}`);
-	}, formula);
 }
 
 const SpreadsheetStateContext = React.createContext();
@@ -153,6 +242,7 @@ function spreadsheetReducer(state, action) {
 		columnIndex,
 		columnTypeModalOpen,
 		copiedValues2dArray,
+		newInputCellValue,
 		descending,
 		distributionModalOpen,
 		endRangeRow,
@@ -160,6 +250,7 @@ function spreadsheetReducer(state, action) {
 		filters,
 		filterModalOpen,
 		layout,
+		modalError,
 		numberFilters,
 		row,
 		rowCount,
@@ -187,7 +278,15 @@ function spreadsheetReducer(state, action) {
 		// EVENT: Activate a cell
 		case ACTIVATE_CELL: {
 			const activeCell = { row, column, columnID };
-			return { ...state, activeCell, cellSelectionRanges: [], uniqueRowIDs: [], uniqueColumnIDs: [], selectedText };
+			return {
+				...state,
+				activeCell,
+				cellSelectionRanges: [],
+				newInputCellValue,
+				uniqueRowIDs: [],
+				uniqueColumnIDs: [],
+				selectedText,
+			};
 		}
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
@@ -259,14 +358,15 @@ function spreadsheetReducer(state, action) {
 			return { ...state };
 		}
 		case CREATE_COLUMNS: {
+			let columnCounter = state.columnCounter || state.columns.length;
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
-				return { id, modelingType: 'Continuous', type: 'String', label: `Column ${state.columns.length + i + 1}` };
+				columnCounter++;
+				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${columnCounter}` };
 			});
 			const columns = state.columns.concat(newColumns);
-			return { ...state, columns };
+			return { ...state, columns, columnCounter };
 		}
-
 		case CREATE_ROWS: {
 			const newRows = Array(rowCount).fill(undefined).map((_) => {
 				return { id: createRandomID() };
@@ -275,13 +375,27 @@ function spreadsheetReducer(state, action) {
 		}
 		case DELETE_COLUMN: {
 			const { rows } = state;
-			const columnID = getCol(colName).id;
+			const column = getCol(colName);
+			const columnID = column.id;
 			const filteredColumns = state.columns.filter((col) => col.id !== columnID);
-			for (let i = 0; i < rows.length; i++) {
-				delete rows[i][columnID];
-			}
+
+			const newRows = rows.reduce((acc, currentRow) => {
+				const { [columnID]: value, ...rest } = currentRow;
+				return [ ...acc, rest ];
+			}, []);
+
+			const updatedFormulaRows = newRows.map((row) => {
+				let rowCopy = { ...row };
+				if (Array.isArray(state.inverseDependencyMap[columnID])) {
+					for (const dependencyColumnID of state.inverseDependencyMap[columnID]) {
+						rowCopy = updateRow(rowCopy, dependencyColumnID, state.columns, state.inverseDependencyMap);
+					}
+				}
+				return rowCopy;
+			});
 			return {
 				...state,
+				rows: updatedFormulaRows,
 				columns: filteredColumns,
 				currentCellSelectionRange: null,
 				cellSelectionRanges: [],
@@ -290,7 +404,6 @@ function spreadsheetReducer(state, action) {
 			};
 		}
 		case DELETE_ROWS: {
-			// const slicedRows = state.rows.slice(0, rowIndex).concat(state.rows.slice(rowIndex + 1));
 			const filteredRows = state.rows.filter((row) => !state.uniqueRowIDs.includes(row.id));
 			return {
 				...state,
@@ -376,10 +489,24 @@ function spreadsheetReducer(state, action) {
 					state.rows,
 				);
 				return rows.map((row) => {
-					if (selectedRowIDs.includes(row.id)) {
-						return selectedColumnIDs.reduce(removeKeyReducer, row);
+					let rowCopy = { ...row };
+					if (selectedRowIDs.includes(rowCopy.id)) {
+						const rowWithKeysRemoved = selectedColumnIDs.reduce(removeKeyReducer, rowCopy);
+						return selectedColumnIDs.reduce((newRow, colID) => {
+							if (Array.isArray(state.inverseDependencyMap[colID])) {
+								for (const dependencyColumnID of state.inverseDependencyMap[colID]) {
+									return (rowCopy = updateRow(
+										rowWithKeysRemoved,
+										dependencyColumnID,
+										state.columns,
+										state.inverseDependencyMap,
+									));
+								}
+							}
+							return newRow;
+						}, rowWithKeysRemoved);
 					} else {
-						return row;
+						return rowCopy;
 					}
 				});
 			}, state.rows);
@@ -405,21 +532,6 @@ function spreadsheetReducer(state, action) {
 					}
 				: state;
 		}
-		// case MODIFY_CURRENT_SELECTION_ROW_RANGE: {
-		// 	const { lastSelection } = state;
-		// 	// Note: In this case I am checking the cellSelectionRanges directly instead of currentCellSelectionRange
-		// 	return state.currentCellSelectionRange
-		// 		? {
-		// 				...state,
-		// 				currentCellSelectionRange: getRangeBoundaries({
-		// 					startRangeRow: lastSelection.row,
-		// 					endRangeRow,
-		// 					startRangeColumn: 1,
-		// 					endRangeColumn: state.columns.length,
-		// 				}),
-		// 			}
-		// 		: state;
-		// }
 		case REMOVE_SELECTED_CELLS: {
 			return {
 				...state,
@@ -442,17 +554,6 @@ function spreadsheetReducer(state, action) {
 				? !state.uniqueRowIDs.includes(rowID) ? state.uniqueRowIDs.concat(rowID) : state.uniqueRowIDs
 				: [ rowID ];
 			const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(columnID) : [ columnID ];
-			// const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(columnID) : [ columnID ];
-			// const totalCellSelectionRanges = selectionActive
-			// 	? state.cellSelectionRanges.concat(selectedCell)
-			// 	: [ selectedCell ];
-			// const uniqueRowIDs = [ ...new Set(generateUniqueRowIDs(totalCellSelectionRanges, state.rows)) ];
-			// AB: This kind of feels like unnecessary work to me
-			// const addSelectedCellToSelectionArray = cellSelectionRanges.concat(
-			// 	cellSelectionRanges.some((cell) => cell.top === selectedCell.top && cell.right === selectedCell.right)
-			// 		? []
-			// 		: selectedCell,
-			// );
 			return {
 				...state,
 				activeCell: null,
@@ -633,6 +734,7 @@ function spreadsheetReducer(state, action) {
 				selectedColumn: colName ? getCol(colName) : column,
 				cellSelectionRanges: [],
 				currentCellSelectionRange: [],
+				modalError: null,
 			};
 		}
 		// EVENT: Distribution Modal opened/closed
@@ -681,26 +783,14 @@ function spreadsheetReducer(state, action) {
 			const row = rows[rowIndex] || rows[rows.length - 1];
 			const newRows = rows.slice();
 			const { id: columnID } = column || columns[columns.length - 1];
-			let rowCopy = Object.assign({}, row, { [columnID]: cellValue });
-
-			const dependentColumns = columns.filter(({ type, formula }) => {
-				return type === 'Formula' && formula.includes(columnID);
-			});
-			// If formula present
-			if (dependentColumns.length) {
-				const formulaParser = new Parser();
-				formulaParser.on('callVariable', function(name, done) {
-					const selectedColumn = columns.find((column) => column.id === name);
-					if (selectedColumn) {
-						done(rowCopy[selectedColumn.id]);
-					}
-				});
-				rowCopy = dependentColumns.reduce((acc, column) => {
-					return { ...acc, [column.id]: formulaParser.parse(column.formula).result };
-				}, rowCopy);
+			let rowCopy = { ...row, [columnID]: cellValue };
+			if (Array.isArray(state.inverseDependencyMap[columnID])) {
+				for (const dependencyColumnID of state.inverseDependencyMap[columnID]) {
+					rowCopy = updateRow(rowCopy, dependencyColumnID, state.columns, state.inverseDependencyMap);
+				}
 			}
 
-			const changedRows = newRows.map((newRow) => (newRow.id !== rowCopy.id ? newRow : rowCopy));
+			const changedRows = Object.assign(newRows, { [rowIndex]: rowCopy });
 			return { ...state, rows: changedRows };
 		}
 
@@ -746,46 +836,63 @@ function spreadsheetReducer(state, action) {
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
+		case SET_MODAL_ERROR: {
+			return { ...state, modalError };
+		}
 		case UPDATE_COLUMN: {
-			// TODO: Make it so a formula cannot refer to itself. Detect formula cycles. Use a stack?
-			const columnHasFormula = updatedColumn.formula && updatedColumn.type === 'Formula';
-			const columnCopy = Object.assign(
-				{},
-				updatedColumn,
-				columnHasFormula ? { formula: translateLabelToID(state.columns, updatedColumn.formula) } : {},
-			);
+			const columnCopy = { ...updatedColumn };
 			const originalPosition = state.columns.findIndex((col) => col.id === columnCopy.id);
 			const updatedColumns = state.columns
 				.slice(0, originalPosition)
 				.concat(columnCopy)
 				.concat(state.columns.slice(originalPosition + 1));
-			let rows = state.rows;
-			if (columnHasFormula) {
-				rows = rows.map((row) => {
-					const formulaColumnsToUpdate = [ columnCopy ].concat(
-						state.columns.filter(({ type, formula }) => {
-							return type === 'Formula' && formula.includes(columnCopy.id);
-						}),
-					);
-					const formulaParser = new Parser();
-					// Not getting called
-					formulaParser.on('callVariable', function(name, done) {
-						const selectedColumn = state.columns.find((column) => column.id === name);
-						if (selectedColumn) {
-							done(row[selectedColumn.id]);
-						}
-					});
-					return formulaColumnsToUpdate.reduce((acc, column) => {
-						row = acc;
-						const {
-							result,
-							// error
-						} = formulaParser.parse(column.formula);
-						return { ...acc, [column.id]: result };
-					}, row);
+
+			if (columnCopy.formula && columnCopy.formula.expression && columnCopy.formula.expression.trim()) {
+				const formulaColumns = updatedColumns.filter(({ type }) => {
+					return type === FORMULA;
 				});
+				const inverseDependencyMap = formulaColumns.reduce((invDepMap, formulaColumn) => {
+					return (
+						formulaColumn.formula &&
+						formulaColumn.formula.IDs.reduce((acc, dependentColumnID) => {
+							return { ...acc, [dependentColumnID]: (acc[dependentColumnID] || []).concat(formulaColumn.id) };
+						}, invDepMap)
+					);
+				}, {});
+
+				const cycles = findCyclicDependencies(inverseDependencyMap, columnCopy.id);
+				if (cycles.length > 0) {
+					console.log('cycle detected. stack: ', cycles);
+					return { ...state, modalError: 'Reference Error - Infinite cycle detected' };
+				}
+
+				const updatedRows = updateRows(state.rows, columnCopy.id, updatedColumns, inverseDependencyMap);
+
+				if (updatedRows.length === 0) {
+					return {
+						...state,
+						modalError: 'Invalid formula entered',
+					};
+				}
+
+				return {
+					...state,
+					columns: updatedColumns,
+					columnTypeModalOpen: false,
+					selectedColumn: null,
+					rows: updatedRows.length > 0 ? updatedRows : state.rows,
+					modalError: null,
+					inverseDependencyMap,
+				};
 			}
-			return { ...state, columns: updatedColumns, rows };
+
+			return {
+				...state,
+				columns: updatedColumns,
+				columnTypeModalOpen: false,
+				modalError: null,
+				selectedColumn: null,
+			};
 		}
 		default: {
 			throw new Error(`Unhandled action type: ${type}`);
@@ -810,48 +917,65 @@ export function useSpreadsheetDispatch() {
 
 export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
-	const statsColumns = [
-		{ id: '_abc1_', modelingType: 'Continuous', type: 'Number', label: 'Volume displaced (ml)' },
-		{ id: '_abc2_', modelingType: 'Continuous', type: 'Number', label: 'Time (sec)' },
-		{ id: '_abc3_', modelingType: 'Continuous', type: 'Number', label: 'Rate (ml/sec)' },
-		{ id: '_abc4_', modelingType: 'Nominal', type: 'String', label: 'Catalase solution' },
+	// const statsColumns = [
+	// 	{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced' },
+	// 	{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time' },
+	// 	{
+	// 		id: '_abc3_',
+	// 		modelingType: CONTINUOUS,
+	// 		formula: { expression: '_abc1_/_abc2_', IDs: [ '_abc1_, _abc2_' ] },
+	// 		type: FORMULA,
+	// 		units: 'ml/sec',
+	// 		label: 'Rate',
+	// 	},
+	// 	{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution' },
+	// ];
+
+	const startingColumn = [
+		{
+			id: '_abc1_',
+			modelingType: CONTINUOUS,
+			type: NUMBER,
+			units: '',
+			label: 'Column 1',
+		},
 	];
 
-	const potatoLiverData = `35	3	1.0606060606	Liver
-    32	5.9	5.4237288136	Liver
-    36	4.9	7.3469387755	Liver
-    40	4	10	Liver
-    41	9	4.5555555556	Liver
-    40	7.8	5.1282051282	Liver
-    41	8.5	4.8235294118	Liver
-    23	6.5	3.5384615385	Liver
-    46	3.4	13.529411765	Liver
-    45	3.1	14.516129032	Liver
-    4	14.9	0.2684563758	Potato
-    7	26.7	0.2621722846	Potato
-    5	22.1	0.2262443439	Potato
-    6	29.6	0.2027027027	Potato
-    5	26.8	0.1865671642	Potato
-    6	32.1	0.1869158879	Potato
-    7	32.9	0.2127659574	Potato
-    6	33.4	0.1796407186	Potato
-    5	32.7	0.1529051988	Potato
-    5	31.6	0.1582278481	Potato`;
+	// const potatoLiverData = `35	3	1.0606060606	Liver
+	//   32	5.9	5.4237288136	Liver
+	//   36	4.9	7.3469387755	Liver
+	//   40	4	10	Liver
+	//   41	9	4.5555555556	Liver
+	//   40	7.8	5.1282051282	Liver
+	//   41	8.5	4.8235294118	Liver
+	//   23	6.5	3.5384615385	Liver
+	//   46	3.4	13.529411765	Liver
+	//   45	3.1	14.516129032	Liver
+	//   4	14.9	0.2684563758	Potato
+	//   7	26.7	0.2621722846	Potato
+	//   5	22.1	0.2262443439	Potato
+	//   6	29.6	0.2027027027	Potato
+	//   5	26.8	0.1865671642	Potato
+	//   6	32.1	0.1869158879	Potato
+	//   7	32.9	0.2127659574	Potato
+	//   6	33.4	0.1796407186	Potato
+	//   5	32.7	0.1529051988	Potato
+	//   5	31.6	0.1582278481	Potato`;
 
 	// quickly build rows out of copy/pasted data
-	function createRows(table) {
-		const tableRows = table.split('\n');
-		const table2d = tableRows.map((row) => row.split('\t'));
-		const rows = [];
-		for (let i = 0; i < table2d.length; i++) {
-			const obj = { id: createRandomID() };
-			for (let j = 0; j < statsColumns.length; j++) {
-				obj[statsColumns[j].id] = table2d[i][j];
-			}
-			rows.push(obj);
-		}
-		return rows;
-	}
+	// function createRows(table) {
+	// 	const tableRows = table.split('\n');
+	// 	const table2d = tableRows.map((row) => row.split('\t'));
+	// 	const rows = [];
+	// 	for (let i = 0; i < table2d.length; i++) {
+	// 		const obj = { id: createRandomID() };
+	// 		for (let j = 0; j < statsColumns.length; j++) {
+	// 			obj[statsColumns[j].id] = table2d[i][j];
+	// 		}
+	// 		rows.push(obj);
+	// 	}
+	// 	return rows;
+	// }
 
 	const initialState = {
 		eventBus,
@@ -860,9 +984,11 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		analysisWindowOpen: false,
 		barChartModalOpen: false,
 		cellSelectionRanges: [],
+		// First column created will be "Column 2"
+		columnCounter: 1,
 		columnTypeModalOpen: false,
 		colHeaderContext: false,
-		columns: statsColumns,
+		columns: startingColumn,
 		colName: null,
 		contextMenuOpen: false,
 		contextMenuPosition: null,
@@ -875,9 +1001,12 @@ export function SpreadsheetProvider({ eventBus, children }) {
 			numberFilters: [],
 		},
 		filterModalOpen: false,
+		inverseDependencyMap: {},
 		lastSelection: { row: 1, column: 1 },
 		layout: true,
-		rows: createRows(potatoLiverData),
+		mappedColumns: {},
+		modalError: false,
+		rows: [],
 		selectedColumns: [],
 		selectedText: false,
 		selectDisabled: false,

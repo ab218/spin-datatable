@@ -2,21 +2,6 @@
 	text-align: center;
 }
 
-/* table {
-	border: 1px solid #ddd;
-	border-collapse: collapse;
-	table-layout: fixed;
-	width: 100%;
-} */
-
-/* td,
-th {
-	white-space: nowrap;
-	border: 1px solid #ddd;
-	height: 30px;
-	width: 40px;
-} */
-
 /* Create a simple white box, and add the shadow for the initial state */
 .hamburger {
 	position: relative;
@@ -49,27 +34,6 @@ th {
 .non-interactive-cell:hover {
 	cursor: not-allowed;
 }
-
-/* .virtualized-cell {
-	white-space: nowrap;
-	border: 1px solid #ddd;
-	height: 30px;
-	width: 40px;
-	overflow: hidden;
-} */
-
-/* thead th {
-	background-color: #eee;
-	position: sticky;
-	top: -1px;
-	z-index: 1;
-} */
-
-/* td input {
-	width: 95%;
-	height: 95%;
-	font-size: 1em;
-} */
 
 .selected-row-number-cell {
 	background-color: rgb(160, 185, 225) !important;
@@ -118,6 +82,7 @@ th {
 }
 
 .modal-span {
+	margin-top: 10px;
 	display: flex;
 	justify-content: space-between;
 }
@@ -133,14 +98,6 @@ th {
 .display-flex {
 	display: flex;
 }
-
-/* .move-row-up {
-	transform: translateY(-30px);
-}
-
-.move-row-down {
-	transform: translateY(30px);
-} */
 
 .border-right {
 	border-right: 1px solid black;
@@ -242,4 +199,18 @@ th {
 
 .sidebar-column-selected {
 	background-color: rgb(160, 185, 225) !important;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.fade-in-animated {
+	opacity: 0;
+	animation: fadeIn 1s forwards; /* forwards (animation-fill-mode) retains the style from the last keyframe when the animation ends */
 }
