@@ -58,7 +58,6 @@ function updateRow(row, columnID, columns, dependencyMap) {
 			const columnFormula = columns[columnIndex].formula.expression;
 			const updatedFormula = swapIDsForValuesInRow(columnFormula, rowSoFar, columns);
 			const containsLetters = (input) => /[A-Za-z]/.test(input);
-			console.log(updatedFormula);
 			if (updatedFormula === 'REFERROR') {
 				return {
 					...rowSoFar,

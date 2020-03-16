@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Slider, Row, Col } from 'antd';
+import React, { useState, useRef } from 'react';
+import { Input, Slider, Row, Col } from 'antd';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER } from './constants';
 
@@ -7,6 +7,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
+	const refContainer = useRef([ currentMin || colMin, currentMax || colMax ]);
 
 	const onChange = (value) => {
 		setMin(value[0]);
@@ -14,6 +15,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 	};
 
 	const onAfterChange = () => {
+		console.log(refContainer);
 		const newCopy = selectedColumns.slice();
 		const index = newCopy.findIndex((col) => col.id === columnID);
 		newCopy[index] = { ...selectedColumns[index], min, max };
@@ -25,15 +27,31 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
 	};
 
+	function findGCD(x, y) {
+		if (typeof x !== 'number' || typeof y !== 'number') return false;
+		x = Math.abs(x);
+		y = Math.abs(y);
+		while (y) {
+			const t = y;
+			y = x % y;
+			x = t;
+		}
+		return x;
+	}
+
 	return (
 		<Row style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
 			<Col style={{ textAlign: 'center', width: 300 }} span={12}>
-				<span style={{ alignSelf: 'center', fontSize: '1.1em', minWidth: 100, textAlign: 'center' }}>
-					{`${colMin.toFixed(2)} ≤ ${label} ≤ ${colMax.toFixed(2)}`}
+				<span style={{ display: 'flex', alignSelf: 'center', fontSize: '1.1em', width: '100%', textAlign: 'center' }}>
+					<Input style={{ maxWidth: 80 }} defaultValue={min.toFixed(2)} />
+					{`≤ ${label} ≤`}
+					<Input style={{ maxWidth: 80 }} defaultValue={max.toFixed(2)} />
 				</span>
 				<Slider
-					min={Math.floor(colMin)}
-					max={Math.ceil(colMax)}
+					ref={refContainer}
+					min={colMin}
+					max={colMax}
+					step={findGCD(colMin, colMax) / 1000}
 					range
 					value={[ min, max ]}
 					onChange={onChange}

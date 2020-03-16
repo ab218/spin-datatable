@@ -19,7 +19,7 @@ import {
 
 export default function AntModal({ selectedColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { columns, columnTypeModalOpen, modalError } = useSpreadsheetState();
+	const { columns, columnTypeModalOpen, modalError, rows } = useSpreadsheetState();
 	const { formula, label, modelingType, type, units } = selectedColumn;
 	const formulaFromState = formula && formula.expression;
 	const [ columnFormula, setColumnFormula ] = useState(swapIDsWithLabels(formulaFromState, columns) || '');
@@ -234,36 +234,42 @@ export default function AntModal({ selectedColumn }) {
 				</span>
 				{columnType === FORMULA && (
 					<div>
-						<h3 style={{ textAlign: 'center', margin: 30 }}>Formula Editor</h3>
-						<div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between' }}>
-							<span style={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-end' }}>
-								<FormulaButtons addTextToInput={addTextToInput} addBracketsToInput={addBracketsToInput} />
-								<div style={{ display: 'flex' }}>
-									<SelectColumn
-										errorMessage={'There must at least two columns'}
-										styleProps={{ width: 200 }}
-										columns={columns.filter((column) => column.id !== selectedColumn.id)}
-										setSelectedColumn={setSelectedFormulaVariable}
+						{rows.length > 0 ? (
+							<div>
+								<h3 style={{ textAlign: 'center', margin: 30 }}>Formula Editor</h3>
+								<div style={{ marginTop: 10, display: 'flex', justifyContent: 'space-between' }}>
+									<span style={{ display: 'flex', flexDirection: 'column', alignSelf: 'flex-end' }}>
+										<FormulaButtons addTextToInput={addTextToInput} addBracketsToInput={addBracketsToInput} />
+										<div style={{ display: 'flex' }}>
+											<SelectColumn
+												errorMessage={'There must at least two columns and one row'}
+												styleProps={{ width: 200 }}
+												columns={columns.filter((column) => column.id !== selectedColumn.id)}
+												setSelectedColumn={setSelectedFormulaVariable}
+											/>
+											<div style={{ margin: 'auto 10px' }}>
+												<Button
+													onClick={(e) => {
+														if (selectedFormulaVariable) {
+															addTextToInput(selectedFormulaVariable.label);
+														}
+													}}
+												>
+													<Icon type="right" />
+												</Button>
+											</div>
+										</div>
+									</span>
+									<SymbolicExpressionEditor
+										formulaError={formulaError}
+										columnFormula={columnFormula}
+										setColumnFormula={setColumnFormula}
 									/>
-									<div style={{ margin: 'auto 10px' }}>
-										<Button
-											onClick={(e) => {
-												if (selectedFormulaVariable) {
-													addTextToInput(selectedFormulaVariable.label);
-												}
-											}}
-										>
-											<Icon type="right" />
-										</Button>
-									</div>
 								</div>
-							</span>
-							<SymbolicExpressionEditor
-								formulaError={formulaError}
-								columnFormula={columnFormula}
-								setColumnFormula={setColumnFormula}
-							/>
-						</div>
+							</div>
+						) : (
+							<div style={{ color: 'red' }}>There must be at least 1 row</div>
+						)}
 					</div>
 				)}
 			</Modal>
