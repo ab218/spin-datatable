@@ -918,7 +918,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
 	const statsColumns = [
 		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced' },
-		{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time' },
+		{ id: '_abc2_', modelingType: NOMINAL, type: NUMBER, units: 'sec', label: 'Time' },
 		{
 			id: '_abc3_',
 			modelingType: CONTINUOUS,

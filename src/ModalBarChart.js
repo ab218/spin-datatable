@@ -61,7 +61,7 @@ export default function AnalysisModal() {
 		const colZArr = XYZCols.map((a) => a.group);
 
 		if (colXArr.length >= 1 && colYArr.length >= 1 && colZArr.length >= 1) {
-			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols);
+			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colX.modelingType);
 			const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=1000,height=800');
 			function receiveMessage(event) {
 				// target window is ready, time to send data.

@@ -3,23 +3,23 @@ window.addEventListener('unload', unload);
 window.opener.postMessage('ready', '*');
 
 function receiveMessage(event) {
-	let linear = true;
-	const { colX, colY, colZ, coordinates, colXId, colYId, colZId } = event.data;
+	// let linear = true;
+	const { colX, colY, colZ, coordinates, colXId, colYId, colZId, colXScale } = event.data;
 	console.log('TARGET', event);
-	function onClickToggleXAxisScale(e) {
-		if (e.target.checked) {
-			linear = false;
-			d3.selectAll('svg').remove();
-			chart(coordinates, 650, 650, false);
-			uniqueGroups.forEach((group) => chart(separateGroups(coordinates, group), 400, 400, true, group));
-		} else {
-			linear = true;
-			d3.selectAll('svg').remove();
-			chart(coordinates, 650, 650, false);
-			uniqueGroups.forEach((group) => chart(separateGroups(coordinates, group), 400, 400, true, group));
-		}
-	}
-	document.getElementById('x-axis-scale').addEventListener('click', onClickToggleXAxisScale);
+	// function onClickToggleXAxisScale(e) {
+	// 	if (e.target.checked) {
+	// 		linear = false;
+	// 		d3.selectAll('svg').remove();
+	// 		chart(coordinates, 650, 650, false);
+	// 		uniqueGroups.forEach((group) => chart(separateGroups(coordinates, group), 400, 400, true, group));
+	// 	} else {
+	// 		linear = true;
+	// 		d3.selectAll('svg').remove();
+	// 		chart(coordinates, 650, 650, false);
+	// 		uniqueGroups.forEach((group) => chart(separateGroups(coordinates, group), 400, 400, true, group));
+	// 	}
+	// }
+	// document.getElementById('x-axis-scale').addEventListener('click', onClickToggleXAxisScale);
 
 	const titleEl = document.createElement('div');
 	const titleText = document.createTextNode(`${colY.label} vs ${colX.label}`);
@@ -99,23 +99,46 @@ function receiveMessage(event) {
 
 		const yAxis = (g) => g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(15, 'f'));
 
-		const x = linear
-			? d3
-					.scaleLinear()
-					.range([ 0 + margin.left, width - margin.right ])
-					.domain([
-						d3.min(data, (d) => d.x) - d3.min(data, (d) => d.x) * 0.05,
-						d3.max(data, (d) => d.x) + d3.max(data, (d) => d.x) * 0.05,
-					])
-					.nice()
-			: d3
-					.scaleBand()
-					.domain(data.sort((a, b) => a.x - b.x).map((d) => d.x))
-					.rangeRound([ margin.left, width - margin.right ])
-					.paddingInner(0.1);
+		function renameDuplicates(arr) {
+			const count = {};
+			const xArr = arr.map((d) => d.x).sort((a, b) => a - b);
+			xArr.forEach(function(x, i) {
+				if (xArr.indexOf(x) !== i) {
+					const duplicateCounter = x in count ? (count[x] = count[x] + 1) : (count[x] = 1);
+					const nextCount = duplicateCounter + 1;
+					let newXValue = x + '(' + nextCount + ')';
+
+					while (xArr.indexOf(newXValue) !== -1) newXValue = x + '(' + (nextCount + 1) + ')';
+					xArr[i] = newXValue;
+				}
+			});
+			return xArr;
+		}
+
+		const renamedDuplicatesArr = renameDuplicates(data);
+
+		const duplicatesChanged = data.reduce((acc, curr, i) => {
+			return [ ...acc, { ...curr, x: renamedDuplicatesArr[i] } ];
+		}, []);
+
+		const x =
+			colXScale === 'Continuous'
+				? d3
+						.scaleLinear()
+						.range([ 0 + margin.left, width - margin.right ])
+						.domain([
+							d3.min(data, (d) => d.x) - d3.min(data, (d) => d.x) * 0.05,
+							d3.max(data, (d) => d.x) + d3.max(data, (d) => d.x) * 0.05,
+						])
+						.nice()
+				: d3
+						.scaleBand()
+						.domain(renamedDuplicatesArr)
+						.rangeRound([ margin.left, width - margin.right ])
+						.paddingInner(0.1);
 
 		const xAxis = (g) =>
-			linear
+			colXScale === 'Continuous'
 				? g
 						.attr('class', 'x-axis')
 						.attr('transform', `translate(0,${height - margin.bottom})`)
@@ -133,7 +156,7 @@ function receiveMessage(event) {
 		svg
 			.append('g')
 			.selectAll('rect')
-			.data(data)
+			.data(duplicatesChanged)
 			.join('rect')
 			.on('click', function(d) {
 				onClickBarSelectCellsBarChart(d3.select(this), d, colXId, colYId, colZId);
@@ -151,7 +174,7 @@ function receiveMessage(event) {
 			.delay(function(d, i) {
 				return i * 50;
 			})
-			.attr('width', linear ? 3 : x.bandwidth())
+			.attr('width', colXScale === 'Continuous' ? 3 : x.bandwidth())
 			.attr('height', (d) => y(0) - y(d.y))
 			.attr('fill', (d) => color(d['group']));
 
