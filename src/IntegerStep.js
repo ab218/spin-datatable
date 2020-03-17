@@ -65,7 +65,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 						onPressEnter={updateSelectedRows}
 						onBlur={updateSelectedRows}
 					/>
-					{`≤ ${label} ≤`}
+					<span style={{ maxWidth: 100 }}>{`≤ ${label} ≤`}</span>
 					<InputNumber
 						onChange={(value) => handleInputChange(value, setMax)}
 						style={{ maxWidth: 60 }}
