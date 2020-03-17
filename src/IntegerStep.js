@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Slider, Row, Col } from 'antd';
+import { InputNumber, Slider, Row, Col } from 'antd';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER } from './constants';
 
@@ -13,7 +13,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		setMax(value[1]);
 	};
 
-	const onAfterChange = () => {
+	function updateSelectedRows() {
 		const newCopy = selectedColumns.slice();
 		const index = newCopy.findIndex((col) => col.id === columnID);
 		newCopy[index] = { ...selectedColumns[index], min, max };
@@ -23,21 +23,67 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 			numberFilters: newCopy.filter((col) => col.type === NUMBER),
 		});
 		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
-	};
+	}
+
+	function findGCD(x, y) {
+		if (typeof x !== 'number' || typeof y !== 'number') return false;
+		x = Math.abs(x);
+		y = Math.abs(y);
+		while (y) {
+			const t = y;
+			y = x % y;
+			x = t;
+		}
+		return x;
+	}
+
+	function handleInputChange(value, setState) {
+		if (isNaN(value)) return;
+		setState(value);
+	}
 
 	return (
-		<Row style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+		<Row style={{ maxWidth: 400, display: 'flex', justifyContent: 'center', marginTop: 10 }}>
 			<Col style={{ textAlign: 'center', width: 300 }} span={12}>
-				<span style={{ alignSelf: 'center', fontSize: '1.1em', minWidth: 100, textAlign: 'center' }}>
-					{`${colMin.toFixed(2)} ≤ ${label} ≤ ${colMax.toFixed(2)}`}
+				<span
+					style={{
+						display: 'flex',
+						alignSelf: 'center',
+						fontSize: '1.1em',
+						width: '100%',
+						textAlign: 'center',
+						justifyContent: 'space-evenly',
+						alignItems: 'center',
+					}}
+				>
+					<InputNumber
+						onChange={(value) => handleInputChange(value, setMin)}
+						style={{ maxWidth: 60 }}
+						min={colMin}
+						max={colMax}
+						value={min}
+						onPressEnter={updateSelectedRows}
+						onBlur={updateSelectedRows}
+					/>
+					{`≤ ${label} ≤`}
+					<InputNumber
+						onChange={(value) => handleInputChange(value, setMax)}
+						style={{ maxWidth: 60 }}
+						min={colMin}
+						max={colMax}
+						value={max}
+						onBlur={updateSelectedRows}
+						onPressEnter={updateSelectedRows}
+					/>
 				</span>
 				<Slider
-					min={Math.floor(colMin)}
-					max={Math.ceil(colMax)}
+					min={colMin}
+					max={colMax}
+					step={findGCD(colMin, colMax) / 1000}
 					range
 					value={[ min, max ]}
 					onChange={onChange}
-					onAfterChange={onAfterChange}
+					onAfterChange={updateSelectedRows}
 				/>
 			</Col>
 		</Row>

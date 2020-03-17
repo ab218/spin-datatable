@@ -269,6 +269,9 @@ function Spreadsheet({ eventBus }) {
 	};
 
 	useEffect(() => {
+		if (barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
+			return;
+		}
 		function onKeyDown(event) {
 			if (!activeCell && cellSelectionRanges.length === 0) {
 				return;
