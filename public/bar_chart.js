@@ -99,6 +99,28 @@ function receiveMessage(event) {
 
 		const yAxis = (g) => g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y).ticks(15, 'f'));
 
+		function renameDuplicates(arr) {
+			const count = {};
+			const xArr = arr.map((d) => d.x).sort((a, b) => a - b);
+			xArr.forEach(function(x, i) {
+				if (xArr.indexOf(x) !== i) {
+					const duplicateCounter = x in count ? (count[x] = count[x] + 1) : (count[x] = 1);
+					const nextCount = duplicateCounter + 1;
+					let newXValue = x + '(' + nextCount + ')';
+
+					while (xArr.indexOf(newXValue) !== -1) newXValue = x + '(' + (nextCount + 1) + ')';
+					xArr[i] = newXValue;
+				}
+			});
+			return xArr;
+		}
+
+		const renamedDuplicatesArr = renameDuplicates(data);
+
+		const duplicatesChanged = data.reduce((acc, curr, i) => {
+			return [ ...acc, { ...curr, x: renamedDuplicatesArr[i] } ];
+		}, []);
+
 		const x =
 			colXScale === 'Continuous'
 				? d3
@@ -111,7 +133,7 @@ function receiveMessage(event) {
 						.nice()
 				: d3
 						.scaleBand()
-						.domain(data.sort((a, b) => a.x - b.x).map((d) => d.x))
+						.domain(renamedDuplicatesArr)
 						.rangeRound([ margin.left, width - margin.right ])
 						.paddingInner(0.1);
 
@@ -134,7 +156,7 @@ function receiveMessage(event) {
 		svg
 			.append('g')
 			.selectAll('rect')
-			.data(data)
+			.data(duplicatesChanged)
 			.join('rect')
 			.on('click', function(d) {
 				onClickBarSelectCellsBarChart(d3.select(this), d, colXId, colYId, colZId);
