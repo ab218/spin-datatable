@@ -1,6 +1,6 @@
 // TODO: Combine this component with Analysis Modal
 import React, { useState } from 'react';
-import { Modal, Input } from 'antd';
+import { Alert, Modal, Button, Input } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELLS, REMOVE_SELECTED_CELLS } from './constants';
 import { performDistributionAnalysis } from './Analyses';
@@ -20,10 +20,8 @@ export default function DistributionModal() {
 
 	async function performAnalysis() {
 		if (yColData.length === 0) {
-			setError('Please add a valid column');
 			return;
 		}
-
 		// TODO: Better error handling here
 		const colVals = rows
 			.map((row) => !excludedRows.includes(row.id) && Number(row[yColData.id]))
@@ -92,14 +90,28 @@ export default function DistributionModal() {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				okButtonProps={{ disabled: yColData.length === 0 || performingAnalysis }}
-				cancelButtonProps={{ disabled: performingAnalysis }}
-				okText={performingAnalysis ? 'Loading...' : 'Ok'}
-				onOk={performAnalysis}
 				title="Distribution"
 				visible={distributionModalOpen}
 				width={550}
 				bodyStyle={{ background: '#ECECEC' }}
+				footer={[
+					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
+						{error ? <Alert className="error" message={error} type="error" showIcon /> : <div />}
+						<span style={{ alignSelf: 'end' }}>
+							<Button disabled={performingAnalysis} key="back" onClick={handleModalClose}>
+								Cancel
+							</Button>
+							<Button
+								disabled={yColData.length === 0 || performingAnalysis}
+								key="submit"
+								type="primary"
+								onClick={performAnalysis}
+							>
+								{performingAnalysis ? 'Loading...' : 'Submit'}
+							</Button>
+						</span>
+					</div>,
+				]}
 			>
 				<div style={{ ...styles.flexSpaced }}>
 					<SelectColumn title={'Select Column'} columns={filteredColumns} setSelectedColumn={setYColData} />
@@ -112,7 +124,6 @@ export default function DistributionModal() {
 						/>
 					</div>
 				</div>
-				<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>
 			</Modal>
 		</div>
 	);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from 'antd';
+import { Alert, Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { createBarChart } from './Analyses';
 import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
@@ -22,6 +22,7 @@ export default function AnalysisModal() {
 
 	async function performAnalysis() {
 		if (!yColData[0] || !xColData[0] || !groupingColData[0]) {
+			// user should never see this
 			setError('Please add all required columns and try again');
 			return;
 		}
@@ -108,7 +109,8 @@ export default function AnalysisModal() {
 			window.addEventListener('message', targetClickEvent);
 			window.addEventListener('message', removeTargetClickEvent);
 		} else {
-			setError('Columns must each contain at least 3 values to perform this analysis');
+			// user should never see this, as columns with under 1 value are filtered out
+			setError('Columns must each contain at least 1 value to perform this analysis');
 			return;
 		}
 	}
@@ -122,17 +124,31 @@ export default function AnalysisModal() {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				okButtonProps={{
-					disabled:
-						xColData.length === 0 || yColData.length === 0 || groupingColData.length === 0 || performingAnalysis,
-				}}
-				cancelButtonProps={{ disabled: performingAnalysis }}
-				okText={performingAnalysis ? 'Loading...' : 'Ok'}
 				onOk={performAnalysis}
 				title="Bar Chart"
 				visible={barChartModalOpen}
 				width={750}
 				bodyStyle={{ background: '#ECECEC' }}
+				footer={[
+					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
+						{error ? <Alert className="error" message={error} type="error" showIcon /> : <div />}
+						<span style={{ alignSelf: 'end' }}>
+							<Button disabled={performingAnalysis} key="back" onClick={handleModalClose}>
+								Cancel
+							</Button>
+							<Button
+								disabled={
+									xColData.length === 0 || yColData.length === 0 || groupingColData.length === 0 || performingAnalysis
+								}
+								key="submit"
+								type="primary"
+								onClick={performAnalysis}
+							>
+								{performingAnalysis ? 'Loading...' : 'Submit'}
+							</Button>
+						</span>
+					</div>,
+				]}
 			>
 				<div style={styles.flexSpaced}>
 					<SelectColumn
@@ -165,7 +181,6 @@ export default function AnalysisModal() {
 						/>
 					</div>
 				</div>
-				<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>
 			</Modal>
 		</div>
 	);

@@ -78,11 +78,12 @@ export default function AntModal({ selectedColumn }) {
 	}
 
 	function handleClose() {
+		const lettersOnlyReg = /^[A-Za-z]+$/;
 		if (!columnName) {
 			return setModalError('Column Name cannot be blank');
 		}
-		if (!columnName[0].toLowerCase().match(/[a-z]/i)) {
-			return setModalError('Column Name must begin with a letter');
+		if (!lettersOnlyReg.test(columnName)) {
+			return setModalError('Column Name must contain only letters');
 		}
 		if (validateColumnName(columnName)) {
 			return setModalError('Column Name must be unique');
@@ -177,7 +178,7 @@ export default function AntModal({ selectedColumn }) {
 				visible={columnTypeModalOpen}
 				footer={[
 					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
-						{modalError ? <Alert className="fade-in-animated" message={modalError} type="error" showIcon /> : <div />}
+						{modalError ? <Alert className="error" message={modalError} type="error" showIcon /> : <div />}
 						<span style={{ alignSelf: 'end' }}>
 							<Button
 								key="back"
@@ -223,7 +224,7 @@ export default function AntModal({ selectedColumn }) {
 					/>
 				</span>
 				<span className="modal-span">
-					<h4>Modeling Type</h4>
+					<h4>Scale</h4>
 					<Dropdown
 						modelingTypeIcons={true}
 						disabledType={columnType === STRING ? CONTINUOUS : ''}

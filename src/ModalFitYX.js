@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Alert, Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { performLinearRegressionAnalysis } from './Analyses';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
@@ -23,6 +23,7 @@ export default function AnalysisModal() {
 	const [ yColData, setYColData ] = useState([]);
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
+	const [ analysisType, setAnalysisType ] = useState(null);
 	const { excludedRows, analysisModalOpen, columns, rows } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
@@ -103,7 +104,7 @@ export default function AnalysisModal() {
 				}
 			}
 			setPerformingAnalysis(false);
-			dispatchSpreadsheetAction({ type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: false });
+			handleModalClose();
 
 			// set event listener and wait for target to be ready
 			window.addEventListener('message', receiveMessage, false);
@@ -126,25 +127,63 @@ export default function AnalysisModal() {
 			return ONEWAY;
 		} else if ((yData === ORDINAL || yData === NOMINAL) && xData === CONTINUOUS) {
 			return LOGISTIC;
-		} else {
+		} else if ((yData === ORDINAL || yData === NOMINAL) && (xData === ORDINAL || xData === NOMINAL)) {
 			return CONTINGENCY;
+		} else {
+			return null;
 		}
 	}
+
+	useEffect(
+		() => {
+			if (!yColData.length || !xColData.length) {
+				return setAnalysisType(null);
+			}
+			setAnalysisType(determineAnalysisType(yColData[0].modelingType, xColData[0].modelingType));
+		},
+		[ xColData, yColData ],
+	);
+
+	useEffect(
+		() => {
+			if (analysisType && analysisType !== BIVARIATE) {
+				setError(`${analysisType} Analysis currently unsupported`);
+				return;
+			}
+			setError(null);
+		},
+		[ analysisType ],
+	);
 
 	return (
 		<div>
 			<Modal
 				className="ant-modal"
-				// destroyOnClose
 				onCancel={handleModalClose}
-				okButtonProps={{ disabled: xColData.length === 0 || yColData.length === 0 || performingAnalysis }}
-				cancelButtonProps={{ disabled: performingAnalysis }}
-				okText={performingAnalysis ? 'Loading...' : 'Ok'}
-				onOk={performAnalysis}
 				title="Fit Y by X"
 				visible={analysisModalOpen}
 				width={750}
 				bodyStyle={{ background: '#ECECEC' }}
+				footer={[
+					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
+						{error ? <Alert className="error" message={error} type="error" showIcon /> : <div />}
+						<span style={{ alignSelf: 'end' }}>
+							<Button disabled={performingAnalysis} key="back" onClick={handleModalClose}>
+								Cancel
+							</Button>
+							<Button
+								disabled={
+									xColData.length === 0 || yColData.length === 0 || performingAnalysis || analysisType !== BIVARIATE
+								}
+								key="submit"
+								type="primary"
+								onClick={performAnalysis}
+							>
+								{performingAnalysis ? 'Loading...' : 'Submit'}
+							</Button>
+						</span>
+					</div>,
+				]}
 			>
 				<div style={styles.flexSpaced}>
 					<div>
@@ -169,11 +208,10 @@ export default function AnalysisModal() {
 					</div>
 				</div>
 				<div style={{ display: 'flex', flexDirection: 'column', height: 30 }}>
-					<h5 style={{ display: error ? 'flex' : 'none', position: 'absolute', color: 'red' }}>{error}</h5>
 					{xColData.length !== 0 &&
 					yColData.length !== 0 && (
 						<h4 style={{ textAlign: 'right' }}>
-							Perform {determineAnalysisType(yColData[0].modelingType, xColData[0].modelingType)} Analysis
+							Perform {analysisType} Analysis {analysisType !== BIVARIATE && '(Currently unsupported)'}
 						</h4>
 					)}
 				</div>

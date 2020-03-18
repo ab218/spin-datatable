@@ -56,7 +56,7 @@
 }
 
 .menu {
-	z-index: 2;
+	z-index: 3;
 	text-align: left;
 	width: 220px;
 	box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
@@ -201,16 +201,27 @@
 	background-color: rgb(160, 185, 225) !important;
 }
 
-@keyframes fadeIn {
+.error {
+	-webkit-animation: fadeOut 2s forwards;
+	animation: fadeOut 2s forwards;
+	-webkit-animation-delay: 4s;
+	animation-delay: 4s;
+}
+
+@-webkit-keyframes fadeOut {
 	from {
-		opacity: 0;
+		opacity: 1;
 	}
 	to {
-		opacity: 1;
+		opacity: 0;
 	}
 }
 
-.fade-in-animated {
-	opacity: 0;
-	animation: fadeIn 1s forwards; /* forwards (animation-fill-mode) retains the style from the last keyframe when the animation ends */
+@keyframes fadeOut {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
 }
