@@ -202,26 +202,32 @@
 }
 
 .error {
-	-webkit-animation: fadeOut 2s forwards;
-	animation: fadeOut 2s forwards;
-	-webkit-animation-delay: 4s;
-	animation-delay: 4s;
+	-webkit-animation: fadeOut 4s forwards;
+	animation: fadeOut 4s forwards;
+	/* -webkit-animation-delay: 4s; */
+	/* animation-delay: 4s; */
 }
 
 @-webkit-keyframes fadeOut {
-	from {
+	0% {
+		opacity: 0;
+	}
+	20% {
 		opacity: 1;
 	}
-	to {
+	100% {
 		opacity: 0;
 	}
 }
 
 @keyframes fadeOut {
-	from {
+	0% {
+		opacity: 0;
+	}
+	20% {
 		opacity: 1;
 	}
-	to {
+	100% {
 		opacity: 0;
 	}
 }

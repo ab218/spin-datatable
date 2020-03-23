@@ -26,7 +26,6 @@ import {
 	SELECT_COLUMN,
 	SET_FILTERS,
 	SORT_COLUMN,
-	SET_MODAL_ERROR,
 	TOGGLE_ANALYSIS_MODAL,
 	TOGGLE_BAR_CHART_MODAL,
 	TOGGLE_COLUMN_TYPE_MODAL,
@@ -436,7 +435,15 @@ function spreadsheetReducer(state, action) {
 				for (let copiedValuesIndex = 0; copiedValuesIndex < copiedValues.length; copiedValuesIndex++) {
 					const newRowValue = { ...rows[indexOfFirstDestinationRow + copiedValuesIndex] };
 					for (let colIndex = 0; colIndex < destinationColumns.length; colIndex++) {
-						newRowValue[destinationColumns[colIndex]] = copiedValues[copiedValuesIndex][colIndex];
+						const targetColumn = state.columns.find((col) => col.id === destinationColumns[colIndex]);
+						if (targetColumn && targetColumn.type === 'Formula') {
+							newRowValue[destinationColumns[colIndex]] = {
+								error: '#FORMERR',
+								errorMessage: 'Please verify formula is still correct after paste operation',
+							};
+						} else {
+							newRowValue[destinationColumns[colIndex]] = copiedValues[copiedValuesIndex][colIndex];
+						}
 					}
 					newRowValues.push(newRowValue);
 				}
@@ -794,9 +801,24 @@ function spreadsheetReducer(state, action) {
 		}
 
 		case SORT_COLUMN: {
-			const columnID = getCol(colName).id;
-			state.rows.sort((a, b) => (descending ? [ b[columnID] ] - [ a[columnID] ] : [ a[columnID] ] - [ b[columnID] ]));
-			return { ...state };
+			const targetColumn = getCol(colName);
+			const deepCopyRows = JSON.parse(JSON.stringify(state.rows));
+			if (targetColumn.type === 'Number' || targetColumn.type === 'Formula') {
+				deepCopyRows.sort(
+					(a, b) =>
+						descending
+							? [ b[targetColumn.id] ] - [ a[targetColumn.id] ]
+							: [ a[targetColumn.id] ] - [ b[targetColumn.id] ],
+				);
+			} else if (targetColumn.type === 'String') {
+				deepCopyRows.sort(
+					(a, b) =>
+						descending
+							? b[targetColumn.id].localeCompare(a[targetColumn.id])
+							: a[targetColumn.id].localeCompare(b[targetColumn.id]),
+				);
+			}
+			return { ...state, rows: deepCopyRows };
 		}
 		case SET_FILTERS: {
 			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
@@ -834,9 +856,6 @@ function spreadsheetReducer(state, action) {
 				uniqueRowIDs: filteredRowIDs,
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
-		}
-		case SET_MODAL_ERROR: {
-			return { ...state, modalError };
 		}
 		case UPDATE_COLUMN: {
 			const columnCopy = { ...updatedColumn };
@@ -918,7 +937,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
 	const statsColumns = [
 		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced' },
-		{ id: '_abc2_', modelingType: NOMINAL, type: NUMBER, units: 'sec', label: 'Time' },
+		{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time' },
 		{
 			id: '_abc3_',
 			modelingType: CONTINUOUS,
@@ -1000,7 +1019,10 @@ export function SpreadsheetProvider({ eventBus, children }) {
 			numberFilters: [],
 		},
 		filterModalOpen: false,
-		inverseDependencyMap: {},
+		inverseDependencyMap: {
+			_abc1_: [ '_abc3_' ],
+			_abc2_: [ '_abc3_' ],
+		},
 		lastSelection: { row: 1, column: 1 },
 		layout: true,
 		mappedColumns: {},

@@ -44,7 +44,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 
 	return (
 		<Row style={{ maxWidth: 400, display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-			<Col style={{ textAlign: 'center', width: 300 }} span={12}>
+			<Col style={{ textAlign: 'center', width: 400 }} span={12}>
 				<span
 					style={{
 						display: 'flex',
@@ -58,17 +58,19 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 				>
 					<InputNumber
 						onChange={(value) => handleInputChange(value, setMin)}
-						style={{ maxWidth: 60 }}
+						style={{ width: 70 }}
 						min={colMin}
 						max={colMax}
 						value={min}
 						onPressEnter={updateSelectedRows}
 						onBlur={updateSelectedRows}
 					/>
-					<span style={{ maxWidth: 100 }}>{`≤ ${label} ≤`}</span>
+					<span style={{ fontSize: '1.2em' }}>≤</span>
+					<span style={{ width: 150 }}>{label}</span>
+					<span style={{ fontSize: '1.2em' }}>≤</span>
 					<InputNumber
 						onChange={(value) => handleInputChange(value, setMax)}
-						style={{ maxWidth: 60 }}
+						style={{ width: 70 }}
 						min={colMin}
 						max={colMax}
 						value={max}

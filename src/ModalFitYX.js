@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Button, Modal } from 'antd';
+import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { performLinearRegressionAnalysis } from './Analyses';
+import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import {
@@ -166,7 +167,7 @@ export default function AnalysisModal() {
 				bodyStyle={{ background: '#ECECEC' }}
 				footer={[
 					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
-						{error ? <Alert className="error" message={error} type="error" showIcon /> : <div />}
+						<ErrorMessage error={error} setError={setError} />
 						<span style={{ alignSelf: 'end' }}>
 							<Button disabled={performingAnalysis} key="back" onClick={handleModalClose}>
 								Cancel

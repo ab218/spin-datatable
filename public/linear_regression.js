@@ -66,6 +66,11 @@ function receiveMessage(event) {
 		linearRegression,
 	} = event.data;
 
+	const sortedCiUpp = [ ...confUpp ].sort((a, b) => a[1] - b[1]);
+	const sortedCiLow = [ ...confLow ].sort((a, b) => a[1] - b[1]);
+	const sortedMeanCiUpp = [ ...meanCiUpp ].sort((a, b) => a[1] - b[1]);
+	const sortedMeanCiLow = [ ...meanCiLow ].sort((a, b) => a[1] - b[1]);
+
 	const linearRegressionCoefficients = linearRegression['coefficients'];
 	const degree2PolyCoefficients = degree2Poly['polynomial'];
 	const degree3PolyCoefficients = degree3Poly['polynomial'];
@@ -552,24 +557,24 @@ function receiveMessage(event) {
 	document
 		.getElementById('confidence-bands-checkbox')
 		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(confUpp, valueLine, 'confidenceBands', null)),
+			toggleChartElement(e.target, () => drawBasicPath(sortedCiUpp, valueLine, 'confidenceBands', null)),
 		);
 	document
 		.getElementById('confidence-bands-checkbox')
 		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(confLow, valueLine, 'confidenceBands', null)),
+			toggleChartElement(e.target, () => drawBasicPath(sortedCiLow, valueLine, 'confidenceBands', null)),
 		);
 
 	document
 		.getElementById('confidence-bands-fit-checkbox')
 		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(meanCiUpp, valueLine, 'confidenceBandsFit', null)),
+			toggleChartElement(e.target, () => drawBasicPath(sortedMeanCiUpp, valueLine, 'confidenceBandsFit', null)),
 		);
 
 	document
 		.getElementById('confidence-bands-fit-checkbox')
 		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(meanCiLow, valueLine, 'confidenceBandsFit', null)),
+			toggleChartElement(e.target, () => drawBasicPath(sortedMeanCiLow, valueLine, 'confidenceBandsFit', null)),
 		);
 
 	drawHistogramBorders();
