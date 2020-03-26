@@ -20,6 +20,23 @@ export async function pingCloudFunctions() {
 	);
 }
 
+export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols) {
+	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway';
+	const result = await axios.post(
+		gcloud,
+		{
+			x: colXArr,
+			y: colYArr,
+		},
+		{
+			crossDomain: true,
+		},
+	);
+	const { anova } = result.data;
+
+	return { coordinates: XYCols, colX, colY, colXArr, colYArr, anova: JSON.parse(anova) };
+}
+
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
 	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
@@ -61,6 +78,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, co
 		centered_4_poly,
 		centered_5_poly,
 		centered_6_poly,
+		resid,
 	} = result.data;
 
 	console.log(result.data);
@@ -90,6 +108,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, co
 		centeredDegree5Poly: centered_5_poly,
 		centeredDegree6Poly: centered_6_poly,
 		coordinates: XYCols,
+		resid,
 		linearRegression: {
 			coefficients: [ slope.toFixed(4) / 1, intercept.toFixed(4) / 1 ],
 			determination: rsquared.toFixed(4) / 1,

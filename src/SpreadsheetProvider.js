@@ -18,6 +18,7 @@ import {
 	OPEN_CONTEXT_MENU,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
+	SAVE_RESIDUALS_TO_COLUMN,
 	SET_SELECTED_COLUMN,
 	SELECT_CELL,
 	SELECT_CELLS,
@@ -248,8 +249,8 @@ function spreadsheetReducer(state, action) {
 		filters,
 		filterModalOpen,
 		layout,
-		modalError,
 		numberFilters,
+		residuals,
 		row,
 		rowCount,
 		rowID,
@@ -570,6 +571,25 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: selectedCell,
 				uniqueRowIDs: currentRowIDs,
 				uniqueColumnIDs: currentColumnIDs,
+			};
+		}
+		case SAVE_RESIDUALS_TO_COLUMN: {
+			let residualsColumnsCounter = state.residualsColumnsCounter + 1;
+			const newColumn = {
+				id: createRandomLetterString(),
+				modelingType: CONTINUOUS,
+				type: NUMBER,
+				label: `Residuals ${residualsColumnsCounter}`,
+			};
+			const columns = state.columns.concat(newColumn);
+			const newRows = state.rows.map((row, i) => {
+				return { ...row, [newColumn.id]: residuals[i] };
+			});
+			return {
+				...state,
+				rows: newRows,
+				columns,
+				residualsColumnsCounter,
 			};
 		}
 		case SELECT_ROW: {
@@ -1004,6 +1024,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		cellSelectionRanges: [],
 		// First column created will be "Column 2"
 		columnCounter: 1,
+		residualsColumnsCounter: 0,
 		columnTypeModalOpen: false,
 		colHeaderContext: false,
 		columns: statsColumns,

@@ -93,10 +93,10 @@ function unload(e) {
 	window.opener.postMessage('closed', '*');
 }
 
-function toggleCenteredPoly(e) {
+function toggleCenteredPoly(checked) {
 	const centeredEls = document.getElementsByClassName('centered');
 	const uncenteredEls = document.getElementsByClassName('uncentered');
-	if (e.target.checked) {
+	if (checked) {
 		for (let i = 0; i < centeredEls.length; i++) {
 			centeredEls[i].style.display = 'block';
 		}
@@ -241,18 +241,21 @@ const drawBasicPath = (points, line, name, title) => {
 		});
 };
 
-function toggleChartElement(ele, drawLine) {
-	const outputElement = d3.selectAll(`.${ele.value}`);
-	const outputElementHitbox = d3.selectAll(`.${ele.value}-hitbox`);
-	if (ele.checked) {
-		drawLine();
-	} else {
-		if (outputElement) {
-			outputElement.remove();
-			outputElementHitbox.remove();
-		}
-	}
-}
+// function toggleChartElement(ele, drawLine) {
+// 	console.log('top', ele, drawLine);
+// 	const outputElement = d3.selectAll(`.${ele.value}`);
+// 	const outputElementHitbox = d3.selectAll(`.${ele.value}-hitbox`);
+// 	if (outputElement._groups[0].length > 1) {
+// 		console.log('already there', outputElement._groups[0].length);
+// 		return;
+// 	}
+// 	console.log('draw');
+// 	drawLine();
+// 	// if (outputElement) {
+// 	// 	outputElement.remove();
+// 	// 	outputElementHitbox.remove();
+// 	// }
+// }
 
 // various chart options checkboxes show/hide fit lines and output
 const chartOptionsTemplate = `<details style="text-align: left;" class="analysis-details" open>
