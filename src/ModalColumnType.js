@@ -20,7 +20,7 @@ import {
 export default function AntModal({ selectedColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { columns, columnTypeModalOpen, rows } = useSpreadsheetState();
-	const { formula, label, modelingType, type, units } = selectedColumn;
+	const { formula, description, label, modelingType, type, units } = selectedColumn;
 	const formulaFromState = formula && formula.expression;
 	const [ columnFormula, setColumnFormula ] = useState(swapIDsWithLabels(formulaFromState, columns) || '');
 	const [ selectedFormulaVariable, setSelectedFormulaVariable ] = useState(null);
@@ -29,6 +29,7 @@ export default function AntModal({ selectedColumn }) {
 	const [ columnName, setColumnName ] = useState(label);
 	const [ columnType, setColumnType ] = useState(type);
 	const [ columnUnits, setColumnUnits ] = useState(units);
+	const [ columnDescription, setColumnDescription ] = useState(description);
 	const [ columnModelingType, setColumnModelingType ] = useState(modelingType);
 	const [ error, setError ] = useState(null);
 
@@ -231,6 +232,23 @@ export default function AntModal({ selectedColumn }) {
 						menuItems={[ CONTINUOUS, ORDINAL, NOMINAL ]}
 						setColumnType={setColumnModelingType}
 						columnType={columnModelingType}
+					/>
+				</span>
+				<span className="modal-span">
+					<h4>
+						Notes <span style={{ fontStyle: 'italic', opacity: 0.4 }}>(Optional)</span>
+					</h4>
+					<Input.TextArea
+						value={columnDescription}
+						onChange={(e) => setColumnDescription(e.target.value)}
+						style={{
+							resize: 'none',
+							userSelect: 'none',
+							marginTop: 0,
+							width: 300,
+							height: 100,
+							border: '1px solid blue',
+						}}
 					/>
 				</span>
 				{columnType === FORMULA && (

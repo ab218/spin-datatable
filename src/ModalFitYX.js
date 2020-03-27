@@ -96,7 +96,7 @@ export default function AnalysisModal() {
 					function saveResiduals(event) {
 						if (event.data.message !== 'save-residuals') return;
 						const { residuals } = event.data;
-						dispatchSpreadsheetAction({ type: SAVE_RESIDUALS_TO_COLUMN, residuals });
+						dispatchSpreadsheetAction({ type: SAVE_RESIDUALS_TO_COLUMN, residuals, colX, colY });
 					}
 
 					function targetClickEvent(event) {

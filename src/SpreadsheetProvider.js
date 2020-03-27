@@ -361,7 +361,7 @@ function spreadsheetReducer(state, action) {
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
 				columnCounter++;
-				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${columnCounter}` };
+				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${columnCounter}`, description: '' };
 			});
 			const columns = state.columns.concat(newColumns);
 			return { ...state, columns, columnCounter };
@@ -580,6 +580,7 @@ function spreadsheetReducer(state, action) {
 				modelingType: CONTINUOUS,
 				type: NUMBER,
 				label: `Residuals ${residualsColumnsCounter}`,
+				description: `Generated from [${action.colY.label} by ${action.colX.label}] Bivariate Analysis output window.`,
 			};
 			const columns = state.columns.concat(newColumn);
 			const newRows = state.rows.map((row, i) => {
@@ -956,8 +957,8 @@ export function useSpreadsheetDispatch() {
 export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
 	const statsColumns = [
-		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced' },
-		{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time' },
+		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced', description: '' },
+		{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time', description: '' },
 		{
 			id: '_abc3_',
 			modelingType: CONTINUOUS,
@@ -965,8 +966,9 @@ export function SpreadsheetProvider({ eventBus, children }) {
 			type: FORMULA,
 			units: 'ml/sec',
 			label: 'Rate',
+			description: '',
 		},
-		{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution' },
+		{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution', description: '' },
 	];
 
 	const startingColumn = [
@@ -976,6 +978,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 			type: NUMBER,
 			units: '',
 			label: 'Column 1',
+			description: '',
 		},
 	];
 
