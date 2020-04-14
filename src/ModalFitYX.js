@@ -147,7 +147,9 @@ export default function AnalysisModal() {
 				setPerformingAnalysis(true);
 				const results = await performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols);
 				const popup = window.open(window.location.href + 'oneway.html', '', 'left=9999,top=100,width=800,height=850');
-				console.log(results);
+				setPerformingAnalysis(false);
+				handleModalClose();
+
 				window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
 			} catch (e) {
 				console.log(e);
@@ -209,7 +211,7 @@ export default function AnalysisModal() {
 				title="Fit Y by X"
 				visible={analysisModalOpen}
 				width={750}
-				bodyStyle={{ background: '#ECECEC' }}
+				bodyStyle={{ background: '#ECECEC', opacity: performingAnalysis ? 0.2 : 1 }}
 				footer={[
 					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
 						<ErrorMessage error={error} setError={setError} />
@@ -248,12 +250,19 @@ export default function AnalysisModal() {
 						Cast Selected Columns into Roles
 						<VariableSelector
 							data={yColData}
-							setData={setYColData}
 							label="Y"
+							performingAnalysis={performingAnalysis}
+							setData={setYColData}
 							selectedColumn={selectedColumn}
 							styleProps={{ marginBottom: 20, marginTop: 20 }}
 						/>
-						<VariableSelector data={xColData} setData={setXColData} label="X" selectedColumn={selectedColumn} />
+						<VariableSelector
+							data={xColData}
+							label="X"
+							performingAnalysis={performingAnalysis}
+							setData={setXColData}
+							selectedColumn={selectedColumn}
+						/>
 					</div>
 				</div>
 				<div style={{ display: 'flex', flexDirection: 'column', height: 30 }}>

@@ -20,6 +20,7 @@ export async function pingCloudFunctions() {
 	);
 }
 
+// bug: if the group only has one data point in it, the cloud function fails.
 export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway';
 	const result = await axios.post(
@@ -32,9 +33,22 @@ export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols
 			crossDomain: true,
 		},
 	);
-	const { anova } = result.data;
+	const { ordered_differences_report, bartlett, levene, x_groups_lists, means_std, anova, summary_table } = result.data;
 
-	return { coordinates: XYCols, colX, colY, colXArr, colYArr, anova: JSON.parse(anova) };
+	return {
+		ordered_differences_report: JSON.parse(ordered_differences_report),
+		x_groups_lists: JSON.parse(x_groups_lists),
+		anova: JSON.parse(anova),
+		coordinates: XYCols,
+		bartlett,
+		levene,
+		colX,
+		colY,
+		colXArr,
+		colYArr,
+		means_std: JSON.parse(means_std),
+		summary_table,
+	};
 }
 
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
