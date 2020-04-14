@@ -1,4 +1,4 @@
-/*global d3 clickedBarPointSize highlightedPointColor highlightedPointSize normalPointSize normalBarFill createPoints reversedLine valueLine drawBasicPath toggleChartElement generateTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
+/*global d3 clickedBarPointSize highlightedPointColor highlightedPointSize normalPointSize normalBarFill createPoints reversedLine valueLine drawBasicPath toggleChartElement generateRegressionTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
 window.addEventListener('unload', unload);
 window.opener.postMessage('ready', '*');
 
@@ -355,7 +355,7 @@ function receiveMessage(event) {
     </div>
   </details>`;
 
-	const linearFitTemplate = generateTemplate(
+	const linearFitTemplate = generateRegressionTemplate(
 		'Linear Fit',
 		'linearRegressionLine',
 		null,
@@ -365,7 +365,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const quadraticFitTemplate = generateTemplate(
+	const quadraticFitTemplate = generateRegressionTemplate(
 		'Quadratic Fit',
 		'degree2PolyLine',
 		'uncentered',
@@ -375,7 +375,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const cubicFitTemplate = generateTemplate(
+	const cubicFitTemplate = generateRegressionTemplate(
 		'Cubic Fit',
 		'degree3PolyLine',
 		'uncentered',
@@ -385,7 +385,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const quarticFitTemplate = generateTemplate(
+	const quarticFitTemplate = generateRegressionTemplate(
 		'Quartic Fit',
 		'degree4PolyLine',
 		'uncentered',
@@ -395,7 +395,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const fifthDegreeFitTemplate = generateTemplate(
+	const fifthDegreeFitTemplate = generateRegressionTemplate(
 		'Fifth Degree Fit',
 		'degree5PolyLine',
 		'uncentered',
@@ -405,7 +405,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const sixthDegreeFitTemplate = generateTemplate(
+	const sixthDegreeFitTemplate = generateRegressionTemplate(
 		'Sixth Degree Fit',
 		'degree6PolyLine',
 		'uncentered',
@@ -417,7 +417,7 @@ function receiveMessage(event) {
 
 	const centeredX = `(${colX.label} - ${colAMean})`;
 
-	const centered2DegreeFitTemplate = generateTemplate(
+	const centered2DegreeFitTemplate = generateRegressionTemplate(
 		'Quadratic Fit (centered)',
 		'degree2CenteredPolyLine',
 		'centered',
@@ -428,7 +428,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered3DegreeFitTemplate = generateTemplate(
+	const centered3DegreeFitTemplate = generateRegressionTemplate(
 		'Cubic Fit (centered)',
 		'degree3CenteredPolyLine',
 		'centered',
@@ -439,7 +439,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered4DegreeFitTemplate = generateTemplate(
+	const centered4DegreeFitTemplate = generateRegressionTemplate(
 		'Quartic Fit (centered)',
 		'degree4CenteredPolyLine',
 		'centered',
@@ -450,7 +450,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered5DegreeFitTemplate = generateTemplate(
+	const centered5DegreeFitTemplate = generateRegressionTemplate(
 		'Fifth Degree Fit (centered)',
 		'degree5CenteredPolyLine',
 		'centered',
@@ -461,7 +461,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered6DegreeFitTemplate = generateTemplate(
+	const centered6DegreeFitTemplate = generateRegressionTemplate(
 		'Sixth Degree Fit (centered)',
 		'degree6CenteredPolyLine',
 		'centered',
