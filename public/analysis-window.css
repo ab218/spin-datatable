@@ -140,6 +140,12 @@ body {
 	background: lightyellow;
 }
 
+.mean {
+	text-align: left;
+	height: 20px;
+	background: lightgreen;
+}
+
 .bar {
 	text-align: left;
 	height: 60px;
@@ -150,6 +156,28 @@ body {
 	font-size: 12px;
 	margin-top: 10px;
 	text-align: center;
+}
+
+.table-header {
+	background-color: #e2d7d7;
+	width: 100px;
+	font-weight: bold;
+}
+
+.table-subtitle {
+	font-weight: bold;
+	text-align: left;
+	font-size: 1.2em;
+	background-color: rgb(238, 238, 238);
+	/* border-bottom: 1px solid lightgray; */
+}
+
+.left {
+	text-align: left;
+}
+
+.right {
+	text-align: right;
 }
 
 .centered {
