@@ -53,7 +53,7 @@ const paramEstimateTable = (coeffs, xLabel, centered) => `
           </table>
           `;
 
-const generateTemplate = (title, id, className, equation, polyDegree, coeffs, xLabel, centered) => `
+const generateRegressionTemplate = (title, id, className, equation, polyDegree, coeffs, xLabel, centered) => `
         <details class="analysis-details ${className}" open id="${id}">
           <summary class="analysis-summary-title">Summary of ${title}</summary>
           <table style="width: 100%;">
@@ -113,7 +113,7 @@ function toggleCenteredPoly(checked) {
 	}
 }
 
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue);
+const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
 
 function onClickSelectCells(thisBar, bar, col) {
 	let metaKeyPressed = false;

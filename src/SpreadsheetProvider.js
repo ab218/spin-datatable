@@ -998,10 +998,10 @@ export function SpreadsheetProvider({ eventBus, children }) {
   6	29.6	0.2027027027	Potato
   5	26.8	0.1865671642	Potato
   6	32.1	0.1869158879	Potato
-  7	32.9	0.2127659574	Potato
-  6	33.4	0.1796407186	Potato
-  5	32.7	0.1529051988	Potato
-  5	31.6	0.1582278481	Potato`;
+  7	32.9	0.2127659574	Beer
+  6	33.4	0.1796407186	Beer
+  5	32.7	0.1529051988	Beer
+  5	31.6	0.1582278481	Beer`;
 
 	// quickly build rows out of copy/pasted data
 	function createRows(table) {
