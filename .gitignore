@@ -24,3 +24,6 @@ yarn-error.log*
 highcharts.js
 bar_chart_test
 windowScroller.js
+
+public/oneway_test.html
+public/oneway_test.js

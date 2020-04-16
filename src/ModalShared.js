@@ -67,11 +67,11 @@ export function CaratButtons({ data, setData, label, selectedColumn }) {
 	);
 }
 
-function RadioGroup({ data, styleProps, removeData }) {
+function SelectedColumn({ data, styleProps, removeData, performingAnalysis }) {
 	const { cardWithBorder, radioGroup, radioButton, columnTypography } = styles;
 	return (
 		<Card bordered style={{ ...cardWithBorder, ...styleProps }}>
-			<Radio.Group style={radioGroup} buttonStyle="solid">
+			<div style={radioGroup}>
 				{data.length === 0 ? <em>Required</em> : null}
 				{data.map((column) => (
 					<div style={{ display: 'flex', ...radioButton }} key={column.id}>
@@ -79,10 +79,12 @@ function RadioGroup({ data, styleProps, removeData }) {
 							{createModelingTypeIcon(column.modelingType)}
 							{column.label}
 						</Typography.Text>
-						<RemoveColumnButton removeColumn={() => removeColumnFromList(removeData, column)} />
+						<RemoveColumnButton
+							removeColumn={() => (performingAnalysis ? null : removeColumnFromList(removeData, column))}
+						/>
 					</div>
 				))}
-			</Radio.Group>
+			</div>
 		</Card>
 	);
 }
@@ -131,11 +133,11 @@ export function SelectColumn({ columns, groupingColData, setSelectedColumn, styl
 	);
 }
 
-export function VariableSelector({ styleProps, data, setData, selectedColumn, label }) {
+export function VariableSelector({ styleProps, data, setData, selectedColumn, label, performingAnalysis }) {
 	return (
 		<div style={{ ...styles.flexSpaced, ...styleProps }}>
 			<CaratButtons data={data} setData={setData} selectedColumn={selectedColumn} label={label} />
-			<RadioGroup data={data} removeData={setData} />
+			<SelectedColumn data={data} removeData={setData} performingAnalysis={performingAnalysis} />
 		</div>
 	);
 }

@@ -1,4 +1,4 @@
-/*global d3 clickedBarPointSize highlightedPointColor highlightedPointSize normalPointSize normalBarFill createPoints reversedLine valueLine drawBasicPath toggleChartElement generateTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
+/*global d3 clickedBarPointSize highlightedPointColor highlightedPointSize normalPointSize normalBarFill createPoints reversedLine valueLine drawBasicPath toggleChartElement generateRegressionTemplate generateEquationTemplate addOrSubtract unload evaluatePValue toggleCenteredPoly onClickSelectCells chartOptionsTemplate*/
 window.addEventListener('unload', unload);
 window.opener.postMessage('ready', '*');
 
@@ -64,7 +64,13 @@ function receiveMessage(event) {
 		centeredDegree5Poly,
 		centeredDegree6Poly,
 		linearRegression,
+		resid,
 	} = event.data;
+
+	const sortedCiUpp = [ ...confUpp ].sort((a, b) => a[1] - b[1]);
+	const sortedCiLow = [ ...confLow ].sort((a, b) => a[1] - b[1]);
+	const sortedMeanCiUpp = [ ...meanCiUpp ].sort((a, b) => a[1] - b[1]);
+	const sortedMeanCiLow = [ ...meanCiLow ].sort((a, b) => a[1] - b[1]);
 
 	const linearRegressionCoefficients = linearRegression['coefficients'];
 	const degree2PolyCoefficients = degree2Poly['polynomial'];
@@ -311,45 +317,45 @@ function receiveMessage(event) {
   <details open style="padding: 10px 30px 30px; text-align: center;">
     <summary class="analysis-summary-title">Summary Statistics</summary>
     <div style="display: flex;">
-      <table style="width: 300px;">
-        <tr>
-          <td style="width: 200px;">Pearson's Correlation:</td>
-          <td style="width: 100px;">${corrcoef}</td>
-        </tr>
-        <tr>
-          <td style="width: 200px;">p:</td>
-          <td style="width: 100px;">${evaluatePValue(pValue)}</td>
-        </tr>
-        <tr>
-          <td style="width: 200px;">Covariance:</td>
-          <td style="width: 100px;">${covariance}</td>
-        </tr>
-        <tr>
-          <td style="width: 200px;">Count:</td>
-          <td style="width: 100px;">${coordinates.length}</td>
-        </tr>
-      </table>
+    <table style="width: 300px; margin-right: 20px;">
+      <tr>
+        <td class="header-background large">Pearson's Correlation</td>
+        <td class="right small">${corrcoef}</td>
+      </tr>
+      <tr>
+        <td class="header-background large">p</td>
+        <td class="right small">${evaluatePValue(pValue)}</td>
+      </tr>
+      <tr>
+        <td class="header-background large">Covariance</td>
+        <td class="right small">${covariance}</td>
+      </tr>
+      <tr>
+        <td class="header-background large">Count</td>
+        <td class="right small">${coordinates.length}</td>
+      </tr>
+    </table>
       <table style="width: 400px">
         <tr>
-          <td style="width: 200px; font-weight: bold;">Variable</td>
-          <td style="width: 100px; font-weight: bold;">Mean</td>
-          <td style="width: 100px; font-weight: bold;">Std Dev</td>
+          <td class="table-header large">Variable</td>
+          <td class="table-header small right">Mean</td>
+          <td class="table-header small right">Std Dev</td>
         </tr>
         <tr>
-          <td style="width: 200px;">${colX.label}</td>
-          <td style="width: 100px;">${colAMean}</td>
-          <td style="width: 100px;">${colAStdev}</td>
+          <td class="left large">${colX.label}</td>
+          <td class="right small">${colAMean}</td>
+          <td class="right small">${colAStdev}</td>
         </tr>
         <tr>
-          <td style="width: 200px;">${colY.label}</td>
-          <td style="width: 100px;">${colBMean}</td>
-          <td style="width: 100px;">${colBStdev}</td>
+          <td class="left large">${colY.label}</td>
+          <td class="right small">${colBMean}</td>
+          <td class="right small">${colBStdev}</td>
         </tr>
       </table>
     </div>
   </details>`;
 
-	const linearFitTemplate = generateTemplate(
+	const linearFitTemplate = generateRegressionTemplate(
 		'Linear Fit',
 		'linearRegressionLine',
 		null,
@@ -359,7 +365,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const quadraticFitTemplate = generateTemplate(
+	const quadraticFitTemplate = generateRegressionTemplate(
 		'Quadratic Fit',
 		'degree2PolyLine',
 		'uncentered',
@@ -369,7 +375,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const cubicFitTemplate = generateTemplate(
+	const cubicFitTemplate = generateRegressionTemplate(
 		'Cubic Fit',
 		'degree3PolyLine',
 		'uncentered',
@@ -379,7 +385,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const quarticFitTemplate = generateTemplate(
+	const quarticFitTemplate = generateRegressionTemplate(
 		'Quartic Fit',
 		'degree4PolyLine',
 		'uncentered',
@@ -389,7 +395,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const fifthDegreeFitTemplate = generateTemplate(
+	const fifthDegreeFitTemplate = generateRegressionTemplate(
 		'Fifth Degree Fit',
 		'degree5PolyLine',
 		'uncentered',
@@ -399,7 +405,7 @@ function receiveMessage(event) {
 		colX.label,
 	);
 
-	const sixthDegreeFitTemplate = generateTemplate(
+	const sixthDegreeFitTemplate = generateRegressionTemplate(
 		'Sixth Degree Fit',
 		'degree6PolyLine',
 		'uncentered',
@@ -411,7 +417,7 @@ function receiveMessage(event) {
 
 	const centeredX = `(${colX.label} - ${colAMean})`;
 
-	const centered2DegreeFitTemplate = generateTemplate(
+	const centered2DegreeFitTemplate = generateRegressionTemplate(
 		'Quadratic Fit (centered)',
 		'degree2CenteredPolyLine',
 		'centered',
@@ -422,7 +428,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered3DegreeFitTemplate = generateTemplate(
+	const centered3DegreeFitTemplate = generateRegressionTemplate(
 		'Cubic Fit (centered)',
 		'degree3CenteredPolyLine',
 		'centered',
@@ -433,7 +439,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered4DegreeFitTemplate = generateTemplate(
+	const centered4DegreeFitTemplate = generateRegressionTemplate(
 		'Quartic Fit (centered)',
 		'degree4CenteredPolyLine',
 		'centered',
@@ -444,7 +450,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered5DegreeFitTemplate = generateTemplate(
+	const centered5DegreeFitTemplate = generateRegressionTemplate(
 		'Fifth Degree Fit (centered)',
 		'degree5CenteredPolyLine',
 		'centered',
@@ -455,7 +461,7 @@ function receiveMessage(event) {
 		centeredX,
 	);
 
-	const centered6DegreeFitTemplate = generateTemplate(
+	const centered6DegreeFitTemplate = generateRegressionTemplate(
 		'Sixth Degree Fit (centered)',
 		'degree6CenteredPolyLine',
 		'centered',
@@ -465,6 +471,30 @@ function receiveMessage(event) {
 		colX.label,
 		centeredX,
 	);
+
+	const chartOptionsDropdown = `<div style="text-align: center;">
+  <h3>Chart Options</h3>
+    <select id="chart-options-dropdown" multiple>
+      <optgroup>
+        <option value="histogramBorders" selected>Histogram Borders</option>
+        <option value="centerPoly">Center Polynomial Regressions</option>
+      </optgroup>
+      <optgroup>
+        <option value="linearRegressionLine" selected>Linear Fit</option>
+        <option value="degree2PolyLine">Quadratic Fit</option>
+        <option value="degree3PolyLine">Cubic Fit</option>
+        <option value="degree4PolyLine">4th degree Fit</option>
+        <option value="degree5PolyLine">5th degree Fit</option>
+        <option value="degree6PolyLine">6th degree Fit</option>
+      </optgroup>
+      <optgroup>
+        <option value="confidenceBandsFit">Confidence Curves (fit)</option>
+        <option value="confidenceBands">Confidence curves</option>
+      </optgroup>
+  </select>
+</div>`;
+
+	const saveResidualsButton = `<button style="margin-top: 1em;" id="saveResiduals">Save Residuals</button>`;
 
 	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
 	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
@@ -478,10 +508,13 @@ function receiveMessage(event) {
 	const centeredQuarticFitParsed = new DOMParser().parseFromString(centered4DegreeFitTemplate, 'text/html');
 	const centeredFifthDegreeFitParsed = new DOMParser().parseFromString(centered5DegreeFitTemplate, 'text/html');
 	const centeredSixthDegreeFitParsed = new DOMParser().parseFromString(centered6DegreeFitTemplate, 'text/html');
-	const chartOptionsParsed = new DOMParser().parseFromString(chartOptionsTemplate, 'text/html');
+	// const chartOptionsParsed = new DOMParser().parseFromString(chartOptionsTemplate, 'text/html');
+	const chartOptionsDropdownParsed = new DOMParser().parseFromString(chartOptionsDropdown, 'text/html');
+	const saveResidualsButtonParsed = new DOMParser().parseFromString(saveResidualsButton, 'text/html');
 
 	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
-	container.appendChild(chartOptionsParsed.body.firstChild);
+	container.appendChild(chartOptionsDropdownParsed.body.firstChild);
+	container.appendChild(saveResidualsButtonParsed.body.firstChild);
 	container.appendChild(linearFitParsed.body.firstChild);
 	container.appendChild(quadraticFitParsed.body.firstChild);
 	container.appendChild(cubicFitParsed.body.firstChild);
@@ -495,82 +528,114 @@ function receiveMessage(event) {
 	container.appendChild(centeredSixthDegreeFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
 
-	document.getElementById('center-poly-checkbox').addEventListener('click', (e) => toggleCenteredPoly(e));
+	new SlimSelect({
+		select: '#chart-options-dropdown',
+		onChange: (info) => {
+			function showCenteredPoly(uncenteredClassName, centeredClassName) {
+				if (centerPoly) {
+					document.getElementById(centeredClassName).style.display = 'block';
+					document.getElementById(uncenteredClassName).style.display = 'none';
+				} else {
+					document.getElementById(centeredClassName).style.display = 'none';
+					document.getElementById(uncenteredClassName).style.display = 'block';
+				}
+			}
+			const histogramBorders = info.find((inf) => inf.value === 'histogramBorders');
+			const centerPoly = info.find((inf) => inf.value === 'centerPoly');
+			const linearRegressionLine = info.find((inf) => inf.value === 'linearRegressionLine');
+			const degree2Poly = info.find((inf) => inf.value === 'degree2PolyLine');
+			const degree3Poly = info.find((inf) => inf.value === 'degree3PolyLine');
+			const degree4Poly = info.find((inf) => inf.value === 'degree4PolyLine');
+			const degree5Poly = info.find((inf) => inf.value === 'degree5PolyLine');
+			const degree6Poly = info.find((inf) => inf.value === 'degree6PolyLine');
+			const confidenceBands = info.find((inf) => inf.value === 'confidenceBands');
+			const confidenceBandsFit = info.find((inf) => inf.value === 'confidenceBandsFit');
+			if (histogramBorders) {
+				drawHistogramBorders();
+			} else {
+				d3.selectAll(`.histogramBorders`).remove();
+			}
+			if (linearRegressionLine) {
+				drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line');
+				document.getElementById('linearRegressionLine').style.display = 'block';
+			} else {
+				d3.selectAll(`.linearRegressionLine`).remove();
+				d3.selectAll(`.linearRegressionLine-hitbox`).remove();
+				document.getElementById('linearRegressionLine').style.display = 'none';
+			}
+			if (degree2Poly) {
+				drawBasicPath(degree2Points, reversedLine, 'degree2PolyLine', 'Quadratic Regression Line');
+				showCenteredPoly('degree2PolyLine', 'degree2CenteredPolyLine');
+			} else {
+				d3.selectAll(`.degree2PolyLine`).remove();
+				d3.selectAll(`.degree2PolyLine-hitbox`).remove();
+				document.getElementById('degree2CenteredPolyLine').style.display = 'none';
+				document.getElementById('degree2PolyLine').style.display = 'none';
+			}
+			if (degree3Poly) {
+				drawBasicPath(degree3Points, reversedLine, 'degree3PolyLine', 'Cubic Regression Line');
+				showCenteredPoly('degree3PolyLine', 'degree3CenteredPolyLine');
+			} else {
+				d3.selectAll(`.degree3PolyLine`).remove();
+				d3.selectAll(`.degree3PolyLine-hitbox`).remove();
+				document.getElementById('degree3CenteredPolyLine').style.display = 'none';
+				document.getElementById('degree3PolyLine').style.display = 'none';
+			}
+			if (degree4Poly) {
+				drawBasicPath(degree4Points, reversedLine, 'degree4PolyLine', 'Quartic Regression Line');
+				showCenteredPoly('degree4PolyLine', 'degree4CenteredPolyLine');
+			} else {
+				d3.selectAll(`.degree4PolyLine`).remove();
+				d3.selectAll(`.degree4PolyLine-hitbox`).remove();
+				document.getElementById('degree4CenteredPolyLine').style.display = 'none';
+				document.getElementById('degree4PolyLine').style.display = 'none';
+			}
+			if (degree5Poly) {
+				drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine', '5th Degree Regression Line');
+				showCenteredPoly('degree4PolyLine', 'degree4CenteredPolyLine');
+			} else {
+				d3.selectAll(`.degree5PolyLine`).remove();
+				d3.selectAll(`.degree5PolyLine-hitbox`).remove();
+				document.getElementById('degree5CenteredPolyLine').style.display = 'none';
+				document.getElementById('degree5PolyLine').style.display = 'none';
+			}
+			if (degree6Poly) {
+				drawBasicPath(degree6Points, reversedLine, 'degree6PolyLine', '6th Degree Regression Line');
+				showCenteredPoly('degree6PolyLine', 'degree6CenteredPolyLine');
+			} else {
+				d3.selectAll(`.degree6PolyLine`).remove();
+				d3.selectAll(`.degree6PolyLine-hitbox`).remove();
+				document.getElementById('degree6CenteredPolyLine').style.display = 'none';
+				document.getElementById('degree6PolyLine').style.display = 'none';
+			}
+			if (confidenceBands) {
+				drawBasicPath(sortedCiUpp, valueLine, 'confidenceBands', null);
+				drawBasicPath(sortedCiLow, valueLine, 'confidenceBands', null);
+			} else {
+				d3.selectAll(`.confidenceBands`).remove();
+				d3.selectAll(`.confidenceBands-hitbox`).remove();
+			}
+			if (confidenceBandsFit) {
+				drawBasicPath(sortedMeanCiUpp, valueLine, 'confidenceBandsFit', null);
+				drawBasicPath(sortedMeanCiLow, valueLine, 'confidenceBandsFit', null);
+			} else {
+				d3.selectAll(`.confidenceBandsFit`).remove();
+				d3.selectAll(`.confidenceBandsFit-hitbox`).remove();
+			}
+		},
+	});
 
-	document
-		.getElementById('histogram-borders-checkbox')
-		.addEventListener('click', (e) => toggleChartElement(e.target, () => drawHistogramBorders()));
+	function onClickSaveResiduals() {
+		window.opener.postMessage(
+			{
+				message: 'save-residuals',
+				residuals: resid,
+			},
+			'*',
+		);
+	}
 
-	document
-		.getElementById('linear-regression-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () =>
-				drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line'),
-			),
-		);
-
-	document
-		.getElementById('degree2-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () =>
-				drawBasicPath(degree2Points, reversedLine, 'degree2PolyLine', 'Quadratic Regression Line'),
-			),
-		);
-
-	document
-		.getElementById('degree3-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () =>
-				drawBasicPath(degree3Points, reversedLine, 'degree3PolyLine', 'Cubic Regression Line'),
-			),
-		);
-
-	document
-		.getElementById('degree4-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () =>
-				drawBasicPath(degree4Points, reversedLine, 'degree4PolyLine', 'Quartic Regression Line'),
-			),
-		);
-
-	document
-		.getElementById('degree5-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () =>
-				drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine', 'Fifth Degree Regression Line'),
-			),
-		);
-
-	document
-		.getElementById('degree6-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () =>
-				drawBasicPath(degree6Points, reversedLine, 'degree6PolyLine', 'Sixth Degree Regression Line'),
-			),
-		);
-
-	document
-		.getElementById('confidence-bands-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(confUpp, valueLine, 'confidenceBands', null)),
-		);
-	document
-		.getElementById('confidence-bands-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(confLow, valueLine, 'confidenceBands', null)),
-		);
-
-	document
-		.getElementById('confidence-bands-fit-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(meanCiUpp, valueLine, 'confidenceBandsFit', null)),
-		);
-
-	document
-		.getElementById('confidence-bands-fit-checkbox')
-		.addEventListener('click', (e) =>
-			toggleChartElement(e.target, () => drawBasicPath(meanCiLow, valueLine, 'confidenceBandsFit', null)),
-		);
+	document.getElementById('saveResiduals').addEventListener('click', (e) => onClickSaveResiduals());
 
 	drawHistogramBorders();
 	drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line');

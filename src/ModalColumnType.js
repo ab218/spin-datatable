@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import katex from 'katex';
 import nerdamer from 'nerdamer';
-import { Alert, Button, Icon, Input, Modal } from 'antd';
+import { Button, Icon, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
 import Dropdown from './Dropdown';
+import ErrorMessage from './ErrorMessage';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import {
-	SET_MODAL_ERROR,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	UPDATE_COLUMN,
 	NUMBER,
@@ -19,8 +19,8 @@ import {
 
 export default function AntModal({ selectedColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { columns, columnTypeModalOpen, modalError, rows } = useSpreadsheetState();
-	const { formula, label, modelingType, type, units } = selectedColumn;
+	const { columns, columnTypeModalOpen, rows } = useSpreadsheetState();
+	const { formula, description, label, modelingType, type, units } = selectedColumn;
 	const formulaFromState = formula && formula.expression;
 	const [ columnFormula, setColumnFormula ] = useState(swapIDsWithLabels(formulaFromState, columns) || '');
 	const [ selectedFormulaVariable, setSelectedFormulaVariable ] = useState(null);
@@ -29,11 +29,9 @@ export default function AntModal({ selectedColumn }) {
 	const [ columnName, setColumnName ] = useState(label);
 	const [ columnType, setColumnType ] = useState(type);
 	const [ columnUnits, setColumnUnits ] = useState(units);
+	const [ columnDescription, setColumnDescription ] = useState(description);
 	const [ columnModelingType, setColumnModelingType ] = useState(modelingType);
-
-	function setModalError(modalError) {
-		dispatchSpreadsheetAction({ type: SET_MODAL_ERROR, modalError });
-	}
+	const [ error, setError ] = useState(null);
 
 	function checkIfValidFormula(formula, columns) {
 		if (!formula) return undefined;
@@ -78,18 +76,21 @@ export default function AntModal({ selectedColumn }) {
 	}
 
 	function handleClose() {
-		const lettersOnlyReg = /^[A-Za-z]+$/;
+		const lettersAndSpacesOnlyReg = /^[0-9a-zA-Z\s]*$/;
 		if (!columnName) {
-			return setModalError('Column Name cannot be blank');
+			return setError('Column Name cannot be blank');
 		}
-		if (!lettersOnlyReg.test(columnName)) {
-			return setModalError('Column Name must contain only letters');
+		if (!lettersAndSpacesOnlyReg.test(columnName)) {
+			return setError('Column Name must contain only letters, spaces and numbers');
+		}
+		if (!columnName[0].match(/[a-z]/i)) {
+			return setError('Column Name must begin with a letter');
 		}
 		if (validateColumnName(columnName)) {
-			return setModalError('Column Name must be unique');
+			return setError('Column Name must be unique');
 		}
 		if (columnFormula && formulaError) {
-			return setModalError('Invalid formula entered');
+			return setError('Invalid formula entered');
 		}
 		dispatchSpreadsheetAction({
 			type: UPDATE_COLUMN,
@@ -178,7 +179,7 @@ export default function AntModal({ selectedColumn }) {
 				visible={columnTypeModalOpen}
 				footer={[
 					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
-						{modalError ? <Alert className="error" message={modalError} type="error" showIcon /> : <div />}
+						<ErrorMessage error={error} setError={setError} />
 						<span style={{ alignSelf: 'end' }}>
 							<Button
 								key="back"
@@ -231,6 +232,23 @@ export default function AntModal({ selectedColumn }) {
 						menuItems={[ CONTINUOUS, ORDINAL, NOMINAL ]}
 						setColumnType={setColumnModelingType}
 						columnType={columnModelingType}
+					/>
+				</span>
+				<span className="modal-span">
+					<h4>
+						Notes <span style={{ fontStyle: 'italic', opacity: 0.4 }}>(Optional)</span>
+					</h4>
+					<Input.TextArea
+						value={columnDescription}
+						onChange={(e) => setColumnDescription(e.target.value)}
+						style={{
+							resize: 'none',
+							userSelect: 'none',
+							marginTop: 0,
+							width: 300,
+							height: 100,
+							border: '1px solid blue',
+						}}
 					/>
 				</span>
 				{columnType === FORMULA && (

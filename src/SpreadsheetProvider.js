@@ -18,6 +18,7 @@ import {
 	OPEN_CONTEXT_MENU,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
+	SAVE_RESIDUALS_TO_COLUMN,
 	SET_SELECTED_COLUMN,
 	SELECT_CELL,
 	SELECT_CELLS,
@@ -26,7 +27,6 @@ import {
 	SELECT_COLUMN,
 	SET_FILTERS,
 	SORT_COLUMN,
-	SET_MODAL_ERROR,
 	TOGGLE_ANALYSIS_MODAL,
 	TOGGLE_BAR_CHART_MODAL,
 	TOGGLE_COLUMN_TYPE_MODAL,
@@ -249,8 +249,8 @@ function spreadsheetReducer(state, action) {
 		filters,
 		filterModalOpen,
 		layout,
-		modalError,
 		numberFilters,
+		residuals,
 		row,
 		rowCount,
 		rowID,
@@ -361,7 +361,7 @@ function spreadsheetReducer(state, action) {
 			const newColumns = Array(columnCount).fill(undefined).map((_, i) => {
 				const id = createRandomLetterString();
 				columnCounter++;
-				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${columnCounter}` };
+				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${columnCounter}`, description: '' };
 			});
 			const columns = state.columns.concat(newColumns);
 			return { ...state, columns, columnCounter };
@@ -436,7 +436,15 @@ function spreadsheetReducer(state, action) {
 				for (let copiedValuesIndex = 0; copiedValuesIndex < copiedValues.length; copiedValuesIndex++) {
 					const newRowValue = { ...rows[indexOfFirstDestinationRow + copiedValuesIndex] };
 					for (let colIndex = 0; colIndex < destinationColumns.length; colIndex++) {
-						newRowValue[destinationColumns[colIndex]] = copiedValues[copiedValuesIndex][colIndex];
+						const targetColumn = state.columns.find((col) => col.id === destinationColumns[colIndex]);
+						if (targetColumn && targetColumn.type === 'Formula') {
+							newRowValue[destinationColumns[colIndex]] = {
+								error: '#FORMERR',
+								errorMessage: 'Please verify formula is still correct after paste operation',
+							};
+						} else {
+							newRowValue[destinationColumns[colIndex]] = copiedValues[copiedValuesIndex][colIndex];
+						}
 					}
 					newRowValues.push(newRowValue);
 				}
@@ -563,6 +571,26 @@ function spreadsheetReducer(state, action) {
 				currentCellSelectionRange: selectedCell,
 				uniqueRowIDs: currentRowIDs,
 				uniqueColumnIDs: currentColumnIDs,
+			};
+		}
+		case SAVE_RESIDUALS_TO_COLUMN: {
+			let residualsColumnsCounter = state.residualsColumnsCounter + 1;
+			const newColumn = {
+				id: createRandomLetterString(),
+				modelingType: CONTINUOUS,
+				type: NUMBER,
+				label: `Residuals ${residualsColumnsCounter}`,
+				description: `Generated from [${action.colY.label} by ${action.colX.label}] Bivariate Analysis output window.`,
+			};
+			const columns = state.columns.concat(newColumn);
+			const newRows = state.rows.map((row, i) => {
+				return { ...row, [newColumn.id]: residuals[i] };
+			});
+			return {
+				...state,
+				rows: newRows,
+				columns,
+				residualsColumnsCounter,
 			};
 		}
 		case SELECT_ROW: {
@@ -794,9 +822,24 @@ function spreadsheetReducer(state, action) {
 		}
 
 		case SORT_COLUMN: {
-			const columnID = getCol(colName).id;
-			state.rows.sort((a, b) => (descending ? [ b[columnID] ] - [ a[columnID] ] : [ a[columnID] ] - [ b[columnID] ]));
-			return { ...state };
+			const targetColumn = getCol(colName);
+			const deepCopyRows = JSON.parse(JSON.stringify(state.rows));
+			if (targetColumn.type === 'Number' || targetColumn.type === 'Formula') {
+				deepCopyRows.sort(
+					(a, b) =>
+						descending
+							? [ b[targetColumn.id] ] - [ a[targetColumn.id] ]
+							: [ a[targetColumn.id] ] - [ b[targetColumn.id] ],
+				);
+			} else if (targetColumn.type === 'String') {
+				deepCopyRows.sort(
+					(a, b) =>
+						descending
+							? b[targetColumn.id].localeCompare(a[targetColumn.id])
+							: a[targetColumn.id].localeCompare(b[targetColumn.id]),
+				);
+			}
+			return { ...state, rows: deepCopyRows };
 		}
 		case SET_FILTERS: {
 			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
@@ -834,9 +877,6 @@ function spreadsheetReducer(state, action) {
 				uniqueRowIDs: filteredRowIDs,
 				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
-		}
-		case SET_MODAL_ERROR: {
-			return { ...state, modalError };
 		}
 		case UPDATE_COLUMN: {
 			const columnCopy = { ...updatedColumn };
@@ -917,8 +957,8 @@ export function useSpreadsheetDispatch() {
 export function SpreadsheetProvider({ eventBus, children }) {
 	// dummy data
 	const statsColumns = [
-		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced' },
-		{ id: '_abc2_', modelingType: NOMINAL, type: NUMBER, units: 'sec', label: 'Time' },
+		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced', description: '' },
+		{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time', description: '' },
 		{
 			id: '_abc3_',
 			modelingType: CONTINUOUS,
@@ -926,8 +966,9 @@ export function SpreadsheetProvider({ eventBus, children }) {
 			type: FORMULA,
 			units: 'ml/sec',
 			label: 'Rate',
+			description: '',
 		},
-		{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution' },
+		{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution', description: '' },
 	];
 
 	const startingColumn = [
@@ -937,6 +978,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 			type: NUMBER,
 			units: '',
 			label: 'Column 1',
+			description: '',
 		},
 	];
 
@@ -956,10 +998,10 @@ export function SpreadsheetProvider({ eventBus, children }) {
   6	29.6	0.2027027027	Potato
   5	26.8	0.1865671642	Potato
   6	32.1	0.1869158879	Potato
-  7	32.9	0.2127659574	Potato
-  6	33.4	0.1796407186	Potato
-  5	32.7	0.1529051988	Potato
-  5	31.6	0.1582278481	Potato`;
+  7	32.9	0.2127659574	Beer
+  6	33.4	0.1796407186	Beer
+  5	32.7	0.1529051988	Beer
+  5	31.6	0.1582278481	Beer`;
 
 	// quickly build rows out of copy/pasted data
 	function createRows(table) {
@@ -985,6 +1027,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		cellSelectionRanges: [],
 		// First column created will be "Column 2"
 		columnCounter: 1,
+		residualsColumnsCounter: 0,
 		columnTypeModalOpen: false,
 		colHeaderContext: false,
 		columns: statsColumns,
@@ -1000,7 +1043,10 @@ export function SpreadsheetProvider({ eventBus, children }) {
 			numberFilters: [],
 		},
 		filterModalOpen: false,
-		inverseDependencyMap: {},
+		inverseDependencyMap: {
+			_abc1_: [ '_abc3_' ],
+			_abc2_: [ '_abc3_' ],
+		},
 		lastSelection: { row: 1, column: 1 },
 		layout: true,
 		mappedColumns: {},

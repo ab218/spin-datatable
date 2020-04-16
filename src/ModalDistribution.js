@@ -1,10 +1,11 @@
 // TODO: Combine this component with Analysis Modal
 import React, { useState } from 'react';
-import { Alert, Modal, Button, Input } from 'antd';
+import { Modal, Button, Input } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELLS, REMOVE_SELECTED_CELLS } from './constants';
 import { performDistributionAnalysis } from './Analyses';
 import { SelectColumn, styles } from './ModalShared';
+import ErrorMessage from './ErrorMessage';
 
 export default function DistributionModal() {
 	const { distributionModalOpen, columns, excludedRows, rows } = useSpreadsheetState();
@@ -96,7 +97,7 @@ export default function DistributionModal() {
 				bodyStyle={{ background: '#ECECEC' }}
 				footer={[
 					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
-						{error ? <Alert className="error" message={error} type="error" showIcon /> : <div />}
+						<ErrorMessage error={error} setError={setError} />
 						<span style={{ alignSelf: 'end' }}>
 							<Button disabled={performingAnalysis} key="back" onClick={handleModalClose}>
 								Cancel

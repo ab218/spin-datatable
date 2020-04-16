@@ -20,6 +20,37 @@ export async function pingCloudFunctions() {
 	);
 }
 
+// bug: if the group only has one data point in it, the cloud function fails.
+export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols) {
+	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway';
+	const result = await axios.post(
+		gcloud,
+		{
+			x: colXArr,
+			y: colYArr,
+		},
+		{
+			crossDomain: true,
+		},
+	);
+	const { ordered_differences_report, bartlett, levene, x_groups_lists, means_std, anova, summary_table } = result.data;
+
+	return {
+		ordered_differences_report: JSON.parse(ordered_differences_report),
+		x_groups_lists: JSON.parse(x_groups_lists),
+		anova: JSON.parse(anova),
+		coordinates: XYCols,
+		bartlett,
+		levene,
+		colX,
+		colY,
+		colXArr,
+		colYArr,
+		means_std: JSON.parse(means_std),
+		summary_table,
+	};
+}
+
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
 	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
@@ -61,6 +92,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, co
 		centered_4_poly,
 		centered_5_poly,
 		centered_6_poly,
+		resid,
 	} = result.data;
 
 	console.log(result.data);
@@ -90,6 +122,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, co
 		centeredDegree5Poly: centered_5_poly,
 		centeredDegree6Poly: centered_6_poly,
 		coordinates: XYCols,
+		resid,
 		linearRegression: {
 			coefficients: [ slope.toFixed(4) / 1, intercept.toFixed(4) / 1 ],
 			determination: rsquared.toFixed(4) / 1,

@@ -25,8 +25,8 @@ const paramEstimates = (coeffs, xLabel, centered) => {
 	for (let i = coeffs.length - 3; i >= 0; i--) {
 		temp += `
     <tr>
-      <td style="width: 34%;">${centered ? centered : xLabel}^${counter}</td>
-      <td style="width: 66%;">${coeffs[i].toFixed(6) / 1}</td>
+      <td class="header-background">${centered ? centered : xLabel}^${counter}</td>
+      <td class="small right">${coeffs[i].toFixed(4) / 1}</td>
     </tr>
     `;
 		counter++;
@@ -35,50 +35,50 @@ const paramEstimates = (coeffs, xLabel, centered) => {
 };
 
 const paramEstimateTable = (coeffs, xLabel, centered) => `
-            <h5 style="margin-bottom: 0;">Parameter Estimates</h5>
-            <table style="width: 100%;">
-            <tr>
-              <td style="width: 34%; font-weight: bold;">Term</td>
-              <td style="width: 66%; font-weight: bold;">Estimate</td>
-            </tr>
-            <tr>
-              <td style="width: 34%;">Intercept</td>
-              <td style="width: 66%;">${coeffs[coeffs.length - 1].toFixed(6) / 1}</td>
-            </tr>
-            <tr>
-              <td style="width: 34%;">${centered ? centered : xLabel}</td>
-              <td style="width: 66%;">${coeffs[coeffs.length - 2].toFixed(6) / 1}</td>
-            </tr>
-            ${paramEstimates(coeffs, xLabel, centered)}
-          </table>
-          `;
+<table>
+  <tr><td colspan=2 class="table-subtitle">Parameter Estimates</td></tr>
+  <tr>
+    <td class="table-header large">Term</td>
+    <td class="table-header small right">Estimate</td>
+  </tr>
+  <tr>
+    <td class="header-background large">Intercept</td>
+    <td class="small right">${coeffs[coeffs.length - 1].toFixed(4) / 1}</td>
+  </tr>
+  <tr>
+    <td class="header-background">${centered ? centered : xLabel}</td>
+    <td class="small right">${coeffs[coeffs.length - 2].toFixed(4) / 1}</td>
+  </tr>
+  ${paramEstimates(coeffs, xLabel, centered)}
+</table>
+`;
 
-const generateTemplate = (title, id, className, equation, polyDegree, coeffs, xLabel, centered) => `
-        <details class="analysis-details ${className}" open id="${id}">
-          <summary class="analysis-summary-title">Summary of ${title}</summary>
-          <table style="width: 100%;">
-            <tr>
-              <td style="width: 34%;">Equation</td>
-              <td style="width: 66%;">${equation}</td>
-            </tr>
-            <tr>
-              <td style="width: 34%;">R-squared</td>
-              <td style="width: 66%;">${polyDegree.determination.toFixed(6) / 1}</td>
-            </tr>
-            </table>
-            ${paramEstimateTable(coeffs, xLabel, centered)}
-          </details>
+const generateRegressionTemplate = (title, id, className, equation, polyDegree, coeffs, xLabel, centered) => `
+<details class="analysis-details ${className}" open id="${id}">
+  <summary class="analysis-summary-title">${title}</summary>
+  <div class="left xxlarge">${equation}</div>
+  <div style="height: 10px;"></div>
+  <table>
+    <tr><td colspan=2 class="table-subtitle">Summary of fit</td></tr>
+    <tr>
+      <td class="header-background small">R-squared</td>
+      <td class="small right">${polyDegree.determination.toFixed(4) / 1}</td>
+    </tr>
+  </table>
+  <div style="height: 10px;"></div>
+  ${paramEstimateTable(coeffs, xLabel, centered)}
+</details>
 `;
 
 const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
 
 const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
-	let temp = `${yLabel} = ${coeffs[coeffs.length - 1].toFixed(6) / 1} ${addOrSubtract(
+	let temp = `${yLabel} = ${coeffs[coeffs.length - 1].toFixed(4) / 1} ${addOrSubtract(
 		coeffs[coeffs.length - 2],
-	)} ${Math.abs(coeffs[1]).toFixed(6) / 1} * ${centered ? centered : xLabel}`;
+	)} ${Math.abs(coeffs[1]).toFixed(4) / 1} * ${centered ? centered : xLabel}`;
 	let counter = 2;
 	for (let i = coeffs.length - 3; i >= 0; i--) {
-		temp += ` ${addOrSubtract(coeffs[i])} ${Math.abs(coeffs[i]).toFixed(6) / 1} * ${centered
+		temp += ` ${addOrSubtract(coeffs[i])} ${Math.abs(coeffs[i]).toFixed(4) / 1} * ${centered
 			? centered
 			: xLabel}^${counter}`;
 		counter++;
@@ -93,10 +93,10 @@ function unload(e) {
 	window.opener.postMessage('closed', '*');
 }
 
-function toggleCenteredPoly(e) {
+function toggleCenteredPoly(checked) {
 	const centeredEls = document.getElementsByClassName('centered');
 	const uncenteredEls = document.getElementsByClassName('uncentered');
-	if (e.target.checked) {
+	if (checked) {
 		for (let i = 0; i < centeredEls.length; i++) {
 			centeredEls[i].style.display = 'block';
 		}
@@ -113,7 +113,7 @@ function toggleCenteredPoly(e) {
 	}
 }
 
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue);
+const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
 
 function onClickSelectCells(thisBar, bar, col) {
 	let metaKeyPressed = false;
@@ -241,33 +241,36 @@ const drawBasicPath = (points, line, name, title) => {
 		});
 };
 
-function toggleChartElement(ele, drawLine) {
-	const outputElement = d3.selectAll(`.${ele.value}`);
-	const outputElementHitbox = d3.selectAll(`.${ele.value}-hitbox`);
-	if (ele.checked) {
-		drawLine();
-	} else {
-		if (outputElement) {
-			outputElement.remove();
-			outputElementHitbox.remove();
-		}
-	}
-}
+// function toggleChartElement(ele, drawLine) {
+// 	console.log('top', ele, drawLine);
+// 	const outputElement = d3.selectAll(`.${ele.value}`);
+// 	const outputElementHitbox = d3.selectAll(`.${ele.value}-hitbox`);
+// 	if (outputElement._groups[0].length > 1) {
+// 		console.log('already there', outputElement._groups[0].length);
+// 		return;
+// 	}
+// 	console.log('draw');
+// 	drawLine();
+// 	// if (outputElement) {
+// 	// 	outputElement.remove();
+// 	// 	outputElementHitbox.remove();
+// 	// }
+// }
 
 // various chart options checkboxes show/hide fit lines and output
-const chartOptionsTemplate = `<details style="text-align: left;" class="analysis-details" open>
-<summary class="analysis-summary-title">Chart Options</summary>
-<div style="margin-left: 2em;">
-  <div><input id="histogram-borders-checkbox" type="checkbox" value="histogramBorders" checked>Histogram Borders</div>
-  <br>
-  <div><input id="center-poly-checkbox" type="checkbox">Center Polynomial Regressions</div>
-  <div><input id="linear-regression-checkbox" type="checkbox" value="linearRegressionLine" checked>Linear Fit <span style="font-size: 1.5em; color: steelblue;">&#9656</span></div>
-  <div style="margin-left: 2em;"><input id="confidence-bands-fit-checkbox" type="checkbox" value="confidenceBandsFit">Confid Curves Fit <span style="font-size: 1.5em; color: red;">&#9656</span></div>
-  <div style="margin-left: 2em;"><input id="confidence-bands-checkbox" type="checkbox" value="confidenceBands">Confid Curves Indiv <span style="font-size: 1.5em; color: red;">&#9656</span></div>
-  <div><input id="degree2-checkbox" type="checkbox" value="degree2PolyLine">Quadratic Fit <span style="font-size: 1.5em; color: green;">&#9656</span></div>
-  <div><input id="degree3-checkbox" type="checkbox" value="degree3PolyLine">Cubic Fit <span style="font-size: 1.5em; color: darkmagenta;">&#9656</span></div>
-  <div><input id="degree4-checkbox" type="checkbox" value="degree4PolyLine">Quartic Fit <span style="font-size: 1.5em; color: saddlebrown;">&#9656</span></div>
-  <div><input id="degree5-checkbox" type="checkbox" value="degree5PolyLine">5th Degree Fit <span style="font-size: 1.5em; color: goldenrod;">&#9656</span></div>
-  <div><input id="degree6-checkbox" type="checkbox" value="degree6PolyLine">6th Degree Fit <span style="font-size: 1.5em; color: thistle;">&#9656</span></div>
-</div>
-</details>`;
+// const chartOptionsTemplate = `<details style="text-align: left;" class="analysis-details" open>
+// <summary class="analysis-summary-title">Chart Options</summary>
+// <div style="margin-left: 2em;">
+//   <div><input id="histogram-borders-checkbox" type="checkbox" value="histogramBorders" checked>Histogram Borders</div>
+//   <br>
+//   <div><input id="center-poly-checkbox" type="checkbox">Center Polynomial Regressions</div>
+//   <div><input id="linear-regression-checkbox" type="checkbox" value="linearRegressionLine" checked>Linear Fit <span style="font-size: 1.5em; color: steelblue;">&#9656</span></div>
+//   <div style="margin-left: 2em;"><input id="confidence-bands-fit-checkbox" type="checkbox" value="confidenceBandsFit">Confid Curves Fit <span style="font-size: 1.5em; color: red;">&#9656</span></div>
+//   <div style="margin-left: 2em;"><input id="confidence-bands-checkbox" type="checkbox" value="confidenceBands">Confid Curves Indiv <span style="font-size: 1.5em; color: red;">&#9656</span></div>
+//   <div><input id="degree2-checkbox" type="checkbox" value="degree2PolyLine">Quadratic Fit <span style="font-size: 1.5em; color: green;">&#9656</span></div>
+//   <div><input id="degree3-checkbox" type="checkbox" value="degree3PolyLine">Cubic Fit <span style="font-size: 1.5em; color: darkmagenta;">&#9656</span></div>
+//   <div><input id="degree4-checkbox" type="checkbox" value="degree4PolyLine">Quartic Fit <span style="font-size: 1.5em; color: saddlebrown;">&#9656</span></div>
+//   <div><input id="degree5-checkbox" type="checkbox" value="degree5PolyLine">5th Degree Fit <span style="font-size: 1.5em; color: goldenrod;">&#9656</span></div>
+//   <div><input id="degree6-checkbox" type="checkbox" value="degree6PolyLine">6th Degree Fit <span style="font-size: 1.5em; color: thistle;">&#9656</span></div>
+// </div>
+// </details>`;

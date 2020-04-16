@@ -47,13 +47,14 @@ export default function AntModal() {
 			<Modal
 				className="ant-modal"
 				destroyOnClose
+				width={500}
 				onCancel={handleCancel}
 				onOk={handleClose}
 				title={`Data Filter`}
 				visible={filterModalOpen}
 				style={{ display: 'flex', justifyContent: 'center' }}
 			>
-				<div style={{ width: 300, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+				<div style={{ width: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 					<SelectColumn
 						title={'Select Column'}
 						columns={columns}
@@ -121,9 +122,9 @@ function FilterColumnPicker({ column, removeColumn }) {
 		<div style={{ marginBottom: 20, paddingBottom: 30, paddingLeft: 10, textAlign: 'center' }}>
 			{label} ({uniqueColumnValues.length})
 			<div style={{ display: 'flex' }}>
-				<Select mode="multiple" style={{ width: 300 }} placeholder="Please select" onChange={handleChange}>
+				<Select mode="multiple" style={{ width: 400 }} placeholder="Please select" onChange={handleChange}>
 					{uniqueColumnValues.map((text) => (
-						<Option style={{ width: 300 }} key={text}>
+						<Option style={{ width: 400 }} key={text}>
 							{text}
 						</Option>
 					))}

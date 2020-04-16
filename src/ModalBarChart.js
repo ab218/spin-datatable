@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Alert, Button, Modal } from 'antd';
+import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import { createBarChart } from './Analyses';
 import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from './constants';
+import ErrorMessage from './ErrorMessage';
 
 export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -131,7 +132,7 @@ export default function AnalysisModal() {
 				bodyStyle={{ background: '#ECECEC' }}
 				footer={[
 					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
-						{error ? <Alert className="error" message={error} type="error" showIcon /> : <div />}
+						<ErrorMessage error={error} setError={setError} />
 						<span style={{ alignSelf: 'end' }}>
 							<Button disabled={performingAnalysis} key="back" onClick={handleModalClose}>
 								Cancel
