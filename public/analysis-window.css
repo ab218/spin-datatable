@@ -164,12 +164,35 @@ body {
 	font-weight: bold;
 }
 
+.header-background {
+	background-color: #e2d7d7;
+}
+
+.xxlarge {
+	width: 400px;
+}
+
+.large {
+	width: 200px;
+}
+
+.medium {
+	width: 150px;
+}
+
+.small {
+	width: 100px;
+}
+
+.xsmall {
+	width: 50px;
+}
+
 .table-subtitle {
 	font-weight: bold;
 	text-align: left;
 	font-size: 1.2em;
 	background-color: rgb(238, 238, 238);
-	/* border-bottom: 1px solid lightgray; */
 }
 
 .left {

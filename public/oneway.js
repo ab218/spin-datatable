@@ -130,72 +130,70 @@ function receiveMessage(event) {
       <table>
         <tr><td colspan=2 class="table-subtitle">Summary of Fit</td></tr>
         <tr>
-          <td style="background-color: E2D7D7; width: 200px;">R-squared</td>
-          <td style="text-align: right; width: 150px;">${summary_table.rsquared.toFixed(4) / 1}</td>
+          <td class="table-header large">R-squared</td>
+          <td class="right small">${summary_table.rsquared.toFixed(4) / 1}</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7; width: 200px;">Adj R-squared</td>
-          <td style="text-align: right; width: 150px;">${summary_table.rsquared_adj.toFixed(4) / 1}</td>
+          <td class="table-header large">Adj R-squared</td>
+          <td class="right small">${summary_table.rsquared_adj.toFixed(4) / 1}</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7; width: 200px;">Root Mean Square Error</td>
-          <td style="text-align: right; width: 150px;">${summary_table.root_mean_squared_error.toFixed(4) / 1 / 1}</td>
+          <td class="table-header large"">Root Mean Square Error</td>
+          <td class="right small">${summary_table.root_mean_squared_error.toFixed(4) / 1 / 1}</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7; width: 200px;">Mean of Response</td>
-          <td style="text-align: right; width: 150px;">${summary_table.y_mean}</td>
+          <td class="table-header large">Mean of Response</td>
+          <td class="right small">${summary_table.y_mean}</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7; width: 200px;">Observations</td>
-          <td style="text-align: right; width: 150px;">${summary_table.nobs}</td>
+          <td class="table-header large">Observations</td>
+          <td class="right small">${summary_table.nobs}</td>
         </tr>
       </table>
       <div style="height: 30px;"></div>
       <table>
         <tr><td colspan=6 class="table-subtitle">Analysis of Variance</td></tr>
         <tr>
-          <td style="background-color: E2D7D7; font-weight: bold;">Source</td>
-          <td style="width: 50px;" class="table-header right">DF</td>
+          <td class="table-header large">Source</td>
+          <td class="table-header right xsmall">DF</td>
           <td class="table-header right">Sum of Squares</td>
           <td class="table-header right">Mean Square</td>
           <td class="table-header right">F Ratio</td>
           <td class="table-header right">Prob > F</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7;">${colX.label}</td>
-          <td style="text-align: right; width: 50px;">${anova.df.x}</td>
-          <td style="text-align: right; width: 100px;">${anova.sum_sq.x}</td>
-          <td style="text-align: right; width: 100px;">${anova.mean_sq.x}</td>
-          <td style="text-align: right; width: 100px;">${anova.F.x.toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;">${evaluatePValue(anova['PR(>F)'].x)}</td>
+          <td class="header-background">${colX.label}</td>
+          <td class="right xsmall">${anova.df.x}</td>
+          <td class="right small">${anova.sum_sq.x}</td>
+          <td class="right small">${anova.mean_sq.x}</td>
+          <td class="right small">${anova.F.x.toFixed(4) / 1}</td>
+          <td class="right small">${evaluatePValue(anova['PR(>F)'].x)}</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7;">Error</td>
-          <td style="text-align: right; width: 50px;">${anova.df.Residual}</td>
-          <td style="text-align: right; width: 100px;">${anova.sum_sq.Residual.toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;">${anova.mean_sq.Residual.toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;"></td>
-          <td style="text-align: right; width: 100px;"></td>
+          <td class="header-background">Error</td>
+          <td class="right xsmall">${anova.df.Residual}</td>
+          <td class="right small">${anova.sum_sq.Residual.toFixed(4) / 1}</td>
+          <td class="right small">${anova.mean_sq.Residual.toFixed(4) / 1}</td>
+          <td class="right small"></td>
+          <td class="right small"></td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7;">C. Total</td>
-          <td style="text-align: right; width: 50px;">${anova.df.x + anova.df.Residual}</td>
-          <td style="text-align: right; width: 100px;">${(anova.sum_sq.x + anova.sum_sq.Residual).toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;"></td>
-          <td style="text-align: right; width: 100px;"></td>
-          <td style="text-align: right; width: 100px;"></td>
+          <td class="header-background">C. Total</td>
+          <td class="right xsmall">${anova.df.x + anova.df.Residual}</td>
+          <td class="right small">${(anova.sum_sq.x + anova.sum_sq.Residual).toFixed(4) / 1}</td>
+          <td class="right small"></td>
+          <td class="right small"></td>
+          <td class="right small"></td>
         </tr>
       </table>
       <div style="height: 30px;"></div>
       <table>
         <tr><td colspan=6 class="table-subtitle">Means for Oneway Analysis</td></tr>
         <tr>
-          <td style="background-color: E2D7D7; text-align: left; font-weight: bold;">Level</td>
-          <td class="table-header right"">Number</td>
-          <td class="table-header right"">Mean</td>
+          <td class="table-header left">Level</td>
+          <td class="table-header right">Number</td>
+          <td class="table-header right">Mean</td>
           <td class="table-header right">Std Error</td>
-          <td class="table-header right">Lower 95%</td>
-          <td class="table-header right">Upper 95%</td>
         </tr>
       ${renderMeansTable()}
       </table>
@@ -207,12 +205,10 @@ function receiveMessage(event) {
 		let output = '';
 		for (let i = 0; i < numberOfRows; i++) {
 			output += `<tr>
-          <td style="background-color: E2D7D7;">${x[i]}</td>
-          <td style="text-align: right; width: 75px;">${count[i]}</td>
-          <td style="text-align: right; width: 75px;">${mean[i].toFixed(4) / 1 / 1}</td>
-          <td style="text-align: right; width: 125px;">${sterr[i].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 125px;">0</td>
-          <td style="text-align: right; width: 125px;">0</td>
+          <td class="header-background">${x[i]}</td>
+          <td class="right small">${count[i]}</td>
+          <td class="right small">${mean[i].toFixed(4) / 1 / 1}</td>
+          <td class="right small">${sterr[i].toFixed(4) / 1}</td>
         </tr>`;
 		}
 		return output;
@@ -224,13 +220,11 @@ function receiveMessage(event) {
 		let output = '';
 		for (let i = 0; i < numberOfRows; i++) {
 			output += `<tr>
-          <td style="background-color: E2D7D7;">${x[i]}</td>
-          <td style="text-align: right; width: 75px;">${count[i]}</td>
-          <td style="text-align: right; width: 75px;">${mean[i]}</td>
-          <td style="text-align: right; width: 125px;">${std[i].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 125px;">${sem[i].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 125px;">0</td>
-          <td style="text-align: right; width: 125px;">0</td>
+          <td class="header-background">${x[i]}</td>
+          <td class="right">${count[i]}</td>
+          <td class="right">${mean[i]}</td>
+          <td class="right">${std[i].toFixed(4) / 1}</td>
+          <td class="right">${sem[i].toFixed(4) / 1}</td>
         </tr>`;
 		}
 		return output;
@@ -240,13 +234,11 @@ function receiveMessage(event) {
       <summary class="analysis-summary-title">Means And Std Deviations</summary>
       <table>
         <tr>
-          <td style="background-color: E2D7D7; font-weight: bold;">Level</td>
+          <td class="table-header">Level</td>
           <td class="table-header right">Number</td>
           <td class="table-header right">Mean</td>
-          <td class="table-header right">Std Dev</td>
-          <td class="table-header right">Std Err Mean</td>
-          <td class="table-header right">Lower 95%</td>
-          <td class="table-header right">Upper 95%</td>
+          <td class="table-header right medium">Std Dev</td>
+          <td class="table-header right medium">Std Err Mean</td>
         </tr>
         ${renderMeansStdTable()}
       </table>
@@ -258,14 +250,14 @@ function receiveMessage(event) {
 		let output = '';
 		for (let i = 0; i < numberOfRows; i++) {
 			output += `<tr>
-          <td style="background-color: E2D7D7;">${x[i]}</td>
-          <td style="text-align: right; width: 100px;">${y[i][0]}</td>
-          <td style="text-align: right; width: 100px;">${d3.quantile(y[i], 0.1)}</td>
-          <td style="text-align: right; width: 100px;">${d3.quantile(y[i], 0.25)}</td>
-          <td style="text-align: right; width: 100px;">${d3.quantile(y[i], 0.5)}</td>
-          <td style="text-align: right; width: 100px;">${d3.quantile(y[i], 0.75)}</td>
-          <td style="text-align: right; width: 100px;">${d3.quantile(y[i], 0.9)}</td>
-          <td style="text-align: right; width: 100px;">${y[i][y[i].length - 1]}</td>
+          <td class="header-background">${x[i]}</td>
+          <td class="right">${y[i][0]}</td>
+          <td class="right">${d3.quantile(y[i], 0.1)}</td>
+          <td class="right">${d3.quantile(y[i], 0.25)}</td>
+          <td class="right">${d3.quantile(y[i], 0.5)}</td>
+          <td class="right">${d3.quantile(y[i], 0.75)}</td>
+          <td class="right">${d3.quantile(y[i], 0.9)}</td>
+          <td class="right">${y[i][y[i].length - 1]}</td>
         </tr>`;
 		}
 		return output;
@@ -275,14 +267,14 @@ function receiveMessage(event) {
       <summary class="analysis-summary-title">Quantiles</summary>
         <table>
           <tr>
-            <td style="background-color: E2D7D7; font-weight: bold;">Level</td>
-            <td class="table-header right">Minimum</td>
-            <td class="table-header right">10%</td>
-            <td class="table-header right">25%</td>
-            <td class="table-header right">Median</td>
-            <td class="table-header right">75%</td>
-            <td class="table-header right">90%</td>
-            <td class="table-header right">Maximum</td>
+            <td class="table-header small">Level</td>
+            <td class="table-header right small">Minimum</td>
+            <td class="table-header right small">10%</td>
+            <td class="table-header right small">25%</td>
+            <td class="table-header right small">Median</td>
+            <td class="table-header right small">75%</td>
+            <td class="table-header right small">90%</td>
+            <td class="table-header right small">Maximum</td>
           </tr>
           ${renderQuantilesTable()}
         </table>
@@ -303,11 +295,11 @@ function receiveMessage(event) {
 		let output = '';
 		for (let i = 0; i < numberOfRows; i++) {
 			output += `<tr>
-        <td style="background-color: E2D7D7;">${index[i]}</td>
-        <td style="text-align: right; width: 100px;">${coef[i].toFixed(4) / 1}</td>
-        <td style="text-align: right; width: 100px;">${std_err[i].toFixed(4) / 1}</td>
-        <td style="text-align: right; width: 100px;">${t[i].toFixed(4) / 1}</td>
-        <td style="text-align: right; width: 100px;">${evaluatePValue(p[i])}</td>
+        <td class="header-background">${index[i]}</td>
+        <td class="right small">${coef[i].toFixed(4) / 1}</td>
+        <td class="right small">${std_err[i].toFixed(4) / 1}</td>
+        <td class="right small">${t[i].toFixed(4) / 1}</td>
+        <td class="right small">${evaluatePValue(p[i])}</td>
         </tr>`;
 		}
 		return output;
@@ -318,7 +310,7 @@ function receiveMessage(event) {
       <table>
         <tr><td colspan=6 class="table-subtitle">Ordered Differences Report</td></tr>
         <tr>
-          <td style="background-color: E2D7D7; font-weight: bold;">Level - Level</td>
+          <td class="table-header">Level - Level</td>
           <td class="table-header right">Difference</td>
           <td class="table-header right">Std Err Diff</td>
           <td class="table-header right">t</td>
@@ -332,7 +324,7 @@ function receiveMessage(event) {
     <summary class="analysis-summary-title">Tests that the Variances are Equal</summary>
       <table>
         <tr>
-          <td style="background-color: E2D7D7; font-weight: bold;">Level</td>
+          <td class="table-header">Level</td>
           <td class="table-header right">Count</td>
           <td class="table-header right">Std Dev</td>
           <td class="table-header right">MeanAbsDif to Mean</td>
@@ -343,23 +335,17 @@ function receiveMessage(event) {
         <tr>
           <td style="background-color: E2D7D7; text-align: left; width: 100px; font-weight: bold;">Test</td>
           <td class="table-header right">F Ratio</td>
-          <td class="table-header right">DFNum</td>
-          <td class="table-header right">DFDen</td>
           <td class="table-header right">Prob > F</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7;">Levene</td>
-          <td style="text-align: right; width: 100px;">${levene[0].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;">2</td>
-          <td style="text-align: right; width: 100px;">2</td>
-          <td style="text-align: right; width: 100px;">${evaluatePValue(levene[1])}</td>
+          <td class="header-background">Levene</td>
+          <td class="right small">${levene[0].toFixed(4) / 1}</td>
+          <td class="right small">${evaluatePValue(levene[1])}</td>
         </tr>
         <tr>
-          <td style="background-color: E2D7D7;">Bartlett</td>
-          <td style="text-align: right; width: 100px;">${bartlett[0].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;">2</td>
-          <td style="text-align: right; width: 100px;">2</td>
-          <td style="text-align: right; width: 100px;">${evaluatePValue(bartlett[1])}</td>
+          <td class="header-background">Bartlett</td>
+          <td class="right small">${bartlett[0].toFixed(4) / 1}</td>
+          <td class="right small">${evaluatePValue(bartlett[1])}</td>
         </tr>
       </table>
     </details>`;
@@ -370,11 +356,11 @@ function receiveMessage(event) {
 		let output = '';
 		for (let i = 0; i < numberOfRows; i++) {
 			output += `<tr>
-          <td style="background-color: E2D7D7;">${x[i]}</td>
-          <td style="text-align: right; width: 100px;">${count[i].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;">${std[i].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;">${madmean[i].toFixed(4) / 1}</td>
-          <td style="text-align: right; width: 100px;">${madmed[i].toFixed(4) / 1}</td>
+          <td class="header-background">${x[i]}</td>
+          <td class="right small">${count[i].toFixed(4) / 1}</td>
+          <td class="right small">${std[i].toFixed(4) / 1}</td>
+          <td class="right small">${madmean[i].toFixed(4) / 1}</td>
+          <td class="right small">${madmed[i].toFixed(4) / 1}</td>
           </tr>`;
 		}
 		return output;
@@ -594,5 +580,6 @@ function receiveMessage(event) {
 			}
 		},
 	});
+	window.removeEventListener('message', receiveMessage);
 }
 window.addEventListener('message', receiveMessage, false);

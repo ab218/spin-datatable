@@ -317,39 +317,39 @@ function receiveMessage(event) {
   <details open style="padding: 10px 30px 30px; text-align: center;">
     <summary class="analysis-summary-title">Summary Statistics</summary>
     <div style="display: flex;">
-      <table style="width: 300px;">
-        <tr>
-          <td style="width: 200px;">Pearson's Correlation:</td>
-          <td style="width: 100px;">${corrcoef}</td>
-        </tr>
-        <tr>
-          <td style="width: 200px;">p:</td>
-          <td style="width: 100px;">${evaluatePValue(pValue)}</td>
-        </tr>
-        <tr>
-          <td style="width: 200px;">Covariance:</td>
-          <td style="width: 100px;">${covariance}</td>
-        </tr>
-        <tr>
-          <td style="width: 200px;">Count:</td>
-          <td style="width: 100px;">${coordinates.length}</td>
-        </tr>
-      </table>
+    <table style="width: 300px; margin-right: 20px;">
+      <tr>
+        <td class="header-background large">Pearson's Correlation</td>
+        <td class="right small">${corrcoef}</td>
+      </tr>
+      <tr>
+        <td class="header-background large">p</td>
+        <td class="right small">${evaluatePValue(pValue)}</td>
+      </tr>
+      <tr>
+        <td class="header-background large">Covariance</td>
+        <td class="right small">${covariance}</td>
+      </tr>
+      <tr>
+        <td class="header-background large">Count</td>
+        <td class="right small">${coordinates.length}</td>
+      </tr>
+    </table>
       <table style="width: 400px">
         <tr>
-          <td style="width: 200px; font-weight: bold;">Variable</td>
-          <td style="width: 100px; font-weight: bold;">Mean</td>
-          <td style="width: 100px; font-weight: bold;">Std Dev</td>
+          <td class="table-header large">Variable</td>
+          <td class="table-header small right">Mean</td>
+          <td class="table-header small right">Std Dev</td>
         </tr>
         <tr>
-          <td style="width: 200px;">${colX.label}</td>
-          <td style="width: 100px;">${colAMean}</td>
-          <td style="width: 100px;">${colAStdev}</td>
+          <td class="left large">${colX.label}</td>
+          <td class="right small">${colAMean}</td>
+          <td class="right small">${colAStdev}</td>
         </tr>
         <tr>
-          <td style="width: 200px;">${colY.label}</td>
-          <td style="width: 100px;">${colBMean}</td>
-          <td style="width: 100px;">${colBStdev}</td>
+          <td class="left large">${colY.label}</td>
+          <td class="right small">${colBMean}</td>
+          <td class="right small">${colBStdev}</td>
         </tr>
       </table>
     </div>
