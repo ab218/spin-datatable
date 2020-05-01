@@ -65,7 +65,7 @@ export default function AnalysisModal() {
 					arr.push([ colA[i], colB[i], row ]);
 				}
 			}
-			return arr.sort();
+			return arr;
 		}
 		const XYCols = makeRows(colA, colB);
 		const colXArr = XYCols.map((a) => a[0]);
@@ -119,7 +119,7 @@ export default function AnalysisModal() {
 					setPerformingAnalysis(true);
 					const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
 					const popup = window.open(
-						window.location.href + 'linear_regression.html',
+						window.location.href + 'regression.html',
 						'',
 						'left=9999,top=100,width=800,height=850',
 					);

@@ -22,7 +22,7 @@ function createPoints(rangeX, step, equation) {
 const paramEstimates = (coeffs, xLabel, centered) => {
 	let temp = ``;
 	let counter = 2;
-	for (let i = coeffs.length - 3; i >= 0; i--) {
+	for (let i = 2; i < coeffs.length; i++) {
 		temp += `
     <tr>
       <td class="header-background">${centered ? centered : xLabel}^${counter}</td>
@@ -43,11 +43,11 @@ const paramEstimateTable = (coeffs, xLabel, centered) => `
   </tr>
   <tr>
     <td class="header-background large">Intercept</td>
-    <td class="small right">${coeffs[coeffs.length - 1].toFixed(4) / 1}</td>
+    <td class="small right">${coeffs[0].toFixed(4) / 1}</td>
   </tr>
   <tr>
     <td class="header-background">${centered ? centered : xLabel}</td>
-    <td class="small right">${coeffs[coeffs.length - 2].toFixed(4) / 1}</td>
+    <td class="small right">${coeffs[1].toFixed(4) / 1}</td>
   </tr>
   ${paramEstimates(coeffs, xLabel, centered)}
 </table>
@@ -61,8 +61,48 @@ const generateRegressionTemplate = (title, id, className, equation, polyDegree, 
   <table>
     <tr><td colspan=2 class="table-subtitle">Summary of fit</td></tr>
     <tr>
-      <td class="header-background small">R-squared</td>
-      <td class="small right">${polyDegree.determination.toFixed(4) / 1}</td>
+      <td class="header-background large">R-squared</td>
+      <td class="small right">${polyDegree.rsquared.toFixed(4) / 1}</td>
+    </tr>
+    <tr>
+      <td class="header-background large">R-squared Adj</td>
+      <td class="small right">${polyDegree.rsquared_adj.toFixed(4) / 1}</td>
+    </tr>
+    <tr>
+      <td class="header-background large">Root Mean Square Error</td>
+      <td class="small right">${polyDegree.mse_error.toFixed(4) / 1}</td>
+    </tr>
+  </table>
+  <div style="height: 20px;"></div>
+  <table>
+    <tr><td colspan=5 class="table-subtitle">Analysis of Variance</td></tr>
+    <tr>
+      <td class="table-header small">Source</td>
+      <td class="table-header xsmall right">DF</td>
+      <td class="table-header medium right">Sum Of Squares</td>
+      <td class="table-header medium right">Mean Square</td>
+      <td class="table-header small right">F Ratio</td>
+    </tr>
+    <tr>
+      <td class="header-background small">Model</td>
+      <td class="xsmall right">${polyDegree.df_model}</td>
+      <td class="medium right">${polyDegree.mse_model.toFixed(4) / 1}</td>
+      <td class="medium right">${polyDegree.mse_model.toFixed(4) / 1}</td>
+      <td class="small right">${(polyDegree.mse_model / polyDegree.mse_error).toFixed(4) / 1}</td>
+    </tr>
+    <tr>
+      <td class="header-background small">Error</td>
+      <td class="xsmall right">${polyDegree.df_resid}</td>
+      <td class="medium right">${polyDegree.ssr.toFixed(4) / 1}</td>
+      <td class="medium right">${polyDegree.mse_error.toFixed(4) / 1}</td>
+      <td class="small right"></td>
+    </tr>
+    <tr>
+      <td class="header-background small">C. Total</td>
+      <td class="xsmall right">${polyDegree.df_total}</td>
+      <td class="medium right">${(polyDegree.mse_model + polyDegree.ssr).toFixed(4) / 1}</td>
+      <td class="medium right"></td>
+      <td class="small right"></td>
     </tr>
   </table>
   <div style="height: 10px;"></div>
@@ -73,11 +113,11 @@ const generateRegressionTemplate = (title, id, className, equation, polyDegree, 
 const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
 
 const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
-	let temp = `${yLabel} = ${coeffs[coeffs.length - 1].toFixed(4) / 1} ${addOrSubtract(
-		coeffs[coeffs.length - 2],
-	)} ${Math.abs(coeffs[1]).toFixed(4) / 1} * ${centered ? centered : xLabel}`;
+	console.log(coeffs);
+	let temp = `${yLabel} = ${coeffs[0].toFixed(4) / 1} ${addOrSubtract(coeffs[1])} ${Math.abs(coeffs[1]).toFixed(4) /
+		1} * ${centered ? centered : xLabel}`;
 	let counter = 2;
-	for (let i = coeffs.length - 3; i >= 0; i--) {
+	for (let i = counter; i < coeffs.length; i++) {
 		temp += ` ${addOrSubtract(coeffs[i])} ${Math.abs(coeffs[i]).toFixed(4) / 1} * ${centered
 			? centered
 			: xLabel}^${counter}`;
