@@ -53,7 +53,22 @@ const paramEstimateTable = (coeffs, xLabel, centered) => `
 </table>
 `;
 
-const generateRegressionTemplate = (title, id, className, equation, polyDegree, coeffs, xLabel, centered) => `
+const generateRegressionTemplate = (
+	title,
+	id,
+	className,
+	equation,
+	polyDegree,
+	coeffs,
+	xLabel,
+	centered,
+	// toggleCIFit,
+	// toggleCIObs,
+	// savePredicted,
+	// saveCIFit,
+	// saveCIObs,
+) => {
+	return `
 <details class="analysis-details ${className}" open id="${id}">
   <summary class="analysis-summary-title">${title}</summary>
   <div class="left xxlarge">${equation}</div>
@@ -62,15 +77,15 @@ const generateRegressionTemplate = (title, id, className, equation, polyDegree, 
     <tr><td colspan=2 class="table-subtitle">Summary of fit</td></tr>
     <tr>
       <td class="header-background large">R-squared</td>
-      <td class="small right">${polyDegree.rsquared.toFixed(4) / 1}</td>
+      <td class="small right">${polyDegree.stats.rsquared.toFixed(4) / 1}</td>
     </tr>
     <tr>
       <td class="header-background large">R-squared Adj</td>
-      <td class="small right">${polyDegree.rsquared_adj.toFixed(4) / 1}</td>
+      <td class="small right">${polyDegree.stats.rsquared_adj.toFixed(4) / 1}</td>
     </tr>
     <tr>
       <td class="header-background large">Root Mean Square Error</td>
-      <td class="small right">${polyDegree.mse_error.toFixed(4) / 1}</td>
+      <td class="small right">${polyDegree.stats.mse_error.toFixed(4) / 1}</td>
     </tr>
   </table>
   <div style="height: 20px;"></div>
@@ -85,22 +100,22 @@ const generateRegressionTemplate = (title, id, className, equation, polyDegree, 
     </tr>
     <tr>
       <td class="header-background small">Model</td>
-      <td class="xsmall right">${polyDegree.df_model}</td>
-      <td class="medium right">${polyDegree.mse_model.toFixed(4) / 1}</td>
-      <td class="medium right">${polyDegree.mse_model.toFixed(4) / 1}</td>
-      <td class="small right">${(polyDegree.mse_model / polyDegree.mse_error).toFixed(4) / 1}</td>
+      <td class="xsmall right">${polyDegree.stats.df_model}</td>
+      <td class="medium right">${polyDegree.stats.mse_model.toFixed(4) / 1}</td>
+      <td class="medium right">${polyDegree.stats.mse_model.toFixed(4) / 1}</td>
+      <td class="small right">${(polyDegree.stats.mse_model / polyDegree.stats.mse_error).toFixed(4) / 1}</td>
     </tr>
     <tr>
       <td class="header-background small">Error</td>
-      <td class="xsmall right">${polyDegree.df_resid}</td>
-      <td class="medium right">${polyDegree.ssr.toFixed(4) / 1}</td>
-      <td class="medium right">${polyDegree.mse_error.toFixed(4) / 1}</td>
+      <td class="xsmall right">${polyDegree.stats.df_resid}</td>
+      <td class="medium right">${polyDegree.stats.ssr.toFixed(4) / 1}</td>
+      <td class="medium right">${polyDegree.stats.mse_error.toFixed(4) / 1}</td>
       <td class="small right"></td>
     </tr>
     <tr>
       <td class="header-background small">C. Total</td>
-      <td class="xsmall right">${polyDegree.df_total}</td>
-      <td class="medium right">${(polyDegree.mse_model + polyDegree.ssr).toFixed(4) / 1}</td>
+      <td class="xsmall right">${polyDegree.stats.df_total}</td>
+      <td class="medium right">${(polyDegree.stats.mse_model + polyDegree.stats.ssr).toFixed(4) / 1}</td>
       <td class="medium right"></td>
       <td class="small right"></td>
     </tr>
@@ -109,11 +124,11 @@ const generateRegressionTemplate = (title, id, className, equation, polyDegree, 
   ${paramEstimateTable(coeffs, xLabel, centered)}
 </details>
 `;
+};
 
 const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
 
 const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
-	console.log(coeffs);
 	let temp = `${yLabel} = ${coeffs[0].toFixed(4) / 1} ${addOrSubtract(coeffs[1])} ${Math.abs(coeffs[1]).toFixed(4) /
 		1} * ${centered ? centered : xLabel}`;
 	let counter = 2;

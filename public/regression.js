@@ -250,16 +250,15 @@ function receiveMessage(event) {
 
 	//points
 	const linearRegressionPoints = createPoints(x.domain(), step, linearRegressionEquation);
-	console.log(linearRegressionPoints);
 	const degree2Points = createPoints(x.domain(), step, poly2equation);
 	const degree3Points = createPoints(x.domain(), step, poly3equation);
 	const degree4Points = createPoints(x.domain(), step, poly4equation);
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
 
-	const linearEquationTemplate = `${colY.label} = ${linearRegressionCoefficients[1].toFixed(6) / 1} ${addOrSubtract(
-		linearRegressionCoefficients[0].toFixed(6) / 1,
-	)} ${Math.abs(linearRegressionCoefficients[0].toFixed(6) / 1)} * ${colX.label}`;
+	const linearEquationTemplate = `${colY.label} = ${linearRegressionCoefficients[0].toFixed(6) / 1} ${addOrSubtract(
+		linearRegressionCoefficients[1].toFixed(6) / 1,
+	)} ${Math.abs(linearRegressionCoefficients[1].toFixed(6) / 1)} * ${colX.label}`;
 	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colX.label, colY.label);
 	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colX.label, colY.label);
 	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colX.label, colY.label);
@@ -357,9 +356,10 @@ function receiveMessage(event) {
 		'linearRegressionLine',
 		null,
 		linearEquationTemplate,
-		reg1.stats,
+		reg1,
 		linearRegressionCoefficients,
 		colX.label,
+		null,
 	);
 
 	const quadraticFitTemplate = generateRegressionTemplate(
@@ -367,9 +367,10 @@ function receiveMessage(event) {
 		'degree2PolyLine',
 		'uncentered',
 		quadraticEquationTemplate,
-		reg2.stats,
+		reg2,
 		degree2PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const cubicFitTemplate = generateRegressionTemplate(
@@ -377,9 +378,10 @@ function receiveMessage(event) {
 		'degree3PolyLine',
 		'uncentered',
 		cubicEquationTemplate,
-		reg3.stats,
+		reg3,
 		degree3PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const quarticFitTemplate = generateRegressionTemplate(
@@ -387,9 +389,10 @@ function receiveMessage(event) {
 		'degree4PolyLine',
 		'uncentered',
 		quarticEquationTemplate,
-		reg4.stats,
+		reg4,
 		degree4PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const fifthDegreeFitTemplate = generateRegressionTemplate(
@@ -397,9 +400,10 @@ function receiveMessage(event) {
 		'degree5PolyLine',
 		'uncentered',
 		degree5EquationTemplate,
-		reg5.stats,
+		reg5,
 		degree5PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const sixthDegreeFitTemplate = generateRegressionTemplate(
@@ -407,9 +411,10 @@ function receiveMessage(event) {
 		'degree6PolyLine',
 		'uncentered',
 		degree6EquationTemplate,
-		reg6.stats,
+		reg6,
 		degree6PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const centeredX = `(${colX.label} - ${colXMean})`;
@@ -419,7 +424,7 @@ function receiveMessage(event) {
 		'degree2CenteredPolyLine',
 		'centered',
 		centeredQuadraticEquationTemplate,
-		cent_reg2.stats,
+		cent_reg2,
 		centered2PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -430,7 +435,7 @@ function receiveMessage(event) {
 		'degree3CenteredPolyLine',
 		'centered',
 		centeredCubicEquationTemplate,
-		cent_reg3.stats,
+		cent_reg3,
 		centered3PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -441,7 +446,7 @@ function receiveMessage(event) {
 		'degree4CenteredPolyLine',
 		'centered',
 		centeredQuarticEquationTemplate,
-		cent_reg4.stats,
+		cent_reg4,
 		centered4PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -452,7 +457,7 @@ function receiveMessage(event) {
 		'degree5CenteredPolyLine',
 		'centered',
 		centeredDegree5EquationTemplate,
-		cent_reg5.stats,
+		cent_reg5,
 		centered5PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -463,7 +468,7 @@ function receiveMessage(event) {
 		'degree6CenteredPolyLine',
 		'centered',
 		centeredDegree6EquationTemplate,
-		cent_reg6.stats,
+		cent_reg6,
 		centered6PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -491,7 +496,7 @@ function receiveMessage(event) {
   </select>
 </div>`;
 
-	const saveResidualsButton = `<button style="margin-top: 1em;" id="saveResiduals">Save Residuals</button>`;
+	// const saveResidualsButton = `<button style="margin-top: 1em;" id="saveResiduals">Save Residuals</button>`;
 	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
 	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
 	const quadraticFitParsed = new DOMParser().parseFromString(quadraticFitTemplate, 'text/html');
@@ -505,11 +510,11 @@ function receiveMessage(event) {
 	const centeredFifthDegreeFitParsed = new DOMParser().parseFromString(centered5DegreeFitTemplate, 'text/html');
 	const centeredSixthDegreeFitParsed = new DOMParser().parseFromString(centered6DegreeFitTemplate, 'text/html');
 	const chartOptionsDropdownParsed = new DOMParser().parseFromString(chartOptionsDropdown, 'text/html');
-	const saveResidualsButtonParsed = new DOMParser().parseFromString(saveResidualsButton, 'text/html');
+	// const saveResidualsButtonParsed = new DOMParser().parseFromString(saveResidualsButton, 'text/html');
 
 	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
 	container.appendChild(chartOptionsDropdownParsed.body.firstChild);
-	container.appendChild(saveResidualsButtonParsed.body.firstChild);
+	// container.appendChild(saveResidualsButtonParsed.body.firstChild);
 	container.appendChild(linearFitParsed.body.firstChild);
 	container.appendChild(quadraticFitParsed.body.firstChild);
 	container.appendChild(cubicFitParsed.body.firstChild);
@@ -522,6 +527,46 @@ function receiveMessage(event) {
 	container.appendChild(centeredFifthDegreeFitParsed.body.firstChild);
 	container.appendChild(centeredSixthDegreeFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
+
+	const saveResiduals = () => {
+		return window.opener.postMessage(
+			{
+				message: 'save-residuals',
+				residuals: polyDegree.stats.residuals,
+			},
+			'*',
+		);
+	};
+
+	function saveCIFit() {
+		window.opener.postMessage(
+			{
+				message: 'save-ci-fit',
+				residuals: polyDegree.ci.conf95,
+			},
+			'*',
+		);
+	}
+
+	function saveCIObs() {
+		window.opener.postMessage(
+			{
+				message: 'save-ci-obs',
+				residuals: polyDegree.ci.conf95,
+			},
+			'*',
+		);
+	}
+
+	function savePredicted() {
+		window.opener.postMessage(
+			{
+				message: 'save-predicted',
+				residuals: polyDegree.stats.predicted,
+			},
+			'*',
+		);
+	}
 
 	new SlimSelect({
 		select: '#chart-options-dropdown',
@@ -620,17 +665,7 @@ function receiveMessage(event) {
 		},
 	});
 
-	function onClickSaveResiduals() {
-		window.opener.postMessage(
-			{
-				message: 'save-residuals',
-				residuals: reg1.stats.residuals,
-			},
-			'*',
-		);
-	}
-
-	document.getElementById('saveResiduals').addEventListener('click', (e) => onClickSaveResiduals());
+	// document.getElementById('saveResiduals').addEventListener('click', (e) => onClickSaveResiduals());
 
 	drawHistogramBorders();
 	drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line');
