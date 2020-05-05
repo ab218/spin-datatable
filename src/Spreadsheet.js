@@ -13,6 +13,7 @@ import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
 import RowHeaders from './RowHeaders';
 import HeaderRenderer from './HeaderRenderer';
+import Analysis from './Analysis';
 import BarChartModal from './ModalBarChart';
 import {
 	Column,
@@ -359,14 +360,17 @@ function Spreadsheet({ eventBus }) {
 		};
 	});
 
+	const [ popup, setPopup ] = useState([]);
+
 	return (
 		// Height 100% necessary for autosizer to work
 		<div style={{ height: '100%', width: '100%' }}>
+			<Analysis popup={popup} setPopup={setPopup} />
 			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
 			{barChartModalOpen && <BarChartModal />}
 			{distributionModalOpen && <DistributionModal />}
-			{analysisModalOpen && <AnalysisModal />}
+			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (
 				<div style={{ height: '100%', display: 'flex' }} onMouseUp={finishCurrentSelectionRange}>

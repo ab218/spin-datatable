@@ -4,6 +4,7 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import { performLinearRegressionAnalysis, performOnewayAnalysis } from './Analyses';
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
+import { createRandomID } from './SpreadsheetProvider';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import {
 	REMOVE_SELECTED_CELLS,
@@ -19,7 +20,7 @@ import {
 } from './constants';
 import VariableLegend from './FitYXLegend';
 
-export default function AnalysisModal() {
+export default function AnalysisModal({ setPopup }) {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
 	const [ xColData, setXColData ] = useState([]);
 	const [ yColData, setYColData ] = useState([]);
@@ -118,20 +119,21 @@ export default function AnalysisModal() {
 
 					setPerformingAnalysis(true);
 					const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
-					const popup = window.open(
-						window.location.href + 'regression.html',
-						'',
-						'left=9999,top=100,width=800,height=850',
-					);
+					// const popup = window.open(
+					// 	window.location.href + 'regression.html',
+					// 	'',
+					// 	'left=9999,top=100,width=800,height=850',
+					// );
+					setPopup((prev) => prev.concat(results));
 
 					setPerformingAnalysis(false);
 					handleModalClose();
 
 					// set event listener and wait for target to be ready
-					window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
-					window.addEventListener('message', targetClickEvent);
-					window.addEventListener('message', saveResiduals);
-					window.addEventListener('message', removeTargetClickEvent);
+					// window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
+					// window.addEventListener('message', targetClickEvent);
+					// window.addEventListener('message', saveResiduals);
+					// window.addEventListener('message', removeTargetClickEvent);
 				} catch (e) {
 					console.log(e);
 					setPerformingAnalysis(false);
