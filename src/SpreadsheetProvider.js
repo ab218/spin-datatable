@@ -823,6 +823,7 @@ function spreadsheetReducer(state, action) {
 
 		case SORT_COLUMN: {
 			const targetColumn = getCol(colName);
+			// TODO: Any better way to do this without the deep copy?
 			const deepCopyRows = JSON.parse(JSON.stringify(state.rows));
 			if (targetColumn.type === 'Number' || targetColumn.type === 'Formula') {
 				deepCopyRows.sort(
