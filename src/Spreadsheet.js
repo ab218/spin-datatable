@@ -13,7 +13,7 @@ import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
 import RowHeaders from './RowHeaders';
 import HeaderRenderer from './HeaderRenderer';
-import Analysis from './Analysis';
+import Analysis from './analysis-output/Analysis';
 import BarChartModal from './ModalBarChart';
 import {
 	Column,

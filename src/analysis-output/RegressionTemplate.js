@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Menu, Select } from 'antd';
 import './analysis-window.css';
-import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetDispatch } from '../SpreadsheetProvider';
 const { Option } = Select;
 
 const paramEstimates = (coeffs, xLabel, centered, xMean) => {

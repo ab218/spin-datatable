@@ -27,20 +27,6 @@ body {
 	text-align: center;
 }
 
-/* .confidenceBands {
-	stroke-width: 2px;
-	stroke: red;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
-}
-
-.confidenceBandsFit {
-	stroke-width: 2px;
-	stroke: red;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
-} */
-
 .linearRegressionLine {
 	stroke-width: 2px;
 	stroke: steelblue;
