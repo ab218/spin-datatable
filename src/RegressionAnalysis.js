@@ -6,7 +6,7 @@ import RegressionD3Chart from './RegressionD3Chart';
 import './analysis-window.css';
 const { Option } = Select;
 
-function ChartOptionsSelect({ handleChange }) {
+function ChartOptionsSelect({ handleChartOptions }) {
 	return (
 		<Select
 			getPopupContainer={(triggerNode) => triggerNode.parentNode}
@@ -14,7 +14,7 @@ function ChartOptionsSelect({ handleChange }) {
 			style={{ width: '100%' }}
 			placeholder="Please select"
 			defaultValue={[ 'Show Histogram Borders', 'Linear Fit' ]}
-			onChange={handleChange}
+			onChange={handleChartOptions}
 			maxTagCount={0}
 			maxTagPlaceholder={(e) => {
 				return 'Select Chart Options';
@@ -39,23 +39,6 @@ function ChartTitle({ colY, colX }) {
 			: ''} By ${colX.label} ${colX.units ? '(' + colX.units + ')' : ''}`}</div>
 	);
 }
-
-const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
-
-const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
-	let temp = `${yLabel} = ${coeffs[0].toFixed(4) / 1} ${addOrSubtract(coeffs[1])} ${Math.abs(coeffs[1]).toFixed(4) /
-		1} * ${centered ? centered : xLabel}`;
-	let counter = 2;
-	for (let i = counter; i < coeffs.length; i++) {
-		temp += ` ${addOrSubtract(coeffs[i])} ${Math.abs(coeffs[i]).toFixed(4) / 1} * ${centered
-			? centered
-			: xLabel}^${counter}`;
-		counter++;
-	}
-	return temp;
-};
-
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
 
 function SummaryStatsTable({ data }) {
 	const {
@@ -122,6 +105,23 @@ function SummaryStatsTable({ data }) {
 	);
 }
 
+const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
+
+const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
+
+const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
+	let temp = `${yLabel} = ${coeffs[0].toFixed(4) / 1} ${addOrSubtract(coeffs[1])} ${Math.abs(coeffs[1]).toFixed(4) /
+		1} * ${centered ? centered : xLabel}`;
+	let counter = 2;
+	for (let i = counter; i < coeffs.length; i++) {
+		temp += ` ${addOrSubtract(coeffs[i])} ${Math.abs(coeffs[i]).toFixed(4) / 1} * ${centered
+			? centered
+			: xLabel}^${counter}`;
+		counter++;
+	}
+	return temp;
+};
+
 export default function RegressionAnalysis({ data, setPopup }) {
 	const {
 		colY,
@@ -139,7 +139,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		cent_reg6,
 	} = data;
 	const [ CI, setCI ] = useState({});
-	const [ alpha, setAlpha ] = useState(null);
 	const [ chartOptions, setChartOptions ] = useState({
 		histogramBorders: true,
 		linearRegressionLine: true,
@@ -150,7 +149,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		degree6Poly: false,
 	});
 
-	function handleChange(value) {
+	function handleChartOptions(value) {
 		const centeredPoly = value.includes('Center Polynomials');
 		const histogramBorders = value.includes('Show Histogram Borders');
 		const linearRegressionLine = value.includes('Linear Fit');
@@ -201,8 +200,8 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} setPopup={setPopup}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<ChartTitle colY={colY} colX={colX} />
-				<RegressionD3Chart alpha={alpha} CI={CI} data={data} chartOptions={chartOptions} />
-				<ChartOptionsSelect handleChange={handleChange} />
+				<RegressionD3Chart CI={CI} data={data} chartOptions={chartOptions} />
+				<ChartOptionsSelect handleChartOptions={handleChartOptions} />
 				<SummaryStatsTable data={data} />
 				{chartOptions.linearRegressionLine && (
 					<GenerateRegressionTemplate
@@ -218,8 +217,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						yLabel={colY.label}
 						centered={null}
 						setCI={setCI}
-						alpha={alpha}
-						setAlpha={setAlpha}
 					/>
 				)}
 				{chartOptions.degree2Poly && (
@@ -236,8 +233,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						yLabel={colY.label}
 						centered={chartOptions.centeredPoly}
 						setCI={setCI}
-						alpha={alpha}
-						setAlpha={setAlpha}
 					/>
 				)}
 				{chartOptions.degree3Poly && (
@@ -254,8 +249,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						yLabel={colY.label}
 						centered={chartOptions.centeredPoly}
 						setCI={setCI}
-						alpha={alpha}
-						setAlpha={setAlpha}
 					/>
 				)}
 				{chartOptions.degree4Poly && (

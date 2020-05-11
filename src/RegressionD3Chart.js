@@ -21,31 +21,50 @@ const xAxis = d3.axisBottom().scale(x).ticks(10, 's');
 const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
 const reversedLine = d3.line().x((d) => x(d[0])).y((d) => y(d[1]));
 
-function mapPoints(arr1, arr2) {
-	const output = [];
-	for (let i = 0; i < arr1.length; i++) {
-		output.push([ arr1[i], arr2[i] ]);
-	}
-	return output;
+//generate n (step) points given some range and equation (ie: y = ax^2+bx+c)
+function createPoints(rangeX, step, equation) {
+	return Array.from({ length: Math.round((rangeX[1] - rangeX[0]) / step) || 1 }, function(_, i) {
+		const x = rangeX[0] + i * step;
+		return [ x, equation(x) ];
+	});
 }
 
-function onMouseEnterPoint(d, thisPoint, colXLabel, colYLabel, pointTooltip) {
-	d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);
-	pointTooltip.transition().duration(200).style('opacity', 0.9);
-	pointTooltip
-		.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
-		.style('left', d3.event.pageX + 'px')
-		.style('top', d3.event.pageY - 28 + 'px');
-}
+const drawBasicPath = (points, name, title, svg, pathTooltip) => {
+	const path = svg
+		.append('path')
+		.data([ points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', name)
+		.attr('d', reversedLine);
+	//find total length of all points of the line chart line
+	const totalLength = path.node().getTotalLength();
 
-function onMouseLeavePoint(d, thisPoint, pointTooltip) {
-	if (d3.select(thisPoint).style('fill') === highlightedPointColor) {
-		d3.select(thisPoint).transition().duration(50).attr('r', clickedBarPointSize);
-	} else {
-		d3.select(thisPoint).transition().duration(50).attr('r', normalPointSize);
-	}
-	pointTooltip.transition().duration(500).style('opacity', 0);
-}
+	//animate the line chart line drawing using path information
+	path
+		.attr('stroke-dasharray', totalLength + ' ' + totalLength)
+		.attr('stroke-dashoffset', totalLength)
+		.transition()
+		.duration(500)
+		.ease(d3.easeLinear)
+		.attr('stroke-dashoffset', 0);
+
+	// invisible hitbox
+	svg
+		.append('path')
+		.data([ points ])
+		.style('fill', 'none')
+		.attr('clip-path', 'url(#clip)')
+		.attr('class', `${name}-hitbox`)
+		.attr('d', reversedLine)
+		.on(`mouseenter`, function() {
+			pathTooltip.transition().duration(200).style('opacity', 0.9);
+			pathTooltip.html(title).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
+		})
+		.on(`mouseleave`, function() {
+			pathTooltip.transition().duration(500).style('opacity', 0);
+		});
+};
 
 function drawHistogramBorders(svg, colA, colB, histogramBinTooltip) {
 	// Histogram borders. Lower number = higher bars
@@ -161,52 +180,33 @@ function drawHistogramBorders(svg, colA, colB, histogramBinTooltip) {
 		.attr('fill', normalBarFill);
 }
 
-const drawBasicPath = (points, name, title, svg, pathTooltip) => {
-	const path = svg
-		.append('path')
-		.data([ points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', name)
-		.attr('d', reversedLine);
-	//find total length of all points of the line chart line
-	const totalLength = path.node().getTotalLength();
-
-	//animate the line chart line drawing using path information
-	path
-		.attr('stroke-dasharray', totalLength + ' ' + totalLength)
-		.attr('stroke-dashoffset', totalLength)
-		.transition()
-		.duration(500)
-		.ease(d3.easeLinear)
-		.attr('stroke-dashoffset', 0);
-
-	// invisible hitbox
-	svg
-		.append('path')
-		.data([ points ])
-		.style('fill', 'none')
-		.attr('clip-path', 'url(#clip)')
-		.attr('class', `${name}-hitbox`)
-		.attr('d', reversedLine)
-		.on(`mouseenter`, function() {
-			pathTooltip.transition().duration(200).style('opacity', 0.9);
-			pathTooltip.html(title).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
-		})
-		.on(`mouseleave`, function() {
-			pathTooltip.transition().duration(500).style('opacity', 0);
-		});
-};
-
-//generate n (step) points given some range and equation (ie: y = ax^2+bx+c)
-function createPoints(rangeX, step, equation) {
-	return Array.from({ length: Math.round((rangeX[1] - rangeX[0]) / step) || 1 }, function(_, i) {
-		const x = rangeX[0] + i * step;
-		return [ x, equation(x) ];
-	});
+function mapPoints(arr1, arr2) {
+	const output = [];
+	for (let i = 0; i < arr1.length; i++) {
+		output.push([ arr1[i], arr2[i] ]);
+	}
+	return output;
 }
 
-export default function D3Container({ alpha, data, chartOptions, CI }) {
+function onMouseEnterPoint(d, thisPoint, colXLabel, colYLabel, pointTooltip) {
+	d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);
+	pointTooltip.transition().duration(200).style('opacity', 0.9);
+	pointTooltip
+		.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
+		.style('left', d3.event.pageX + 'px')
+		.style('top', d3.event.pageY - 28 + 'px');
+}
+
+function onMouseLeavePoint(d, thisPoint, pointTooltip) {
+	if (d3.select(thisPoint).style('fill') === highlightedPointColor) {
+		d3.select(thisPoint).transition().duration(50).attr('r', clickedBarPointSize);
+	} else {
+		d3.select(thisPoint).transition().duration(50).attr('r', normalPointSize);
+	}
+	pointTooltip.transition().duration(500).style('opacity', 0);
+}
+
+export default function D3Container({ data, chartOptions, CI }) {
 	const d3Container = useRef(null);
 	const { reg1, reg2, reg3, reg4, reg5, reg6, colY, colX, coordinates } = data;
 
@@ -269,6 +269,31 @@ export default function D3Container({ alpha, data, chartOptions, CI }) {
 	// Column Points
 	const colA = coordinates.map((a) => a[1]).sort(d3.ascending);
 	const colB = coordinates.map((a) => a[0]).sort(d3.ascending);
+	// get extents and range
+	const xExtent = d3.extent(coordinates, function(d) {
+		return d[0];
+	});
+	const xRange = xExtent[1] - xExtent[0];
+	const yExtent = d3.extent(coordinates, function(d) {
+		return d[1];
+	});
+	const yRange = yExtent[1] - yExtent[0];
+
+	// set domain to be extent +- 5%
+	x.domain([ xExtent[0] - xRange * 0.05, xExtent[1] + xRange * 0.05 ]).nice();
+	y.domain([ yExtent[0] - yRange * 0.05, yExtent[1] + yRange * 0.05 ]).nice();
+
+	const pointTooltip = d3.select(d3Container.current).append('div').attr('class', 'point tooltip').style('opacity', 0);
+	const pathTooltip = d3
+		.select(d3Container.current)
+		.append('div')
+		.attr('class', 'regression-line tooltip')
+		.style('opacity', 0);
+	const histogramBinTooltip = d3
+		.select(d3Container.current)
+		.append('div')
+		.attr('class', 'histogram-border tooltip')
+		.style('opacity', 0);
 
 	// initialize chart with static features (axes and points)
 	useEffect(
@@ -281,26 +306,6 @@ export default function D3Container({ alpha, data, chartOptions, CI }) {
 					.attr('height', svgHeight)
 					.append('g')
 					.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-				// get extents and range
-				const xExtent = d3.extent(coordinates, function(d) {
-					return d[0];
-				});
-				const xRange = xExtent[1] - xExtent[0];
-				const yExtent = d3.extent(coordinates, function(d) {
-					return d[1];
-				});
-				const yRange = yExtent[1] - yExtent[0];
-
-				// set domain to be extent +- 5%
-				x.domain([ xExtent[0] - xRange * 0.05, xExtent[1] + xRange * 0.05 ]).nice();
-				y.domain([ yExtent[0] - yRange * 0.05, yExtent[1] + yRange * 0.05 ]).nice();
-
-				const pointTooltip = d3
-					.select(d3Container.current)
-					.append('div')
-					.attr('class', 'point tooltip')
-					.style('opacity', 0);
 
 				// So that lines stay within the bounds of the graph
 				svg.append('clipPath').attr('id', 'clip').append('rect').attr('width', width).attr('height', height);
@@ -354,16 +359,6 @@ export default function D3Container({ alpha, data, chartOptions, CI }) {
 			if (d3Container.current && data && chartOptions) {
 				const svg = d3.select(d3Container.current).select('g');
 				const removeChartElement = (className) => d3.select(d3Container.current).selectAll(className).remove();
-				const pathTooltip = d3
-					.select(d3Container.current)
-					.append('div')
-					.attr('class', 'regression-line tooltip')
-					.style('opacity', 0);
-				const histogramBinTooltip = d3
-					.select(d3Container.current)
-					.append('div')
-					.attr('class', 'histogram-border tooltip')
-					.style('opacity', 0);
 				if (histogramBorders) {
 					drawHistogramBorders(svg, colA, colB, histogramBinTooltip);
 				} else {
@@ -371,24 +366,43 @@ export default function D3Container({ alpha, data, chartOptions, CI }) {
 				}
 				if (linearRegressionLine) {
 					drawBasicPath(linearRegressionPoints, 'linearRegressionLine', 'Linear Regression Line', svg, pathTooltip);
-					if (CI && CI.linearRegressionLineCIFitUpper && CI.linearRegressionLineCIFitLower.length > 0) {
+					if (CI && CI.linearRegressionLineCIFitLower && CI.linearRegressionLineCIFitLower.length > 0) {
 						drawBasicPath(
 							mapPoints(colB, CI.linearRegressionLineCIFitUpper.sort((a, b) => b - a)),
-							'linearRegressionCIFit',
+							'linearRegressionLineCIFit',
 							'Linear Regression CI',
 							svg,
 							pathTooltip,
 						);
 						drawBasicPath(
 							mapPoints(colB, CI.linearRegressionLineCIFitLower.sort((a, b) => b - a)),
-							'linearRegressionCIFit',
+							'linearRegressionLineCIFit',
 							'Linear Regression CI',
 							svg,
 							pathTooltip,
 						);
 					} else {
-						removeChartElement('.linearRegressionCIFit');
-						removeChartElement(`.linearRegressionCIFit-hitbox`);
+						removeChartElement('.linearRegressionLineCIFit');
+						removeChartElement(`.linearRegressionLineCIFit-hitbox`);
+					}
+					if (CI && CI.linearRegressionLineCIObsLower && CI.linearRegressionLineCIObsLower.length > 0) {
+						drawBasicPath(
+							mapPoints(colB, CI.linearRegressionLineCIObsUpper.sort((a, b) => b - a)),
+							'linearRegressionLineCIObs',
+							'Linear Regression CI',
+							svg,
+							pathTooltip,
+						);
+						drawBasicPath(
+							mapPoints(colB, CI.linearRegressionLineCIObsLower.sort((a, b) => b - a)),
+							'linearRegressionLineCIObs',
+							'Linear Regression CI',
+							svg,
+							pathTooltip,
+						);
+					} else {
+						removeChartElement('.linearRegressionLineCIObs');
+						removeChartElement(`.linearRegressionLineCIObs-hitbox`);
 					}
 				} else {
 					removeChartElement('.linearRegressionLine');
@@ -415,6 +429,25 @@ export default function D3Container({ alpha, data, chartOptions, CI }) {
 						removeChartElement('.degree2PolyLineCIFit');
 						removeChartElement(`.degree2PolyLineCIFit-hitbox`);
 					}
+					if (CI && CI.degree2PolyLineCIObsLower && CI.degree2PolyLineCIObsLower.length > 0) {
+						drawBasicPath(
+							mapPoints(colB, CI.degree2PolyLineCIObsLower.sort((a, b) => b - a)),
+							'degree2PolyLineCIObs',
+							'Quadratic Regression CI',
+							svg,
+							pathTooltip,
+						);
+						drawBasicPath(
+							mapPoints(colB, CI.degree2PolyLineCIObsUpper.sort((a, b) => b - a)),
+							'degree2PolyLineCIObs',
+							'Quadratic Regression CI',
+							svg,
+							pathTooltip,
+						);
+					} else {
+						removeChartElement('.degree2PolyLineCIObs');
+						removeChartElement(`.degree2PolyLineCIObs-hitbox`);
+					}
 				} else {
 					removeChartElement(`.degree2PolyLine`);
 					removeChartElement(`.degree2PolyLine-hitbox`);
@@ -439,6 +472,25 @@ export default function D3Container({ alpha, data, chartOptions, CI }) {
 					} else {
 						removeChartElement('.degree3PolyLineCIFit');
 						removeChartElement(`.degree3PolyLineCIFit-hitbox`);
+					}
+					if (CI && CI.degree3PolyLineCIObsLower && CI.degree3PolyLineCIObsLower.length > 0) {
+						drawBasicPath(
+							mapPoints(colB, CI.degree3PolyLineCIObsLower.sort((a, b) => b - a)),
+							'degree3PolyLineCIObs',
+							'Cubic Regression CI',
+							svg,
+							pathTooltip,
+						);
+						drawBasicPath(
+							mapPoints(colB, CI.degree3PolyLineCIObsUpper.sort((a, b) => b - a)),
+							'degree3PolyLineCIObs',
+							'Cubic Regression CI',
+							svg,
+							pathTooltip,
+						);
+					} else {
+						removeChartElement('.degree3PolyLineCIObs');
+						removeChartElement(`.degree3PolyLineCIObs-hitbox`);
 					}
 				} else {
 					removeChartElement(`.degree3PolyLine`);
@@ -465,7 +517,7 @@ export default function D3Container({ alpha, data, chartOptions, CI }) {
 			}
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[ chartOptions, CI, alpha ],
+		[ chartOptions, CI ],
 	);
 
 	return <div ref={d3Container} />;

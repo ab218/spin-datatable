@@ -27,7 +27,7 @@ body {
 	text-align: center;
 }
 
-.confidenceBands {
+/* .confidenceBands {
 	stroke-width: 2px;
 	stroke: red;
 	stroke-dasharray: 10, 5;
@@ -39,7 +39,7 @@ body {
 	stroke: red;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
-}
+} */
 
 .linearRegressionLine {
 	stroke-width: 2px;
@@ -47,14 +47,27 @@ body {
 	z-index: 1;
 }
 
-.linearRegressionCIFit {
-	stroke-width: 2px;
+.linearRegressionLineCIFit {
+	stroke-width: 1px;
 	stroke: steelblue;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
 
-.linearRegressionCIFit-hitbox {
+.linearRegressionLineCIFit-hitbox {
+	stroke-width: 10px;
+	stroke: transparent;
+	z-index: 1;
+}
+
+.linearRegressionLineCIObs {
+	stroke-width: 1px;
+	stroke: steelblue;
+	stroke-dasharray: 10, 5;
+	z-index: 1;
+}
+
+.linearRegressionLineCIObs-hitbox {
 	stroke-width: 10px;
 	stroke: transparent;
 	z-index: 1;
@@ -73,13 +86,26 @@ body {
 }
 
 .degree2PolyLineCIFit {
-	stroke-width: 2px;
+	stroke-width: 1px;
 	stroke: green;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
 
 .degree2PolyLineCIFit-hitbox {
+	stroke-width: 10px;
+	stroke: transparent;
+	z-index: 1;
+}
+
+.degree2PolyLineCIObs {
+	stroke-width: 1px;
+	stroke: green;
+	stroke-dasharray: 10, 5;
+	z-index: 1;
+}
+
+.degree2PolyLineCIObs-hitbox {
 	stroke-width: 10px;
 	stroke: transparent;
 	z-index: 1;
@@ -104,13 +130,26 @@ body {
 }
 
 .degree3PolyLineCIFit {
-	stroke-width: 2px;
+	stroke-width: 1px;
 	stroke: darkmagenta;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
 
 .degree3PolyLineCIFit-hitbox {
+	stroke-width: 10px;
+	stroke: transparent;
+	z-index: 1;
+}
+
+.degree3PolyLineCIObs {
+	stroke-width: 1px;
+	stroke: darkmagenta;
+	stroke-dasharray: 10, 5;
+	z-index: 1;
+}
+
+.degree3PolyLineCIObs-hitbox {
 	stroke-width: 10px;
 	stroke: transparent;
 	z-index: 1;

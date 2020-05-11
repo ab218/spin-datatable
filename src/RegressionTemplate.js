@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Menu, Select } from 'antd';
 import './analysis-window.css';
 import { useSpreadsheetDispatch } from './SpreadsheetProvider';
@@ -58,8 +58,6 @@ export default function GenerateRegressionTemplate({
 	xMean,
 	centered,
 	setCI,
-	alpha,
-	setAlpha,
 }) {
 	const {
 		rsquared,
@@ -77,6 +75,7 @@ export default function GenerateRegressionTemplate({
 	const conf90 = polyDegree.ci ? polyDegree.ci.conf90 : null;
 	const conf95 = polyDegree.ci ? polyDegree.ci.conf95 : null;
 	const conf99 = polyDegree.ci ? polyDegree.ci.conf99 : null;
+	const [ alpha, setAlpha ] = useState(conf95);
 
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	useEffect(
