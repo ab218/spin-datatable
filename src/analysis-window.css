@@ -47,6 +47,19 @@ body {
 	z-index: 1;
 }
 
+.linearRegressionCIFit {
+	stroke-width: 2px;
+	stroke: steelblue;
+	stroke-dasharray: 10, 5;
+	z-index: 1;
+}
+
+.linearRegressionCIFit-hitbox {
+	stroke-width: 10px;
+	stroke: transparent;
+	z-index: 1;
+}
+
 .linearRegressionLine-hitbox {
 	stroke-width: 10px;
 	stroke: transparent;
@@ -56,6 +69,19 @@ body {
 .degree2PolyLine {
 	stroke-width: 2px;
 	stroke: green;
+	z-index: 1;
+}
+
+.degree2PolyLineCIFit {
+	stroke-width: 2px;
+	stroke: green;
+	stroke-dasharray: 10, 5;
+	z-index: 1;
+}
+
+.degree2PolyLineCIFit-hitbox {
+	stroke-width: 10px;
+	stroke: transparent;
 	z-index: 1;
 }
 
@@ -72,6 +98,19 @@ body {
 }
 
 .degree3PolyLine-hitbox {
+	stroke-width: 10px;
+	stroke: transparent;
+	z-index: 1;
+}
+
+.degree3PolyLineCIFit {
+	stroke-width: 2px;
+	stroke: darkmagenta;
+	stroke-dasharray: 10, 5;
+	z-index: 1;
+}
+
+.degree3PolyLineCIFit-hitbox {
 	stroke-width: 10px;
 	stroke: transparent;
 	z-index: 1;

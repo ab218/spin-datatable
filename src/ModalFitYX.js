@@ -4,11 +4,11 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvid
 import { performLinearRegressionAnalysis, performOnewayAnalysis } from './Analyses';
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from './constants';
-import { createRandomID } from './SpreadsheetProvider';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
+import { createRandomID } from './SpreadsheetProvider';
 import {
-	REMOVE_SELECTED_CELLS,
-	SELECT_CELLS,
+	// REMOVE_SELECTED_CELLS,
+	// SELECT_CELLS,
 	ORDINAL,
 	CONTINUOUS,
 	NOMINAL,
@@ -16,7 +16,7 @@ import {
 	LOGISTIC,
 	ONEWAY,
 	CONTINGENCY,
-	SAVE_RESIDUALS_TO_COLUMN,
+	// SAVE_VALUES_TO_COLUMN,
 } from './constants';
 import VariableLegend from './FitYXLegend';
 
@@ -87,35 +87,35 @@ export default function AnalysisModal({ setPopup }) {
 		async function linearRegression() {
 			if (colXArr.length >= 3 && colYArr.length >= 3) {
 				try {
-					function removeTargetClickEvent(event) {
-						if (event.data === 'closed') {
-							window.removeEventListener('message', targetClickEvent);
-							window.removeEventListener('message', removeTargetClickEvent);
-						}
-					}
+					// function removeTargetClickEvent(event) {
+					// 	if (event.data === 'closed') {
+					// 		window.removeEventListener('message', targetClickEvent);
+					// 		window.removeEventListener('message', removeTargetClickEvent);
+					// 	}
+					// }
 
-					function saveResiduals(event) {
-						if (event.data.message !== 'save-residuals') return;
-						const { residuals } = event.data;
-						dispatchSpreadsheetAction({ type: SAVE_RESIDUALS_TO_COLUMN, residuals, colX, colY });
-					}
+					// function saveResiduals(event) {
+					// 	if (event.data.message !== 'save-residuals') return;
+					// 	const { residuals } = event.data;
+					// 	dispatchSpreadsheetAction({ type: SAVE_VALUES_TO_COLUMN, residuals, colX, colY });
+					// }
 
-					function targetClickEvent(event) {
-						if (event.data.message === 'clicked') {
-							const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
-							const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
-							if (!event.data.metaKeyPressed) {
-								dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-							}
-							const rowIndices = rows.reduce((acc, row, rowIndex) => {
-								// TODO Shouldn't be using Number here?
-								return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
-									? acc.concat(rowIndex)
-									: acc;
-							}, []);
-							dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
-						}
-					}
+					// function targetClickEvent(event) {
+					// 	if (event.data.message === 'clicked') {
+					// 		const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
+					// 		const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
+					// 		if (!event.data.metaKeyPressed) {
+					// 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+					// 		}
+					// 		const rowIndices = rows.reduce((acc, row, rowIndex) => {
+					// 			// TODO Shouldn't be using Number here?
+					// 			return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
+					// 				? acc.concat(rowIndex)
+					// 				: acc;
+					// 		}, []);
+					// 		dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
+					// 	}
+					// }
 
 					setPerformingAnalysis(true);
 					const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
@@ -124,7 +124,7 @@ export default function AnalysisModal({ setPopup }) {
 					// 	'',
 					// 	'left=9999,top=100,width=800,height=850',
 					// );
-					setPopup((prev) => prev.concat(results));
+					setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
 
 					setPerformingAnalysis(false);
 					handleModalClose();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 export default function Popout({ title, id, setPopup, ...props }) {
@@ -9,23 +9,37 @@ export default function Popout({ title, id, setPopup, ...props }) {
 	}
 	useEffect(
 		() => {
-			console.log('mount');
 			const features = 'left=9999,top=100,width=800,height=850';
 			const externalWindow = window.open('', id, features);
+			const stylesheets = Array.from(document.styleSheets);
+			stylesheets.forEach((stylesheet) => {
+				const css = stylesheet;
+				if (stylesheet.href) {
+					const newStyleElement = document.createElement('link');
+					newStyleElement.rel = 'stylesheet';
+					newStyleElement.href = stylesheet.href;
+					externalWindow.document.head.appendChild(newStyleElement);
+				} else if (css && css.cssRules && css.cssRules.length > 0) {
+					const newStyleElement = document.createElement('style');
+					Array.from(css.cssRules).forEach((rule) => {
+						newStyleElement.appendChild(document.createTextNode(rule.cssText));
+					});
+					externalWindow.document.head.appendChild(newStyleElement);
+				}
+			});
 
-			let containerElement = null;
 			if (externalWindow) {
-				containerElement = externalWindow.document.createElement('div');
+				const containerElement = externalWindow.document.createElement('div');
+				containerElement.setAttribute('id', 'portal-root');
 				externalWindow.document.body.appendChild(containerElement);
 				externalWindow.document.title = title;
+				setContainerElement(containerElement);
 
 				// Make sure the window closes when the component unloads
 				externalWindow.addEventListener('beforeunload', () => {
-					console.log('called beforeunload');
 					closeWindow();
 				});
 			}
-			setContainerElement(containerElement);
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[],

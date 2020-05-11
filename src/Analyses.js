@@ -54,7 +54,7 @@ export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
 	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
+	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
 	const result = await axios.post(
 		'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels',
 		{ x: colXArr, y: colYArr },
@@ -62,17 +62,16 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, co
 			crossDomain: true,
 		},
 	);
-	const result2 = await axios.post(
-		gcloud,
-		{
-			x: colXArr,
-			y: colYArr,
-		},
-		{
-			crossDomain: true,
-		},
-	);
-	console.log('old:', result, 'new:', result2);
+	// const result2 = await axios.post(
+	// 	gcloud,
+	// 	{
+	// 		x: colXArr,
+	// 		y: colYArr,
+	// 	},
+	// 	{
+	// 		crossDomain: true,
+	// 	},
+	// );
 	// console.log(result.data) // gcloud
 	// console.log(result.data.body); // Lambda
 
