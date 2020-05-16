@@ -215,65 +215,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 	const [ equationTemplates, setEquationTemplates ] = useState({});
 	const [ alpha, setAlpha ] = useState('conf95');
 
-	const menu = (title, id, conf) => (
-		<Menu multiple>
-			{conf && (
-				<Menu.ItemGroup title={title}>
-					<Menu.Item
-						onClick={() =>
-							setCI((prev) => {
-								return { ...prev, [id]: { ...prev[id], fit: !prev[id].fit } };
-							})}
-					>
-						<div style={{ display: 'flex' }}>
-							<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].fit ? '✓' : ' '}</span>
-							<span>Show Confidence Curves (fit)</span>
-						</div>
-					</Menu.Item>
-					<Menu.Item
-						onClick={() =>
-							setCI((prev) => {
-								return { ...prev, [id]: { ...prev[id], obs: !prev[id].obs } };
-							})}
-					>
-						<div style={{ display: 'flex' }}>
-							<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].obs ? '✓' : ' '}</span>
-							<span>Show Confidence Curves (obs)</span>
-						</div>
-					</Menu.Item>
-				</Menu.ItemGroup>
-			)}
-		</Menu>
-	);
-
-	function ChartOptionsLegend({ chartOptions }) {
-		function ChartOption({ title, color, id, conf }) {
-			return (
-				<Dropdown
-					placement={'topRight'}
-					getPopupContainer={(triggerNode) => triggerNode.parentNode}
-					overlay={menu(title, id, conf)}
-				>
-					<div>
-						<Icon type="minus" style={{ cursor: 'pointer', fontSize: '20px', color }} /> {title}
-					</div>
-				</Dropdown>
-			);
-		}
-		return (
-			<div style={{ paddingLeft: '30px' }}>
-				{chartOptions.linearRegressionLine && (
-					<ChartOption conf id="degree1" title={'Linear Fit'} color={'steelblue'} />
-				)}
-				{chartOptions.degree2Poly && <ChartOption conf id="degree2" title={'Quadratic Fit'} color={'green'} />}
-				{chartOptions.degree3Poly && <ChartOption conf id="degree3" title={'Cubic Fit'} color={'darkmagenta'} />}
-				{chartOptions.degree4Poly && <ChartOption id="degree4" title={'Quartic Fit'} color={'saddlebrown'} />}
-				{chartOptions.degree5Poly && <ChartOption id="degree5" title={'5th Degree Fit'} color={'goldenrod'} />}
-				{chartOptions.degree6Poly && <ChartOption id="degree6" title={'6th Degree Fit'} color={'thistle'} />}
-			</div>
-		);
-	}
-
 	function handleChartOptions(value) {
 		const centeredPoly = value.includes('Center Polynomials');
 		const histogramBorders = value.includes('Show Histogram Borders');
@@ -348,11 +289,15 @@ export default function RegressionAnalysis({ data, setPopup }) {
 				<ChartTitle colY={colY} colX={colX} />
 				<div style={{ display: 'flex' }}>
 					<div style={{ textAlign: 'left' }}>
-						<div>Set Alpha Level</div>
-						<SetAlphaLevel setAlpha={setAlpha} />
 						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
 						<RegressionD3Chart CI={CI} data={data} chartOptions={chartOptions} alpha={alpha} />
-						<ChartOptionsLegend chartOptions={chartOptions} />
+						<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+							<ChartOptionsLegend chartOptions={chartOptions} setCI={setCI} CI={CI} />
+							<div>
+								<div>Set Alpha Level</div>
+								<SetAlphaLevel setAlpha={setAlpha} />
+							</div>
+						</div>
 					</div>
 					<div style={{ overflowY: 'scroll', height: '800px' }}>
 						<SummaryStatsTable data={data} />
@@ -370,6 +315,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								yLabel={colY.label}
 								centered={null}
 								setCI={setCI}
+								alpha={alpha}
 							/>
 						)}
 						{chartOptions.degree2Poly && (
@@ -386,6 +332,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								yLabel={colY.label}
 								centered={chartOptions.centeredPoly}
 								setCI={setCI}
+								alpha={alpha}
 							/>
 						)}
 						{chartOptions.degree3Poly && (
@@ -402,6 +349,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								yLabel={colY.label}
 								centered={chartOptions.centeredPoly}
 								setCI={setCI}
+								alpha={alpha}
 							/>
 						)}
 						{chartOptions.degree4Poly && (
@@ -453,5 +401,62 @@ export default function RegressionAnalysis({ data, setPopup }) {
 				</div>
 			</div>
 		</Popup>
+	);
+}
+
+const menu = (title, id, conf, setCI, CI) => (
+	<Menu multiple>
+		{conf && (
+			<Menu.ItemGroup title={title}>
+				<Menu.Item
+					onClick={() =>
+						setCI((prev) => {
+							return { ...prev, [id]: { ...prev[id], fit: !prev[id].fit } };
+						})}
+				>
+					<div style={{ display: 'flex' }}>
+						<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].fit ? '✓' : ' '}</span>
+						<span>Show Confidence Curves (fit)</span>
+					</div>
+				</Menu.Item>
+				<Menu.Item
+					onClick={() =>
+						setCI((prev) => {
+							return { ...prev, [id]: { ...prev[id], obs: !prev[id].obs } };
+						})}
+				>
+					<div style={{ display: 'flex' }}>
+						<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].obs ? '✓' : ' '}</span>
+						<span>Show Confidence Curves (obs)</span>
+					</div>
+				</Menu.Item>
+			</Menu.ItemGroup>
+		)}
+	</Menu>
+);
+
+function ChartOptionsLegend({ chartOptions, setCI, CI }) {
+	function ChartOption({ title, color, id, conf }) {
+		return (
+			<Dropdown
+				placement={'topRight'}
+				getPopupContainer={(triggerNode) => triggerNode.parentNode}
+				overlay={menu(title, id, conf, setCI, CI)}
+			>
+				<div>
+					<Icon type="minus" style={{ cursor: 'pointer', fontSize: '20px', color }} /> {title}
+				</div>
+			</Dropdown>
+		);
+	}
+	return (
+		<div style={{ paddingLeft: '30px' }}>
+			{chartOptions.linearRegressionLine && <ChartOption conf id="degree1" title={'Linear Fit'} color={'steelblue'} />}
+			{chartOptions.degree2Poly && <ChartOption conf id="degree2" title={'Quadratic Fit'} color={'green'} />}
+			{chartOptions.degree3Poly && <ChartOption conf id="degree3" title={'Cubic Fit'} color={'darkmagenta'} />}
+			{chartOptions.degree4Poly && <ChartOption id="degree4" title={'Quartic Fit'} color={'saddlebrown'} />}
+			{chartOptions.degree5Poly && <ChartOption id="degree5" title={'5th Degree Fit'} color={'goldenrod'} />}
+			{chartOptions.degree6Poly && <ChartOption id="degree6" title={'6th Degree Fit'} color={'thistle'} />}
+		</div>
 	);
 }

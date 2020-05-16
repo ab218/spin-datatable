@@ -1,5 +1,8 @@
 import React from 'react';
 import './analysis-window.css';
+import { Dropdown, Menu } from 'antd';
+import { SAVE_VALUES_TO_COLUMN } from '../constants';
+import { useSpreadsheetDispatch } from '../SpreadsheetProvider';
 
 const paramEstimates = (coeffs, xLabel, centered, xMean) => {
 	let temp = [];
@@ -51,8 +54,10 @@ export default function GenerateRegressionTemplate({
 	polyDegree,
 	coeffs,
 	xLabel,
+	yLabel,
 	xMean,
 	centered,
+	alpha,
 }) {
 	const { rsquared, rsquared_adj, mse_error, df_model, mse_model, ssr, df_total, df_resid } = polyDegree.stats;
 	return (
@@ -62,27 +67,30 @@ export default function GenerateRegressionTemplate({
 			</summary>
 			<div className="left xxlarge">{equation}</div>
 			<div style={{ height: '10px' }} />
-			<table>
-				<tbody>
-					<tr>
-						<td colSpan={2} className="table-subtitle">
-							Summary of fit
-						</td>
-					</tr>
-					<tr>
-						<td className="header-background large">R-squared</td>
-						<td className="small right">{rsquared.toFixed(4) / 1}</td>
-					</tr>
-					<tr>
-						<td className="header-background large">R-squared Adj</td>
-						<td className="small right">{rsquared_adj.toFixed(4) / 1}</td>
-					</tr>
-					<tr>
-						<td className="header-background large">Root Mean Square Error</td>
-						<td className="small right">{mse_error.toFixed(4) / 1}</td>
-					</tr>
-				</tbody>
-			</table>
+			<div style={{ display: 'flex', justifyContent: 'space-between' }}>
+				<table>
+					<tbody>
+						<tr>
+							<td colSpan={2} className="table-subtitle">
+								Summary of fit
+							</td>
+						</tr>
+						<tr>
+							<td className="header-background large">R-squared</td>
+							<td className="small right">{rsquared.toFixed(4) / 1}</td>
+						</tr>
+						<tr>
+							<td className="header-background large">R-squared Adj</td>
+							<td className="small right">{rsquared_adj.toFixed(4) / 1}</td>
+						</tr>
+						<tr>
+							<td className="header-background large">Root Mean Square Error</td>
+							<td className="small right">{mse_error.toFixed(4) / 1}</td>
+						</tr>
+					</tbody>
+				</table>
+				{alpha && <SaveDropdown alpha={alpha} title={title} polyDegree={polyDegree} xLabel={xLabel} yLabel={yLabel} />}
+			</div>
 			<div style={{ height: '20px' }} />
 			<table>
 				<tbody>
@@ -124,5 +132,79 @@ export default function GenerateRegressionTemplate({
 			<div style={{ height: '10px' }} />
 			{paramEstimateTable(coeffs, xLabel, centered, xMean)}
 		</details>
+	);
+}
+
+function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha }) {
+	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const menu = (title, id) => (
+		<Menu>
+			<Menu.ItemGroup title={title}>
+				<Menu.Item
+					onClick={() =>
+						dispatchSpreadsheetAction({
+							type: SAVE_VALUES_TO_COLUMN,
+							values: polyDegree.stats.predicted,
+							xLabel,
+							yLabel,
+						})}
+				>
+					Save Predicteds
+				</Menu.Item>
+				<Menu.Item
+					onClick={() =>
+						dispatchSpreadsheetAction({
+							type: SAVE_VALUES_TO_COLUMN,
+							values: polyDegree.stats.residuals,
+							xLabel,
+							yLabel,
+						})}
+				>
+					Save Residuals
+				</Menu.Item>
+				<Menu.Item
+					onClick={() => {
+						dispatchSpreadsheetAction({
+							type: SAVE_VALUES_TO_COLUMN,
+							values: polyDegree.ci[alpha].mean_ci_lower,
+							xLabel,
+							yLabel,
+						});
+						dispatchSpreadsheetAction({
+							type: SAVE_VALUES_TO_COLUMN,
+							values: polyDegree.ci[alpha].mean_ci_upper,
+							xLabel,
+							yLabel,
+						});
+					}}
+				>
+					{/* eg: conf95, regex to remove letters */}
+					Save {alpha.replace(/\D/g, '')}% Confidence Intervals (fit)
+				</Menu.Item>
+				<Menu.Item
+					onClick={() => {
+						dispatchSpreadsheetAction({
+							type: SAVE_VALUES_TO_COLUMN,
+							values: polyDegree.ci[alpha].obs_ci_lower,
+							xLabel,
+							yLabel,
+						});
+						dispatchSpreadsheetAction({
+							type: SAVE_VALUES_TO_COLUMN,
+							values: polyDegree.ci[alpha].obs_ci_upper,
+							xLabel,
+							yLabel,
+						});
+					}}
+				>
+					Save {alpha.replace(/\D/g, '')}% Confidence Intervals (obs)
+				</Menu.Item>
+			</Menu.ItemGroup>
+		</Menu>
+	);
+	return (
+		<Dropdown.Button getPopupContainer={(triggerNode) => triggerNode.parentNode} overlay={menu(title, polyDegree)}>
+			Save Values to Table
+		</Dropdown.Button>
 	);
 }
