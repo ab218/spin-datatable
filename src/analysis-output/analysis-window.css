@@ -29,6 +29,7 @@ body {
 
 .linearRegressionLine {
 	stroke-width: 2px;
+	color: steelblue;
 	stroke: steelblue;
 	z-index: 1;
 }
@@ -223,12 +224,14 @@ body {
 }
 
 .table-header {
+	border: 1px solid white;
 	background-color: #e2d7d7;
 	width: 100px;
 	font-weight: bold;
 }
 
 .header-background {
+	border: 1px solid white;
 	background-color: #e2d7d7;
 }
 
@@ -253,6 +256,7 @@ body {
 }
 
 .table-subtitle {
+	border: 1px solid white;
 	font-weight: bold;
 	text-align: left;
 	font-size: 1.2em;

@@ -39,6 +39,8 @@ import {
 	FORMULA,
 } from './constants';
 
+const blankColumnWidth = 100;
+
 export const checkIfValidNumber = (str) => {
 	if (str.match(/^-?\d*\.?\d*$/)) {
 		return false;
@@ -52,7 +54,7 @@ export function formatForNumberColumn(cellValue, column) {
 	}
 }
 
-function Spreadsheet({ eventBus }) {
+function Spreadsheet() {
 	const {
 		activeCell,
 		analysisModalOpen,
@@ -66,6 +68,9 @@ function Spreadsheet({ eventBus }) {
 	} = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ widths, setWidths ] = useState({});
+	const [ popup, setPopup ] = useState([]);
+	const [ visibleColumns, setVisibleColumns ] = useState(null);
+	const [ visibleRows, setVisibleRows ] = useState(null);
 
 	useEffect(() => {
 		// Activate cell top leftmost cell on first load
@@ -174,61 +179,15 @@ function Spreadsheet({ eventBus }) {
 	}
 
 	const emptyRow = {};
-	const visibleColumns = Math.max(columns.length + 3, Math.ceil(window.innerWidth / 100));
-	const visibleRows = Math.max(rows.length + 5, Math.ceil(window.innerHeight / 30));
-	const columnsDiff = visibleColumns - columns.length;
-	const blankColumnWidth = 100;
+	useEffect(
+		() => {
+			setVisibleColumns(Math.max(columns.length + 3, Math.ceil(window.innerWidth / 100)));
+			setVisibleRows(Math.max(rows.length + 5, Math.ceil(window.innerHeight / 30)));
+		},
+		[ window.innerWidth, window.innerHeight ],
+	);
 
-	function renderColumns(totalColumnCount) {
-		// Render column if it exists, otherwise render a blank column
-		const colsContainer = [];
-		for (let columnIndex = 0; columnIndex < totalColumnCount; columnIndex++) {
-			const column = columns[columnIndex];
-			colsContainer.push(
-				<Column
-					key={columnIndex}
-					cellRenderer={(props) => {
-						// rowData = rowID, dataKey = columnID
-						const { dataKey: columnID, rowData } = props;
-						const rowID = rowData.id;
-						return (
-							<CellRenderer
-								{...props}
-								column={column}
-								columnID={columnID}
-								rowID={rowID}
-								createNewColumns={createNewColumns}
-								createNewRows={createNewRows}
-								changeActiveCell={changeActiveCell}
-								modifyCellSelectionRange={modifyCellSelectionRange}
-								selectCell={selectCell}
-								updateCell={updateCell}
-							/>
-						);
-					}}
-					columnIndex={columnIndex}
-					dataKey={(column && column.id) || ''}
-					headerRenderer={(props) => (
-						<HeaderRenderer
-							{...props}
-							columnIndex={columnIndex}
-							createNewColumns={createNewColumns}
-							resizeColumn={resizeColumn}
-							units={(column && column.units) || ''}
-						/>
-					)}
-					label={(column && column.label) || ''}
-					width={(column && widths[column.id]) || blankColumnWidth}
-					style={{
-						border: '1px solid #ddd',
-						borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
-						margin: 0,
-					}}
-				/>,
-			);
-		}
-		return colsContainer;
-	}
+	const columnsDiff = visibleColumns - columns.length;
 
 	function sumOfColumnWidths(columns) {
 		let total = 0;
@@ -270,10 +229,10 @@ function Spreadsheet({ eventBus }) {
 	};
 
 	useEffect(() => {
-		if (barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
-			return;
-		}
 		function onKeyDown(event) {
+			if (barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
+				return;
+			}
 			if (!activeCell && cellSelectionRanges.length === 0) {
 				return;
 			}
@@ -354,13 +313,12 @@ function Spreadsheet({ eventBus }) {
 				}
 			}
 		}
+
 		document.addEventListener('keydown', onKeyDown);
 		return () => {
 			document.removeEventListener('keydown', onKeyDown);
 		};
-	});
-
-	const [ popup, setPopup ] = useState([]);
+	}, []);
 
 	return (
 		// Height 100% necessary for autosizer to work
@@ -402,7 +360,26 @@ function Spreadsheet({ eventBus }) {
 									)}
 									style={{ margin: 0 }}
 								/>
-								{renderColumns(visibleColumns)}
+								{renderColumns(
+									columns,
+									createNewColumns,
+									createNewRows,
+									changeActiveCell,
+									modifyCellSelectionRange,
+									selectCell,
+									updateCell,
+									resizeColumn,
+									widths,
+								)}
+								{visibleColumns &&
+									renderBlankColumns(
+										visibleColumns,
+										columns,
+										createNewColumns,
+										createNewRows,
+										resizeColumn,
+										blankColumnWidth,
+									)}
 							</Table>
 						)}
 					</AutoSizer>
@@ -414,3 +391,111 @@ function Spreadsheet({ eventBus }) {
 }
 
 export default Spreadsheet;
+
+function renderColumns(
+	columns,
+	createNewColumns,
+	createNewRows,
+	changeActiveCell,
+	modifyCellSelectionRange,
+	selectCell,
+	updateCell,
+	resizeColumn,
+	widths,
+) {
+	return columns.map((column, columnIndex) => (
+		<Column
+			key={columnIndex}
+			cellRenderer={(props) => {
+				// rowData = rowID, dataKey = columnID
+				const { dataKey: columnID, rowData } = props;
+				const rowID = rowData.id;
+				return (
+					<CellRenderer
+						{...props}
+						column={column}
+						columnID={columnID}
+						rowID={rowID}
+						createNewColumns={createNewColumns}
+						createNewRows={createNewRows}
+						changeActiveCell={changeActiveCell}
+						modifyCellSelectionRange={modifyCellSelectionRange}
+						selectCell={selectCell}
+						updateCell={updateCell}
+					/>
+				);
+			}}
+			columnIndex={columnIndex}
+			dataKey={(column && column.id) || ''}
+			headerRenderer={(props) => (
+				<HeaderRenderer
+					{...props}
+					columnIndex={columnIndex}
+					createNewColumns={createNewColumns}
+					resizeColumn={resizeColumn}
+					units={(column && column.units) || ''}
+				/>
+			)}
+			label={(column && column.label) || ''}
+			width={(column && widths[column.id]) || 100}
+			style={{
+				border: '1px solid #ddd',
+				borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
+				margin: 0,
+			}}
+		/>
+	));
+}
+
+function renderBlankColumns(
+	totalColumnCount,
+	columns,
+	createNewColumns,
+	createNewRows,
+	resizeColumn,
+	blankColumnWidth,
+) {
+	const columnContainer = [];
+	for (let columnIndex = columns.length - 1; columnIndex < totalColumnCount; columnIndex++) {
+		const column = columns[columnIndex];
+		columnContainer.push(
+			<Column
+				key={columnIndex}
+				cellRenderer={(props) => {
+					// rowData = rowID, dataKey = columnID
+					const { dataKey: columnID, rowData } = props;
+					const rowID = rowData.id;
+					return (
+						<CellRenderer
+							{...props}
+							column={column}
+							columnID={columnID}
+							rowID={rowID}
+							createNewColumns={createNewColumns}
+							createNewRows={createNewRows}
+						/>
+					);
+				}}
+				columnIndex={columnIndex}
+				dataKey={''}
+				headerRenderer={(props) => (
+					<HeaderRenderer
+						{...props}
+						columnIndex={columnIndex}
+						createNewColumns={createNewColumns}
+						resizeColumn={resizeColumn}
+						units={''}
+					/>
+				)}
+				label={''}
+				width={blankColumnWidth}
+				style={{
+					border: '1px solid #ddd',
+					borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
+					margin: 0,
+				}}
+			/>,
+		);
+	}
+	return columnContainer;
+}

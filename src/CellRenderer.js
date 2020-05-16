@@ -2,18 +2,18 @@
 import React from 'react';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import ActiveCell from './ActiveCell';
-import { SelectedCell, NormalCell } from './Cell';
+import ActiveCell from './Cell/ActiveCell';
+import SelectedCell from './Cell/SelectedCell';
+import NormalCell from './Cell/NormalCell';
 import { CLOSE_CONTEXT_MENU, OPEN_CONTEXT_MENU } from './constants';
 
-export default function CellRenderer({
+export default React.memo(function CellRenderer({
 	rowIndex,
 	columnIndex,
 	rowID,
 	cellData,
 	column,
 	columnID,
-	columnType,
 	createNewColumns,
 	createNewRows,
 	changeActiveCell,
@@ -153,4 +153,4 @@ export default function CellRenderer({
 			/>
 		);
 	}
-}
+});

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import './analysis-window.css';
 
@@ -9,11 +9,11 @@ const clickedBarPointSize = normalPointSize * 2;
 const normalBarFill = '#69b3a2';
 const clickedBarFill = 'red';
 const normalPointFill = 'black';
-const margin = { top: 100, right: 50, bottom: 20, left: 50 };
-const width = 400;
-const height = 400;
-const svgWidth = width + margin.left + margin.right + 100;
-const svgHeight = height + margin.top + margin.bottom + 100;
+const margin = { top: 100, right: 70, bottom: 70, left: 50 };
+const width = 300;
+const height = 300;
+const svgWidth = width + margin.left + margin.right;
+const svgHeight = height + margin.top + margin.bottom;
 const x = d3.scaleLinear().range([ 0, width ]);
 const y = d3.scaleLinear().range([ height, 0 ]);
 // define the line
@@ -58,21 +58,23 @@ const drawBasicPath = (points, name, title, svg, pathTooltip) => {
 		.attr('class', `${name}-hitbox`)
 		.attr('d', reversedLine)
 		.on(`mouseenter`, function() {
+			if (!pathTooltip) return;
 			pathTooltip.transition().duration(200).style('opacity', 0.9);
 			pathTooltip.html(title).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function() {
+			if (!pathTooltip) return;
 			pathTooltip.transition().duration(500).style('opacity', 0);
 		});
 };
 
-function drawHistogramBorders(svg, colA, colB, histogramBinTooltip) {
+function drawHistogramBorders(svg, yPoints, xPoints, histogramBinTooltip) {
 	// Histogram borders. Lower number = higher bars
 	const barHeight = 150;
 	const barsY = d3.scaleLinear().range([ height, barHeight ]);
-	barsY.domain([ 0, colA.length ]);
+	barsY.domain([ 0, yPoints.length ]);
 	const barsX = d3.scaleLinear().range([ 0, 250 ]);
-	barsX.domain([ 0, colB.length ]);
+	barsX.domain([ 0, xPoints.length ]);
 
 	// set the parameters for the histogram
 	const histogramY = d3
@@ -86,8 +88,8 @@ function drawHistogramBorders(svg, colA, colB, histogramBinTooltip) {
 		.thresholds(8); // then the numbers of bins
 
 	// And apply this function to data to get the bins
-	const colABins = histogramY(colA);
-	const colBBins = histogramX(colB);
+	const yPointsBins = histogramY(yPoints);
+	const xPointsBins = histogramX(xPoints);
 
 	function onMouseOverHistogramBar(d, thisBar) {
 		d3.select(thisBar).transition().duration(50).attr('opacity', 0.6);
@@ -128,7 +130,7 @@ function drawHistogramBorders(svg, colA, colB, histogramBinTooltip) {
 	// Histogram Bar X axis
 	svg
 		.selectAll('xHistBars')
-		.data(colBBins)
+		.data(xPointsBins)
 		.enter()
 		.append('rect')
 		.on('click', function(d) {
@@ -155,7 +157,7 @@ function drawHistogramBorders(svg, colA, colB, histogramBinTooltip) {
 	// Histogram Bar Y Axis
 	svg
 		.selectAll('yHistBars')
-		.data(colABins)
+		.data(yPointsBins)
 		.enter()
 		.append('rect')
 		.on(`mouseover`, function(d) {
@@ -168,7 +170,7 @@ function drawHistogramBorders(svg, colA, colB, histogramBinTooltip) {
 			onClickSelectCells(d3.select(this), d, 'y');
 		})
 		.attr('class', 'histogramBorders')
-		.attr('x', 405)
+		.attr('x', width + 5)
 		.attr('y', (d) => y(d.x1))
 		.attr('height', (d) => y(d.x0) - y(d.x1) - 1)
 		.transition()
@@ -206,7 +208,7 @@ function onMouseLeavePoint(d, thisPoint, pointTooltip) {
 	pointTooltip.transition().duration(500).style('opacity', 0);
 }
 
-export default function D3Container({ data, chartOptions, CI }) {
+export default function D3Container({ data, chartOptions, CI, alpha }) {
 	const d3Container = useRef(null);
 	const { reg1, reg2, reg3, reg4, reg5, reg6, colY, colX, coordinates } = data;
 
@@ -220,85 +222,106 @@ export default function D3Container({ data, chartOptions, CI }) {
 		degree6Poly,
 	} = chartOptions;
 
-	const linearRegressionCoefficients = reg1.stats['polynomial'];
-	const degree2PolyCoefficients = reg2.stats['polynomial'];
-	const degree3PolyCoefficients = reg3.stats['polynomial'];
-	const degree4PolyCoefficients = reg4.stats['polynomial'];
-	const degree5PolyCoefficients = reg5.stats['polynomial'];
-	const degree6PolyCoefficients = reg6.stats['polynomial'];
-	const linearRegressionEquation = (x) => linearRegressionCoefficients[0] + linearRegressionCoefficients[1] * x;
-	const xDomainMin = x.domain()[0];
-	const xDomainMax = x.domain()[1];
-	const step = (xDomainMax - xDomainMin) / 200;
-	const linearRegressionPoints = createPoints(x.domain(), step, linearRegressionEquation);
-	const poly2equation = (x) =>
-		degree2PolyCoefficients[0] + degree2PolyCoefficients[1] * x + degree2PolyCoefficients[2] * x * x;
-	const poly3equation = (x) =>
-		degree3PolyCoefficients[0] +
-		degree3PolyCoefficients[1] * x +
-		degree3PolyCoefficients[2] * x * x +
-		degree3PolyCoefficients[3] * x * x * x;
-	const poly4equation = (x) =>
-		degree4PolyCoefficients[0] +
-		degree4PolyCoefficients[1] * x +
-		degree4PolyCoefficients[2] * x * x +
-		degree4PolyCoefficients[3] * x * x * x +
-		degree4PolyCoefficients[4] * x * x * x * x;
-	const poly5equation = (x) =>
-		degree5PolyCoefficients[0] +
-		degree5PolyCoefficients[1] * x +
-		degree5PolyCoefficients[2] * x * x +
-		degree5PolyCoefficients[3] * x * x * x +
-		degree5PolyCoefficients[4] * x * x * x * x +
-		degree5PolyCoefficients[5] * x * x * x * x * x;
-	const poly6equation = (x) =>
-		degree6PolyCoefficients[0] +
-		degree6PolyCoefficients[1] * x +
-		degree6PolyCoefficients[2] * x * x +
-		degree6PolyCoefficients[3] * x * x * x +
-		degree6PolyCoefficients[4] * x * x * x * x +
-		degree6PolyCoefficients[5] * x * x * x * x * x +
-		degree6PolyCoefficients[6] * x * x * x * x * x * x;
+	const [ linearRegressionPoints, setLinearRegressionPoints ] = useState([]);
+	const [ degree2Points, setDegree2Points ] = useState([]);
+	const [ degree3Points, setDegree3Points ] = useState([]);
+	const [ degree4Points, setDegree4Points ] = useState([]);
+	const [ degree5Points, setDegree5Points ] = useState([]);
+	const [ degree6Points, setDegree6Points ] = useState([]);
+	const [ yPoints, setYPoints ] = useState(coordinates.map((a) => a[1]).sort(d3.ascending));
+	const [ xPoints, setXPoints ] = useState(coordinates.map((a) => a[0]).sort(d3.ascending));
 
-	//points
-	const degree2Points = createPoints(x.domain(), step, poly2equation);
-	const degree3Points = createPoints(x.domain(), step, poly3equation);
-	const degree4Points = createPoints(x.domain(), step, poly4equation);
-	const degree5Points = createPoints(x.domain(), step, poly5equation);
-	const degree6Points = createPoints(x.domain(), step, poly6equation);
-	// Column Points
-	const colA = coordinates.map((a) => a[1]).sort(d3.ascending);
-	const colB = coordinates.map((a) => a[0]).sort(d3.ascending);
-	// get extents and range
-	const xExtent = d3.extent(coordinates, function(d) {
-		return d[0];
-	});
-	const xRange = xExtent[1] - xExtent[0];
-	const yExtent = d3.extent(coordinates, function(d) {
-		return d[1];
-	});
-	const yRange = yExtent[1] - yExtent[0];
+	useEffect(
+		() => {
+			// get extents and range
+			const xExtent = d3.extent(coordinates, function(d) {
+				return d[0];
+			});
+			const xRange = xExtent[1] - xExtent[0];
+			const yExtent = d3.extent(coordinates, function(d) {
+				return d[1];
+			});
+			const yRange = yExtent[1] - yExtent[0];
+			// set domain to be extent +- 5%
+			x.domain([ xExtent[0] - xRange * 0.05, xExtent[1] + xRange * 0.05 ]).nice();
+			y.domain([ yExtent[0] - yRange * 0.05, yExtent[1] + yRange * 0.05 ]).nice();
+			d3
+				.select(d3Container.current)
+				.append('div')
+				.attr('class', 'regression-line tooltip')
+				.attr('id', 'regression-line-tooltip')
+				.style('opacity', 0);
+			d3
+				.select(d3Container.current)
+				.append('div')
+				.attr('class', 'histogram-border tooltip')
+				.attr('id', 'histogram-border-tooltip')
+				.style('opacity', 0);
+			const linearRegressionCoefficients = reg1.stats['polynomial'];
+			const degree2PolyCoefficients = reg2.stats['polynomial'];
+			const degree3PolyCoefficients = reg3.stats['polynomial'];
+			const degree4PolyCoefficients = reg4.stats['polynomial'];
+			const degree5PolyCoefficients = reg5.stats['polynomial'];
+			const degree6PolyCoefficients = reg6.stats['polynomial'];
+			const linearRegressionEquation = (x) => linearRegressionCoefficients[0] + linearRegressionCoefficients[1] * x;
+			const xDomainMin = x.domain()[0];
+			const xDomainMax = x.domain()[1];
+			// lower divisor = less points = better performance
+			const step = (xDomainMax - xDomainMin) / 25;
+			setLinearRegressionPoints(createPoints(x.domain(), step, linearRegressionEquation));
+			const poly2equation = (x) =>
+				degree2PolyCoefficients[0] + degree2PolyCoefficients[1] * x + degree2PolyCoefficients[2] * x * x;
+			const poly3equation = (x) =>
+				degree3PolyCoefficients[0] +
+				degree3PolyCoefficients[1] * x +
+				degree3PolyCoefficients[2] * x * x +
+				degree3PolyCoefficients[3] * x * x * x;
+			const poly4equation = (x) =>
+				degree4PolyCoefficients[0] +
+				degree4PolyCoefficients[1] * x +
+				degree4PolyCoefficients[2] * x * x +
+				degree4PolyCoefficients[3] * x * x * x +
+				degree4PolyCoefficients[4] * x * x * x * x;
+			const poly5equation = (x) =>
+				degree5PolyCoefficients[0] +
+				degree5PolyCoefficients[1] * x +
+				degree5PolyCoefficients[2] * x * x +
+				degree5PolyCoefficients[3] * x * x * x +
+				degree5PolyCoefficients[4] * x * x * x * x +
+				degree5PolyCoefficients[5] * x * x * x * x * x;
+			const poly6equation = (x) =>
+				degree6PolyCoefficients[0] +
+				degree6PolyCoefficients[1] * x +
+				degree6PolyCoefficients[2] * x * x +
+				degree6PolyCoefficients[3] * x * x * x +
+				degree6PolyCoefficients[4] * x * x * x * x +
+				degree6PolyCoefficients[5] * x * x * x * x * x +
+				degree6PolyCoefficients[6] * x * x * x * x * x * x;
+			//points
+			setDegree2Points(createPoints(x.domain(), step, poly2equation));
+			setDegree3Points(createPoints(x.domain(), step, poly3equation));
+			setDegree4Points(createPoints(x.domain(), step, poly4equation));
+			setDegree5Points(createPoints(x.domain(), step, poly5equation));
+			setDegree6Points(createPoints(x.domain(), step, poly6equation));
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[],
+	);
 
-	// set domain to be extent +- 5%
-	x.domain([ xExtent[0] - xRange * 0.05, xExtent[1] + xRange * 0.05 ]).nice();
-	y.domain([ yExtent[0] - yRange * 0.05, yExtent[1] + yRange * 0.05 ]).nice();
-
-	const pointTooltip = d3.select(d3Container.current).append('div').attr('class', 'point tooltip').style('opacity', 0);
-	const pathTooltip = d3
-		.select(d3Container.current)
-		.append('div')
-		.attr('class', 'regression-line tooltip')
-		.style('opacity', 0);
-	const histogramBinTooltip = d3
-		.select(d3Container.current)
-		.append('div')
-		.attr('class', 'histogram-border tooltip')
-		.style('opacity', 0);
+	const chartContainer = d3.select(d3Container.current);
+	const svg = chartContainer.select('g');
+	const pathTooltip = chartContainer.select('#regression-line-tooltip');
+	const removeChartElement = (className) => chartContainer.selectAll(className).remove();
 
 	// initialize chart with static features (axes and points)
 	useEffect(
 		() => {
 			if (data && d3Container.current) {
+				const pointTooltip = d3
+					.select(d3Container.current)
+					.append('div')
+					.attr('class', 'point tooltip')
+					.style('opacity', 0);
 				const svg = d3
 					.select(d3Container.current)
 					.append('svg')
@@ -353,161 +376,98 @@ export default function D3Container({ data, chartOptions, CI }) {
 		[ data ],
 	);
 
-	// chart options
+	useEffect(
+		() => {
+			const chartContainer = d3.select(d3Container.current);
+			const svg = chartContainer.select('g');
+			const histogramBinTooltip = chartContainer.select('#histogram-border-tooltip');
+			const removeChartElement = (className) => chartContainer.selectAll(className).remove();
+			if (histogramBorders) {
+				drawHistogramBorders(svg, yPoints, xPoints, histogramBinTooltip);
+			} else {
+				removeChartElement(`.histogramBorders`);
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ histogramBorders ],
+	);
+
+	useEffect(
+		() => {
+			if (linearRegressionLine) {
+				drawBasicPath(linearRegressionPoints, 'linearRegressionLine', 'Linear Regression Line', svg, pathTooltip);
+			} else {
+				removeChartElement('.linearRegressionLine');
+				removeChartElement(`.linearRegressionLine-hitbox`);
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ linearRegressionLine ],
+	);
+
 	useEffect(
 		() => {
 			if (d3Container.current && data && chartOptions) {
-				const svg = d3.select(d3Container.current).select('g');
-				const removeChartElement = (className) => d3.select(d3Container.current).selectAll(className).remove();
-				if (histogramBorders) {
-					drawHistogramBorders(svg, colA, colB, histogramBinTooltip);
-				} else {
-					removeChartElement(`.histogramBorders`);
-				}
-				if (linearRegressionLine) {
-					drawBasicPath(linearRegressionPoints, 'linearRegressionLine', 'Linear Regression Line', svg, pathTooltip);
-					if (CI && CI.linearRegressionLineCIFitLower && CI.linearRegressionLineCIFitLower.length > 0) {
-						drawBasicPath(
-							mapPoints(colB, CI.linearRegressionLineCIFitUpper.sort((a, b) => b - a)),
-							'linearRegressionLineCIFit',
-							'Linear Regression CI',
-							svg,
-							pathTooltip,
-						);
-						drawBasicPath(
-							mapPoints(colB, CI.linearRegressionLineCIFitLower.sort((a, b) => b - a)),
-							'linearRegressionLineCIFit',
-							'Linear Regression CI',
-							svg,
-							pathTooltip,
-						);
-					} else {
-						removeChartElement('.linearRegressionLineCIFit');
-						removeChartElement(`.linearRegressionLineCIFit-hitbox`);
-					}
-					if (CI && CI.linearRegressionLineCIObsLower && CI.linearRegressionLineCIObsLower.length > 0) {
-						drawBasicPath(
-							mapPoints(colB, CI.linearRegressionLineCIObsUpper.sort((a, b) => b - a)),
-							'linearRegressionLineCIObs',
-							'Linear Regression CI',
-							svg,
-							pathTooltip,
-						);
-						drawBasicPath(
-							mapPoints(colB, CI.linearRegressionLineCIObsLower.sort((a, b) => b - a)),
-							'linearRegressionLineCIObs',
-							'Linear Regression CI',
-							svg,
-							pathTooltip,
-						);
-					} else {
-						removeChartElement('.linearRegressionLineCIObs');
-						removeChartElement(`.linearRegressionLineCIObs-hitbox`);
-					}
-				} else {
-					removeChartElement('.linearRegressionLine');
-					removeChartElement(`.linearRegressionLine-hitbox`);
-				}
 				if (degree2Poly) {
 					drawBasicPath(degree2Points, 'degree2PolyLine', 'Quadratic Regression Line', svg, pathTooltip);
-					if (CI && CI.degree2PolyLineCIFitLower && CI.degree2PolyLineCIFitLower.length > 0) {
-						drawBasicPath(
-							mapPoints(colB, CI.degree2PolyLineCIFitLower.sort((a, b) => b - a)),
-							'degree2PolyLineCIFit',
-							'Quadratic Regression CI',
-							svg,
-							pathTooltip,
-						);
-						drawBasicPath(
-							mapPoints(colB, CI.degree2PolyLineCIFitUpper.sort((a, b) => b - a)),
-							'degree2PolyLineCIFit',
-							'Quadratic Regression CI',
-							svg,
-							pathTooltip,
-						);
-					} else {
-						removeChartElement('.degree2PolyLineCIFit');
-						removeChartElement(`.degree2PolyLineCIFit-hitbox`);
-					}
-					if (CI && CI.degree2PolyLineCIObsLower && CI.degree2PolyLineCIObsLower.length > 0) {
-						drawBasicPath(
-							mapPoints(colB, CI.degree2PolyLineCIObsLower.sort((a, b) => b - a)),
-							'degree2PolyLineCIObs',
-							'Quadratic Regression CI',
-							svg,
-							pathTooltip,
-						);
-						drawBasicPath(
-							mapPoints(colB, CI.degree2PolyLineCIObsUpper.sort((a, b) => b - a)),
-							'degree2PolyLineCIObs',
-							'Quadratic Regression CI',
-							svg,
-							pathTooltip,
-						);
-					} else {
-						removeChartElement('.degree2PolyLineCIObs');
-						removeChartElement(`.degree2PolyLineCIObs-hitbox`);
-					}
 				} else {
 					removeChartElement(`.degree2PolyLine`);
 					removeChartElement(`.degree2PolyLine-hitbox`);
 				}
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ degree2Poly ],
+	);
+
+	useEffect(
+		() => {
+			if (d3Container.current && data && chartOptions) {
 				if (degree3Poly) {
-					drawBasicPath(degree3Points, 'degree3PolyLine', 'Cubic Regression Line', svg, pathTooltip);
-					if (CI && CI.degree3PolyLineCIFitLower && CI.degree3PolyLineCIFitLower.length > 0) {
-						drawBasicPath(
-							mapPoints(colB, CI.degree3PolyLineCIFitLower.sort((a, b) => b - a)),
-							'degree3PolyLineCIFit',
-							'Cubic Regression CI',
-							svg,
-							pathTooltip,
-						);
-						drawBasicPath(
-							mapPoints(colB, CI.degree3PolyLineCIFitUpper.sort((a, b) => b - a)),
-							'degree3PolyLineCIFit',
-							'Cubic Regression CI',
-							svg,
-							pathTooltip,
-						);
-					} else {
-						removeChartElement('.degree3PolyLineCIFit');
-						removeChartElement(`.degree3PolyLineCIFit-hitbox`);
-					}
-					if (CI && CI.degree3PolyLineCIObsLower && CI.degree3PolyLineCIObsLower.length > 0) {
-						drawBasicPath(
-							mapPoints(colB, CI.degree3PolyLineCIObsLower.sort((a, b) => b - a)),
-							'degree3PolyLineCIObs',
-							'Cubic Regression CI',
-							svg,
-							pathTooltip,
-						);
-						drawBasicPath(
-							mapPoints(colB, CI.degree3PolyLineCIObsUpper.sort((a, b) => b - a)),
-							'degree3PolyLineCIObs',
-							'Cubic Regression CI',
-							svg,
-							pathTooltip,
-						);
-					} else {
-						removeChartElement('.degree3PolyLineCIObs');
-						removeChartElement(`.degree3PolyLineCIObs-hitbox`);
-					}
+					drawBasicPath(degree3Points, 'degree3PolyLine', 'Quadratic Regression Line', svg, pathTooltip);
 				} else {
 					removeChartElement(`.degree3PolyLine`);
 					removeChartElement(`.degree3PolyLine-hitbox`);
 				}
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ degree3Poly ],
+	);
+
+	useEffect(
+		() => {
+			if (d3Container.current && data && chartOptions) {
 				if (degree4Poly) {
-					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quartic Regression Line', svg, pathTooltip);
+					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quadratic Regression Line', svg, pathTooltip);
 				} else {
 					removeChartElement(`.degree4PolyLine`);
 					removeChartElement(`.degree4PolyLine-hitbox`);
 				}
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ degree4Poly ],
+	);
+
+	useEffect(
+		() => {
+			if (d3Container.current && data && chartOptions) {
 				if (degree5Poly) {
 					drawBasicPath(degree5Points, 'degree5PolyLine', '5th Degree Regression Line', svg, pathTooltip);
 				} else {
 					removeChartElement(`.degree5PolyLine`);
 					removeChartElement(`.degree5PolyLine-hitbox`);
 				}
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ degree5Poly ],
+	);
+
+	useEffect(
+		() => {
+			if (d3Container.current && data && chartOptions) {
 				if (degree6Poly) {
 					drawBasicPath(degree6Points, 'degree6PolyLine', '6th Degree Regression Line', svg, pathTooltip);
 				} else {
@@ -517,7 +477,86 @@ export default function D3Container({ data, chartOptions, CI }) {
 			}
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[ chartOptions, CI ],
+		[ degree6Poly ],
+	);
+
+	function updateConfCurves(degree, data, curveClass, title) {
+		const chartContainer = d3.select(d3Container.current);
+		const svg = chartContainer.select('g');
+		const curveClassFit = `${curveClass}Fit`;
+		const curveClassObs = `${curveClass}Obs`;
+		const dotCurveClassFit = `.${curveClass}Fit`;
+		const dotCurveClassObs = `.${curveClass}Obs`;
+		const hitboxClassFit = `.${curveClass}Fit-hitbox`;
+		const hitboxClassObs = `.${curveClass}Obs-hitbox`;
+		// const pathTooltip = chartContainer.select('#regression-line-tooltip');
+		const removeChartElement = (className) => chartContainer.selectAll(className).remove();
+		if (CI && CI[degree].fit) {
+			removeChartElement(dotCurveClassFit);
+			removeChartElement(hitboxClassFit);
+			drawBasicPath(
+				mapPoints(xPoints, data.ci[alpha].mean_ci_upper.sort((a, b) => b - a)),
+				curveClassFit,
+				title,
+				svg,
+				null,
+			);
+			drawBasicPath(
+				mapPoints(xPoints, data.ci[alpha].mean_ci_lower.sort((a, b) => b - a)),
+				curveClassFit,
+				title,
+				svg,
+				null,
+			);
+		} else {
+			removeChartElement(dotCurveClassFit);
+			removeChartElement(hitboxClassFit);
+		}
+		if (CI && CI[degree].obs) {
+			removeChartElement(dotCurveClassObs);
+			removeChartElement(hitboxClassObs);
+			drawBasicPath(
+				mapPoints(xPoints, data.ci[alpha].obs_ci_upper.sort((a, b) => b - a)),
+				curveClassObs,
+				title,
+				svg,
+				null,
+			);
+			drawBasicPath(
+				mapPoints(xPoints, data.ci[alpha].obs_ci_lower.sort((a, b) => b - a)),
+				curveClassObs,
+				title,
+				svg,
+				null,
+			);
+		} else {
+			removeChartElement(dotCurveClassObs);
+			removeChartElement(hitboxClassObs);
+		}
+	}
+
+	useEffect(
+		() => {
+			updateConfCurves('degree1', reg1, 'linearRegressionLineCI', 'Linear Regression CI');
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ CI.degree1, alpha ],
+	);
+
+	useEffect(
+		() => {
+			updateConfCurves('degree2', reg2, 'degree2PolyLineCI', 'Quadratic Regression CI');
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ CI.degree2, alpha ],
+	);
+
+	useEffect(
+		() => {
+			updateConfCurves('degree3', reg3, 'degree3PolyLineCI', 'Cubic Regression CI');
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ CI.degree3, alpha ],
 	);
 
 	return <div ref={d3Container} />;

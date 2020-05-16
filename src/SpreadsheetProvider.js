@@ -270,7 +270,7 @@ function spreadsheetReducer(state, action) {
 		return state.columns.find((col) => col.label === colName);
 	}
 	const { type, ...event } = action;
-	state.eventBus.fire(type, event);
+	// state.eventBus.fire(type, event);
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
@@ -955,7 +955,7 @@ export function useSpreadsheetDispatch() {
 	return context;
 }
 
-export function SpreadsheetProvider({ eventBus, children }) {
+export function SpreadsheetProvider({ children }) {
 	// dummy data
 	const statsColumns = [
 		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced', description: '' },
@@ -1020,7 +1020,6 @@ export function SpreadsheetProvider({ eventBus, children }) {
 	}
 
 	const initialState = {
-		eventBus,
 		activeCell: null,
 		analysisModalOpen: false,
 		analysisWindowOpen: false,

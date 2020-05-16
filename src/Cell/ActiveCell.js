@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { STRING } from './constants';
-export default class ActiveCell extends Component {
+import { STRING } from '../constants';
+export default class ActiveCell extends React.PureComponent {
 	constructor(props) {
 		super(props);
 		this.state = {

@@ -9,7 +9,7 @@ export default function Popout({ title, id, setPopup, ...props }) {
 	}
 	useEffect(
 		() => {
-			const features = 'left=9999,top=100,width=800,height=850';
+			const features = 'left=9999,top=100,width=1000,height=850';
 			const externalWindow = window.open('', id, features);
 			const stylesheets = Array.from(document.styleSheets);
 			stylesheets.forEach((stylesheet) => {

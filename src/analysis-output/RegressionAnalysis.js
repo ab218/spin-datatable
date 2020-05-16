@@ -1,10 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Popup from './PopupWindow';
-import { Select } from 'antd';
+import { Select, Menu, Dropdown, Icon } from 'antd';
 import GenerateRegressionTemplate from './RegressionTemplate';
 import RegressionD3Chart from './RegressionD3Chart';
 import './analysis-window.css';
 const { Option } = Select;
+// const { SubMenu } = Menu;
+
+function SetAlphaLevel({ setAlpha }) {
+	return (
+		<Select
+			getPopupContainer={(triggerNode) => triggerNode.parentNode}
+			defaultValue="conf95"
+			style={{ width: 120 }}
+			onChange={(val) => {
+				return setAlpha(val);
+			}}
+		>
+			<Option value="conf90">0.1</Option>
+			<Option value="conf95">0.05</Option>
+			<Option value="conf99">0.01</Option>
+		</Select>
+	);
+}
 
 function ChartOptionsSelect({ handleChartOptions }) {
 	return (
@@ -12,8 +30,9 @@ function ChartOptionsSelect({ handleChartOptions }) {
 			getPopupContainer={(triggerNode) => triggerNode.parentNode}
 			mode="multiple"
 			style={{ width: '100%' }}
+			size={'small'}
 			placeholder="Please select"
-			defaultValue={[ 'Show Histogram Borders', 'Linear Fit' ]}
+			defaultValue={[ 'Show Histogram Borders' ]}
 			onChange={handleChartOptions}
 			maxTagCount={0}
 			maxTagPlaceholder={(e) => {
@@ -31,6 +50,43 @@ function ChartOptionsSelect({ handleChartOptions }) {
 		</Select>
 	);
 }
+
+// function ChartOptionsSelect({ handleChartOptions }) {
+// 	function FitOptions(fitName, fitTitle) {
+// 		return (
+// 			<SubMenu title={fitTitle} key={`${fitName}Fit`}>
+// 				<Menu.Item key={`${fitName}Line`}>Display {fitTitle}</Menu.Item>
+// 				<SubMenu key={`${fitName}CI`} title={`Confidence Curves`}>
+// 					<Menu.Item key={`${fitName}CIFit`}>Fit</Menu.Item>
+// 					<Menu.Item key={`${fitName}CIObs`}>Obs</Menu.Item>
+// 				</SubMenu>
+// 			</SubMenu>
+// 		);
+// 	}
+// 	return (
+// 		<Menu
+// 			multiple
+// 			inlineIndent={50}
+// 			onClick={handleClick}
+// 			style={{ position: 'absolute', width: 400, textAlign: 'left' }}
+// 			mode="inline"
+// 		>
+// 			<SubMenu title="Linear Fit" key="linearFit">
+// 				<Menu.Item key="linearLine">Display Linear Fit</Menu.Item>
+// 				<SubMenu key="linearCI" title="Confidence Curves">
+// 					<Menu.Item key="linearCIFit">Fit</Menu.Item>
+// 					<Menu.Item key="linearCIObs">Obs</Menu.Item>
+// 				</SubMenu>
+// 				<SubMenu key="linearSave" title="Save Values To Table">
+// 					<Menu.Item key="saveLinearPredicted">Save Predicted Values</Menu.Item>
+// 					<Menu.Item key="saveLinearResiduals">Save Residual Values</Menu.Item>
+// 					<Menu.Item key="saveLinearCIFit">Save CI Fit Values</Menu.Item>
+// 					<Menu.Item key="saveLinearCIObs">Save CI Obs Values</Menu.Item>
+// 				</SubMenu>
+// 			</SubMenu>
+// 		</Menu>
+// 	);
+// }
 
 function ChartTitle({ colY, colX }) {
 	return (
@@ -56,7 +112,7 @@ function SummaryStatsTable({ data }) {
 	return (
 		<details open style={{ padding: '10px 30px 30px', textAlign: 'center' }}>
 			<summary className="analysis-summary-title">Summary Statistics</summary>
-			<div style={{ display: 'flex' }}>
+			<div>
 				<table style={{ width: '300px', marginRight: '20px' }}>
 					<tbody>
 						<tr>
@@ -81,6 +137,7 @@ function SummaryStatsTable({ data }) {
 						</tr>
 					</tbody>
 				</table>
+				<div style={{ height: '30px' }} />
 				<table style={{ width: '400px' }}>
 					<tbody>
 						<tr>
@@ -138,16 +195,84 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		cent_reg5,
 		cent_reg6,
 	} = data;
-	const [ CI, setCI ] = useState({});
+	const [ CI, setCI ] = useState({
+		degree1: { fit: false, obs: false },
+		degree2: { fit: false, obs: false },
+		degree3: { fit: false, obs: false },
+		degree4: { fit: false, obs: false },
+		degree5: { fit: false, obs: false },
+		degree6: { fit: false, obs: false },
+	});
 	const [ chartOptions, setChartOptions ] = useState({
 		histogramBorders: true,
-		linearRegressionLine: true,
+		linearRegressionLine: false,
 		degree2Poly: false,
 		degree3Poly: false,
 		degree4Poly: false,
 		degree5Poly: false,
 		degree6Poly: false,
 	});
+	const [ equationTemplates, setEquationTemplates ] = useState({});
+	const [ alpha, setAlpha ] = useState('conf95');
+
+	const menu = (title, id, conf) => (
+		<Menu multiple>
+			{conf && (
+				<Menu.ItemGroup title={title}>
+					<Menu.Item
+						onClick={() =>
+							setCI((prev) => {
+								return { ...prev, [id]: { ...prev[id], fit: !prev[id].fit } };
+							})}
+					>
+						<div style={{ display: 'flex' }}>
+							<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].fit ? '✓' : ' '}</span>
+							<span>Show Confidence Curves (fit)</span>
+						</div>
+					</Menu.Item>
+					<Menu.Item
+						onClick={() =>
+							setCI((prev) => {
+								return { ...prev, [id]: { ...prev[id], obs: !prev[id].obs } };
+							})}
+					>
+						<div style={{ display: 'flex' }}>
+							<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].obs ? '✓' : ' '}</span>
+							<span>Show Confidence Curves (obs)</span>
+						</div>
+					</Menu.Item>
+				</Menu.ItemGroup>
+			)}
+		</Menu>
+	);
+
+	function ChartOptionsLegend({ chartOptions }) {
+		function ChartOption({ title, color, id, conf }) {
+			return (
+				<Dropdown
+					placement={'topRight'}
+					getPopupContainer={(triggerNode) => triggerNode.parentNode}
+					overlay={menu(title, id, conf)}
+				>
+					<div>
+						<Icon type="minus" style={{ cursor: 'pointer', fontSize: '20px', color }} /> {title}
+					</div>
+				</Dropdown>
+			);
+		}
+		return (
+			<div style={{ paddingLeft: '30px' }}>
+				{chartOptions.linearRegressionLine && (
+					<ChartOption conf id="degree1" title={'Linear Fit'} color={'steelblue'} />
+				)}
+				{chartOptions.degree2Poly && <ChartOption conf id="degree2" title={'Quadratic Fit'} color={'green'} />}
+				{chartOptions.degree3Poly && <ChartOption conf id="degree3" title={'Cubic Fit'} color={'darkmagenta'} />}
+				{chartOptions.degree4Poly && <ChartOption id="degree4" title={'Quartic Fit'} color={'saddlebrown'} />}
+				{chartOptions.degree5Poly && <ChartOption id="degree5" title={'5th Degree Fit'} color={'goldenrod'} />}
+				{chartOptions.degree6Poly && <ChartOption id="degree6" title={'6th Degree Fit'} color={'thistle'} />}
+			</div>
+		);
+	}
 
 	function handleChartOptions(value) {
 		const centeredPoly = value.includes('Center Polynomials');
@@ -182,120 +307,150 @@ export default function RegressionAnalysis({ data, setPopup }) {
 	const centered4PolyCoefficients = cent_reg4.stats['polynomial'];
 	const centered5PolyCoefficients = cent_reg5.stats['polynomial'];
 	const centered6PolyCoefficients = cent_reg6.stats['polynomial'];
-	const linearEquationTemplate = `${colY.label} = ${linearRegressionCoefficients[0].toFixed(6) / 1} ${addOrSubtract(
-		linearRegressionCoefficients[1].toFixed(6) / 1,
-	)} ${Math.abs(linearRegressionCoefficients[1].toFixed(6) / 1)} * ${colX.label}`;
-	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colX.label, colY.label);
-	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colX.label, colY.label);
-	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colX.label, colY.label);
-	const degree5EquationTemplate = generateEquationTemplate(degree5PolyCoefficients, colX.label, colY.label);
-	const degree6EquationTemplate = generateEquationTemplate(degree6PolyCoefficients, colX.label, colY.label);
-	const centeredQuadraticEquationTemplate = generateEquationTemplate(centered2PolyCoefficients, colX.label, colY.label);
-	const centeredCubicEquationTemplate = generateEquationTemplate(centered3PolyCoefficients, colX.label, colY.label);
-	const centeredQuarticEquationTemplate = generateEquationTemplate(centered4PolyCoefficients, colX.label, colY.label);
-	const centeredDegree5EquationTemplate = generateEquationTemplate(centered5PolyCoefficients, colX.label, colY.label);
-	const centeredDegree6EquationTemplate = generateEquationTemplate(centered6PolyCoefficients, colX.label, colY.label);
+	useEffect(
+		() => {
+			setEquationTemplates({
+				linearEquationTemplate: `${colY.label} = ${linearRegressionCoefficients[0].toFixed(6) / 1} ${addOrSubtract(
+					linearRegressionCoefficients[1].toFixed(6) / 1,
+				)} ${Math.abs(linearRegressionCoefficients[1].toFixed(6) / 1)} * ${colX.label}`,
+				quadraticEquationTemplate: generateEquationTemplate(degree2PolyCoefficients, colX.label, colY.label),
+				cubicEquationTemplate: generateEquationTemplate(degree3PolyCoefficients, colX.label, colY.label),
+				quarticEquationTemplate: generateEquationTemplate(degree4PolyCoefficients, colX.label, colY.label),
+				degree5EquationTemplate: generateEquationTemplate(degree5PolyCoefficients, colX.label, colY.label),
+				degree6EquationTemplate: generateEquationTemplate(degree6PolyCoefficients, colX.label, colY.label),
+				centeredQuadraticEquationTemplate: generateEquationTemplate(centered2PolyCoefficients, colX.label, colY.label),
+				centeredCubicEquationTemplate: generateEquationTemplate(centered3PolyCoefficients, colX.label, colY.label),
+				centeredQuarticEquationTemplate: generateEquationTemplate(centered4PolyCoefficients, colX.label, colY.label),
+				centeredDegree5EquationTemplate: generateEquationTemplate(centered5PolyCoefficients, colX.label, colY.label),
+				centeredDegree6EquationTemplate: generateEquationTemplate(centered6PolyCoefficients, colX.label, colY.label),
+			});
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[],
+	);
 
+	const {
+		linearEquationTemplate,
+		centeredCubicEquationTemplate,
+		centeredQuadraticEquationTemplate,
+		centeredQuarticEquationTemplate,
+		centeredDegree5EquationTemplate,
+		centeredDegree6EquationTemplate,
+		quadraticEquationTemplate,
+		cubicEquationTemplate,
+		quarticEquationTemplate,
+		degree5EquationTemplate,
+		degree6EquationTemplate,
+	} = equationTemplates;
 	return (
 		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} setPopup={setPopup}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<ChartTitle colY={colY} colX={colX} />
-				<RegressionD3Chart CI={CI} data={data} chartOptions={chartOptions} />
-				<ChartOptionsSelect handleChartOptions={handleChartOptions} />
-				<SummaryStatsTable data={data} />
-				{chartOptions.linearRegressionLine && (
-					<GenerateRegressionTemplate
-						key={'linearRegressionLine'}
-						title={'Linear Fit'}
-						id={'linearRegressionLine'}
-						className={null}
-						equation={linearEquationTemplate}
-						polyDegree={reg1}
-						coeffs={linearRegressionCoefficients}
-						xMean={data.colXMean}
-						xLabel={colX.label}
-						yLabel={colY.label}
-						centered={null}
-						setCI={setCI}
-					/>
-				)}
-				{chartOptions.degree2Poly && (
-					<GenerateRegressionTemplate
-						key={'degree2PolyLine'}
-						title={'Quadratic Fit'}
-						id={'degree2PolyLine'}
-						className={null}
-						equation={chartOptions.centeredPoly ? centeredQuadraticEquationTemplate : quadraticEquationTemplate}
-						polyDegree={chartOptions.centeredPoly ? cent_reg2 : reg2}
-						coeffs={chartOptions.centeredPoly ? centered2PolyCoefficients : degree2PolyCoefficients}
-						xMean={data.colXMean}
-						xLabel={colX.label}
-						yLabel={colY.label}
-						centered={chartOptions.centeredPoly}
-						setCI={setCI}
-					/>
-				)}
-				{chartOptions.degree3Poly && (
-					<GenerateRegressionTemplate
-						key={'degree3PolyLine'}
-						title={'Cubic Fit'}
-						id={'degree3PolyLine'}
-						className={null}
-						equation={chartOptions.centeredPoly ? centeredCubicEquationTemplate : cubicEquationTemplate}
-						polyDegree={chartOptions.centeredPoly ? cent_reg3 : reg3}
-						coeffs={chartOptions.centeredPoly ? centered3PolyCoefficients : degree3PolyCoefficients}
-						xMean={data.colXMean}
-						xLabel={colX.label}
-						yLabel={colY.label}
-						centered={chartOptions.centeredPoly}
-						setCI={setCI}
-					/>
-				)}
-				{chartOptions.degree4Poly && (
-					<GenerateRegressionTemplate
-						key={'degree4PolyLine'}
-						title={'Quartic Fit'}
-						id={'degree4PolyLine'}
-						className={null}
-						equation={chartOptions.centeredPoly ? centeredQuarticEquationTemplate : quarticEquationTemplate}
-						polyDegree={cent_reg4}
-						coeffs={chartOptions.centeredPoly ? centered4PolyCoefficients : degree4PolyCoefficients}
-						xMean={data.colXMean}
-						xLabel={colX.label}
-						yLabel={colY.label}
-						centered={chartOptions.centeredPoly}
-					/>
-				)}
-				{chartOptions.degree5Poly && (
-					<GenerateRegressionTemplate
-						key={'degree5PolyLine'}
-						title={'5th Degree Fit'}
-						id={'degree5PolyLine'}
-						className={null}
-						equation={chartOptions.centeredPoly ? centeredDegree5EquationTemplate : degree5EquationTemplate}
-						polyDegree={chartOptions.centeredPoly ? cent_reg5 : reg5}
-						coeffs={chartOptions.centeredPoly ? centered5PolyCoefficients : degree5PolyCoefficients}
-						xMean={data.colXMean}
-						xLabel={colX.label}
-						yLabel={colY.label}
-						centered={chartOptions.centeredPoly}
-					/>
-				)}
-				{chartOptions.degree6Poly && (
-					<GenerateRegressionTemplate
-						key={'degree6PolyLine'}
-						title={'6th Degree Fit'}
-						id={'degree6PolyLine'}
-						className={null}
-						equation={chartOptions.centeredPoly ? centeredDegree6EquationTemplate : degree6EquationTemplate}
-						polyDegree={chartOptions.centeredPoly ? cent_reg6 : reg6}
-						coeffs={chartOptions.centeredPoly ? centered6PolyCoefficients : degree6PolyCoefficients}
-						xMean={data.colXMean}
-						xLabel={colX.label}
-						yLabel={colY.label}
-						centered={chartOptions.centeredPoly}
-					/>
-				)}
+				<div style={{ display: 'flex' }}>
+					<div style={{ textAlign: 'left' }}>
+						<div>Set Alpha Level</div>
+						<SetAlphaLevel setAlpha={setAlpha} />
+						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
+						<RegressionD3Chart CI={CI} data={data} chartOptions={chartOptions} alpha={alpha} />
+						<ChartOptionsLegend chartOptions={chartOptions} />
+					</div>
+					<div style={{ overflowY: 'scroll', height: '800px' }}>
+						<SummaryStatsTable data={data} />
+						{chartOptions.linearRegressionLine && (
+							<GenerateRegressionTemplate
+								key={'linearRegressionLine'}
+								title={'Linear Fit'}
+								id={'linearRegressionLine'}
+								className={null}
+								equation={linearEquationTemplate}
+								polyDegree={reg1}
+								coeffs={linearRegressionCoefficients}
+								xMean={data.colXMean}
+								xLabel={colX.label}
+								yLabel={colY.label}
+								centered={null}
+								setCI={setCI}
+							/>
+						)}
+						{chartOptions.degree2Poly && (
+							<GenerateRegressionTemplate
+								key={'degree2PolyLine'}
+								title={'Quadratic Fit'}
+								id={'degree2PolyLine'}
+								className={null}
+								equation={chartOptions.centeredPoly ? centeredQuadraticEquationTemplate : quadraticEquationTemplate}
+								polyDegree={chartOptions.centeredPoly ? cent_reg2 : reg2}
+								coeffs={chartOptions.centeredPoly ? centered2PolyCoefficients : degree2PolyCoefficients}
+								xMean={data.colXMean}
+								xLabel={colX.label}
+								yLabel={colY.label}
+								centered={chartOptions.centeredPoly}
+								setCI={setCI}
+							/>
+						)}
+						{chartOptions.degree3Poly && (
+							<GenerateRegressionTemplate
+								key={'degree3PolyLine'}
+								title={'Cubic Fit'}
+								id={'degree3PolyLine'}
+								className={null}
+								equation={chartOptions.centeredPoly ? centeredCubicEquationTemplate : cubicEquationTemplate}
+								polyDegree={chartOptions.centeredPoly ? cent_reg3 : reg3}
+								coeffs={chartOptions.centeredPoly ? centered3PolyCoefficients : degree3PolyCoefficients}
+								xMean={data.colXMean}
+								xLabel={colX.label}
+								yLabel={colY.label}
+								centered={chartOptions.centeredPoly}
+								setCI={setCI}
+							/>
+						)}
+						{chartOptions.degree4Poly && (
+							<GenerateRegressionTemplate
+								key={'degree4PolyLine'}
+								title={'Quartic Fit'}
+								id={'degree4PolyLine'}
+								className={null}
+								equation={chartOptions.centeredPoly ? centeredQuarticEquationTemplate : quarticEquationTemplate}
+								polyDegree={cent_reg4}
+								coeffs={chartOptions.centeredPoly ? centered4PolyCoefficients : degree4PolyCoefficients}
+								xMean={data.colXMean}
+								xLabel={colX.label}
+								yLabel={colY.label}
+								centered={chartOptions.centeredPoly}
+							/>
+						)}
+						{chartOptions.degree5Poly && (
+							<GenerateRegressionTemplate
+								key={'degree5PolyLine'}
+								title={'5th Degree Fit'}
+								id={'degree5PolyLine'}
+								className={null}
+								equation={chartOptions.centeredPoly ? centeredDegree5EquationTemplate : degree5EquationTemplate}
+								polyDegree={chartOptions.centeredPoly ? cent_reg5 : reg5}
+								coeffs={chartOptions.centeredPoly ? centered5PolyCoefficients : degree5PolyCoefficients}
+								xMean={data.colXMean}
+								xLabel={colX.label}
+								yLabel={colY.label}
+								centered={chartOptions.centeredPoly}
+							/>
+						)}
+						{chartOptions.degree6Poly && (
+							<GenerateRegressionTemplate
+								key={'degree6PolyLine'}
+								title={'6th Degree Fit'}
+								id={'degree6PolyLine'}
+								className={null}
+								equation={chartOptions.centeredPoly ? centeredDegree6EquationTemplate : degree6EquationTemplate}
+								polyDegree={chartOptions.centeredPoly ? cent_reg6 : reg6}
+								coeffs={chartOptions.centeredPoly ? centered6PolyCoefficients : degree6PolyCoefficients}
+								xMean={data.colXMean}
+								xLabel={colX.label}
+								yLabel={colY.label}
+								centered={chartOptions.centeredPoly}
+							/>
+						)}
+					</div>
+				</div>
 			</div>
 		</Popup>
 	);
