@@ -5,7 +5,7 @@ import { Button, Icon, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
 import Dropdown from './Dropdown';
 import ErrorMessage from './ErrorMessage';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
 import {
 	TOGGLE_COLUMN_TYPE_MODAL,
 	UPDATE_COLUMN,
@@ -15,7 +15,7 @@ import {
 	CONTINUOUS,
 	ORDINAL,
 	NOMINAL,
-} from './constants';
+} from '../constants';
 
 export default function AntModal({ selectedColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();

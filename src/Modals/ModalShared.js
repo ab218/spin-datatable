@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Card, Icon, Radio, Tooltip, Typography } from 'antd';
 import RemoveColumnButton from './RemoveColumnButton';
-import { ORDINAL, CONTINUOUS, NOMINAL } from './constants';
+import { ORDINAL, CONTINUOUS, NOMINAL } from '../constants';
 
 export const styles = {
 	cardWithBorder: {

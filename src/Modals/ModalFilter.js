@@ -4,7 +4,7 @@ import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
 import { SelectColumn } from './ModalShared';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
 import {
 	FILTER_COLUMN,
 	TOGGLE_FILTER_MODAL,
@@ -12,7 +12,7 @@ import {
 	SET_FILTERS,
 	DELETE_FILTER,
 	STRING,
-} from './constants';
+} from '../constants';
 
 export default function AntModal() {
 	const [ clickedColumn, setClickedColumn ] = useState(null);

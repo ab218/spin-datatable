@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { performLinearRegressionAnalysis, performOnewayAnalysis } from './Analyses';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { performLinearRegressionAnalysis, performOnewayAnalysis } from '../Analyses';
 import ErrorMessage from './ErrorMessage';
-import { TOGGLE_ANALYSIS_MODAL } from './constants';
+import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { createRandomID } from './SpreadsheetProvider';
+import { createRandomID } from '../SpreadsheetProvider';
 import {
 	// REMOVE_SELECTED_CELLS,
 	// SELECT_CELLS,
@@ -17,7 +17,7 @@ import {
 	ONEWAY,
 	CONTINGENCY,
 	// SAVE_VALUES_TO_COLUMN,
-} from './constants';
+} from '../constants';
 import VariableLegend from './FitYXLegend';
 
 export default function AnalysisModal({ setPopup }) {

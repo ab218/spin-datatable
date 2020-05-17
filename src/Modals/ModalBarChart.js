@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { createBarChart } from './Analyses';
-import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from './constants';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { createBarChart } from '../Analyses';
+import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from './constants';
+import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from '../constants';
 import ErrorMessage from './ErrorMessage';
 
 export default function AnalysisModal() {

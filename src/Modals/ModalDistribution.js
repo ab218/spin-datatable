@@ -1,9 +1,9 @@
 // TODO: Combine this component with Analysis Modal
 import React, { useState } from 'react';
 import { Modal, Button, Input } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELLS, REMOVE_SELECTED_CELLS } from './constants';
-import { performDistributionAnalysis } from './Analyses';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { TOGGLE_DISTRIBUTION_MODAL, SELECT_CELLS, REMOVE_SELECTED_CELLS } from '../constants';
+import { performDistributionAnalysis } from '../Analyses';
 import { SelectColumn, styles } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
 

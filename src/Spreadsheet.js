@@ -3,18 +3,18 @@ import React, { useEffect, useState } from 'react';
 import { pingCloudFunctions } from './Analyses';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import AnalysisModal from './ModalFitYX';
 import CellRenderer from './CellRenderer';
 import ContextMenu from './ContextMenu';
-import DistributionModal from './ModalDistribution';
-import FilterModal from './ModalFilter';
-import ColumnTypeModal from './ModalColumnType';
 import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
 import RowHeaders from './RowHeaders';
 import HeaderRenderer from './HeaderRenderer';
 import Analysis from './analysis-output/Analysis';
-import BarChartModal from './ModalBarChart';
+import BarChartModal from './Modals/ModalBarChart';
+import ColumnTypeModal from './Modals/ModalColumnType';
+import DistributionModal from './Modals/ModalDistribution';
+import FilterModal from './Modals/ModalFilter';
+import AnalysisModal from './Modals/ModalFitYX';
 import {
 	Column,
 	Table,
