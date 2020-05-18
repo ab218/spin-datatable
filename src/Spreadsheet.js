@@ -313,12 +313,11 @@ function Spreadsheet() {
 				}
 			}
 		}
-
 		document.addEventListener('keydown', onKeyDown);
 		return () => {
 			document.removeEventListener('keydown', onKeyDown);
 		};
-	}, []);
+	});
 
 	return (
 		// Height 100% necessary for autosizer to work
