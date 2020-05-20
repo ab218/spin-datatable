@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
-export default function Popout({ title, id, setPopup, ...props }) {
+export default function Popout({ title, id, setPopup, windowWidth, ...props }) {
 	const [ containerElement, setContainerElement ] = useState(null);
-
 	function closeWindow() {
 		setPopup((prev) => prev.filter((pop) => pop.id !== id));
 	}
 	useEffect(
 		() => {
-			const features = 'left=9999,top=100,width=1000,height=850';
+			const features = `left=9999,top=100,width=${windowWidth},height=850`;
 			const externalWindow = window.open('', id, features);
 			const stylesheets = Array.from(document.styleSheets);
 			stylesheets.forEach((stylesheet) => {

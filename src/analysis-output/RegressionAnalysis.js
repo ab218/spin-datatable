@@ -284,7 +284,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		degree6EquationTemplate,
 	} = equationTemplates;
 	return (
-		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} setPopup={setPopup}>
+		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} setPopup={setPopup} windowWidth={1000}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<ChartTitle colY={colY} colX={colX} />
 				<div style={{ display: 'flex' }}>

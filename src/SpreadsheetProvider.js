@@ -45,11 +45,12 @@ import {
 } from './constants';
 
 function updateRow(row, columnID, columns, dependencyMap) {
+	const emptyArray = [];
 	const columnIDtoIndexMap = columns.reduce((acc, { id }, index) => {
 		return { ...acc, [id]: index };
 	}, {});
 	const getDependentColumns = (column) => {
-		return column ? [ column ].concat((dependencyMap[column] || []).map(getDependentColumns)) : [];
+		return column ? [ column ].concat((dependencyMap[column] || emptyArray).map(getDependentColumns)) : emptyArray;
 	};
 	const dependencyList = [ columnID ].map(getDependentColumns).flat(Infinity);
 	try {

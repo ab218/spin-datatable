@@ -119,6 +119,7 @@ export default function AnalysisModal({ setPopup }) {
 
 					setPerformingAnalysis(true);
 					const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
+					console.log('xy results: ', results);
 					// const popup = window.open(
 					// 	window.location.href + 'regression.html',
 					// 	'',

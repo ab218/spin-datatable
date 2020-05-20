@@ -313,6 +313,7 @@ function Spreadsheet() {
 				}
 			}
 		}
+
 		document.addEventListener('keydown', onKeyDown);
 		return () => {
 			document.removeEventListener('keydown', onKeyDown);
@@ -326,7 +327,7 @@ function Spreadsheet() {
 			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
 			{barChartModalOpen && <BarChartModal />}
-			{distributionModalOpen && <DistributionModal />}
+			{distributionModalOpen && <DistributionModal setPopup={setPopup} />}
 			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			{widths && (

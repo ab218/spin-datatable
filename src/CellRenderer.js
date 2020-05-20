@@ -7,7 +7,7 @@ import SelectedCell from './Cell/SelectedCell';
 import NormalCell from './Cell/NormalCell';
 import { CLOSE_CONTEXT_MENU, OPEN_CONTEXT_MENU } from './constants';
 
-export default React.memo(function CellRenderer({
+export default function CellRenderer({
 	rowIndex,
 	columnIndex,
 	rowID,
@@ -46,7 +46,8 @@ export default React.memo(function CellRenderer({
 		}
 		// const withinASelectedRange = cellSelectionRanges.some(withinRange);
 		// return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
-		return cellSelectionRanges.concat(currentCellSelectionRange || []).some(withinRange);
+		const emptyArray = [];
+		return cellSelectionRanges.concat(currentCellSelectionRange || emptyArray).some(withinRange);
 	}
 
 	function handleContextMenu(e) {
@@ -153,4 +154,4 @@ export default React.memo(function CellRenderer({
 			/>
 		);
 	}
-});
+}
