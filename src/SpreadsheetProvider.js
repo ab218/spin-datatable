@@ -270,7 +270,8 @@ function spreadsheetReducer(state, action) {
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
-	const { type, ...event } = action;
+	// const { type, ...event } = action;
+	const { type } = action;
 	// state.eventBus.fire(type, event);
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {

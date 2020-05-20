@@ -228,8 +228,9 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 	const [ degree4Points, setDegree4Points ] = useState([]);
 	const [ degree5Points, setDegree5Points ] = useState([]);
 	const [ degree6Points, setDegree6Points ] = useState([]);
-	const [ yPoints, setYPoints ] = useState(coordinates.map((a) => a[1]).sort(d3.ascending));
-	const [ xPoints, setXPoints ] = useState(coordinates.map((a) => a[0]).sort(d3.ascending));
+
+	const xPoints = coordinates.map((a) => a[0]).sort(d3.ascending);
+	const yPoints = coordinates.map((a) => a[1]).sort(d3.ascending);
 
 	useEffect(
 		() => {

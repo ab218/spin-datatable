@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { STRING } from '../constants';
 export default class ActiveCell extends React.PureComponent {
 	constructor(props) {

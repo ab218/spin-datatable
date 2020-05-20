@@ -7,7 +7,6 @@ export default function AnalysisContainer({ popup, setPopup }) {
 		return null;
 	}
 	return popup.map((data, i) => {
-		console.log('data in popup', data);
 		if (data.reg1) {
 			return <RegressionAnalysis key={i} data={data} setPopup={setPopup} />;
 		} else if (data.numberOfBins) {

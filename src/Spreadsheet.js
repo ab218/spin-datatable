@@ -342,7 +342,7 @@ function Spreadsheet() {
 								height={height}
 								headerHeight={25}
 								rowHeight={30}
-								rowCount={visibleRows}
+								rowCount={visibleRows || 1}
 								rowGetter={({ index }) => rows[index] || emptyRow}
 								rowStyle={{ alignItems: 'stretch' }}
 							>

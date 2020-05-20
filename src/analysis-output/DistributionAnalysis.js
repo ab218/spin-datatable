@@ -20,6 +20,7 @@ export default function DistributionAnalysis({ data, setPopup }) {
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<TitleText colObj={colObj} />
 				<DistributionD3Chart
+					colObj={colObj}
 					min={min}
 					max={max}
 					q1={q1}

@@ -1,7 +1,7 @@
-/*global d3 unload onClickSelectCells*/
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import './analysis-window.css';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
 
 // set the dimensions and margins of the graph
 const margin = { top: 20, right: 30, bottom: 40, left: 70 };
@@ -28,10 +28,52 @@ function maxBinLength(arr) {
 	return highest;
 }
 
-export default function D3Container({ vals, numberOfBins, boxDataSorted, min, max, q1, q3, median }) {
+const normalBarFill = '#69b3a2';
+const clickedBarFill = 'red';
+const normalPointFill = 'black';
+const normalPointSize = 2;
+const clickedBarPointSize = normalPointSize * 2;
+
+export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted, min, max, q1, q3, median }) {
 	const d3Container = useRef(null);
 	const center = 1;
 	const boxWidth = 40;
+
+	const { columns, rows, excludedRows } = useSpreadsheetState();
+	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+
+	function targetClickEvent(thisBar, values, col) {
+		d3.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
+		d3.selectAll('rect').style('fill', normalBarFill);
+
+		thisBar.style('fill', clickedBarFill);
+		d3
+			.selectAll('.point')
+			.filter((d) => {
+				const binMin = values.x0;
+				const binMax = values.x1;
+				if (!d) {
+					return null;
+				}
+				if (col === 'x') {
+					return d[0] >= binMin && d[0] < binMax;
+				}
+				return d[1] >= binMin && d[1] < binMax;
+			})
+			.attr('r', clickedBarPointSize)
+			.style('fill', clickedBarFill);
+		const selectedColumn = colObj;
+		const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
+		dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
+
+		const rowIndices = rows.reduce((acc, row, rowIndex) => {
+			// TODO Shouldn't be using Number here. won't work for string values
+			return !excludedRows.includes(row.id) && values.includes(Number(row[selectedColumn.id]))
+				? acc.concat(rowIndex)
+				: acc;
+		}, []);
+		dispatchSpreadsheetAction({ type: 'SELECT_CELLS', rows: rowIndices, column: columnIndex });
+	}
 
 	// Add axes
 	const x = d3.scaleLinear().range([ 0, width ]);
@@ -74,7 +116,7 @@ export default function D3Container({ vals, numberOfBins, boxDataSorted, min, ma
 					d3.select(this).transition().duration(50).attr('opacity', 1);
 				})
 				.on('click', function(d) {
-					onClickSelectCells(d3.select(this), d, 'y');
+					targetClickEvent(d3.select(this), d, 'y');
 				})
 				.attr('x', 1)
 				.attr('y', (d) => y(d.x1))
