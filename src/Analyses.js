@@ -36,6 +36,7 @@ export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols
 	const { ordered_differences_report, bartlett, levene, x_groups_lists, means_std, anova, summary_table } = result.data;
 
 	return {
+		analysisType: 'oneway',
 		ordered_differences_report: JSON.parse(ordered_differences_report),
 		x_groups_lists: JSON.parse(x_groups_lists),
 		anova: JSON.parse(anova),
@@ -79,6 +80,7 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, co
 
 	const mean = (numbers) => numbers.reduce((acc, val) => acc + Number(val), 0) / numbers.length;
 	return {
+		analysisType: 'regression',
 		...result.data,
 		colX,
 		colY,
@@ -106,6 +108,7 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	// console.log(result.data.body); // Lambda
 	const { mean_y, std_y, count, quantiles, histogram, skew, kurtosis } = result.data;
 	return {
+		analysisType: 'distribution',
 		count,
 		colObj: colY,
 		mean: mean_y,
@@ -121,6 +124,7 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 
 export async function createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colXScale) {
 	return {
+		analysisType: 'barChart',
 		colXArr,
 		colYArr,
 		colZArr,

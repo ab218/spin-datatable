@@ -168,7 +168,7 @@ function toggleCenteredPoly(checked) {
 	}
 }
 
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
+export const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
 
 function onClickSelectCells(thisBar, bar, col) {
 	let metaKeyPressed = false;
