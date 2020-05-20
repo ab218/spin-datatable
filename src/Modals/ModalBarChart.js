@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
 import { createBarChart } from '../Analyses';
-import { TOGGLE_BAR_CHART_MODAL, SELECT_ROW } from '../constants';
+import { TOGGLE_BAR_CHART_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { REMOVE_SELECTED_CELLS, FILTER_COLUMN, SET_FILTERS } from '../constants';
 import ErrorMessage from './ErrorMessage';
+import { createRandomID } from '../SpreadsheetProvider';
 
-export default function AnalysisModal() {
+export default function AnalysisModal({ setPopup }) {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
 	const [ xColData, setXColData ] = useState([]);
 	const [ yColData, setYColData ] = useState([]);
@@ -64,51 +64,52 @@ export default function AnalysisModal() {
 
 		if (colXArr.length >= 1 && colYArr.length >= 1 && colZArr.length >= 1) {
 			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colX.modelingType);
-			const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=1000,height=800');
-			function receiveMessage(event) {
-				// target window is ready, time to send data.
-				if (event.data === 'ready') {
-					// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
-					if (typeof results === 'string') {
-						return alert('Something went wrong. Check your data and try again.');
-					}
-					popup.postMessage(results, '*');
-					window.removeEventListener('message', receiveMessage);
-				}
-			}
+			setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+			// const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=1000,height=800');
+			// function receiveMessage(event) {
+			// 	// target window is ready, time to send data.
+			// 	if (event.data === 'ready') {
+			// 		// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
+			// 		if (typeof results === 'string') {
+			// 			return alert('Something went wrong. Check your data and try again.');
+			// 		}
+			// 		popup.postMessage(results, '*');
+			// 		window.removeEventListener('message', receiveMessage);
+			// 	}
+			// }
 
-			function removeTargetClickEvent(event) {
-				if (event.data === 'closed') {
-					window.removeEventListener('message', targetClickEvent);
-					window.removeEventListener('message', removeTargetClickEvent);
-				}
-			}
+			// function removeTargetClickEvent(event) {
+			// 	if (event.data === 'closed') {
+			// 		window.removeEventListener('message', targetClickEvent);
+			// 		window.removeEventListener('message', removeTargetClickEvent);
+			// 	}
+			// }
 
-			function targetClickEvent(event) {
-				if (event.data.message === 'clicked') {
-					if (!event.data.metaKeyPressed) {
-						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-					}
-					if (event.data.label && event.data.colZ) {
-						dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: { [colZ.id]: event.data.colZ.text } });
-						dispatchSpreadsheetAction({ type: FILTER_COLUMN });
-						return;
-					}
-					const selectedRow = event.data.rowID;
-					dispatchSpreadsheetAction({
-						type: SELECT_ROW,
-						rowID: selectedRow,
-						rowIndex: rows.findIndex((row) => row.id === selectedRow),
-					});
-				}
-			}
+			// function targetClickEvent(event) {
+			// 	if (event.data.message === 'clicked') {
+			// 		if (!event.data.metaKeyPressed) {
+			// 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+			// 		}
+			// 		if (event.data.label && event.data.colZ) {
+			// 			dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: { [colZ.id]: event.data.colZ.text } });
+			// 			dispatchSpreadsheetAction({ type: FILTER_COLUMN });
+			// 			return;
+			// 		}
+			// 		const selectedRow = event.data.rowID;
+			// 		dispatchSpreadsheetAction({
+			// 			type: SELECT_ROW,
+			// 			rowID: selectedRow,
+			// 			rowIndex: rows.findIndex((row) => row.id === selectedRow),
+			// 		});
+			// 	}
+			// }
 			setPerformingAnalysis(false);
 			dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
 
 			// set event listener and wait for target to be ready
-			window.addEventListener('message', receiveMessage, false);
-			window.addEventListener('message', targetClickEvent);
-			window.addEventListener('message', removeTargetClickEvent);
+			// window.addEventListener('message', receiveMessage, false);
+			// window.addEventListener('message', targetClickEvent);
+			// window.addEventListener('message', removeTargetClickEvent);
 		} else {
 			// user should never see this, as columns with under 1 value are filtered out
 			setError('Columns must each contain at least 1 value to perform this analysis');

@@ -326,7 +326,7 @@ function Spreadsheet() {
 			<Analysis popup={popup} setPopup={setPopup} />
 			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
-			{barChartModalOpen && <BarChartModal />}
+			{barChartModalOpen && <BarChartModal setPopup={setPopup} />}
 			{distributionModalOpen && <DistributionModal setPopup={setPopup} />}
 			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}

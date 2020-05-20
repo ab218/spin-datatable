@@ -2,6 +2,7 @@ import React from 'react';
 import RegressionAnalysis from './RegressionAnalysis';
 import DistributionAnalysis from './DistributionAnalysis';
 import OnewayAnalysis from './OnewayAnalysis';
+import BarChartAnalysis from './BarChartAnalysis';
 
 export default function AnalysisContainer({ popup, setPopup }) {
 	if (!popup.length === 0) {
@@ -14,6 +15,8 @@ export default function AnalysisContainer({ popup, setPopup }) {
 			return <DistributionAnalysis key={i} data={data} setPopup={setPopup} />;
 		} else if (data.analysisType === 'oneway') {
 			return <OnewayAnalysis key={i} data={data} setPopup={setPopup} />;
+		} else if (data.analysisType === 'barChart') {
+			return <BarChartAnalysis key={i} data={data} setPopup={setPopup} />;
 		}
 		return null;
 	});
