@@ -69,8 +69,8 @@ function Spreadsheet() {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ widths, setWidths ] = useState({});
 	const [ popup, setPopup ] = useState([]);
-	const [ visibleColumns, setVisibleColumns ] = useState(null);
-	const [ visibleRows, setVisibleRows ] = useState(null);
+	const [ visibleColumns, setVisibleColumns ] = useState(1);
+	const [ visibleRows, setVisibleRows ] = useState(1);
 
 	useEffect(() => {
 		// Activate cell top leftmost cell on first load
@@ -184,7 +184,7 @@ function Spreadsheet() {
 			setVisibleColumns(Math.max(columns.length + 3, Math.ceil(window.innerWidth / 100)));
 			setVisibleRows(Math.max(rows.length + 5, Math.ceil(window.innerHeight / 30)));
 		},
-		[ window.innerWidth, window.innerHeight ],
+		[ window.innerWidth, window.innerHeight, rows, columns ],
 	);
 
 	const columnsDiff = visibleColumns - columns.length;
@@ -342,7 +342,7 @@ function Spreadsheet() {
 								height={height}
 								headerHeight={25}
 								rowHeight={30}
-								rowCount={visibleRows || 1}
+								rowCount={visibleRows}
 								rowGetter={({ index }) => rows[index] || emptyRow}
 								rowStyle={{ alignItems: 'stretch' }}
 							>

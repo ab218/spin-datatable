@@ -2,6 +2,9 @@ import axios from 'axios';
 
 export async function pingCloudFunctions() {
 	const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
+	const distribution = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
+	const oneway = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway';
+
 	await axios.post(
 		linearRegression,
 		{ ping: 'ping' },
@@ -10,9 +13,16 @@ export async function pingCloudFunctions() {
 		},
 	);
 
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
 	await axios.post(
-		gcloud,
+		oneway,
+		{ ping: 'ping' },
+		{
+			crossDomain: true,
+		},
+	);
+
+	await axios.post(
+		distribution,
 		{ ping: 'ping' },
 		{
 			crossDomain: true,
@@ -54,25 +64,13 @@ export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols
 
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
-	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
-	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
 	const result = await axios.post(
-		'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels',
+		'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression',
 		{ x: colXArr, y: colYArr },
 		{
 			crossDomain: true,
 		},
 	);
-	// const result2 = await axios.post(
-	// 	gcloud,
-	// 	{
-	// 		x: colXArr,
-	// 		y: colYArr,
-	// 	},
-	// 	{
-	// 		crossDomain: true,
-	// 	},
-	// );
 	// console.log(result.data) // gcloud
 	// console.log(result.data.body); // Lambda
 
