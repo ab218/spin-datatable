@@ -4,7 +4,6 @@ import BarChartD3Chart from './BarChartD3Chart';
 import './analysis-window.css';
 
 export default function BarChartAnalysis({ data, setPopup }) {
-	console.log('in barchart', data);
 	const { colX, colY, colZ, coordinates, colXId, colYId, colZId, colXScale } = data;
 	return (
 		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} windowWidth={1000} setPopup={setPopup}>

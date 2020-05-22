@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Modal, Button, Input } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
 import { TOGGLE_DISTRIBUTION_MODAL } from '../constants';
-import { performDistributionAnalysis } from '../Analyses';
+import { performDistributionAnalysis } from '../analysis-output/Analysis';
 import { SelectColumn, styles } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
 import { createRandomID } from '../SpreadsheetProvider';

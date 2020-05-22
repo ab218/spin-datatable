@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
-import { performLinearRegressionAnalysis, performOnewayAnalysis } from '../Analyses';
+import { performLinearRegressionAnalysis, performOnewayAnalysis } from '../analysis-output/Analysis';
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';

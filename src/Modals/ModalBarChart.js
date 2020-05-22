@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
-import { createBarChart } from '../Analyses';
+import { createBarChart } from '../analysis-output/Analysis';
 import { TOGGLE_BAR_CHART_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import ErrorMessage from './ErrorMessage';

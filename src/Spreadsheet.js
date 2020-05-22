@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState } from 'react';
-import { pingCloudFunctions } from './Analyses';
+import { pingCloudFunctions } from './analysis-output/Analysis';
 import './App.css';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
 import CellRenderer from './CellRenderer';
