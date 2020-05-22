@@ -4,30 +4,9 @@ export async function pingCloudFunctions() {
 	const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
 	const distribution = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
 	const oneway = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway';
-
-	await axios.post(
-		linearRegression,
-		{ ping: 'ping' },
-		{
-			crossDomain: true,
-		},
-	);
-
-	await axios.post(
-		oneway,
-		{ ping: 'ping' },
-		{
-			crossDomain: true,
-		},
-	);
-
-	await axios.post(
-		distribution,
-		{ ping: 'ping' },
-		{
-			crossDomain: true,
-		},
-	);
+	axios.post(linearRegression, { ping: 'ping' }, { crossDomain: true });
+	axios.post(oneway, { ping: 'ping' }, { crossDomain: true });
+	axios.post(distribution, { ping: 'ping' }, { crossDomain: true });
 }
 
 // bug: if the group only has one data point in it, the cloud function fails.

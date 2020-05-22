@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import * as d3 from 'd3';
 import './analysis-window.css';
 import OnewayD3Chart from './OnewayD3Chart';
 import Popup from './PopupWindow';
+import { Select } from 'antd';
+const { Option } = Select;
 
 export default function OnewayAnalysis({ data, setPopup }) {
-	console.log(data);
 	const {
 		summary_table,
 		coordinates,
@@ -18,22 +19,43 @@ export default function OnewayAnalysis({ data, setPopup }) {
 		levene,
 		bartlett,
 	} = data;
+
+	const [ chartOptions, setChartOptions ] = useState({ pooledMean: false, boxPlots: false });
+
+	function handleChartOptions(value) {
+		const pooledMean = value.includes('pooledMean');
+		const boxPlots = value.includes('boxPlots');
+		const options = {
+			pooledMean,
+			boxPlots,
+		};
+		setChartOptions(options);
+	}
+
 	return (
-		<Popup key={data.id} id={data.id} title={`Popup {data.id}`} windowWidth={800} setPopup={setPopup}>
+		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} windowWidth={1000} setPopup={setPopup}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<TitleText colY={colY} colX={colX} />
-				<OnewayD3Chart
-					summary_table={summary_table}
-					colX={colX}
-					colY={colY}
-					x_groups_lists={x_groups_lists}
-					coordinates={coordinates}
-				/>
-				<SummaryOfFit summary_table={summary_table} colX={colX} anova={anova} means_std={means_std} />
-				<MeansAndStd means_std={means_std} />
-				<Quantiles x_groups_lists={x_groups_lists} />
-				<EqualVarianceReport levene={levene} bartlett={bartlett} means_std={means_std} />
-				<OrderedDifferencesReport ordered_differences_report={ordered_differences_report} />
+				<div style={{ display: 'flex' }}>
+					<div>
+						<OnewayD3Chart
+							chartOptions={chartOptions}
+							summary_table={summary_table}
+							colX={colX}
+							colY={colY}
+							x_groups_lists={x_groups_lists}
+							coordinates={coordinates}
+						/>
+						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
+					</div>
+					<div style={{ overflowY: 'scroll', height: '800px' }}>
+						<SummaryOfFit summary_table={summary_table} colX={colX} anova={anova} means_std={means_std} />
+						<MeansAndStd means_std={means_std} />
+						<Quantiles x_groups_lists={x_groups_lists} />
+						<EqualVarianceReport levene={levene} bartlett={bartlett} means_std={means_std} />
+						<OrderedDifferencesReport ordered_differences_report={ordered_differences_report} />
+					</div>
+				</div>
 			</div>
 		</Popup>
 	);
@@ -41,6 +63,26 @@ export default function OnewayAnalysis({ data, setPopup }) {
 
 // TODO: DRY
 const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
+
+function ChartOptionsSelect({ handleChartOptions }) {
+	return (
+		<Select
+			getPopupContainer={(triggerNode) => triggerNode.parentNode}
+			mode="multiple"
+			style={{ width: '100%' }}
+			size={'small'}
+			placeholder="Please select"
+			onChange={handleChartOptions}
+			maxTagCount={0}
+			maxTagPlaceholder={(e) => {
+				return 'Select Chart Options';
+			}}
+		>
+			<Option key={'pooledMean'}>Show Pooled Mean</Option>
+			<Option key={'boxPlots'}>Show Boxplots</Option>
+		</Select>
+	);
+}
 
 const TitleText = ({ colY, colX }) => (
 	<h1>
@@ -341,15 +383,3 @@ function renderEqualVariancesReportTable(means_std) {
 	}
 	return output;
 }
-
-// const ChartOptionsDropdown = () => (
-// 	<div style={{ textAlign: 'center' }}>
-// 		<h3>Chart Options</h3>
-// 		<select id="chart-options-dropdown" multiple>
-// 			<optgroup>
-// 				<option value="pooledMean">Show Pooled Mean</option>
-// 				<option value="boxPlots">Show Boxplots</option>
-// 			</optgroup>
-// 		</select>
-// 	</div>
-// );

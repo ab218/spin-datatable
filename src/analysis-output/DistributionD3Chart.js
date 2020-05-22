@@ -44,7 +44,7 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 
 	function targetClickEvent(thisBar, values, col) {
 		d3.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
-		d3.selectAll('rect').style('fill', normalBarFill);
+		d3.select(d3Container.current).selectAll('.histBars').style('fill', normalBarFill);
 
 		thisBar.style('fill', clickedBarFill);
 		d3
@@ -109,6 +109,7 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 				.enter()
 				.append('rect')
 				.attr('fill', '#69b3a2')
+				.attr('class', 'histBars')
 				.on(`mouseenter`, function() {
 					d3.select(this).transition().duration(50).attr('opacity', 0.6);
 				})

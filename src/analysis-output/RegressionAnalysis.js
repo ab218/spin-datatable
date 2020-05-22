@@ -5,7 +5,6 @@ import GenerateRegressionTemplate from './RegressionTemplate';
 import RegressionD3Chart from './RegressionD3Chart';
 import './analysis-window.css';
 const { Option } = Select;
-// const { SubMenu } = Menu;
 
 function SetAlphaLevel({ setAlpha }) {
 	return (
@@ -50,43 +49,6 @@ function ChartOptionsSelect({ handleChartOptions }) {
 		</Select>
 	);
 }
-
-// function ChartOptionsSelect({ handleChartOptions }) {
-// 	function FitOptions(fitName, fitTitle) {
-// 		return (
-// 			<SubMenu title={fitTitle} key={`${fitName}Fit`}>
-// 				<Menu.Item key={`${fitName}Line`}>Display {fitTitle}</Menu.Item>
-// 				<SubMenu key={`${fitName}CI`} title={`Confidence Curves`}>
-// 					<Menu.Item key={`${fitName}CIFit`}>Fit</Menu.Item>
-// 					<Menu.Item key={`${fitName}CIObs`}>Obs</Menu.Item>
-// 				</SubMenu>
-// 			</SubMenu>
-// 		);
-// 	}
-// 	return (
-// 		<Menu
-// 			multiple
-// 			inlineIndent={50}
-// 			onClick={handleClick}
-// 			style={{ position: 'absolute', width: 400, textAlign: 'left' }}
-// 			mode="inline"
-// 		>
-// 			<SubMenu title="Linear Fit" key="linearFit">
-// 				<Menu.Item key="linearLine">Display Linear Fit</Menu.Item>
-// 				<SubMenu key="linearCI" title="Confidence Curves">
-// 					<Menu.Item key="linearCIFit">Fit</Menu.Item>
-// 					<Menu.Item key="linearCIObs">Obs</Menu.Item>
-// 				</SubMenu>
-// 				<SubMenu key="linearSave" title="Save Values To Table">
-// 					<Menu.Item key="saveLinearPredicted">Save Predicted Values</Menu.Item>
-// 					<Menu.Item key="saveLinearResiduals">Save Residual Values</Menu.Item>
-// 					<Menu.Item key="saveLinearCIFit">Save CI Fit Values</Menu.Item>
-// 					<Menu.Item key="saveLinearCIObs">Save CI Obs Values</Menu.Item>
-// 				</SubMenu>
-// 			</SubMenu>
-// 		</Menu>
-// 	);
-// }
 
 function ChartTitle({ colY, colX }) {
 	return (
@@ -283,6 +245,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		degree5EquationTemplate,
 		degree6EquationTemplate,
 	} = equationTemplates;
+
 	return (
 		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} setPopup={setPopup} windowWidth={1000}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
