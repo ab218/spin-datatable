@@ -4,7 +4,7 @@ import { Divider, Layout } from 'antd';
 import './App.css';
 import { SELECT_COLUMN } from './constants';
 import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { createModelingTypeIcon } from './ModalShared';
+import { createModelingTypeIcon } from './Modals/ModalShared';
 
 export default function Sidebar() {
 	const { columns, excludedRows, rows, uniqueColumnIDs, uniqueRowIDs } = useSpreadsheetState();

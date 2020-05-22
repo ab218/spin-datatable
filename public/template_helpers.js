@@ -22,7 +22,7 @@ function createPoints(rangeX, step, equation) {
 const paramEstimates = (coeffs, xLabel, centered) => {
 	let temp = ``;
 	let counter = 2;
-	for (let i = coeffs.length - 3; i >= 0; i--) {
+	for (let i = 2; i < coeffs.length; i++) {
 		temp += `
     <tr>
       <td class="header-background">${centered ? centered : xLabel}^${counter}</td>
@@ -43,17 +43,32 @@ const paramEstimateTable = (coeffs, xLabel, centered) => `
   </tr>
   <tr>
     <td class="header-background large">Intercept</td>
-    <td class="small right">${coeffs[coeffs.length - 1].toFixed(4) / 1}</td>
+    <td class="small right">${coeffs[0].toFixed(4) / 1}</td>
   </tr>
   <tr>
     <td class="header-background">${centered ? centered : xLabel}</td>
-    <td class="small right">${coeffs[coeffs.length - 2].toFixed(4) / 1}</td>
+    <td class="small right">${coeffs[1].toFixed(4) / 1}</td>
   </tr>
   ${paramEstimates(coeffs, xLabel, centered)}
 </table>
 `;
 
-const generateRegressionTemplate = (title, id, className, equation, polyDegree, coeffs, xLabel, centered) => `
+const generateRegressionTemplate = (
+	title,
+	id,
+	className,
+	equation,
+	polyDegree,
+	coeffs,
+	xLabel,
+	centered,
+	// toggleCIFit,
+	// toggleCIObs,
+	// savePredicted,
+	// saveCIFit,
+	// saveCIObs,
+) => {
+	return `
 <details class="analysis-details ${className}" open id="${id}">
   <summary class="analysis-summary-title">${title}</summary>
   <div class="left xxlarge">${equation}</div>
@@ -61,23 +76,63 @@ const generateRegressionTemplate = (title, id, className, equation, polyDegree, 
   <table>
     <tr><td colspan=2 class="table-subtitle">Summary of fit</td></tr>
     <tr>
-      <td class="header-background small">R-squared</td>
-      <td class="small right">${polyDegree.determination.toFixed(4) / 1}</td>
+      <td class="header-background large">R-squared</td>
+      <td class="small right">${polyDegree.stats.rsquared.toFixed(4) / 1}</td>
+    </tr>
+    <tr>
+      <td class="header-background large">R-squared Adj</td>
+      <td class="small right">${polyDegree.stats.rsquared_adj.toFixed(4) / 1}</td>
+    </tr>
+    <tr>
+      <td class="header-background large">Root Mean Square Error</td>
+      <td class="small right">${polyDegree.stats.mse_error.toFixed(4) / 1}</td>
+    </tr>
+  </table>
+  <div style="height: 20px;"></div>
+  <table>
+    <tr><td colspan=5 class="table-subtitle">Analysis of Variance</td></tr>
+    <tr>
+      <td class="table-header small">Source</td>
+      <td class="table-header xsmall right">DF</td>
+      <td class="table-header medium right">Sum Of Squares</td>
+      <td class="table-header medium right">Mean Square</td>
+      <td class="table-header small right">F Ratio</td>
+    </tr>
+    <tr>
+      <td class="header-background small">Model</td>
+      <td class="xsmall right">${polyDegree.stats.df_model}</td>
+      <td class="medium right">${polyDegree.stats.mse_model.toFixed(4) / 1}</td>
+      <td class="medium right">${polyDegree.stats.mse_model.toFixed(4) / 1}</td>
+      <td class="small right">${(polyDegree.stats.mse_model / polyDegree.stats.mse_error).toFixed(4) / 1}</td>
+    </tr>
+    <tr>
+      <td class="header-background small">Error</td>
+      <td class="xsmall right">${polyDegree.stats.df_resid}</td>
+      <td class="medium right">${polyDegree.stats.ssr.toFixed(4) / 1}</td>
+      <td class="medium right">${polyDegree.stats.mse_error.toFixed(4) / 1}</td>
+      <td class="small right"></td>
+    </tr>
+    <tr>
+      <td class="header-background small">C. Total</td>
+      <td class="xsmall right">${polyDegree.stats.df_total}</td>
+      <td class="medium right">${(polyDegree.stats.mse_model + polyDegree.stats.ssr).toFixed(4) / 1}</td>
+      <td class="medium right"></td>
+      <td class="small right"></td>
     </tr>
   </table>
   <div style="height: 10px;"></div>
   ${paramEstimateTable(coeffs, xLabel, centered)}
 </details>
 `;
+};
 
 const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
 
 const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
-	let temp = `${yLabel} = ${coeffs[coeffs.length - 1].toFixed(4) / 1} ${addOrSubtract(
-		coeffs[coeffs.length - 2],
-	)} ${Math.abs(coeffs[1]).toFixed(4) / 1} * ${centered ? centered : xLabel}`;
+	let temp = `${yLabel} = ${coeffs[0].toFixed(4) / 1} ${addOrSubtract(coeffs[1])} ${Math.abs(coeffs[1]).toFixed(4) /
+		1} * ${centered ? centered : xLabel}`;
 	let counter = 2;
-	for (let i = coeffs.length - 3; i >= 0; i--) {
+	for (let i = counter; i < coeffs.length; i++) {
 		temp += ` ${addOrSubtract(coeffs[i])} ${Math.abs(coeffs[i]).toFixed(4) / 1} * ${centered
 			? centered
 			: xLabel}^${counter}`;
@@ -113,7 +168,7 @@ function toggleCenteredPoly(checked) {
 	}
 }
 
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
+export const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
 
 function onClickSelectCells(thisBar, bar, col) {
 	let metaKeyPressed = false;

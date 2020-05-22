@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { SET_SELECTED_COLUMN } from './constants';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { SET_SELECTED_COLUMN } from '../constants';
 
 export default function AddColumnButton({ clickedColumn }) {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();

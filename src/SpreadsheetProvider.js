@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useMemo } from 'react';
 import nerdamer from 'nerdamer';
 import './App.css';
 import {
@@ -18,7 +18,7 @@ import {
 	OPEN_CONTEXT_MENU,
 	PASTE_VALUES,
 	REMOVE_SELECTED_CELLS,
-	SAVE_RESIDUALS_TO_COLUMN,
+	SAVE_VALUES_TO_COLUMN,
 	SET_SELECTED_COLUMN,
 	SELECT_CELL,
 	SELECT_CELLS,
@@ -45,11 +45,12 @@ import {
 } from './constants';
 
 function updateRow(row, columnID, columns, dependencyMap) {
+	const emptyArray = [];
 	const columnIDtoIndexMap = columns.reduce((acc, { id }, index) => {
 		return { ...acc, [id]: index };
 	}, {});
 	const getDependentColumns = (column) => {
-		return column ? [ column ].concat((dependencyMap[column] || []).map(getDependentColumns)) : [];
+		return column ? [ column ].concat((dependencyMap[column] || emptyArray).map(getDependentColumns)) : emptyArray;
 	};
 	const dependencyList = [ columnID ].map(getDependentColumns).flat(Infinity);
 	try {
@@ -194,7 +195,7 @@ function getRangeBoundaries({ startRangeRow, startRangeColumn, endRangeRow, endR
 	return { top, left, bottom, right };
 }
 
-function createRandomID() {
+export function createRandomID() {
 	let result = '';
 	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 	for (let i = 0; i < 10; i++) {
@@ -250,7 +251,7 @@ function spreadsheetReducer(state, action) {
 		filterModalOpen,
 		layout,
 		numberFilters,
-		residuals,
+		values,
 		row,
 		rowCount,
 		rowID,
@@ -269,8 +270,9 @@ function spreadsheetReducer(state, action) {
 	function getCol(colName) {
 		return state.columns.find((col) => col.label === colName);
 	}
-	const { type, ...event } = action;
-	state.eventBus.fire(type, event);
+	// const { type, ...event } = action;
+	const { type } = action;
+	// state.eventBus.fire(type, event);
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
@@ -573,24 +575,24 @@ function spreadsheetReducer(state, action) {
 				uniqueColumnIDs: currentColumnIDs,
 			};
 		}
-		case SAVE_RESIDUALS_TO_COLUMN: {
-			let residualsColumnsCounter = state.residualsColumnsCounter + 1;
+		case SAVE_VALUES_TO_COLUMN: {
+			let valuesColumnsCounter = state.valuesColumnsCounter + 1;
 			const newColumn = {
 				id: createRandomLetterString(),
 				modelingType: CONTINUOUS,
 				type: NUMBER,
-				label: `Residuals ${residualsColumnsCounter}`,
-				description: `Generated from [${action.colY.label} by ${action.colX.label}] Bivariate Analysis output window.`,
+				label: `Values ${valuesColumnsCounter}`,
+				description: `Generated from [${action.yLabel} by ${action.xLabel}] Bivariate Analysis output window.`,
 			};
 			const columns = state.columns.concat(newColumn);
 			const newRows = state.rows.map((row, i) => {
-				return { ...row, [newColumn.id]: residuals[i] };
+				return { ...row, [newColumn.id]: values[i] };
 			});
 			return {
 				...state,
 				rows: newRows,
 				columns,
-				residualsColumnsCounter,
+				valuesColumnsCounter,
 			};
 		}
 		case SELECT_ROW: {
@@ -823,6 +825,7 @@ function spreadsheetReducer(state, action) {
 
 		case SORT_COLUMN: {
 			const targetColumn = getCol(colName);
+			// TODO: Any better way to do this without the deep copy?
 			const deepCopyRows = JSON.parse(JSON.stringify(state.rows));
 			if (targetColumn.type === 'Number' || targetColumn.type === 'Formula') {
 				deepCopyRows.sort(
@@ -942,19 +945,19 @@ function spreadsheetReducer(state, action) {
 export function useSpreadsheetState() {
 	const context = React.useContext(SpreadsheetStateContext);
 	if (context === undefined) {
-		throw new Error('useCountState must be used within a CountProvider');
+		throw new Error('useSpreadsheetState must be used within a SpreadsheetProvider');
 	}
 	return context;
 }
 export function useSpreadsheetDispatch() {
 	const context = React.useContext(SpreadsheetDispatchContext);
 	if (context === undefined) {
-		throw new Error('useCountDispatch must be used within a CountProvider');
+		throw new Error('useSpreadsheetDispatch must be used within a SpreadsheetProvider');
 	}
 	return context;
 }
 
-export function SpreadsheetProvider({ eventBus, children }) {
+export function SpreadsheetProvider({ children }) {
 	// dummy data
 	const statsColumns = [
 		{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced', description: '' },
@@ -971,16 +974,16 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution', description: '' },
 	];
 
-	const startingColumn = [
-		{
-			id: '_abc1_',
-			modelingType: CONTINUOUS,
-			type: NUMBER,
-			units: '',
-			label: 'Column 1',
-			description: '',
-		},
-	];
+	// const startingColumn = [
+	// 	{
+	// 		id: '_abc1_',
+	// 		modelingType: CONTINUOUS,
+	// 		type: NUMBER,
+	// 		units: '',
+	// 		label: 'Column 1',
+	// 		description: '',
+	// 	},
+	// ];
 
 	const potatoLiverData = `35	3	1.0606060606	Liver
   32	5.9	5.4237288136	Liver
@@ -1019,7 +1022,6 @@ export function SpreadsheetProvider({ eventBus, children }) {
 	}
 
 	const initialState = {
-		eventBus,
 		activeCell: null,
 		analysisModalOpen: false,
 		analysisWindowOpen: false,
@@ -1027,7 +1029,7 @@ export function SpreadsheetProvider({ eventBus, children }) {
 		cellSelectionRanges: [],
 		// First column created will be "Column 2"
 		columnCounter: 1,
-		residualsColumnsCounter: 0,
+		valuesColumnsCounter: 0,
 		columnTypeModalOpen: false,
 		colHeaderContext: false,
 		columns: statsColumns,

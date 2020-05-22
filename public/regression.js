@@ -39,51 +39,43 @@ const yAxis = d3.axisLeft().scale(y).ticks(10, 's');
 function receiveMessage(event) {
 	console.log('TARGET', event);
 	const {
-		confUpp,
-		confLow,
-		meanCiLow,
-		meanCiUpp,
 		colX,
 		colY,
+		colXMean,
+		colYMean,
 		coordinates,
+		reg1,
+		reg2,
+		reg3,
+		reg4,
+		reg5,
+		reg6,
+		cent_reg2,
+		cent_reg3,
+		cent_reg4,
+		cent_reg5,
+		cent_reg6,
 		corrcoef,
-		covariance,
-		colAMean,
-		colAStdev,
-		colBMean,
-		colBStdev,
-		pValue,
-		degree2Poly,
-		degree3Poly,
-		degree4Poly,
-		degree5Poly,
-		degree6Poly,
-		centeredDegree2Poly,
-		centeredDegree3Poly,
-		centeredDegree4Poly,
-		centeredDegree5Poly,
-		centeredDegree6Poly,
-		linearRegression,
-		resid,
+		cov,
+		std_x,
+		std_y,
 	} = event.data;
 
-	const sortedCiUpp = [ ...confUpp ].sort((a, b) => a[1] - b[1]);
-	const sortedCiLow = [ ...confLow ].sort((a, b) => a[1] - b[1]);
-	const sortedMeanCiUpp = [ ...meanCiUpp ].sort((a, b) => a[1] - b[1]);
-	const sortedMeanCiLow = [ ...meanCiLow ].sort((a, b) => a[1] - b[1]);
-
-	const linearRegressionCoefficients = linearRegression['coefficients'];
-	const degree2PolyCoefficients = degree2Poly['polynomial'];
-	const degree3PolyCoefficients = degree3Poly['polynomial'];
-	const degree4PolyCoefficients = degree4Poly['polynomial'];
-	const degree5PolyCoefficients = degree5Poly['polynomial'];
-	const degree6PolyCoefficients = degree6Poly['polynomial'];
-	const centered2PolyCoefficients = centeredDegree2Poly['polynomial'];
-	const centered3PolyCoefficients = centeredDegree3Poly['polynomial'];
-	const centered4PolyCoefficients = centeredDegree4Poly['polynomial'];
-	const centered5PolyCoefficients = centeredDegree5Poly['polynomial'];
-	const centered6PolyCoefficients = centeredDegree6Poly['polynomial'];
-
+	// const sortedCiUpp = [ ...confUpp ].sort((a, b) => a[1] - b[1]);
+	// const sortedCiLow = [ ...confLow ].sort((a, b) => a[1] - b[1]);
+	// const sortedMeanCiUpp = [ ...meanCiUpp ].sort((a, b) => a[1] - b[1]);
+	// const sortedMeanCiLow = [ ...meanCiLow ].sort((a, b) => a[1] - b[1]);
+	const linearRegressionCoefficients = reg1.stats['polynomial'];
+	const degree2PolyCoefficients = reg2.stats['polynomial'];
+	const degree3PolyCoefficients = reg3.stats['polynomial'];
+	const degree4PolyCoefficients = reg4.stats['polynomial'];
+	const degree5PolyCoefficients = reg5.stats['polynomial'];
+	const degree6PolyCoefficients = reg6.stats['polynomial'];
+	const centered2PolyCoefficients = cent_reg2.stats['polynomial'];
+	const centered3PolyCoefficients = cent_reg3.stats['polynomial'];
+	const centered4PolyCoefficients = cent_reg4.stats['polynomial'];
+	const centered5PolyCoefficients = cent_reg5.stats['polynomial'];
+	const centered6PolyCoefficients = cent_reg6.stats['polynomial'];
 	const titleEl = document.createElement('div');
 	const titleText = document.createTextNode(
 		`Bivariate Fit of ${colY.label} ${colY.units ? '(' + colY.units + ')' : ''} By ${colX.label} ${colX.units
@@ -222,35 +214,35 @@ function receiveMessage(event) {
 			.attr('fill', normalBarFill);
 	}
 
-	const linearRegressionEquation = (x) => linearRegressionCoefficients[1] + linearRegressionCoefficients[0] * x;
+	const linearRegressionEquation = (x) => linearRegressionCoefficients[0] + linearRegressionCoefficients[1] * x;
 	const poly2equation = (x) =>
-		degree2PolyCoefficients[2] + degree2PolyCoefficients[1] * x + degree2PolyCoefficients[0] * x * x;
+		degree2PolyCoefficients[0] + degree2PolyCoefficients[1] * x + degree2PolyCoefficients[2] * x * x;
 	const poly3equation = (x) =>
-		degree3PolyCoefficients[3] +
-		degree3PolyCoefficients[2] * x +
-		degree3PolyCoefficients[1] * x * x +
-		degree3PolyCoefficients[0] * x * x * x;
+		degree3PolyCoefficients[0] +
+		degree3PolyCoefficients[1] * x +
+		degree3PolyCoefficients[2] * x * x +
+		degree3PolyCoefficients[3] * x * x * x;
 	const poly4equation = (x) =>
-		degree4PolyCoefficients[4] +
-		degree4PolyCoefficients[3] * x +
+		degree4PolyCoefficients[0] +
+		degree4PolyCoefficients[1] * x +
 		degree4PolyCoefficients[2] * x * x +
-		degree4PolyCoefficients[1] * x * x * x +
-		degree4PolyCoefficients[0] * x * x * x * x;
+		degree4PolyCoefficients[3] * x * x * x +
+		degree4PolyCoefficients[4] * x * x * x * x;
 	const poly5equation = (x) =>
-		degree5PolyCoefficients[5] +
-		degree5PolyCoefficients[4] * x +
-		degree5PolyCoefficients[3] * x * x +
-		degree5PolyCoefficients[2] * x * x * x +
-		degree5PolyCoefficients[1] * x * x * x * x +
-		degree5PolyCoefficients[0] * x * x * x * x * x;
+		degree5PolyCoefficients[0] +
+		degree5PolyCoefficients[1] * x +
+		degree5PolyCoefficients[2] * x * x +
+		degree5PolyCoefficients[3] * x * x * x +
+		degree5PolyCoefficients[4] * x * x * x * x +
+		degree5PolyCoefficients[5] * x * x * x * x * x;
 	const poly6equation = (x) =>
-		degree6PolyCoefficients[6] +
-		degree6PolyCoefficients[5] * x +
-		degree6PolyCoefficients[4] * x * x +
+		degree6PolyCoefficients[0] +
+		degree6PolyCoefficients[1] * x +
+		degree6PolyCoefficients[2] * x * x +
 		degree6PolyCoefficients[3] * x * x * x +
-		degree6PolyCoefficients[2] * x * x * x * x +
-		degree6PolyCoefficients[1] * x * x * x * x * x +
-		degree6PolyCoefficients[0] * x * x * x * x * x * x;
+		degree6PolyCoefficients[4] * x * x * x * x +
+		degree6PolyCoefficients[5] * x * x * x * x * x +
+		degree6PolyCoefficients[6] * x * x * x * x * x * x;
 
 	const xDomainMin = x.domain()[0];
 	const xDomainMax = x.domain()[1];
@@ -264,9 +256,9 @@ function receiveMessage(event) {
 	const degree5Points = createPoints(x.domain(), step, poly5equation);
 	const degree6Points = createPoints(x.domain(), step, poly6equation);
 
-	const linearEquationTemplate = `${colY.label} = ${linearRegressionCoefficients[1].toFixed(6) / 1} ${addOrSubtract(
-		linearRegressionCoefficients[0].toFixed(6) / 1,
-	)} ${Math.abs(linearRegressionCoefficients[0].toFixed(6) / 1)} * ${colX.label}`;
+	const linearEquationTemplate = `${colY.label} = ${linearRegressionCoefficients[0].toFixed(6) / 1} ${addOrSubtract(
+		linearRegressionCoefficients[1].toFixed(6) / 1,
+	)} ${Math.abs(linearRegressionCoefficients[1].toFixed(6) / 1)} * ${colX.label}`;
 	const quadraticEquationTemplate = generateEquationTemplate(degree2PolyCoefficients, colX.label, colY.label);
 	const cubicEquationTemplate = generateEquationTemplate(degree3PolyCoefficients, colX.label, colY.label);
 	const quarticEquationTemplate = generateEquationTemplate(degree4PolyCoefficients, colX.label, colY.label);
@@ -319,16 +311,20 @@ function receiveMessage(event) {
     <div style="display: flex;">
     <table style="width: 300px; margin-right: 20px;">
       <tr>
+        <td class="table-header large">Statistic</td>
+        <td class="table-header right small">Value</td>
+      </tr>
+      <tr>
         <td class="header-background large">Pearson's Correlation</td>
-        <td class="right small">${corrcoef}</td>
+        <td class="right small">${corrcoef[0][1].toFixed(4) / 1}</td>
       </tr>
       <tr>
         <td class="header-background large">p</td>
-        <td class="right small">${evaluatePValue(pValue)}</td>
+        <td class="right small">${evaluatePValue(reg1.stats.pvalues[0])}</td>
       </tr>
       <tr>
         <td class="header-background large">Covariance</td>
-        <td class="right small">${covariance}</td>
+        <td class="right small">${cov[0][1].toFixed(4) / 1}</td>
       </tr>
       <tr>
         <td class="header-background large">Count</td>
@@ -342,14 +338,14 @@ function receiveMessage(event) {
           <td class="table-header small right">Std Dev</td>
         </tr>
         <tr>
-          <td class="left large">${colX.label}</td>
-          <td class="right small">${colAMean}</td>
-          <td class="right small">${colAStdev}</td>
+          <td class="header-background left large">${colX.label}</td>
+          <td class="right small">${colXMean.toFixed(4) / 1}</td>
+          <td class="right small">${std_x.toFixed(4) / 1}</td>
         </tr>
         <tr>
-          <td class="left large">${colY.label}</td>
-          <td class="right small">${colBMean}</td>
-          <td class="right small">${colBStdev}</td>
+          <td class="header-background left large">${colY.label}</td>
+          <td class="right small">${colYMean.toFixed(4) / 1}</td>
+          <td class="right small">${std_y.toFixed(4) / 1}</td>
         </tr>
       </table>
     </div>
@@ -360,9 +356,10 @@ function receiveMessage(event) {
 		'linearRegressionLine',
 		null,
 		linearEquationTemplate,
-		linearRegression,
+		reg1,
 		linearRegressionCoefficients,
 		colX.label,
+		null,
 	);
 
 	const quadraticFitTemplate = generateRegressionTemplate(
@@ -370,9 +367,10 @@ function receiveMessage(event) {
 		'degree2PolyLine',
 		'uncentered',
 		quadraticEquationTemplate,
-		degree2Poly,
+		reg2,
 		degree2PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const cubicFitTemplate = generateRegressionTemplate(
@@ -380,9 +378,10 @@ function receiveMessage(event) {
 		'degree3PolyLine',
 		'uncentered',
 		cubicEquationTemplate,
-		degree3Poly,
+		reg3,
 		degree3PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const quarticFitTemplate = generateRegressionTemplate(
@@ -390,9 +389,10 @@ function receiveMessage(event) {
 		'degree4PolyLine',
 		'uncentered',
 		quarticEquationTemplate,
-		degree4Poly,
+		reg4,
 		degree4PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const fifthDegreeFitTemplate = generateRegressionTemplate(
@@ -400,9 +400,10 @@ function receiveMessage(event) {
 		'degree5PolyLine',
 		'uncentered',
 		degree5EquationTemplate,
-		degree5Poly,
+		reg5,
 		degree5PolyCoefficients,
 		colX.label,
+		null,
 	);
 
 	const sixthDegreeFitTemplate = generateRegressionTemplate(
@@ -410,19 +411,20 @@ function receiveMessage(event) {
 		'degree6PolyLine',
 		'uncentered',
 		degree6EquationTemplate,
-		degree6Poly,
+		reg6,
 		degree6PolyCoefficients,
 		colX.label,
+		null,
 	);
 
-	const centeredX = `(${colX.label} - ${colAMean})`;
+	const centeredX = `(${colX.label} - ${colXMean})`;
 
 	const centered2DegreeFitTemplate = generateRegressionTemplate(
 		'Quadratic Fit (centered)',
 		'degree2CenteredPolyLine',
 		'centered',
 		centeredQuadraticEquationTemplate,
-		centeredDegree2Poly,
+		cent_reg2,
 		centered2PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -433,7 +435,7 @@ function receiveMessage(event) {
 		'degree3CenteredPolyLine',
 		'centered',
 		centeredCubicEquationTemplate,
-		centeredDegree3Poly,
+		cent_reg3,
 		centered3PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -444,7 +446,7 @@ function receiveMessage(event) {
 		'degree4CenteredPolyLine',
 		'centered',
 		centeredQuarticEquationTemplate,
-		centeredDegree4Poly,
+		cent_reg4,
 		centered4PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -455,7 +457,7 @@ function receiveMessage(event) {
 		'degree5CenteredPolyLine',
 		'centered',
 		centeredDegree5EquationTemplate,
-		centeredDegree5Poly,
+		cent_reg5,
 		centered5PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -466,7 +468,7 @@ function receiveMessage(event) {
 		'degree6CenteredPolyLine',
 		'centered',
 		centeredDegree6EquationTemplate,
-		centeredDegree6Poly,
+		cent_reg6,
 		centered6PolyCoefficients,
 		colX.label,
 		centeredX,
@@ -494,8 +496,7 @@ function receiveMessage(event) {
   </select>
 </div>`;
 
-	const saveResidualsButton = `<button style="margin-top: 1em;" id="saveResiduals">Save Residuals</button>`;
-
+	// const saveResidualsButton = `<button style="margin-top: 1em;" id="saveResiduals">Save Residuals</button>`;
 	const summaryStatsParsed = new DOMParser().parseFromString(summaryStatsTemplate, 'text/html');
 	const linearFitParsed = new DOMParser().parseFromString(linearFitTemplate, 'text/html');
 	const quadraticFitParsed = new DOMParser().parseFromString(quadraticFitTemplate, 'text/html');
@@ -508,13 +509,12 @@ function receiveMessage(event) {
 	const centeredQuarticFitParsed = new DOMParser().parseFromString(centered4DegreeFitTemplate, 'text/html');
 	const centeredFifthDegreeFitParsed = new DOMParser().parseFromString(centered5DegreeFitTemplate, 'text/html');
 	const centeredSixthDegreeFitParsed = new DOMParser().parseFromString(centered6DegreeFitTemplate, 'text/html');
-	// const chartOptionsParsed = new DOMParser().parseFromString(chartOptionsTemplate, 'text/html');
 	const chartOptionsDropdownParsed = new DOMParser().parseFromString(chartOptionsDropdown, 'text/html');
-	const saveResidualsButtonParsed = new DOMParser().parseFromString(saveResidualsButton, 'text/html');
+	// const saveResidualsButtonParsed = new DOMParser().parseFromString(saveResidualsButton, 'text/html');
 
 	document.body.insertBefore(summaryStatsParsed.body.firstChild, chartsContainer);
 	container.appendChild(chartOptionsDropdownParsed.body.firstChild);
-	container.appendChild(saveResidualsButtonParsed.body.firstChild);
+	// container.appendChild(saveResidualsButtonParsed.body.firstChild);
 	container.appendChild(linearFitParsed.body.firstChild);
 	container.appendChild(quadraticFitParsed.body.firstChild);
 	container.appendChild(cubicFitParsed.body.firstChild);
@@ -527,6 +527,46 @@ function receiveMessage(event) {
 	container.appendChild(centeredFifthDegreeFitParsed.body.firstChild);
 	container.appendChild(centeredSixthDegreeFitParsed.body.firstChild);
 	window.removeEventListener('message', receiveMessage);
+
+	const saveResiduals = () => {
+		return window.opener.postMessage(
+			{
+				message: 'save-residuals',
+				residuals: polyDegree.stats.residuals,
+			},
+			'*',
+		);
+	};
+
+	function saveCIFit() {
+		window.opener.postMessage(
+			{
+				message: 'save-ci-fit',
+				residuals: polyDegree.ci.conf95,
+			},
+			'*',
+		);
+	}
+
+	function saveCIObs() {
+		window.opener.postMessage(
+			{
+				message: 'save-ci-obs',
+				residuals: polyDegree.ci.conf95,
+			},
+			'*',
+		);
+	}
+
+	function savePredicted() {
+		window.opener.postMessage(
+			{
+				message: 'save-predicted',
+				residuals: polyDegree.stats.predicted,
+			},
+			'*',
+		);
+	}
 
 	new SlimSelect({
 		select: '#chart-options-dropdown',
@@ -548,8 +588,8 @@ function receiveMessage(event) {
 			const degree4Poly = info.find((inf) => inf.value === 'degree4PolyLine');
 			const degree5Poly = info.find((inf) => inf.value === 'degree5PolyLine');
 			const degree6Poly = info.find((inf) => inf.value === 'degree6PolyLine');
-			const confidenceBands = info.find((inf) => inf.value === 'confidenceBands');
-			const confidenceBandsFit = info.find((inf) => inf.value === 'confidenceBandsFit');
+			// const confidenceBands = info.find((inf) => inf.value === 'confidenceBands');
+			// const confidenceBandsFit = info.find((inf) => inf.value === 'confidenceBandsFit');
 			if (histogramBorders) {
 				drawHistogramBorders();
 			} else {
@@ -592,7 +632,7 @@ function receiveMessage(event) {
 			}
 			if (degree5Poly) {
 				drawBasicPath(degree5Points, reversedLine, 'degree5PolyLine', '5th Degree Regression Line');
-				showCenteredPoly('degree4PolyLine', 'degree4CenteredPolyLine');
+				showCenteredPoly('degree5PolyLine', 'degree5CenteredPolyLine');
 			} else {
 				d3.selectAll(`.degree5PolyLine`).remove();
 				d3.selectAll(`.degree5PolyLine-hitbox`).remove();
@@ -608,34 +648,24 @@ function receiveMessage(event) {
 				document.getElementById('degree6CenteredPolyLine').style.display = 'none';
 				document.getElementById('degree6PolyLine').style.display = 'none';
 			}
-			if (confidenceBands) {
-				drawBasicPath(sortedCiUpp, valueLine, 'confidenceBands', null);
-				drawBasicPath(sortedCiLow, valueLine, 'confidenceBands', null);
-			} else {
-				d3.selectAll(`.confidenceBands`).remove();
-				d3.selectAll(`.confidenceBands-hitbox`).remove();
-			}
-			if (confidenceBandsFit) {
-				drawBasicPath(sortedMeanCiUpp, valueLine, 'confidenceBandsFit', null);
-				drawBasicPath(sortedMeanCiLow, valueLine, 'confidenceBandsFit', null);
-			} else {
-				d3.selectAll(`.confidenceBandsFit`).remove();
-				d3.selectAll(`.confidenceBandsFit-hitbox`).remove();
-			}
+			// if (confidenceBands) {
+			// 	drawBasicPath(sortedCiUpp, valueLine, 'confidenceBands', null);
+			// 	drawBasicPath(sortedCiLow, valueLine, 'confidenceBands', null);
+			// } else {
+			// 	d3.selectAll(`.confidenceBands`).remove();
+			// 	d3.selectAll(`.confidenceBands-hitbox`).remove();
+			// }
+			// if (confidenceBandsFit) {
+			// 	drawBasicPath(sortedMeanCiUpp, valueLine, 'confidenceBandsFit', null);
+			// 	drawBasicPath(sortedMeanCiLow, valueLine, 'confidenceBandsFit', null);
+			// } else {
+			// 	d3.selectAll(`.confidenceBandsFit`).remove();
+			// 	d3.selectAll(`.confidenceBandsFit-hitbox`).remove();
+			// }
 		},
 	});
 
-	function onClickSaveResiduals() {
-		window.opener.postMessage(
-			{
-				message: 'save-residuals',
-				residuals: resid,
-			},
-			'*',
-		);
-	}
-
-	document.getElementById('saveResiduals').addEventListener('click', (e) => onClickSaveResiduals());
+	// document.getElementById('saveResiduals').addEventListener('click', (e) => onClickSaveResiduals());
 
 	drawHistogramBorders();
 	drawBasicPath(linearRegressionPoints, reversedLine, 'linearRegressionLine', 'Linear Regression Line');

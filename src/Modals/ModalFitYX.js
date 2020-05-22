@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { performLinearRegressionAnalysis, performOnewayAnalysis } from './Analyses';
+import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { performLinearRegressionAnalysis, performOnewayAnalysis } from '../analysis-output/Analysis';
 import ErrorMessage from './ErrorMessage';
-import { TOGGLE_ANALYSIS_MODAL } from './constants';
+import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
+import { createRandomID } from '../SpreadsheetProvider';
 import {
-	REMOVE_SELECTED_CELLS,
-	SELECT_CELLS,
+	// REMOVE_SELECTED_CELLS,
+	// SELECT_CELLS,
 	ORDINAL,
 	CONTINUOUS,
 	NOMINAL,
@@ -15,11 +16,11 @@ import {
 	LOGISTIC,
 	ONEWAY,
 	CONTINGENCY,
-	SAVE_RESIDUALS_TO_COLUMN,
-} from './constants';
+	// SAVE_VALUES_TO_COLUMN,
+} from '../constants';
 import VariableLegend from './FitYXLegend';
 
-export default function AnalysisModal() {
+export default function AnalysisModal({ setPopup }) {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
 	const [ xColData, setXColData ] = useState([]);
 	const [ yColData, setYColData ] = useState([]);
@@ -65,73 +66,74 @@ export default function AnalysisModal() {
 					arr.push([ colA[i], colB[i], row ]);
 				}
 			}
-			return arr.sort();
+			return arr;
 		}
 		const XYCols = makeRows(colA, colB);
 		const colXArr = XYCols.map((a) => a[0]);
 		const colYArr = XYCols.map((a) => a[1]);
 
-		function receiveMessage(event, popup, results) {
-			// target window is ready, time to send data.
-			if (event.data === 'ready') {
-				// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
-				if (typeof results === 'string') {
-					return alert('Something went wrong. Check your data and try again.');
-				}
-				popup.postMessage(results, '*');
-				window.removeEventListener('message', receiveMessage);
-			}
-		}
+		// function receiveMessage(event, popup, results) {
+		// 	// target window is ready, time to send data.
+		// 	if (event.data === 'ready') {
+		// 		// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
+		// 		if (typeof results === 'string') {
+		// 			return alert('Something went wrong. Check your data and try again.');
+		// 		}
+		// 		popup.postMessage(results, '*');
+		// 		window.removeEventListener('message', receiveMessage);
+		// 	}
+		// }
 
 		async function linearRegression() {
 			if (colXArr.length >= 3 && colYArr.length >= 3) {
 				try {
-					function removeTargetClickEvent(event) {
-						if (event.data === 'closed') {
-							window.removeEventListener('message', targetClickEvent);
-							window.removeEventListener('message', removeTargetClickEvent);
-						}
-					}
+					// function removeTargetClickEvent(event) {
+					// 	if (event.data === 'closed') {
+					// 		window.removeEventListener('message', targetClickEvent);
+					// 		window.removeEventListener('message', removeTargetClickEvent);
+					// 	}
+					// }
 
-					function saveResiduals(event) {
-						if (event.data.message !== 'save-residuals') return;
-						const { residuals } = event.data;
-						dispatchSpreadsheetAction({ type: SAVE_RESIDUALS_TO_COLUMN, residuals, colX, colY });
-					}
+					// function saveResiduals(event) {
+					// 	if (event.data.message !== 'save-residuals') return;
+					// 	const { residuals } = event.data;
+					// 	dispatchSpreadsheetAction({ type: SAVE_VALUES_TO_COLUMN, residuals, colX, colY });
+					// }
 
-					function targetClickEvent(event) {
-						if (event.data.message === 'clicked') {
-							const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
-							const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
-							if (!event.data.metaKeyPressed) {
-								dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-							}
-							const rowIndices = rows.reduce((acc, row, rowIndex) => {
-								// TODO Shouldn't be using Number here?
-								return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
-									? acc.concat(rowIndex)
-									: acc;
-							}, []);
-							dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
-						}
-					}
+					// function targetClickEvent(event) {
+					// 	if (event.data.message === 'clicked') {
+					// 		const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
+					// 		const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
+					// 		if (!event.data.metaKeyPressed) {
+					// 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+					// 		}
+					// 		const rowIndices = rows.reduce((acc, row, rowIndex) => {
+					// 			// TODO Shouldn't be using Number here?
+					// 			return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
+					// 				? acc.concat(rowIndex)
+					// 				: acc;
+					// 		}, []);
+					// 		dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
+					// 	}
+					// }
 
 					setPerformingAnalysis(true);
 					const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
-					const popup = window.open(
-						window.location.href + 'linear_regression.html',
-						'',
-						'left=9999,top=100,width=800,height=850',
-					);
+					// const popup = window.open(
+					// 	window.location.href + 'regression.html',
+					// 	'',
+					// 	'left=9999,top=100,width=800,height=850',
+					// );
+					setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
 
 					setPerformingAnalysis(false);
 					handleModalClose();
 
 					// set event listener and wait for target to be ready
-					window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
-					window.addEventListener('message', targetClickEvent);
-					window.addEventListener('message', saveResiduals);
-					window.addEventListener('message', removeTargetClickEvent);
+					// window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
+					// window.addEventListener('message', targetClickEvent);
+					// window.addEventListener('message', saveResiduals);
+					// window.addEventListener('message', removeTargetClickEvent);
 				} catch (e) {
 					console.log(e);
 					setPerformingAnalysis(false);
@@ -146,11 +148,12 @@ export default function AnalysisModal() {
 			try {
 				setPerformingAnalysis(true);
 				const results = await performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols);
-				const popup = window.open(window.location.href + 'oneway.html', '', 'left=9999,top=100,width=800,height=850');
+				setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+				// const popup = window.open(window.location.href + 'oneway.html', '', 'left=9999,top=100,width=800,height=850');
 				setPerformingAnalysis(false);
 				handleModalClose();
 
-				window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
+				// window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
 			} catch (e) {
 				console.log(e);
 				setPerformingAnalysis(false);

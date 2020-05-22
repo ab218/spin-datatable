@@ -1,6 +1,6 @@
 import React from 'react';
 import { styles, OrdinalIcon, ContinuousIcon, NominalIcon } from './ModalShared';
-import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from './constants';
+import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from '../constants';
 
 function lightUpQuadrants(yData, xData) {
 	let yDataArr = [];

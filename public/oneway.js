@@ -450,7 +450,7 @@ function receiveMessage(event) {
 		.attr('class', 'pooledMean');
 
 	// Boxplot
-	const boxPlotStrokeColor = 'red';
+	const boxPlotStrokeColor = 'purple';
 	const boxWidth = 50;
 	// Show the main vertical line
 	svg

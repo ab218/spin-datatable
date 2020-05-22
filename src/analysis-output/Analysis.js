@@ -1,23 +1,35 @@
+import React from 'react';
 import axios from 'axios';
+import RegressionAnalysis from './RegressionAnalysis';
+import DistributionAnalysis from './DistributionAnalysis';
+import OnewayAnalysis from './OnewayAnalysis';
+import BarChartAnalysis from './BarChartAnalysis';
+
+export default function AnalysisContainer({ popup, setPopup }) {
+	if (!popup.length === 0) {
+		return null;
+	}
+	return popup.map((data, i) => {
+		if (data.analysisType === 'regression') {
+			return <RegressionAnalysis key={i} data={data} setPopup={setPopup} />;
+		} else if (data.analysisType === 'distribution') {
+			return <DistributionAnalysis key={i} data={data} setPopup={setPopup} />;
+		} else if (data.analysisType === 'oneway') {
+			return <OnewayAnalysis key={i} data={data} setPopup={setPopup} />;
+		} else if (data.analysisType === 'barChart') {
+			return <BarChartAnalysis key={i} data={data} setPopup={setPopup} />;
+		}
+		return null;
+	});
+}
 
 export async function pingCloudFunctions() {
-	const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
-	await axios.post(
-		linearRegression,
-		{ ping: 'ping' },
-		{
-			crossDomain: true,
-		},
-	);
-
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
-	await axios.post(
-		gcloud,
-		{ ping: 'ping' },
-		{
-			crossDomain: true,
-		},
-	);
+	const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
+	const distribution = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
+	const oneway = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway';
+	axios.post(linearRegression, { ping: 'ping' }, { crossDomain: true });
+	axios.post(oneway, { ping: 'ping' }, { crossDomain: true });
+	axios.post(distribution, { ping: 'ping' }, { crossDomain: true });
 }
 
 // bug: if the group only has one data point in it, the cloud function fails.
@@ -36,6 +48,7 @@ export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols
 	const { ordered_differences_report, bartlett, levene, x_groups_lists, means_std, anova, summary_table } = result.data;
 
 	return {
+		analysisType: 'oneway',
 		ordered_differences_report: JSON.parse(ordered_differences_report),
 		x_groups_lists: JSON.parse(x_groups_lists),
 		anova: JSON.parse(anova),
@@ -53,80 +66,27 @@ export async function performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols
 
 export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols) {
 	// const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
-	// const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/statsmodels';
-	const gcloud = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
 	const result = await axios.post(
-		gcloud,
-		{
-			x: colXArr,
-			y: colYArr,
-		},
+		'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression',
+		{ x: colXArr, y: colYArr },
 		{
 			crossDomain: true,
 		},
 	);
 	// console.log(result.data) // gcloud
 	// console.log(result.data.body); // Lambda
-	const {
-		conf_low,
-		conf_upp,
-		mean_x,
-		mean_y,
-		std_x,
-		std_y,
-		pvalues,
-		rsquared,
-		corrcoef,
-		cov,
-		degree_2_poly,
-		degree_3_poly,
-		degree_4_poly,
-		degree_5_poly,
-		degree_6_poly,
-		slope,
-		intercept,
-		mean_ci_low,
-		mean_ci_upp,
-		centered_2_poly,
-		centered_3_poly,
-		centered_4_poly,
-		centered_5_poly,
-		centered_6_poly,
-		resid,
-	} = result.data;
 
 	console.log(result.data);
 
+	const mean = (numbers) => numbers.reduce((acc, val) => acc + Number(val), 0) / numbers.length;
 	return {
-		confLow: conf_low,
-		confUpp: conf_upp,
-		meanCiLow: mean_ci_low,
-		meanCiUpp: mean_ci_upp,
-		corrcoef: corrcoef[1][0].toFixed(4) / 1,
-		covariance: cov[1][0].toFixed(4) / 1,
+		analysisType: 'regression',
+		...result.data,
 		colX,
-		colAMean: mean_x.toFixed(4) / 1,
-		colAStdev: std_x.toFixed(4) / 1,
 		colY,
-		colBMean: mean_y.toFixed(4) / 1,
-		colBStdev: std_y.toFixed(4) / 1,
-		pValue: pvalues[1].toFixed(4) / 1,
-		degree2Poly: degree_2_poly,
-		degree3Poly: degree_3_poly,
-		degree4Poly: degree_4_poly,
-		degree5Poly: degree_5_poly,
-		degree6Poly: degree_6_poly,
-		centeredDegree2Poly: centered_2_poly,
-		centeredDegree3Poly: centered_3_poly,
-		centeredDegree4Poly: centered_4_poly,
-		centeredDegree5Poly: centered_5_poly,
-		centeredDegree6Poly: centered_6_poly,
+		colXMean: mean([ ...colXArr ]),
+		colYMean: mean([ ...colYArr ]),
 		coordinates: XYCols,
-		resid,
-		linearRegression: {
-			coefficients: [ slope.toFixed(4) / 1, intercept.toFixed(4) / 1 ],
-			determination: rsquared.toFixed(4) / 1,
-		},
 	};
 }
 
@@ -148,6 +108,7 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	// console.log(result.data.body); // Lambda
 	const { mean_y, std_y, count, quantiles, histogram, skew, kurtosis } = result.data;
 	return {
+		analysisType: 'distribution',
 		count,
 		colObj: colY,
 		mean: mean_y,
@@ -163,6 +124,7 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 
 export async function createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colXScale) {
 	return {
+		analysisType: 'barChart',
 		colXArr,
 		colYArr,
 		colZArr,
