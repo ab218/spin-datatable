@@ -7,8 +7,15 @@ import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvi
 const margin = { top: 20, right: 30, bottom: 40, left: 70 };
 const width = 300 - margin.left - margin.right;
 const height = 300 - margin.top - margin.bottom;
+const center = 1;
+const boxWidth = 40;
+const normalBarFill = '#69b3a2';
+const clickedBarFill = 'red';
+const normalPointFill = 'black';
+const normalPointSize = 2;
+const clickedBarPointSize = normalPointSize * 2;
 
-function makeSvg(container, id, customWidth) {
+function makeSvg(container, customWidth) {
 	return d3
 		.select(container)
 		.append('svg')
@@ -28,16 +35,8 @@ function maxBinLength(arr) {
 	return highest;
 }
 
-const normalBarFill = '#69b3a2';
-const clickedBarFill = 'red';
-const normalPointFill = 'black';
-const normalPointSize = 2;
-const clickedBarPointSize = normalPointSize * 2;
-
 export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted, min, max, q1, q3, median }) {
 	const d3Container = useRef(null);
-	const center = 1;
-	const boxWidth = 40;
 
 	const { columns, rows, excludedRows } = useSpreadsheetState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -79,18 +78,79 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 	const x = d3.scaleLinear().range([ 0, width ]);
 	const y = d3.scaleLinear().domain([ min, max ]).range([ height, 0 ]).nice();
 
-	useEffect(() => {
-		if (vals && d3Container.current) {
-			// append the histogram svg object to the body of the page
-			const histSvg = makeSvg(d3Container.current, 'histogramVis');
-			const boxSvg = makeSvg(d3Container.current, 'boxplotVis', 100);
+	useEffect(
+		() => {
+			if (vals && d3Container.current) {
+				// append the histogram svg object to the body of the page
+				const histSvg = makeSvg(d3Container.current);
+				const boxSvg = makeSvg(d3Container.current, 100);
 
-			histSvg.append('g').attr('class', 'x axis').call(d3.axisLeft().scale(y).ticks(10, 's'));
+				histSvg.append('g').attr('class', 'yAxis').call(d3.axisLeft().scale(y).ticks(numberOfBins, 's'));
+
+				// Boxplot
+				// Show the main vertical line
+				boxSvg
+					.append('line')
+					.attr('x1', center)
+					.attr('x2', center)
+					.attr('y1', y(min))
+					.attr('y2', y(max))
+					.attr('stroke', 'black');
+				boxSvg
+					.append('line')
+					.attr('x1', center)
+					.attr('x2', center)
+					.attr('y1', y(min))
+					.attr('y2', y(max))
+					.attr('stroke', 'black');
+				boxSvg
+					.append('rect')
+					.attr('x', center - boxWidth / 2)
+					.attr('y', y(q3))
+					.attr('height', y(q1) - y(q3))
+					.attr('width', boxWidth)
+					.attr('stroke', 'black')
+					.style('fill', '#69b3a2');
+				// show median, min and max horizontal lines
+				boxSvg
+					.selectAll('toto')
+					.data([ min, median, max ])
+					.enter()
+					.append('line')
+					.attr('x1', center - boxWidth / 2)
+					.attr('x2', center + boxWidth / 2)
+					.attr('y1', (d) => y(d))
+					.attr('y2', (d) => y(d))
+					.attr('stroke', 'black');
+
+				const jitterWidth = 10;
+				const jitter = jitterWidth / 2 + Math.random() * jitterWidth;
+
+				boxSvg
+					.selectAll('indPoints')
+					.data(boxDataSorted)
+					.enter()
+					.append('circle')
+					.attr('cx', () => center - boxWidth / 10)
+					.attr('cy', (d) => y(d) - jitter)
+					.attr('r', 4)
+					.style('fill', 'white')
+					.attr('stroke', 'black');
+			}
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[],
+	);
+
+	useEffect(
+		() => {
 			// set the parameters for the histogram
 			const histogram = d3
 				.histogram()
 				.domain(y.domain()) // then the domain of the graphic
 				.thresholds(y.ticks(numberOfBins)); // then the numbers of bins
+
+			const histSvg = d3.select(d3Container.current).select('g');
 
 			// And apply this function to data to get the bins
 			const bins = histogram(boxDataSorted);
@@ -98,7 +158,7 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 
 			histSvg
 				.append('g')
-				.attr('class', 'x axis')
+				.attr('class', 'xAxis')
 				.attr('transform', 'translate(0,' + height + ')')
 				.call(d3.axisBottom().scale(x).ticks(5, 's'));
 
@@ -128,58 +188,14 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 				.delay((_, i) => i * 100)
 				.attr('width', (d) => x(d.length));
 
-			// Boxplot
-			// Show the main vertical line
-			boxSvg
-				.append('line')
-				.attr('x1', center)
-				.attr('x2', center)
-				.attr('y1', y(min))
-				.attr('y2', y(max))
-				.attr('stroke', 'black');
-			boxSvg
-				.append('line')
-				.attr('x1', center)
-				.attr('x2', center)
-				.attr('y1', y(min))
-				.attr('y2', y(max))
-				.attr('stroke', 'black');
-			boxSvg
-				.append('rect')
-				.attr('x', center - boxWidth / 2)
-				.attr('y', y(q3))
-				.attr('height', y(q1) - y(q3))
-				.attr('width', boxWidth)
-				.attr('stroke', 'black')
-				.style('fill', '#69b3a2');
-			// show median, min and max horizontal lines
-			boxSvg
-				.selectAll('toto')
-				.data([ min, median, max ])
-				.enter()
-				.append('line')
-				.attr('x1', center - boxWidth / 2)
-				.attr('x2', center + boxWidth / 2)
-				.attr('y1', (d) => y(d))
-				.attr('y2', (d) => y(d))
-				.attr('stroke', 'black');
-
-			const jitterWidth = 10;
-			const jitter = jitterWidth / 2 + Math.random() * jitterWidth;
-
-			boxSvg
-				.selectAll('indPoints')
-				.data(boxDataSorted)
-				.enter()
-				.append('circle')
-				.attr('cx', () => center - boxWidth / 10)
-				.attr('cy', (d) => y(d) - jitter)
-				.attr('r', 4)
-				.style('fill', 'white')
-				.attr('stroke', 'black');
-		}
+			return () => {
+				histSvg.selectAll('.histBars').remove();
+				histSvg.selectAll('.xAxis').remove();
+			};
+		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+		[ numberOfBins ],
+	);
 
 	return <div ref={d3Container} />;
 }

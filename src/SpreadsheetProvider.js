@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useMemo } from 'react';
 import nerdamer from 'nerdamer';
 import './App.css';
 import {
@@ -945,14 +945,14 @@ function spreadsheetReducer(state, action) {
 export function useSpreadsheetState() {
 	const context = React.useContext(SpreadsheetStateContext);
 	if (context === undefined) {
-		throw new Error('useCountState must be used within a CountProvider');
+		throw new Error('useSpreadsheetState must be used within a SpreadsheetProvider');
 	}
 	return context;
 }
 export function useSpreadsheetDispatch() {
 	const context = React.useContext(SpreadsheetDispatchContext);
 	if (context === undefined) {
-		throw new Error('useCountDispatch must be used within a CountProvider');
+		throw new Error('useSpreadsheetDispatch must be used within a SpreadsheetProvider');
 	}
 	return context;
 }
