@@ -6,6 +6,7 @@ import {
 	useSpreadsheetDispatch,
 	useSelectDispatch,
 	useRowsDispatch,
+	useSelectState,
 } from './context/SpreadsheetProvider';
 import {
 	CLOSE_CONTEXT_MENU,
@@ -16,8 +17,9 @@ import {
 } from './constants';
 
 export default function RowHeaders({ rowIndex, rowData }) {
-	const { contextMenuOpen, excludedRows, uniqueRowIDs } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
+	const { contextMenuOpen } = useSpreadsheetState();
+	const { uniqueRowIDs } = useSelectState();
+	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
@@ -69,6 +71,8 @@ export default function RowHeaders({ rowIndex, rowData }) {
 				if (typeof e.buttons === 'number' && e.buttons > 0) {
 					dispatchSelectAction({
 						type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
+						rows,
+						columns,
 						endRangeRow: rowIndex,
 						endRangeColumn: 1,
 					});

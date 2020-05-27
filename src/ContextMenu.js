@@ -32,7 +32,7 @@ export default function ContextMenu({ paste }) {
 		contextMenuRowIndex,
 		// layout,
 	} = useSpreadsheetState();
-	// const { cellSelectionRanges } = useSelectState();
+	const { cellSelectionRanges } = useSelectState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
@@ -122,7 +122,7 @@ export default function ContextMenu({ paste }) {
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: EXCLUDE_ROWS });
+							dispatchRowsAction({ type: EXCLUDE_ROWS, cellSelectionRanges });
 						}}
 						key="20"
 					>
@@ -130,7 +130,7 @@ export default function ContextMenu({ paste }) {
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: UNEXCLUDE_ROWS });
+							dispatchRowsAction({ type: UNEXCLUDE_ROWS, cellSelectionRanges });
 						}}
 						key="21"
 					>

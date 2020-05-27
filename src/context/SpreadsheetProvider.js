@@ -65,48 +65,44 @@ export function SpreadsheetProvider({ children }) {
 		barChartModalOpen: false,
 		// First column created will be "Column 2"
 		columnCounter: 1,
-		valuesColumnsCounter: 0,
 		columnTypeModalOpen: false,
 		colHeaderContext: false,
-		columns: statsColumns,
 		colName: null,
 		contextMenuOpen: false,
 		contextMenuPosition: null,
 		contextMenuRowIndex: null,
 		distributionModalOpen: false,
-		excludedRows: [],
-		filters: {
-			stringFilters: [],
-			numberFilters: [],
-		},
 		filterModalOpen: false,
-		// lastSelection: { row: 1, column: 1 },
 		layout: true,
 		mappedColumns: {},
 		modalError: false,
-		rows: createRows(potatoLiverData, statsColumns),
-		totalSelectedRows: 0,
-		uniqueRowIDs: [],
-		uniqueColumnIDs: [],
 	};
 
 	const initialSelectState = {
 		activeCell: null,
 		cellSelectionRanges: [],
 		currentCellSelectionRange: null,
+		filters: {
+			stringFilters: [],
+			numberFilters: [],
+		},
 		lastSelection: { row: 1, column: 1 },
-		selectedColumns: [],
 		selectDisabled: false,
+		selectedColumns: [],
 		selectedRowIDs: [],
+		uniqueRowIDs: [],
+		uniqueColumnIDs: [],
 	};
 
 	const initialRowsState = {
 		columns: statsColumns,
+		excludedRows: [],
 		rows: createRows(potatoLiverData, statsColumns),
 		inverseDependencyMap: {
 			_abc1_: [ '_abc3_' ],
 			_abc2_: [ '_abc3_' ],
 		},
+		valuesColumnsCounter: 0,
 	};
 
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);

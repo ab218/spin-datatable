@@ -1,6 +1,7 @@
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+	FILTER_COLUMN,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	REMOVE_SELECTED_CELLS,
 	SELECT_CELL,
@@ -8,25 +9,39 @@ import {
 	SELECT_ALL_CELLS,
 	SELECT_ROW,
 	SELECT_COLUMN,
+	SET_FILTERS,
+	SET_SELECTED_COLUMN,
+	DELETE_FILTER,
 	TRANSLATE_SELECTED_CELL,
 } from '../../constants';
 
-import { getRangeBoundaries } from '../helpers';
+import {
+	getRangeBoundaries,
+	generateUniqueRowIDs,
+	generateUniqueColumnIDs,
+	filterRowsByColumnRange,
+	filterRowsByString,
+	returnIntersectionOrNonEmptyArray,
+} from '../helpers';
 
 export function selectReducer(state, action) {
 	const {
 		column,
+		columns,
 		columnID,
 		columnIndex,
 		endRangeRow,
 		endRangeColumn,
+		filters,
+		selectedColumns,
+		stringFilter,
+		numberFilters,
 		newInputCellValue,
 		row,
 		rowID,
 		rowIndex,
 		rows,
 		selectionActive,
-		// selectedText,
 	} = action;
 
 	// const { type, ...event } = action;
@@ -55,6 +70,43 @@ export function selectReducer(state, action) {
 				currentCellSelectionRange: null,
 			};
 		}
+		case SET_FILTERS: {
+			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
+			return {
+				...state,
+				selectedColumns: selectedColumns || state.selectedColumns,
+				filters: {
+					stringFilters: stringFilterCopy,
+					numberFilters: numberFilters || state.filters.numberFilters,
+				},
+			};
+		}
+		case DELETE_FILTER: {
+			return { ...state, filters, selectedColumns };
+		}
+		case FILTER_COLUMN: {
+			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, rows);
+			const filteredRowsByString = filterRowsByString(rows, state.filters);
+			const filteredRows = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
+			const filteredRowIDs = filteredRows.map((row) => row.id);
+			const selectedRowIndexes = filteredRows.map((row) => rows.findIndex((stateRow) => stateRow.id === row.id));
+			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
+				return {
+					top: rowIndex,
+					left: 1,
+					bottom: rowIndex,
+					right: columns.length,
+				};
+			});
+			return {
+				...state,
+				activeCell: null,
+				currentCellSelectionRange: selectedRowObjects,
+				cellSelectionRanges: selectedRowObjects,
+				uniqueRowIDs: filteredRowIDs,
+				uniqueColumnIDs: columns.map((col) => col.id),
+			};
+		}
 		case MODIFY_CURRENT_SELECTION_CELL_RANGE: {
 			const { lastSelection } = state;
 			const currentCellSelectionRange = getRangeBoundaries({
@@ -63,15 +115,15 @@ export function selectReducer(state, action) {
 				endRangeRow,
 				endRangeColumn,
 			});
-			// const totalCellSelectionRanges = state.cellSelectionRanges.concat(currentCellSelectionRange);
-			// const uniqueRowIDs = generateUniqueRowIDs(totalCellSelectionRanges, state.rows);
-			// const uniqueColumnIDs = generateUniqueColumnIDs(totalCellSelectionRanges, state.columns);
+			const totalCellSelectionRanges = state.cellSelectionRanges.concat(currentCellSelectionRange);
+			const uniqueRowIDs = generateUniqueRowIDs(totalCellSelectionRanges, rows);
+			const uniqueColumnIDs = generateUniqueColumnIDs(totalCellSelectionRanges, columns);
 			return state.currentCellSelectionRange
 				? {
 						...state,
 						currentCellSelectionRange,
-						// uniqueRowIDs,
-						// uniqueColumnIDs,
+						uniqueRowIDs,
+						uniqueColumnIDs,
 					}
 				: state;
 		}
@@ -114,16 +166,16 @@ export function selectReducer(state, action) {
 				top: rowIndex,
 				left: 1,
 				bottom: rowIndex,
-				right: action.columns.length,
+				right: columns.length,
 			};
 			return {
 				...state,
 				activeCell: null,
 				currentCellSelectionRange: allCellsInRow,
 				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
-				lastSelection: { column: action.columns.length, row: rowIndex },
+				lastSelection: { column: columns.length, row: rowIndex },
 				uniqueRowIDs: [ rowID ],
-				uniqueColumnIDs: action.columns.map((col) => col.id),
+				uniqueColumnIDs: columns.map((col) => col.id),
 			};
 		}
 		// This is used when a rows array is supplied. Histogram bar clicks.
@@ -131,7 +183,7 @@ export function selectReducer(state, action) {
 			const { cellSelectionRanges = [] } = state;
 			const columnIndexOffset = 1;
 			const computedColumnIndex = column + columnIndexOffset;
-			const rowIDs = rows.map((row) => state.rows[row].id);
+			const rowIDs = rows.map((row) => rows[row].id);
 			const newSelectedCells = rows.map((rowIndex) => ({
 				top: rowIndex,
 				bottom: rowIndex,
@@ -144,23 +196,23 @@ export function selectReducer(state, action) {
 				activeCell: null,
 				cellSelectionRanges: newCellSelectionRanges,
 				uniqueRowIDs: rowIDs,
-				uniqueColumnIDs: [ state.columns[column].id ],
+				uniqueColumnIDs: [ columns[column].id ],
 			};
 		}
 		case SELECT_ALL_CELLS: {
 			const allCells = {
 				top: 0,
 				left: 1,
-				bottom: action.rows.length - 1,
-				right: action.columns.length,
+				bottom: rows.length - 1,
+				right: columns.length,
 			};
 			return {
 				...state,
 				activeCell: null,
 				currentCellSelectionRange: null,
 				cellSelectionRanges: [ allCells ],
-				uniqueColumnIDs: action.columns.map((column) => column.id),
-				uniqueRowIDs: action.rows.map((row) => row.id),
+				uniqueColumnIDs: columns.map((column) => column.id),
+				uniqueRowIDs: rows.map((row) => row.id),
 			};
 		}
 		case SELECT_COLUMN: {
@@ -181,11 +233,14 @@ export function selectReducer(state, action) {
 				uniqueRowIDs: rows.map((row) => row.id),
 			};
 		}
+		case SET_SELECTED_COLUMN: {
+			return { ...state, selectedColumns };
+		}
 		// EVENT: Selected Cell translated
 		case TRANSLATE_SELECTED_CELL: {
 			const newCellSelectionRanges = [ { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex } ];
-			const rowID = state.rows[rowIndex].id;
-			const columnID = state.columns[columnIndex - 1].id;
+			const rowID = rows[rowIndex].id;
+			const columnID = columns[columnIndex - 1].id;
 			return {
 				...state,
 				cellSelectionRanges: newCellSelectionRanges,

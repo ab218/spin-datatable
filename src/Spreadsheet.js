@@ -1,20 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { pingCloudFunctions } from './analysis-output/Analysis';
 import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
-	useSelectState,
-	useRowsDispatch,
-	useRowsState,
 	useSelectDispatch,
+	useRowsState,
+	useRowsDispatch,
+	useSelectState,
 } from './context/SpreadsheetProvider';
-import CellRenderer from './CellRenderer';
 import ContextMenu from './ContextMenu';
-import AnalysisMenu from './AnalysisMenu';
-import Sidebar from './Sidebar';
-import RowHeaders from './RowHeaders';
-import HeaderRenderer from './HeaderRenderer';
 import Analysis from './analysis-output/Analysis';
 import BarChartModal from './Modals/ModalBarChart';
 import ColumnTypeModal from './Modals/ModalColumnType';
@@ -22,15 +17,8 @@ import DistributionModal from './Modals/ModalDistribution';
 import FilterModal from './Modals/ModalFilter';
 import AnalysisModal from './Modals/ModalFitYX';
 // import TestCounter from './TestCounter';
-import {
-	Column,
-	Table,
-	AutoSizer,
-	// WindowScroller,
-} from 'react-virtualized';
-import { ACTIVATE_CELL, NUMBER } from './constants';
-
-const blankColumnWidth = 100;
+import { ACTIVATE_CELL, NUMBER, FORMULA } from './constants';
+import TableView from './TableView';
 
 export const checkIfValidNumber = (str) => {
 	if (str.match(/^-?\d*\.?\d*$/)) {
@@ -40,8 +28,7 @@ export const checkIfValidNumber = (str) => {
 };
 
 export default function Spreadsheet() {
-	console.log('spreadsheet');
-	const { rows, columns } = useRowsState();
+	// console.log('spreadsheet');
 	const {
 		analysisModalOpen,
 		barChartModalOpen,
@@ -49,12 +36,12 @@ export default function Spreadsheet() {
 		filterModalOpen,
 		selectedColumn,
 	} = useSpreadsheetState();
+	const { rows, columns } = useRowsState();
+	const { cellSelectionRanges, activeCell } = useSelectState();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const [ widths, setWidths ] = useState({});
+	const dispatchRowsAction = useRowsDispatch();
 	const [ popup, setPopup ] = useState([]);
-	const [ visibleColumns, setVisibleColumns ] = useState(1);
-	const [ visibleRows, setVisibleRows ] = useState(1);
 
 	useEffect(() => {
 		// Activate cell top leftmost cell on first load
@@ -65,181 +52,120 @@ export default function Spreadsheet() {
 	}, []);
 
 	// When a new column is created, set the default width to 100px;
-	useEffect(
-		() => {
-			columns.forEach((col) => {
-				setWidths((prevWidths) => {
-					return prevWidths[col.id] ? prevWidths : { ...prevWidths, [col.id]: 100 };
-				});
-			});
-		},
-		[ columns ],
-	);
 
-	const resizeColumn = ({ dataKey, deltaX }) =>
-		setWidths((prevWidths) => {
-			// for empty columns
-			if (!dataKey) {
-				return prevWidths;
-			}
-			return {
-				...prevWidths,
-				// don't allow columns to shrink below 50px
-				[dataKey]: Math.max(prevWidths[dataKey] + deltaX, 50),
-			};
-		});
-
-	// async function paste() {
-	// 	// safari doesn't have navigator.clipboard
-	// 	if (!navigator.clipboard) {
-	// 		console.log('navigator.clipboard not supported by safari/edge');
-	// 		return;
-	// 	}
-	// 	// TODO: Fix this bug properly
-	// 	if (!cellSelectionRanges[0]) {
-	// 		console.log('no cell selection range');
-	// 		return;
-	// 	}
-	// 	const copiedValues = await navigator.clipboard.readText();
-	// 	const copiedValuesStringified = JSON.stringify(copiedValues).replace(/(?:\\[rn]|[\r\n])/g, '\\n');
-	// 	const copiedValuesRows = JSON.parse(copiedValuesStringified).split('\n');
-	// 	const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
-	// 	const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
-	// 	const { top, left } = cellSelectionRanges[0];
-	// 	const { height, width } = copiedValues2dArrayDimensions;
-	// 	const numberOfColumnsRequired = left - 1 + width - columns.length;
-	// 	const numberOfRowsRequired = top + height - rows.length;
-	// 	if (numberOfRowsRequired > 0) {
-	// 		createNewRows(numberOfRowsRequired);
-	// 	}
-	// 	if (numberOfColumnsRequired > 0) {
-	// 		createNewColumns(numberOfColumnsRequired);
-	// 	}
-	// 	dispatchSpreadsheetAction({
-	// 		type: 'PASTE_VALUES',
-	// 		copiedValues2dArray,
-	// 		top,
-	// 		left,
-	// 		height,
-	// 		width,
-	// 	});
-	// }
-
-	useEffect(
-		() => {
-			setVisibleColumns(Math.max(columns.length + 3, Math.ceil(window.innerWidth / 100)));
-			setVisibleRows(Math.max(rows.length + 5, Math.ceil(window.innerHeight / 30)));
-		},
-		[ window.innerWidth, window.innerHeight, rows, columns ],
-	);
-
-	const columnsDiff = visibleColumns - columns.length;
-
-	function sumOfColumnWidths(columns) {
-		let total = 0;
-		for (let i = 0; i < columns.length; i++) {
-			total += columns[i];
+	async function paste() {
+		// safari doesn't have navigator.clipboard
+		if (!navigator.clipboard) {
+			console.log('navigator.clipboard not supported by safari/edge');
+			return;
 		}
-		return total;
+		// TODO: Fix this bug properly
+		if (!cellSelectionRanges[0]) {
+			console.log('no cell selection range');
+			return;
+		}
+		const copiedValues = await navigator.clipboard.readText();
+		const copiedValuesStringified = JSON.stringify(copiedValues).replace(/(?:\\[rn]|[\r\n])/g, '\\n');
+		const copiedValuesRows = JSON.parse(copiedValuesStringified).split('\n');
+		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
+		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
+		const { top, left } = cellSelectionRanges[0];
+		const { height, width } = copiedValues2dArrayDimensions;
+		const numberOfColumnsRequired = left - 1 + width - columns.length;
+		const numberOfRowsRequired = top + height - rows.length;
+		if (numberOfRowsRequired > 0) {
+			dispatchRowsAction({ type: 'CREATE_ROWS', rowCount: numberOfRowsRequired });
+		}
+		if (numberOfColumnsRequired > 0) {
+			dispatchRowsAction({ type: 'CREATE_COLUMNS', columnCount: numberOfColumnsRequired });
+		}
+		dispatchRowsAction({
+			type: 'PASTE_VALUES',
+			copiedValues2dArray,
+			top,
+			left,
+			height,
+			width,
+		});
 	}
 
-	// useEffect(() => {
-	// 	function onKeyDown(event) {
-	// 		if (barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
-	// 			return;
-	// 		}
-	// 		if (!activeCell && cellSelectionRanges.length === 0) {
-	// 			return;
-	// 		}
-	// 		const columnIndex = activeCell ? activeCell.column - 1 : cellSelectionRanges[0].left - 1;
-	// 		const rowIndex = activeCell ? activeCell.row : cellSelectionRanges[0].top;
+	useEffect(() => {
+		function onKeyDown(event) {
+			if (barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
+				return;
+			}
+			if (!activeCell && cellSelectionRanges.length === 0) {
+				return;
+			}
+			const columnIndex = activeCell ? activeCell.column - 1 : cellSelectionRanges[0].left - 1;
+			const rowIndex = activeCell ? activeCell.row : cellSelectionRanges[0].top;
 
-	// 		if (event.metaKey || event.ctrlKey) {
-	// 			// prevent cell input if holding ctrl/meta
-	// 			if (event.key === 'c') {
-	// 				dispatchSpreadsheetAction({ type: 'COPY_VALUES' });
-	// 				return;
-	// 			} else if (event.key === 'a') {
-	// 				// else if (event.key === 'v') {
-	// 				// 	paste();
-	// 				// 	return;
-	// 				// }
-	// 				event.preventDefault();
-	// 				dispatchSelectAction({ type: 'SELECT_ALL_CELLS', rows, columns });
-	// 				return;
-	// 			}
-	// 			return;
-	// 		}
-	// 		if (event.key.length === 1) {
-	// 			if (rowIndex + 1 > rows.length) {
-	// 				dispatchSpreadsheetAction({ type: 'CREATE_ROWS', rowCount: rows });
-	// 			}
-	// 			if (columns[columnIndex].type !== FORMULA) {
-	// 				dispatchSelectAction({
-	// 					type: 'ACTIVATE_CELL',
-	// 					row: rowIndex,
-	// 					column: columnIndex + 1,
-	// 					newInputCellValue: event.key,
-	// 				});
-	// 			}
-	// 		} else {
-	// 			switch (event.key) {
-	// 				case 'Backspace':
-	// 					dispatchSpreadsheetAction({ type: 'DELETE_VALUES' });
-	// 					break;
-	// 				case 'Escape':
-	// 					dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
-	// 					break;
-	// 				case 'ArrowDown':
-	// 				case 'ArrowUp':
-	// 				case 'ArrowLeft':
-	// 				case 'ArrowRight':
-	// 					event.preventDefault();
-	// 					const { row, column } = cursorKeyToRowColMapper[event.key](
-	// 						rowIndex,
-	// 						columnIndex + 1,
-	// 						rows.length,
-	// 						columns.length,
-	// 					);
-	// 					dispatchSelectAction({ type: 'TRANSLATE_SELECTED_CELL', rowIndex: row, columnIndex: column });
-	// 					break;
-	// 				default:
-	// 					break;
-	// 			}
-	// 		}
-	// 	}
+			if (event.metaKey || event.ctrlKey) {
+				// prevent cell input if holding ctrl/meta
+				if (event.key === 'c') {
+					dispatchRowsAction({ type: 'COPY_VALUES', cellSelectionRanges });
+					return;
+				} else if (event.key === 'v') {
+					paste();
+					return;
+				} else if (event.key === 'a') {
+					event.preventDefault();
+					dispatchSelectAction({ type: 'SELECT_ALL_CELLS', rows, columns });
+					return;
+				}
+				return;
+			}
+			if (event.key.length === 1) {
+				if (rowIndex + 1 > rows.length) {
+					dispatchRowsAction({ type: 'CREATE_ROWS', rowCount: rows });
+				}
+				if (columns[columnIndex].type !== FORMULA) {
+					dispatchSelectAction({
+						type: 'ACTIVATE_CELL',
+						row: rowIndex,
+						column: columnIndex + 1,
+						newInputCellValue: event.key,
+					});
+				}
+			} else {
+				switch (event.key) {
+					case 'Backspace':
+						dispatchRowsAction({ type: 'DELETE_VALUES', cellSelectionRanges });
+						break;
+					case 'Escape':
+						dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
+						break;
+					case 'ArrowDown':
+					case 'ArrowUp':
+					case 'ArrowLeft':
+					case 'ArrowRight':
+						event.preventDefault();
+						const { row, column } = cursorKeyToRowColMapper[event.key](
+							rowIndex,
+							columnIndex + 1,
+							rows.length,
+							columns.length,
+						);
+						dispatchSelectAction({
+							type: 'TRANSLATE_SELECTED_CELL',
+							rowIndex: row,
+							columnIndex: column,
+							rows,
+							columns,
+						});
+						break;
+					default:
+						break;
+				}
+			}
+		}
 
-	// 	document.addEventListener('keydown', onKeyDown);
-	// 	return () => {
-	// 		console.log('detach');
-	// 		document.removeEventListener('keydown', onKeyDown);
-	// 	};
-	// });
-
-	const emptyRow = {};
-
-	const cellRendererCallback = useCallback((column) => (props) => {
-		// rowData = rowID, dataKey = columnID
-		const { dataKey: columnID, rowData } = props;
-		const rowID = rowData.id;
-		return <CellRenderer {...props} column={column} columnID={columnID} rowsLength={rows.length} rowID={rowID} />;
+		document.addEventListener('keydown', onKeyDown);
+		return () => {
+			// console.log('detach');
+			document.removeEventListener('keydown', onKeyDown);
+		};
 	});
-
-	const rowHeaderCellRendererCallback = useCallback((props) => {
-		return <RowHeaders {...props} />;
-	});
-
-	const headerRendererCallback = useCallback((column, columnIndex) => (props) => (
-		<HeaderRenderer {...props} columnIndex={columnIndex} resizeColumn={resizeColumn} units={column && column.units} />
-	));
-
-	const blankHeaderRendererCallback = useCallback((columnIndex) => (props) => (
-		<HeaderRenderer {...props} columnIndex={columnIndex} />
-	));
-
-	const analysisMenuCallback = useCallback(() => <AnalysisMenu />);
-
-	const rowGetterCallback = useCallback(({ index }) => rows[index] || emptyRow);
 
 	return (
 		// Height 100% necessary for autosizer to work
@@ -253,107 +179,22 @@ export default function Spreadsheet() {
 			{distributionModalOpen && <DistributionModal setPopup={setPopup} />}
 			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
-			{widths && (
-				<div
-					style={{ height: '100%', display: 'flex' }}
-					// onKeyDown={onKeyDown}
-					onMouseDown={(e) => {
-						e.preventDefault();
-						return dispatchSpreadsheetAction({ type: 'CLOSE_CONTEXT_MENU' });
-					}}
-					onMouseUp={(e) => {
-						e.preventDefault();
-						return dispatchSelectAction({ type: 'ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS' });
-					}}
-				>
-					{/* <TestCounter /> */}
-					<Sidebar />
-					{/* <WindowScroller> */}
-					<AutoSizer>
-						{({ height }) => (
-							<Table
-								overscanRowCount={0}
-								width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
-								height={height}
-								headerHeight={25}
-								rowHeight={30}
-								rowCount={visibleRows}
-								rowGetter={rowGetterCallback}
-								rowStyle={{ alignItems: 'stretch' }}
-							>
-								<Column
-									width={100}
-									label={''}
-									dataKey={'rowHeaderColumn'}
-									headerRenderer={analysisMenuCallback}
-									cellRenderer={rowHeaderCellRendererCallback}
-									style={{ margin: 0 }}
-								/>
-								{renderColumns(columns, widths, cellRendererCallback, headerRendererCallback)}
-								{visibleColumns &&
-									renderBlankColumns(
-										visibleColumns,
-										columns,
-										blankColumnWidth,
-										cellRendererCallback,
-										blankHeaderRendererCallback,
-									)}
-							</Table>
-						)}
-					</AutoSizer>
-					{/* </WindowScroller> */}
-				</div>
-			)}
+			<div
+				style={{ height: '100%', display: 'flex' }}
+				// onKeyDown={onKeyDown}
+				onMouseDown={(e) => {
+					e.preventDefault();
+					return dispatchSpreadsheetAction({ type: 'CLOSE_CONTEXT_MENU' });
+				}}
+				onMouseUp={(e) => {
+					e.preventDefault();
+					return dispatchSelectAction({ type: 'ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS' });
+				}}
+			>
+				<TableView />
+			</div>
 		</div>
 	);
-}
-
-function renderColumns(columns, widths, cellRendererCallback, headerRendererCallback) {
-	return columns.map((column, columnIndex) => (
-		<Column
-			key={columnIndex}
-			cellRenderer={cellRendererCallback(column)}
-			columnIndex={columnIndex}
-			dataKey={(column && column.id) || ''}
-			headerRenderer={headerRendererCallback(column, columnIndex)}
-			label={(column && column.label) || ''}
-			width={(column && widths[column.id]) || 100}
-			style={{
-				border: '1px solid #ddd',
-				borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
-				margin: 0,
-			}}
-		/>
-	));
-}
-
-function renderBlankColumns(
-	totalColumnCount,
-	columns,
-	blankColumnWidth,
-	cellRendererCallback,
-	blankHeaderRendererCallback,
-) {
-	const columnContainer = [];
-	for (let columnIndex = columns.length - 1; columnIndex < totalColumnCount; columnIndex++) {
-		columnContainer.push(
-			<Column
-				key={columnIndex}
-				cellRenderer={cellRendererCallback(null)}
-				columnIndex={columnIndex}
-				dataKey={''}
-				headerRenderer={blankHeaderRendererCallback(columnIndex)}
-				label={''}
-				width={blankColumnWidth}
-				style={{
-					border: '1px solid #ddd',
-					borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
-					margin: 0,
-				}}
-			/>,
-		);
-	}
-	return columnContainer;
 }
 
 export const cursorKeyToRowColMapper = {

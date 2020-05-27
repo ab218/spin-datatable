@@ -27,8 +27,8 @@ export default function AnalysisModal({ setPopup }) {
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
 	const [ analysisType, setAnalysisType ] = useState(null);
-	const { excludedRows, analysisModalOpen } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
+	const { analysisModalOpen } = useSpreadsheetState();
+	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {

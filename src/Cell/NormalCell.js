@@ -90,5 +90,14 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 		);
 	}
 
-	return <NewNormalCell cellValue={cellValue} columnIndex={columnIndex} column={column} rowIndex={rowIndex} />;
+	return (
+		<NewNormalCell
+			rows={rows}
+			columns={columns}
+			cellValue={cellValue}
+			columnIndex={columnIndex}
+			column={column}
+			rowIndex={rowIndex}
+		/>
+	);
 });

@@ -2,12 +2,12 @@
 import React from 'react';
 import { Divider, Layout } from 'antd';
 import { SELECT_COLUMN } from './constants';
-import { useSpreadsheetState, useSelectDispatch, useRowsState } from './context/SpreadsheetProvider';
+import { useSelectState, useSelectDispatch, useRowsState } from './context/SpreadsheetProvider';
 import { createModelingTypeIcon } from './Modals/ModalShared';
 
 export default function Sidebar() {
-	const { excludedRows, uniqueColumnIDs, uniqueRowIDs } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
+	const { uniqueColumnIDs, uniqueRowIDs } = useSelectState();
+	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
 	return (
 		<Layout.Sider width={'20em'} style={{ textAlign: 'left' }} theme={'light'}>

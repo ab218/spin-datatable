@@ -3,7 +3,7 @@ import {
 	useSpreadsheetDispatch,
 	useSelectDispatch,
 	// useRowsDispatch,
-	// useRowsState,
+	useRowsState,
 } from '../context/SpreadsheetProvider';
 import {
 	ACTIVATE_CELL,
@@ -20,62 +20,15 @@ import {
 // import { cursorKeyToRowColMapper } from '../Spreadsheet';
 
 export default React.memo(function SelectedCell({ column, columnIndex, columnID, rowIndex, cellValue }) {
-	// console.log('selected');
+	console.log('selected');
 	// const dispatchRowsAction = useRowsDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	// const { rows, columns } = useRowsState();
+	const { rows, columns } = useRowsState();
 
 	function changeActiveCell(row, column, selectionActive, columnID) {
 		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
 	}
-	// const dispatchRowsAction = useRowsDispatch();
-
-	// function createNewRows(rowCount) {
-	// 	dispatchRowsAction({ type: CREATE_ROWS, rowCount });
-	// }
-
-	// const onKeyDown = (event) => {
-	// 	event.preventDefault();
-	// 	// if the key pressed is not a non-character key (arrow key etc)
-	// 	if (event.key.length === 1) {
-	// 		// if (rowIndex + 1 > rows.length) {
-	// 		// 	createNewRows(rows);
-	// 		// }
-	// 		if (columns[columnIndex].type !== FORMULA) {
-	// 			dispatchSelectAction({
-	// 				type: ACTIVATE_CELL,
-	// 				row: rowIndex,
-	// 				column: columnIndex + 1,
-	// 				newInputCellValue: event.key,
-	// 			});
-	// 		}
-	// 	} else {
-	// 		switch (event.key) {
-	// 			case 'Backspace':
-	// 				dispatchRowsAction({ type: 'DELETE_VALUES' });
-	// 				break;
-	// 			case 'Escape':
-	// 				dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
-	// 				break;
-	// 			case 'ArrowDown':
-	// 			case 'ArrowUp':
-	// 			case 'ArrowLeft':
-	// 			case 'ArrowRight':
-	// 				event.preventDefault();
-	// 				const { row, column } = cursorKeyToRowColMapper[event.key](
-	// 					rowIndex,
-	// 					columnIndex + 1,
-	// 					rows.length,
-	// 					columns.length,
-	// 				);
-	// 				dispatchSelectAction({ type: 'TRANSLATE_SELECTED_CELL', rowIndex: row, columnIndex: column });
-	// 				break;
-	// 			default:
-	// 				break;
-	// 		}
-	// 	}
-	// };
 
 	function handleContextMenu(e) {
 		e.preventDefault();
@@ -102,6 +55,8 @@ export default React.memo(function SelectedCell({ column, columnIndex, columnID,
 				type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
 				endRangeRow: rowIndex,
 				endRangeColumn: columnIndex,
+				rows,
+				columns,
 			});
 		}
 	}

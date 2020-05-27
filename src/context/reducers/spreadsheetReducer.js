@@ -1,29 +1,15 @@
-import {
-	selectRowAndColumnIDs,
-	getCol,
-	generateUniqueRowIDs,
-	filterRowsByColumnRange,
-	filterRowsByString,
-	returnIntersectionOrNonEmptyArray,
-} from '../helpers';
+import { getCol } from '../helpers';
 
 import {
 	CLOSE_CONTEXT_MENU,
 	CLOSE_COLUMN_TYPE_MODAL,
-	COPY_VALUES,
-	DELETE_FILTER,
-	EXCLUDE_ROWS,
-	FILTER_COLUMN,
 	OPEN_CONTEXT_MENU,
-	SET_SELECTED_COLUMN,
-	SET_FILTERS,
 	TOGGLE_ANALYSIS_MODAL,
 	TOGGLE_BAR_CHART_MODAL,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	TOGGLE_DISTRIBUTION_MODAL,
 	TOGGLE_FILTER_MODAL,
 	TOGGLE_LAYOUT,
-	UNEXCLUDE_ROWS,
 } from '../../constants';
 
 export function spreadsheetReducer(state, action) {
@@ -35,35 +21,17 @@ export function spreadsheetReducer(state, action) {
 		colName,
 		column,
 		columnTypeModalOpen,
-		// copiedValues2dArray,
 		distributionModalOpen,
-		filters,
 		filterModalOpen,
 		layout,
-		numberFilters,
 		rowIndex,
-		selectedColumns,
-		stringFilter,
 	} = action;
 	// const { type, ...event } = action;
 	const { type } = action;
 	// state.eventBus.fire(type, event);
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
+
 	switch (type) {
-		case EXCLUDE_ROWS: {
-			const { cellSelectionRanges, excludedRows, rows } = state;
-			return {
-				...state,
-				excludedRows: [ ...new Set(excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows))) ],
-			};
-		}
-		case UNEXCLUDE_ROWS: {
-			const { cellSelectionRanges, excludedRows, rows } = state;
-			return {
-				...state,
-				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
-			};
-		}
 		// EVENT: Change layout
 		case TOGGLE_LAYOUT: {
 			return { ...state, layout };
@@ -146,20 +114,17 @@ export function spreadsheetReducer(state, action) {
 		}
 		// EVENT: Analysis Modal opened/closed
 		case TOGGLE_ANALYSIS_MODAL: {
-			return { ...state, analysisModalOpen, activeCell: null };
+			return { ...state, analysisModalOpen };
 		}
 		case TOGGLE_BAR_CHART_MODAL: {
-			return { ...state, barChartModalOpen, activeCell: null };
+			return { ...state, barChartModalOpen };
 		}
 		// EVENT: Column Type Modal opened/closed
 		case TOGGLE_COLUMN_TYPE_MODAL: {
 			return {
 				...state,
-				activeCell: null,
 				columnTypeModalOpen,
 				selectedColumn: colName ? getCol(state.columns, colName) : column,
-				cellSelectionRanges: [],
-				currentCellSelectionRange: [],
 				modalError: null,
 			};
 		}
@@ -176,9 +141,6 @@ export function spreadsheetReducer(state, action) {
 			return {
 				...state,
 				distributionModalOpen,
-				activeCell: null,
-				cellSelectionRanges: [],
-				currentCellSelectionRange: [],
 			};
 		}
 		// EVENT: Filter Modal opened/closed
@@ -186,50 +148,7 @@ export function spreadsheetReducer(state, action) {
 			return {
 				...state,
 				filterModalOpen,
-				selectedColumn: null,
-				activeCell: null,
-				selectedColumns: [],
 				filters: { numberFilters: [], stringFilters: [] },
-			};
-		}
-		case SET_SELECTED_COLUMN: {
-			return { ...state, selectedColumns };
-		}
-		case SET_FILTERS: {
-			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
-			return {
-				...state,
-				selectedColumns: selectedColumns || state.selectedColumns,
-				filters: {
-					stringFilters: stringFilterCopy,
-					numberFilters: numberFilters || state.filters.numberFilters,
-				},
-			};
-		}
-		case DELETE_FILTER: {
-			return { ...state, filters, selectedColumns };
-		}
-		case FILTER_COLUMN: {
-			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
-			const filteredRowsByString = filterRowsByString(state.rows, state.filters);
-			const filteredRows = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
-			const filteredRowIDs = filteredRows.map((row) => row.id);
-			const selectedRowIndexes = filteredRows.map((row) => state.rows.findIndex((stateRow) => stateRow.id === row.id));
-			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
-				return {
-					top: rowIndex,
-					left: 1,
-					bottom: rowIndex,
-					right: state.columns.length,
-				};
-			});
-			return {
-				...state,
-				activeCell: null,
-				currentCellSelectionRange: selectedRowObjects,
-				cellSelectionRanges: selectedRowObjects,
-				uniqueRowIDs: filteredRowIDs,
-				uniqueColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
 		default: {

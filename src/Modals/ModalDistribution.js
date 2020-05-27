@@ -9,8 +9,8 @@ import ErrorMessage from './ErrorMessage';
 import { createRandomID } from '../context/helpers';
 
 export default function DistributionModal({ setPopup }) {
-	const { distributionModalOpen, excludedRows } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
+	const { distributionModalOpen } = useSpreadsheetState();
+	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ error, setError ] = useState('');
 	const [ numberOfBins, setNumberOfBins ] = useState(10);

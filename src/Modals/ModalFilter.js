@@ -8,6 +8,7 @@ import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
 	useSelectDispatch,
+	useSelectState,
 	useRowsState,
 } from '../context/SpreadsheetProvider';
 import {
@@ -24,8 +25,9 @@ export default function AntModal() {
 
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
-	const { filterModalOpen, filters, selectedColumns } = useSpreadsheetState();
-	const { columns } = useRowsState();
+	const { filterModalOpen } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
+	const { filters, selectedColumns } = useSelectState();
 
 	function handleClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
@@ -45,8 +47,8 @@ export default function AntModal() {
 			return filtersCopy;
 		}
 		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnID);
-		dispatchSpreadsheetAction({ type: DELETE_FILTER, filters: deleteFilter(), selectedColumns: filteredColumns });
-		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
+		dispatchSelectAction({ type: DELETE_FILTER, filters: deleteFilter(), selectedColumns: filteredColumns });
+		dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
 	}
 
 	return (
@@ -86,7 +88,7 @@ export default function AntModal() {
 }
 
 function FilterColumnSlider({ column, removeColumn }) {
-	const { selectedColumns } = useSpreadsheetState();
+	const { selectedColumns } = useSelectState();
 	const { id, colMin, colMax, label, min, max } = column;
 
 	return (
@@ -107,14 +109,14 @@ function FilterColumnSlider({ column, removeColumn }) {
 }
 
 function FilterColumnPicker({ column, removeColumn }) {
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { rows } = useSpreadsheetState();
+	const dispatchSelectAction = useSelectDispatch();
+	const { rows, columns } = useRowsState();
 	const [ checkedText, setCheckedText ] = useState();
 
 	useEffect(
 		() => {
-			dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: checkedText });
-			dispatchSpreadsheetAction({ type: FILTER_COLUMN });
+			dispatchSelectAction({ type: SET_FILTERS, stringFilter: checkedText });
+			dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[ checkedText ],

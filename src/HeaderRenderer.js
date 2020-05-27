@@ -6,6 +6,7 @@ import {
 	useSelectDispatch,
 	useRowsState,
 	useRowsDispatch,
+	useSelectState,
 } from './context/SpreadsheetProvider';
 import Draggable from 'react-draggable';
 import {
@@ -18,7 +19,8 @@ import {
 } from './constants';
 
 export default function HeaderRenderer({ dataKey, label, units, columnIndex, resizeColumn }) {
-	const { contextMenuOpen, uniqueColumnIDs } = useSpreadsheetState();
+	const { contextMenuOpen } = useSpreadsheetState();
+	const { uniqueColumnIDs } = useSelectState();
 	const { columns, rows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();

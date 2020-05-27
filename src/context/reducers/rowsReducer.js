@@ -6,6 +6,7 @@ import {
 	updateRow,
 	findCyclicDependencies,
 	updateRows,
+	generateUniqueRowIDs,
 } from '../helpers';
 
 import {
@@ -15,6 +16,8 @@ import {
 	DELETE_ROWS,
 	DELETE_COLUMN,
 	DELETE_VALUES,
+	EXCLUDE_ROWS,
+	UNEXCLUDE_ROWS,
 	PASTE_VALUES,
 	SAVE_VALUES_TO_COLUMN,
 	SORT_COLUMN,
@@ -127,6 +130,7 @@ export function rowsReducer(state, action) {
 			return { ...state, rows: state.rows.concat(newRows) };
 		}
 		case DELETE_COLUMN: {
+			// BUG: If deleting all columns, row headers remain
 			const { rows } = state;
 			const column = getCol(state.columns, colName);
 			const columnID = column.id;
@@ -161,10 +165,10 @@ export function rowsReducer(state, action) {
 			return {
 				...state,
 				rows: filteredRows,
-				// currentCellSelectionRange: null,
-				// cellSelectionRanges: [],
-				// selectedRowIDs: [],
-				// activeCell: null,
+				currentCellSelectionRange: null,
+				cellSelectionRanges: [],
+				selectedRowIDs: [],
+				activeCell: null,
 			};
 		}
 		// EVENT: Paste
@@ -258,6 +262,22 @@ export function rowsReducer(state, action) {
 				});
 			}, state.rows);
 			return { ...state, rows: newRows };
+		}
+		case EXCLUDE_ROWS: {
+			const { excludedRows, rows } = state;
+			const { cellSelectionRanges } = action;
+			return {
+				...state,
+				excludedRows: [ ...new Set(excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows))) ],
+			};
+		}
+		case UNEXCLUDE_ROWS: {
+			const { excludedRows, rows } = state;
+			const { cellSelectionRanges } = action;
+			return {
+				...state,
+				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
+			};
 		}
 		case SAVE_VALUES_TO_COLUMN: {
 			let valuesColumnsCounter = state.valuesColumnsCounter + 1;

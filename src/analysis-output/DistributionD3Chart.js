@@ -38,8 +38,7 @@ function maxBinLength(arr) {
 export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted, min, max, q1, q3, median }) {
 	const d3Container = useRef(null);
 
-	const { excludedRows } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
+	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
 
 	function targetClickEvent(thisBar, values, col) {

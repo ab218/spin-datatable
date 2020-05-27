@@ -14,8 +14,8 @@ export default function AnalysisModal({ setPopup }) {
 	const [ groupingColData, setGroupingColData ] = useState([]);
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
-	const { excludedRows, barChartModalOpen } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
+	const { barChartModalOpen } = useSpreadsheetState();
+	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {
