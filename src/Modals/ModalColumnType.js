@@ -5,8 +5,14 @@ import { Button, Icon, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
 import Dropdown from './Dropdown';
 import ErrorMessage from './ErrorMessage';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
 import {
+	useSpreadsheetState,
+	useSpreadsheetDispatch,
+	useRowsDispatch,
+	useRowsState,
+} from '../context/SpreadsheetProvider';
+import {
+	CLOSE_COLUMN_TYPE_MODAL,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	UPDATE_COLUMN,
 	NUMBER,
@@ -18,8 +24,10 @@ import {
 } from '../constants';
 
 export default function AntModal({ selectedColumn }) {
+	const dispatchRowsAction = useRowsDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { columns, columnTypeModalOpen, rows } = useSpreadsheetState();
+	const { columnTypeModalOpen } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
 	const { formula, description, label, modelingType, type, units } = selectedColumn;
 	const formulaFromState = formula && formula.expression;
 	const [ columnFormula, setColumnFormula ] = useState(swapIDsWithLabels(formulaFromState, columns) || '');
@@ -92,7 +100,7 @@ export default function AntModal({ selectedColumn }) {
 		if (columnFormula && formulaError) {
 			return setError('Invalid formula entered');
 		}
-		dispatchSpreadsheetAction({
+		dispatchRowsAction({
 			type: UPDATE_COLUMN,
 			updatedColumn: {
 				label: columnName,
@@ -103,6 +111,7 @@ export default function AntModal({ selectedColumn }) {
 				id: selectedColumn.id,
 			},
 		});
+		dispatchSpreadsheetAction({ type: CLOSE_COLUMN_TYPE_MODAL });
 	}
 
 	function formatInput(formula) {

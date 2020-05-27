@@ -1,5 +1,6 @@
 import React from 'react';
 import { STRING } from '../constants';
+import { cursorKeyToRowColMapper } from '../Spreadsheet';
 export default class ActiveCell extends React.PureComponent {
 	constructor(props) {
 		super(props);
@@ -10,6 +11,7 @@ export default class ActiveCell extends React.PureComponent {
 	}
 
 	componentWillUnmount() {
+		console.log('active');
 		const { columnIndex, rowIndex, updateCell } = this.props;
 		const { currentValue } = this.state;
 		// Don't update blank cell if nothing was changed
@@ -18,8 +20,29 @@ export default class ActiveCell extends React.PureComponent {
 		}
 	}
 
+	onKeyDown = (event, rows, rowIndex, columns, columnIndex) => {
+		switch (event.key) {
+			case 'ArrowDown':
+			case 'ArrowUp':
+			case 'Enter':
+			case 'Tab':
+				event.preventDefault();
+				const { row, column } = cursorKeyToRowColMapper[event.key](
+					rowIndex,
+					columnIndex,
+					rows.length,
+					columns.length,
+					event.shiftKey,
+				);
+				this.props.changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
+				break;
+			default:
+				break;
+		}
+	};
+
 	render() {
-		const { column, createNewRows, rows, rowIndex } = this.props;
+		const { column, columns, columnIndex, rows, rowIndex } = this.props;
 		return (
 			<div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => this.props.handleContextMenu(e)}>
 				<input
@@ -33,11 +56,9 @@ export default class ActiveCell extends React.PureComponent {
 						width: '100%',
 					}}
 					ref={this.input}
+					onKeyDown={(e) => this.onKeyDown(e, rows, rowIndex, columns, columnIndex)}
 					onChange={(e) => {
 						e.preventDefault();
-						if (rowIndex + 1 > rows.length) {
-							createNewRows(rowIndex + 1 - rows.length);
-						}
 						this.setState({ currentValue: e.target.value });
 					}}
 				/>

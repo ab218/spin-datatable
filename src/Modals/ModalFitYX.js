@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { useSpreadsheetState, useSpreadsheetDispatch, useRowsState } from '../context/SpreadsheetProvider';
 import { performLinearRegressionAnalysis, performOnewayAnalysis } from '../analysis-output/Analysis';
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { createRandomID } from '../SpreadsheetProvider';
+import { createRandomID } from '../context/helpers';
 import {
 	// REMOVE_SELECTED_CELLS,
 	// SELECT_CELLS,
@@ -27,7 +27,8 @@ export default function AnalysisModal({ setPopup }) {
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
 	const [ analysisType, setAnalysisType ] = useState(null);
-	const { excludedRows, analysisModalOpen, columns, rows } = useSpreadsheetState();
+	const { excludedRows, analysisModalOpen } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {

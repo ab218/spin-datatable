@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 import './analysis-window.css';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { useSpreadsheetState, useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
 
 // set the dimensions and margins of the graph
 const margin = { top: 20, right: 30, bottom: 40, left: 70 };
@@ -38,8 +38,9 @@ function maxBinLength(arr) {
 export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted, min, max, q1, q3, median }) {
 	const d3Container = useRef(null);
 
-	const { columns, rows, excludedRows } = useSpreadsheetState();
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const { excludedRows } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
+	const dispatchSelectAction = useSelectDispatch();
 
 	function targetClickEvent(thisBar, values, col) {
 		d3.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
@@ -63,7 +64,7 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 			.style('fill', clickedBarFill);
 		const selectedColumn = colObj;
 		const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
-		dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
+		dispatchSelectAction({ type: 'REMOVE_SELECTED_CELLS' });
 
 		const rowIndices = rows.reduce((acc, row, rowIndex) => {
 			// TODO Shouldn't be using Number here. won't work for string values
@@ -71,7 +72,7 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 				? acc.concat(rowIndex)
 				: acc;
 		}, []);
-		dispatchSpreadsheetAction({ type: 'SELECT_CELLS', rows: rowIndices, column: columnIndex });
+		dispatchSelectAction({ type: 'SELECT_CELLS', rows: rowIndices, column: columnIndex });
 	}
 
 	// Add axes

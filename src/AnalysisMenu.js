@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, Icon, Dropdown } from 'antd';
-import { useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetDispatch, useSelectDispatch } from './context/SpreadsheetProvider';
 import {
 	REMOVE_SELECTED_CELLS,
 	TOGGLE_ANALYSIS_MODAL,
@@ -12,13 +12,14 @@ import {
 export default function HamburgerMenu() {
 	const [ collapsed, setCollapsed ] = useState(false);
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const dispatchSelectAction = useSelectDispatch();
 
 	const menu = (
 		<Menu>
 			<Menu.Item
 				onClick={() => {
 					dispatchSpreadsheetAction({ type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: true });
-					dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 				}}
 			>
 				Distribution
@@ -26,7 +27,7 @@ export default function HamburgerMenu() {
 			<Menu.Item
 				onClick={() => {
 					dispatchSpreadsheetAction({ type: TOGGLE_ANALYSIS_MODAL, analysisModalOpen: true });
-					dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 				}}
 			>
 				Fit Y By X
@@ -37,7 +38,7 @@ export default function HamburgerMenu() {
 			<Menu.Item
 				onClick={() => {
 					dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: true, selectedColumns: [] });
-					dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 				}}
 			>
 				Bar Chart

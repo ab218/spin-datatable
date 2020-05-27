@@ -4,7 +4,12 @@ import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
 import { SelectColumn } from './ModalShared';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import {
+	useSpreadsheetState,
+	useSpreadsheetDispatch,
+	useSelectDispatch,
+	useRowsState,
+} from '../context/SpreadsheetProvider';
 import {
 	FILTER_COLUMN,
 	TOGGLE_FILTER_MODAL,
@@ -18,14 +23,16 @@ export default function AntModal() {
 	const [ clickedColumn, setClickedColumn ] = useState(null);
 
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { filterModalOpen, columns, filters, selectedColumns } = useSpreadsheetState();
+	const dispatchSelectAction = useSelectDispatch();
+	const { filterModalOpen, filters, selectedColumns } = useSpreadsheetState();
+	const { columns } = useRowsState();
 
 	function handleClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
 
 	function handleCancel() {
-		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
 

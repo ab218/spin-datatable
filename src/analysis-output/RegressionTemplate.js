@@ -2,7 +2,7 @@ import React from 'react';
 import './analysis-window.css';
 import { Dropdown, Menu } from 'antd';
 import { SAVE_VALUES_TO_COLUMN } from '../constants';
-import { useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { useRowsDispatch } from '../context/SpreadsheetProvider';
 
 const paramEstimates = (coeffs, xLabel, centered, xMean) => {
 	let temp = [];
@@ -136,13 +136,13 @@ export default function GenerateRegressionTemplate({
 }
 
 function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha }) {
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const dispatchRowsAction = useRowsDispatch();
 	const menu = (title, id) => (
 		<Menu>
 			<Menu.ItemGroup title={title}>
 				<Menu.Item
 					onClick={() =>
-						dispatchSpreadsheetAction({
+						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
 							values: polyDegree.stats.predicted,
 							xLabel,
@@ -153,7 +153,7 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha }) {
 				</Menu.Item>
 				<Menu.Item
 					onClick={() =>
-						dispatchSpreadsheetAction({
+						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
 							values: polyDegree.stats.residuals,
 							xLabel,
@@ -164,13 +164,13 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha }) {
 				</Menu.Item>
 				<Menu.Item
 					onClick={() => {
-						dispatchSpreadsheetAction({
+						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
 							values: polyDegree.ci[alpha].mean_ci_lower,
 							xLabel,
 							yLabel,
 						});
-						dispatchSpreadsheetAction({
+						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
 							values: polyDegree.ci[alpha].mean_ci_upper,
 							xLabel,
@@ -183,13 +183,13 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha }) {
 				</Menu.Item>
 				<Menu.Item
 					onClick={() => {
-						dispatchSpreadsheetAction({
+						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
 							values: polyDegree.ci[alpha].obs_ci_lower,
 							xLabel,
 							yLabel,
 						});
-						dispatchSpreadsheetAction({
+						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
 							values: polyDegree.ci[alpha].obs_ci_upper,
 							xLabel,

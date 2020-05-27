@@ -1,100 +1,94 @@
 import React from 'react';
-import { useSpreadsheetDispatch, useSpreadsheetState } from '../SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU, NUMBER, STRING } from '../constants';
-import { formatForNumberColumn } from '../Spreadsheet';
-import { Tooltip } from 'antd';
-import '../App.css';
+import {
+	useRowsState,
+	useRowsDispatch,
+	// useSpreadsheetDispatch,
+	useSpreadsheetState,
+	useSelectDispatch,
+	useSelectState,
+} from '../context/SpreadsheetProvider';
+import ActiveCell from './ActiveCell';
+import SelectedCell from './SelectedCell';
+import NewNormalCell from './NewNormalCell';
+// import BlankClickableCell from './BlankClickableCell';
+import {
+	ACTIVATE_CELL,
+	UPDATE_CELL,
+	FORMULA,
+	// CLOSE_CONTEXT_MENU,
+} from '../constants';
 
-export default function NormalCell({
-	cellValue,
-	columnIndex,
-	column,
-	columns,
-	columnID,
-	rowID,
-	modifyCellSelectionRange,
-	rowIndex,
-	selectCell,
-}) {
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { contextMenuOpen } = useSpreadsheetState();
+export default React.memo(function NormalCell({ cellValue, columnIndex, column, columnID, rowID, rowIndex }) {
+	// Normal cells rerender on every click.
+	// console.log('normal', columnIndex, rowIndex);
+	const dispatchSelectAction = useSelectDispatch();
+	const dispatchRowsAction = useRowsDispatch();
 
-	function onMouseDown(event) {
-		// prevent text from being highlighted on drag select cells
-		event.preventDefault();
-		if (contextMenuOpen) {
-			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
+	const { newInputCellValue } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
+	const { activeCell, cellSelectionRanges, currentCellSelectionRange } = useSelectState();
+
+	function updateCell(currentValue, rowIndex, columnIndex) {
+		// Don't allow formula column cells to be edited
+		const formulaColumns = columns.map((col) => (col.type === FORMULA ? columns.indexOf(col) : null));
+		if (!formulaColumns.includes(columnIndex - 1)) {
+			dispatchRowsAction({
+				type: UPDATE_CELL,
+				rowIndex,
+				columnIndex: columnIndex - 1,
+				cellValue: currentValue,
+			});
 		}
-		selectCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, rowID, columnID);
 	}
 
-	function onMouseEnter(event) {
-		if (typeof event.buttons === 'number' && event.buttons > 0) {
-			modifyCellSelectionRange(rowIndex, columnIndex, true);
-		}
+	function changeActiveCell(row, column, selectionActive, columnID) {
+		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
 	}
 
-	if (typeof cellValue === 'object') {
+	function isSelectedCell(rowIndex, columnIndex) {
+		function withinRange(value) {
+			const { top, right, bottom, left } = value;
+			if (columnIndex === null) {
+				return rowIndex >= top && rowIndex <= bottom;
+			} else if (rowIndex === null) {
+				return columnIndex >= left && columnIndex <= right;
+			} else {
+				return rowIndex >= top && rowIndex <= bottom && columnIndex >= left && columnIndex <= right;
+			}
+		}
+		const emptyArray = [];
+		return cellSelectionRanges.concat(currentCellSelectionRange || emptyArray).some(withinRange);
+	}
+
+	if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
 		return (
-			<Tooltip title={cellValue.errorMessage}>
-				<div
-					key={`row${rowIndex}col${columnIndex}`}
-					onMouseDown={onMouseDown}
-					onMouseEnter={onMouseEnter}
-					style={{
-						textAlign: column.type === STRING ? 'left' : 'right',
-						backgroundColor: 'pink',
-						height: '100%',
-						width: '100%',
-						lineHeight: 2,
-						padding: '0 5px',
-						overflow: 'hidden',
-						userSelect: 'none',
-					}}
-				>
-					{cellValue.error}
-				</div>
-			</Tooltip>
+			<ActiveCell
+				updateCell={updateCell}
+				column={column}
+				// handleContextMenu={handleContextMenu}
+				key={`row${rowIndex}col${columnIndex}`}
+				columnIndex={columnIndex}
+				columns={columns}
+				changeActiveCell={changeActiveCell}
+				rowIndex={rowIndex}
+				rows={rows}
+				value={newInputCellValue || cellValue}
+			/>
+		);
+	} else if (columnID && isSelectedCell(rowIndex, columnIndex)) {
+		return (
+			<SelectedCell
+				key={`Row${rowIndex}Col${columnIndex}`}
+				column={column}
+				columnID={columnID}
+				columnIndex={columnIndex}
+				rowID={rowID}
+				rowIndex={rowIndex}
+				cellValue={cellValue}
+				// modifyCellSelectionRange={modifyCellSelectionRange}
+			/>
 		);
 	}
 
-	// this will need fixing
-	return formatForNumberColumn(cellValue, columns.find((col) => col.id === columnID)) ? (
-		<Tooltip title={`Cell value is not a number`}>
-			<div
-				key={`row${rowIndex}col${columnIndex}`}
-				onMouseDown={onMouseDown}
-				onMouseEnter={onMouseEnter}
-				style={{
-					textAlign: column.type === STRING ? 'left' : 'right',
-					backgroundColor: 'pink',
-					height: '100%',
-					width: '100%',
-					lineHeight: 2,
-					padding: '0 5px',
-					overflow: 'hidden',
-					userSelect: 'none',
-				}}
-			>
-				{cellValue || (column.type === NUMBER && '\u2022')}
-			</div>
-		</Tooltip>
-	) : (
-		<div
-			style={{
-				textAlign: column.type === STRING ? 'left' : 'right',
-				height: '100%',
-				width: '100%',
-				lineHeight: 2,
-				padding: '0 5px',
-				overflow: 'hidden',
-				userSelect: 'none',
-			}}
-			key={`row${rowIndex}col${columnIndex}`}
-			onMouseDown={onMouseDown}
-			onMouseEnter={onMouseEnter}
-		>
-			{cellValue || (column.type === NUMBER && '\u2022')}
-		</div>
-	);
-}
+	return <NewNormalCell cellValue={cellValue} columnIndex={columnIndex} column={column} rowIndex={rowIndex} />;
+});

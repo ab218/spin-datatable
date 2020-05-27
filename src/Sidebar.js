@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
 import { Divider, Layout } from 'antd';
-import './App.css';
 import { SELECT_COLUMN } from './constants';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import { useSpreadsheetState, useSelectDispatch, useRowsState } from './context/SpreadsheetProvider';
 import { createModelingTypeIcon } from './Modals/ModalShared';
 
 export default function Sidebar() {
-	const { columns, excludedRows, rows, uniqueColumnIDs, uniqueRowIDs } = useSpreadsheetState();
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const { excludedRows, uniqueColumnIDs, uniqueRowIDs } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
+	const dispatchSelectAction = useSelectDispatch();
 	return (
 		<Layout.Sider width={'20em'} style={{ textAlign: 'left' }} theme={'light'}>
 			<table style={{ marginTop: '100px', marginLeft: '10px', width: '100%' }}>
@@ -20,8 +20,9 @@ export default function Sidebar() {
 						columns.map((column, columnIndex) => (
 							<tr
 								onClick={(e) => {
-									dispatchSpreadsheetAction({
+									dispatchSelectAction({
 										type: SELECT_COLUMN,
+										rows: rows,
 										columnID: column.id,
 										columnIndex,
 										selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,

@@ -1,26 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useCallback } from 'react';
 import { pingCloudFunctions } from './analysis-output/Analysis';
-import {
-	useSpreadsheetState,
-	useSpreadsheetDispatch,
-	useSelectState,
-	useRowsDispatch,
-	useRowsState,
-	useSelectDispatch,
-} from './context/SpreadsheetProvider';
+import { useRowsState, useSelectDispatch } from './context/SpreadsheetProvider';
 import CellRenderer from './CellRenderer';
-import ContextMenu from './ContextMenu';
 import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
 import RowHeaders from './RowHeaders';
 import HeaderRenderer from './HeaderRenderer';
-import Analysis from './analysis-output/Analysis';
-import BarChartModal from './Modals/ModalBarChart';
-import ColumnTypeModal from './Modals/ModalColumnType';
-import DistributionModal from './Modals/ModalDistribution';
-import FilterModal from './Modals/ModalFilter';
-import AnalysisModal from './Modals/ModalFitYX';
 // import TestCounter from './TestCounter';
 import {
 	Column,
@@ -28,7 +14,7 @@ import {
 	AutoSizer,
 	// WindowScroller,
 } from 'react-virtualized';
-import { ACTIVATE_CELL, NUMBER } from './constants';
+import { ACTIVATE_CELL } from './constants';
 
 const blankColumnWidth = 100;
 
@@ -39,20 +25,11 @@ export const checkIfValidNumber = (str) => {
 	return str;
 };
 
-export default function Spreadsheet() {
+export default React.memo(function Spreadsheet() {
 	console.log('spreadsheet');
 	const { rows, columns } = useRowsState();
-	const {
-		analysisModalOpen,
-		barChartModalOpen,
-		distributionModalOpen,
-		filterModalOpen,
-		selectedColumn,
-	} = useSpreadsheetState();
 	const dispatchSelectAction = useSelectDispatch();
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ widths, setWidths ] = useState({});
-	const [ popup, setPopup ] = useState([]);
 	const [ visibleColumns, setVisibleColumns ] = useState(1);
 	const [ visibleRows, setVisibleRows ] = useState(1);
 
@@ -239,74 +216,45 @@ export default function Spreadsheet() {
 
 	const analysisMenuCallback = useCallback(() => <AnalysisMenu />);
 
-	const rowGetterCallback = useCallback(({ index }) => rows[index] || emptyRow);
-
 	return (
 		// Height 100% necessary for autosizer to work
 		<div style={{ height: '100%', width: '100%' }}>
-			<Analysis popup={popup} setPopup={setPopup} />
-			<ContextMenu
-			// paste={paste}
-			/>
-			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
-			{barChartModalOpen && <BarChartModal setPopup={setPopup} />}
-			{distributionModalOpen && <DistributionModal setPopup={setPopup} />}
-			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
-			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
-			{widths && (
-				<div
-					style={{ height: '100%', display: 'flex' }}
-					// onKeyDown={onKeyDown}
-					onMouseDown={(e) => {
-						e.preventDefault();
-						return dispatchSpreadsheetAction({ type: 'CLOSE_CONTEXT_MENU' });
-					}}
-					onMouseUp={(e) => {
-						e.preventDefault();
-						return dispatchSelectAction({ type: 'ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS' });
-					}}
-				>
-					{/* <TestCounter /> */}
-					<Sidebar />
-					{/* <WindowScroller> */}
-					<AutoSizer>
-						{({ height }) => (
-							<Table
-								overscanRowCount={0}
-								width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
-								height={height}
-								headerHeight={25}
-								rowHeight={30}
-								rowCount={visibleRows}
-								rowGetter={rowGetterCallback}
-								rowStyle={{ alignItems: 'stretch' }}
-							>
-								<Column
-									width={100}
-									label={''}
-									dataKey={'rowHeaderColumn'}
-									headerRenderer={analysisMenuCallback}
-									cellRenderer={rowHeaderCellRendererCallback}
-									style={{ margin: 0 }}
-								/>
-								{renderColumns(columns, widths, cellRendererCallback, headerRendererCallback)}
-								{visibleColumns &&
-									renderBlankColumns(
-										visibleColumns,
-										columns,
-										blankColumnWidth,
-										cellRendererCallback,
-										blankHeaderRendererCallback,
-									)}
-							</Table>
-						)}
-					</AutoSizer>
-					{/* </WindowScroller> */}
-				</div>
-			)}
+			<Sidebar />
+			<AutoSizer>
+				{({ height }) => (
+					<Table
+						overscanRowCount={0}
+						width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
+						height={height}
+						headerHeight={25}
+						rowHeight={30}
+						rowCount={visibleRows}
+						rowGetter={({ index }) => rows[index] || emptyRow}
+						rowStyle={{ alignItems: 'stretch' }}
+					>
+						<Column
+							width={100}
+							label={''}
+							dataKey={'rowHeaderColumn'}
+							headerRenderer={analysisMenuCallback}
+							cellRenderer={rowHeaderCellRendererCallback}
+							style={{ margin: 0 }}
+						/>
+						{renderColumns(columns, widths, cellRendererCallback, headerRendererCallback)}
+						{visibleColumns &&
+							renderBlankColumns(
+								visibleColumns,
+								columns,
+								blankColumnWidth,
+								cellRendererCallback,
+								blankHeaderRendererCallback,
+							)}
+					</Table>
+				)}
+			</AutoSizer>
 		</div>
 	);
-}
+});
 
 function renderColumns(columns, widths, cellRendererCallback, headerRendererCallback) {
 	return columns.map((column, columnIndex) => (

@@ -1,15 +1,16 @@
 // TODO: Combine this component with Analysis Modal
 import React, { useState } from 'react';
 import { Modal, Button, Input } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { useSpreadsheetState, useSpreadsheetDispatch, useRowsState } from '../context/SpreadsheetProvider';
 import { TOGGLE_DISTRIBUTION_MODAL } from '../constants';
 import { performDistributionAnalysis } from '../analysis-output/Analysis';
 import { SelectColumn, styles } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
-import { createRandomID } from '../SpreadsheetProvider';
+import { createRandomID } from '../context/helpers';
 
 export default function DistributionModal({ setPopup }) {
-	const { distributionModalOpen, columns, excludedRows, rows } = useSpreadsheetState();
+	const { distributionModalOpen, excludedRows } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ error, setError ] = useState('');
 	const [ numberOfBins, setNumberOfBins ] = useState(10);

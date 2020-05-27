@@ -1,9 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
-import './App.css';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import {
+	useSpreadsheetState,
+	useSpreadsheetDispatch,
+	useSelectDispatch,
+	useRowsState,
+	useRowsDispatch,
+} from './context/SpreadsheetProvider';
 import Draggable from 'react-draggable';
 import {
+	CREATE_COLUMNS,
 	CLOSE_CONTEXT_MENU,
 	OPEN_CONTEXT_MENU,
 	REMOVE_SELECTED_CELLS,
@@ -11,17 +17,25 @@ import {
 	TOGGLE_COLUMN_TYPE_MODAL,
 } from './constants';
 
-export default function HeaderRenderer({ dataKey, label, units, columnIndex, createNewColumns, resizeColumn }) {
-	const { columns, contextMenuOpen, uniqueColumnIDs } = useSpreadsheetState();
+export default function HeaderRenderer({ dataKey, label, units, columnIndex, resizeColumn }) {
+	const { contextMenuOpen, uniqueColumnIDs } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const dispatchSelectAction = useSelectDispatch();
+	const dispatchRowsAction = useRowsDispatch();
+
+	function createNewColumns(columnCount) {
+		dispatchRowsAction({ type: CREATE_COLUMNS, columnCount });
+	}
 	function openModal(e) {
 		if (!dataKey) {
-			if (columnIndex >= columns.length) {
-				createNewColumns(columnIndex + 1 - columns.length);
+			// TODO: Fix these seemingly magic numbers
+			if (columnIndex >= columns.length - 1) {
+				createNewColumns(columnIndex + 2 - columns.length);
 				return;
 			}
 		}
-		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 		dispatchSpreadsheetAction({
 			type: TOGGLE_COLUMN_TYPE_MODAL,
 			columnTypeModalOpen: true,
@@ -43,11 +57,12 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, cre
 				}}
 				onClick={(e) => {
 					if (columnIndex < columns.length) {
-						if (contextMenuOpen) {
-							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-						}
-						dispatchSpreadsheetAction({
+						// if (contextMenuOpen) {
+						// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
+						// }
+						dispatchSelectAction({
 							type: SELECT_COLUMN,
+							rows: rows,
 							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
@@ -58,8 +73,9 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, cre
 				onContextMenu={(e) => {
 					if (columnIndex < columns.length) {
 						e.preventDefault();
-						dispatchSpreadsheetAction({
+						dispatchSelectAction({
 							type: SELECT_COLUMN,
+							rows: rows,
 							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,

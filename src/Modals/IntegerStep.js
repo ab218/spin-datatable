@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { InputNumber, Slider, Row, Col } from 'antd';
-import { useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { useSpreadsheetDispatch } from '../context/SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER } from '../constants';
 
 export default function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
