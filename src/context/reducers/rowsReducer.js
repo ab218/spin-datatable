@@ -40,10 +40,6 @@ export function rowsReducer(state, action) {
 		rowCount,
 		rowIndex,
 		updatedColumn,
-		top,
-		left,
-		height,
-		width,
 	} = action;
 	// const { type, ...event } = action;
 	const { type } = action;
@@ -101,7 +97,13 @@ export function rowsReducer(state, action) {
 			const copiedRows = rows
 				.map((row) => {
 					if (selectedRowIDs.includes(row.id)) {
-						return selectedColumnIDs.map((selectedColumn) => row[selectedColumn]);
+						return selectedColumnIDs.map((selectedColumn) => {
+							const cellValue = row[selectedColumn];
+							if (typeof cellValue === 'object') {
+								return cellValue.error;
+							}
+							return row[selectedColumn];
+						});
 					}
 					return null;
 				})
@@ -165,10 +167,6 @@ export function rowsReducer(state, action) {
 			return {
 				...state,
 				rows: filteredRows,
-				currentCellSelectionRange: null,
-				cellSelectionRanges: [],
-				selectedRowIDs: [],
-				activeCell: null,
 			};
 		}
 		// EVENT: Paste
@@ -198,28 +196,9 @@ export function rowsReducer(state, action) {
 					.concat(rows.slice(indexOfFirstDestinationRow + newRowValues.length));
 			}
 
-			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-				top,
-				left,
-				top + height - 1,
-				left + width - 1,
-				state.columns,
-				state.rows,
-			);
-
 			return {
 				...state,
-				uniqueColumnIDs: selectedColumnIDs,
-				uniqueRowIDs: selectedRowIDs,
-				// cellSelectionRanges: [
-				// 	{
-				// 		top: top,
-				// 		left: left,
-				// 		bottom: top + height - 1,
-				// 		right: left + width - 1,
-				// 	},
-				// ],
-				rows: mapRows(state.rows, copiedValues2dArray, selectedColumnIDs, selectedRowIDs),
+				rows: mapRows(state.rows, copiedValues2dArray, action.selectedColumnIDs, action.selectedRowIDs),
 			};
 		}
 		// EVENT: Delete values

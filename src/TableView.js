@@ -18,7 +18,6 @@ export const checkIfValidNumber = (str) => {
 };
 
 export default React.memo(function TableView() {
-	console.log('table view');
 	const { rows, columns } = useRowsState();
 	const [ widths, setWidths ] = useState({});
 	const [ visibleColumns, setVisibleColumns ] = useState(1);

@@ -11,7 +11,6 @@ export default class ActiveCell extends React.PureComponent {
 	}
 
 	componentWillUnmount() {
-		console.log('active');
 		const { columnIndex, rowIndex, updateCell } = this.props;
 		const { currentValue } = this.state;
 		// Don't update blank cell if nothing was changed

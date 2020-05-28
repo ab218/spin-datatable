@@ -16,8 +16,23 @@ import ColumnTypeModal from './Modals/ModalColumnType';
 import DistributionModal from './Modals/ModalDistribution';
 import FilterModal from './Modals/ModalFilter';
 import AnalysisModal from './Modals/ModalFitYX';
+import { selectRowAndColumnIDs } from './context/helpers';
 // import TestCounter from './TestCounter';
-import { ACTIVATE_CELL, NUMBER, FORMULA } from './constants';
+import {
+	ACTIVATE_CELL,
+	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
+	CLOSE_CONTEXT_MENU,
+	COPY_VALUES,
+	CREATE_COLUMNS,
+	CREATE_ROWS,
+	DELETE_VALUES,
+	PASTE_VALUES,
+	REMOVE_SELECTED_CELLS,
+	SELECT_ALL_CELLS,
+	SELECT_BLOCK_OF_CELLS,
+	TRANSLATE_SELECTED_CELL,
+	FORMULA,
+} from './constants';
 import TableView from './TableView';
 
 export const checkIfValidNumber = (str) => {
@@ -28,7 +43,6 @@ export const checkIfValidNumber = (str) => {
 };
 
 export default function Spreadsheet() {
-	// console.log('spreadsheet');
 	const {
 		analysisModalOpen,
 		barChartModalOpen,
@@ -74,24 +88,48 @@ export default function Spreadsheet() {
 		const numberOfColumnsRequired = left - 1 + width - columns.length;
 		const numberOfRowsRequired = top + height - rows.length;
 		if (numberOfRowsRequired > 0) {
-			dispatchRowsAction({ type: 'CREATE_ROWS', rowCount: numberOfRowsRequired });
+			dispatchRowsAction({ type: CREATE_ROWS, rowCount: numberOfRowsRequired });
 		}
 		if (numberOfColumnsRequired > 0) {
-			dispatchRowsAction({ type: 'CREATE_COLUMNS', columnCount: numberOfColumnsRequired });
+			dispatchRowsAction({ type: CREATE_COLUMNS, columnCount: numberOfColumnsRequired });
 		}
-		dispatchRowsAction({
-			type: 'PASTE_VALUES',
-			copiedValues2dArray,
+		const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
 			top,
 			left,
-			height,
-			width,
+			top + height - 1,
+			left + width - 1,
+			columns,
+			rows,
+		);
+
+		const uniqueColumnIDs = selectedColumnIDs;
+		const uniqueRowIDs = selectedRowIDs;
+		const newCellSelectionRanges = [
+			{
+				top: top,
+				left: left,
+				bottom: top + height - 1,
+				right: left + width - 1,
+			},
+		];
+
+		dispatchRowsAction({
+			type: PASTE_VALUES,
+			copiedValues2dArray,
+			selectedColumnIDs,
+			selectedRowIDs,
+		});
+		dispatchSelectAction({
+			type: SELECT_BLOCK_OF_CELLS,
+			uniqueColumnIDs,
+			uniqueRowIDs,
+			cellSelectionRanges: newCellSelectionRanges,
 		});
 	}
 
 	useEffect(() => {
 		function onKeyDown(event) {
-			if (barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
+			if (activeCell || barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
 				return;
 			}
 			if (!activeCell && cellSelectionRanges.length === 0) {
@@ -103,25 +141,25 @@ export default function Spreadsheet() {
 			if (event.metaKey || event.ctrlKey) {
 				// prevent cell input if holding ctrl/meta
 				if (event.key === 'c') {
-					dispatchRowsAction({ type: 'COPY_VALUES', cellSelectionRanges });
+					dispatchRowsAction({ type: COPY_VALUES, cellSelectionRanges });
 					return;
 				} else if (event.key === 'v') {
 					paste();
 					return;
 				} else if (event.key === 'a') {
 					event.preventDefault();
-					dispatchSelectAction({ type: 'SELECT_ALL_CELLS', rows, columns });
+					dispatchSelectAction({ type: SELECT_ALL_CELLS, rows, columns });
 					return;
 				}
 				return;
 			}
 			if (event.key.length === 1) {
 				if (rowIndex + 1 > rows.length) {
-					dispatchRowsAction({ type: 'CREATE_ROWS', rowCount: rows });
+					dispatchRowsAction({ type: CREATE_ROWS, rowCount: rows });
 				}
 				if (columns[columnIndex].type !== FORMULA) {
 					dispatchSelectAction({
-						type: 'ACTIVATE_CELL',
+						type: ACTIVATE_CELL,
 						row: rowIndex,
 						column: columnIndex + 1,
 						newInputCellValue: event.key,
@@ -130,10 +168,10 @@ export default function Spreadsheet() {
 			} else {
 				switch (event.key) {
 					case 'Backspace':
-						dispatchRowsAction({ type: 'DELETE_VALUES', cellSelectionRanges });
+						dispatchRowsAction({ type: DELETE_VALUES, cellSelectionRanges });
 						break;
 					case 'Escape':
-						dispatchSpreadsheetAction({ type: 'REMOVE_SELECTED_CELLS' });
+						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
 						break;
 					case 'ArrowDown':
 					case 'ArrowUp':
@@ -147,7 +185,7 @@ export default function Spreadsheet() {
 							columns.length,
 						);
 						dispatchSelectAction({
-							type: 'TRANSLATE_SELECTED_CELL',
+							type: TRANSLATE_SELECTED_CELL,
 							rowIndex: row,
 							columnIndex: column,
 							rows,
@@ -162,7 +200,6 @@ export default function Spreadsheet() {
 
 		document.addEventListener('keydown', onKeyDown);
 		return () => {
-			// console.log('detach');
 			document.removeEventListener('keydown', onKeyDown);
 		};
 	});
@@ -171,9 +208,7 @@ export default function Spreadsheet() {
 		// Height 100% necessary for autosizer to work
 		<div style={{ height: '100%', width: '100%' }}>
 			<Analysis popup={popup} setPopup={setPopup} />
-			<ContextMenu
-			// paste={paste}
-			/>
+			<ContextMenu paste={paste} />
 			{selectedColumn && <ColumnTypeModal selectedColumn={selectedColumn} />}
 			{barChartModalOpen && <BarChartModal setPopup={setPopup} />}
 			{distributionModalOpen && <DistributionModal setPopup={setPopup} />}
@@ -184,11 +219,11 @@ export default function Spreadsheet() {
 				// onKeyDown={onKeyDown}
 				onMouseDown={(e) => {
 					e.preventDefault();
-					return dispatchSpreadsheetAction({ type: 'CLOSE_CONTEXT_MENU' });
+					return dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 				}}
 				onMouseUp={(e) => {
 					e.preventDefault();
-					return dispatchSelectAction({ type: 'ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS' });
+					return dispatchSelectAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
 				}}
 			>
 				<TableView />

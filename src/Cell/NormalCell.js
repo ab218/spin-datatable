@@ -20,7 +20,6 @@ import {
 
 export default React.memo(function NormalCell({ cellValue, columnIndex, column, columnID, rowID, rowIndex }) {
 	// Normal cells rerender on every click.
-	// console.log('normal', columnIndex, rowIndex);
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
 

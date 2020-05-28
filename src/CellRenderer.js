@@ -13,11 +13,6 @@ export default React.memo(function CellRenderer({
 	columnID,
 	rowsLength,
 }) {
-	console.log('render');
-	// function handleContextMenu(e) {
-	// 	e.preventDefault();
-	// 	dispatchSpreadsheetAction({ type: OPEN_CONTEXT_MENU, contextMenuPosition: { left: e.pageX, top: e.pageY } });
-	// }
 	if (rowID && !columnID) {
 		return <BlankCell rowIndex={rowIndex} columnIndex={columnIndex} />;
 	} else if (rowIndex === rowsLength) {

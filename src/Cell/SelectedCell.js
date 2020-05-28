@@ -20,8 +20,6 @@ import {
 // import { cursorKeyToRowColMapper } from '../Spreadsheet';
 
 export default React.memo(function SelectedCell({ column, columnIndex, columnID, rowIndex, cellValue }) {
-	console.log('selected');
-	// const dispatchRowsAction = useRowsDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { rows, columns } = useRowsState();

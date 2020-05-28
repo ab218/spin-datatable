@@ -59,9 +59,9 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, res
 				}}
 				onClick={(e) => {
 					if (columnIndex < columns.length) {
-						// if (contextMenuOpen) {
-						// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-						// }
+						if (contextMenuOpen) {
+							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
+						}
 						dispatchSelectAction({
 							type: SELECT_COLUMN,
 							rows: rows,

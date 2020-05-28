@@ -8,6 +8,7 @@ import {
 	SELECT_CELLS,
 	SELECT_ALL_CELLS,
 	SELECT_ROW,
+	SELECT_BLOCK_OF_CELLS,
 	SELECT_COLUMN,
 	SET_FILTERS,
 	SET_SELECTED_COLUMN,
@@ -30,6 +31,7 @@ export function selectReducer(state, action) {
 		columns,
 		columnID,
 		columnIndex,
+		cellSelectionRanges,
 		endRangeRow,
 		endRangeColumn,
 		filters,
@@ -40,8 +42,11 @@ export function selectReducer(state, action) {
 		row,
 		rowID,
 		rowIndex,
+		rowIndexes,
 		rows,
 		selectionActive,
+		selectedRowIDs,
+		uniqueColumnIDs,
 	} = action;
 
 	// const { type, ...event } = action;
@@ -182,9 +187,9 @@ export function selectReducer(state, action) {
 		case SELECT_CELLS: {
 			const { cellSelectionRanges = [] } = state;
 			const columnIndexOffset = 1;
-			const computedColumnIndex = column + columnIndexOffset;
-			const rowIDs = rows.map((row) => rows[row].id);
-			const newSelectedCells = rows.map((rowIndex) => ({
+			const computedColumnIndex = columnIndex + columnIndexOffset;
+			const rowIDs = rowIndexes.map((row) => rows[row].id);
+			const newSelectedCells = rowIndexes.map((rowIndex) => ({
 				top: rowIndex,
 				bottom: rowIndex,
 				left: computedColumnIndex,
@@ -196,7 +201,7 @@ export function selectReducer(state, action) {
 				activeCell: null,
 				cellSelectionRanges: newCellSelectionRanges,
 				uniqueRowIDs: rowIDs,
-				uniqueColumnIDs: [ columns[column].id ],
+				uniqueColumnIDs: [ columns[columnIndex].id ],
 			};
 		}
 		case SELECT_ALL_CELLS: {
@@ -232,6 +237,9 @@ export function selectReducer(state, action) {
 				uniqueColumnIDs: [ columnID ],
 				uniqueRowIDs: rows.map((row) => row.id),
 			};
+		}
+		case SELECT_BLOCK_OF_CELLS: {
+			return { ...state, cellSelectionRanges, uniqueColumnIDs, selectedRowIDs };
 		}
 		case SET_SELECTED_COLUMN: {
 			return { ...state, selectedColumns };

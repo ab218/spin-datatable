@@ -1,7 +1,6 @@
 import React from 'react';
 
 export default React.memo(function BlankCell({ rowIndex, columnIndex }) {
-	console.log('blank');
 	return (
 		// cells in defined rows but undefined columns
 		<div

@@ -16,7 +16,6 @@ function formatForNumberColumn(cellValue, column) {
 }
 
 export default React.memo(function NormalCell({ cellValue, columnIndex, column, rowIndex, rows, columns }) {
-	console.log('normal');
 	// const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	function onMouseDown(event) {
