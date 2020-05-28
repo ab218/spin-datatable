@@ -11,6 +11,23 @@ const SelectStateContext = React.createContext();
 const SelectDispatchContext = React.createContext();
 const RowsStateContext = React.createContext();
 const RowsDispatchContext = React.createContext();
+const ColumnWidthStateContext = React.createContext();
+const ColumnWidthDispatchContext = React.createContext();
+
+export function useColumnWidthState() {
+	const context = React.useContext(ColumnWidthStateContext);
+	if (context === undefined) {
+		throw new Error('useColumnWidthState must be used within a SpreadsheetProvider');
+	}
+	return context;
+}
+export function useColumnWidthDispatch() {
+	const context = React.useContext(ColumnWidthDispatchContext);
+	if (context === undefined) {
+		throw new Error('ColumnWidthDispatchContext must be used within a SpreadsheetProvider');
+	}
+	return context;
+}
 
 export function useRowsState() {
 	const context = React.useContext(RowsStateContext);
@@ -105,20 +122,45 @@ export function SpreadsheetProvider({ children }) {
 		valuesColumnsCounter: 0,
 	};
 
+	const initialColumnWidthState = {
+		widths: {},
+	};
+
+	function columnWidthReducer(state, action) {
+		const { type } = action;
+		switch (type) {
+			// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
+			case 'RESIZE_COLUMN': {
+				const { widths } = state;
+				const { dataKey, deltaX } = action;
+				const colWidth = widths[dataKey] || 0;
+				return { ...state, widths: { ...state.widths, [dataKey]: Math.max(colWidth + deltaX, 50) } };
+			}
+			default: {
+				throw new Error(`Unhandled action type: ${type}`);
+			}
+		}
+	}
+
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);
 	const [ selectState, changeSelectState ] = useReducer(selectReducer, initialSelectState);
 	const [ rowsState, changeRowsState ] = useReducer(rowsReducer, initialRowsState);
+	const [ columnWidthState, changeColumnWidthState ] = useReducer(columnWidthReducer, initialColumnWidthState);
 	return (
-		<SpreadsheetStateContext.Provider value={state}>
-			<SpreadsheetDispatchContext.Provider value={changeSpreadsheet}>
-				<RowsStateContext.Provider value={rowsState}>
-					<RowsDispatchContext.Provider value={changeRowsState}>
-						<SelectDispatchContext.Provider value={changeSelectState}>
-							<SelectStateContext.Provider value={selectState}>{children}</SelectStateContext.Provider>
-						</SelectDispatchContext.Provider>
-					</RowsDispatchContext.Provider>
-				</RowsStateContext.Provider>
-			</SpreadsheetDispatchContext.Provider>
-		</SpreadsheetStateContext.Provider>
+		<ColumnWidthDispatchContext.Provider value={changeColumnWidthState}>
+			<ColumnWidthStateContext.Provider value={columnWidthState}>
+				<SpreadsheetStateContext.Provider value={state}>
+					<SpreadsheetDispatchContext.Provider value={changeSpreadsheet}>
+						<RowsStateContext.Provider value={rowsState}>
+							<RowsDispatchContext.Provider value={changeRowsState}>
+								<SelectDispatchContext.Provider value={changeSelectState}>
+									<SelectStateContext.Provider value={selectState}>{children}</SelectStateContext.Provider>
+								</SelectDispatchContext.Provider>
+							</RowsDispatchContext.Provider>
+						</RowsStateContext.Provider>
+					</SpreadsheetDispatchContext.Provider>
+				</SpreadsheetStateContext.Provider>
+			</ColumnWidthStateContext.Provider>
+		</ColumnWidthDispatchContext.Provider>
 	);
 }

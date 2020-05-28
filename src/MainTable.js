@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useCallback } from 'react';
-import { useRowsState } from './context/SpreadsheetProvider';
+import { useRowsState, useColumnWidthState, useColumnWidthDispatch } from './context/SpreadsheetProvider';
 import CellRenderer from './CellRenderer';
 import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
@@ -19,7 +19,9 @@ export const checkIfValidNumber = (str) => {
 
 export default React.memo(function TableView() {
 	const { rows, columns } = useRowsState();
-	const [ widths, setWidths ] = useState({});
+	const { widths } = useColumnWidthState();
+	const dispatchColumnWidthAction = useColumnWidthDispatch();
+	// const [ widths, setWidths ] = useState({});
 	const [ visibleColumns, setVisibleColumns ] = useState(1);
 	const [ visibleRows, setVisibleRows ] = useState(1);
 
@@ -27,26 +29,11 @@ export default React.memo(function TableView() {
 	useEffect(
 		() => {
 			columns.forEach((col) => {
-				setWidths((prevWidths) => {
-					return prevWidths[col.id] ? prevWidths : { ...prevWidths, [col.id]: 100 };
-				});
+				dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey: col.id, deltaX: 100 });
 			});
 		},
 		[ columns ],
 	);
-
-	const resizeColumn = ({ dataKey, deltaX }) =>
-		setWidths((prevWidths) => {
-			// for empty columns
-			if (!dataKey) {
-				return prevWidths;
-			}
-			return {
-				...prevWidths,
-				// don't allow columns to shrink below 50px
-				[dataKey]: Math.max(prevWidths[dataKey] + deltaX, 50),
-			};
-		});
 
 	useEffect(
 		() => {
@@ -75,20 +62,6 @@ export default React.memo(function TableView() {
 		return <CellRenderer {...props} column={column} columnID={columnID} rowsLength={rows.length} rowID={rowID} />;
 	});
 
-	const rowHeaderCellRendererCallback = useCallback((props) => {
-		return <RowHeaders {...props} />;
-	});
-
-	const headerRendererCallback = useCallback((column, columnIndex) => (props) => (
-		<HeaderRenderer {...props} columnIndex={columnIndex} resizeColumn={resizeColumn} units={column && column.units} />
-	));
-
-	const blankHeaderRendererCallback = useCallback((columnIndex) => (props) => (
-		<HeaderRenderer {...props} columnIndex={columnIndex} />
-	));
-
-	const analysisMenuCallback = useCallback(() => <AnalysisMenu />);
-
 	return (
 		// Height 100% necessary for autosizer to work
 		<div style={{ height: '100%', width: '100%', display: 'flex' }}>
@@ -109,19 +82,12 @@ export default React.memo(function TableView() {
 							width={100}
 							label={''}
 							dataKey={'rowHeaderColumn'}
-							headerRenderer={analysisMenuCallback}
-							cellRenderer={rowHeaderCellRendererCallback}
+							headerRenderer={() => <AnalysisMenu />}
+							cellRenderer={(props) => <RowHeaders {...props} />}
 							style={{ margin: 0 }}
 						/>
-						{renderColumns(columns, widths, cellRendererCallback, headerRendererCallback)}
-						{visibleColumns &&
-							renderBlankColumns(
-								visibleColumns,
-								columns,
-								blankColumnWidth,
-								cellRendererCallback,
-								blankHeaderRendererCallback,
-							)}
+						{renderColumns(columns, cellRendererCallback, widths)}
+						{visibleColumns && renderBlankColumns(visibleColumns, columns, blankColumnWidth, cellRendererCallback)}
 					</Table>
 				)}
 			</AutoSizer>
@@ -129,16 +95,18 @@ export default React.memo(function TableView() {
 	);
 });
 
-function renderColumns(columns, widths, cellRendererCallback, headerRendererCallback) {
+function renderColumns(columns, cellRendererCallback, widths) {
 	return columns.map((column, columnIndex) => (
 		<Column
 			key={columnIndex}
 			cellRenderer={cellRendererCallback(column)}
 			columnIndex={columnIndex}
 			dataKey={(column && column.id) || ''}
-			headerRenderer={headerRendererCallback(column, columnIndex)}
+			headerRenderer={(props) => (
+				<HeaderRenderer {...props} column={column} columnIndex={columnIndex} units={column && column.units} />
+			)}
 			label={(column && column.label) || ''}
-			width={(column && widths[column.id]) || 100}
+			width={widths[column.id] || 100}
 			style={{
 				border: '1px solid #ddd',
 				borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
@@ -148,13 +116,7 @@ function renderColumns(columns, widths, cellRendererCallback, headerRendererCall
 	));
 }
 
-function renderBlankColumns(
-	totalColumnCount,
-	columns,
-	blankColumnWidth,
-	cellRendererCallback,
-	blankHeaderRendererCallback,
-) {
+function renderBlankColumns(totalColumnCount, columns, blankColumnWidth, cellRendererCallback) {
 	const columnContainer = [];
 	for (let columnIndex = columns.length - 1; columnIndex < totalColumnCount; columnIndex++) {
 		columnContainer.push(
@@ -163,7 +125,7 @@ function renderBlankColumns(
 				cellRenderer={cellRendererCallback(null)}
 				columnIndex={columnIndex}
 				dataKey={''}
-				headerRenderer={blankHeaderRendererCallback(columnIndex)}
+				headerRenderer={(props) => <HeaderRenderer {...props} columnIndex={columnIndex} />}
 				label={''}
 				width={blankColumnWidth}
 				style={{

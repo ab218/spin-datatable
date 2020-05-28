@@ -7,6 +7,7 @@ import {
 	useRowsState,
 	useRowsDispatch,
 	useSelectState,
+	useColumnWidthDispatch,
 } from './context/SpreadsheetProvider';
 import Draggable from 'react-draggable';
 import {
@@ -18,13 +19,14 @@ import {
 	TOGGLE_COLUMN_TYPE_MODAL,
 } from './constants';
 
-export default function HeaderRenderer({ dataKey, label, units, columnIndex, resizeColumn }) {
+export default React.memo(function HeaderRenderer({ dataKey, label, units, columnIndex }) {
 	const { contextMenuOpen } = useSpreadsheetState();
 	const { uniqueColumnIDs } = useSelectState();
 	const { columns, rows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
+	const dispatchColumnWidthAction = useColumnWidthDispatch();
 
 	function createNewColumns(columnCount) {
 		dispatchRowsAction({ type: CREATE_COLUMNS, columnCount });
@@ -44,6 +46,22 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, res
 			column: columns.find((col) => col.id === dataKey),
 		});
 	}
+
+	const resizeColumn = ({ dataKey, deltaX }) => {
+		dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey, deltaX });
+	};
+	// setWidths((prevWidths) => {
+	//   // for empty columns
+	//   if (!dataKey) {
+	//     return prevWidths;
+	//   }
+	//   return {
+	//     ...prevWidths,
+	//     // don't allow columns to shrink below 50px
+	//     [dataKey]: Math.max(prevWidths[dataKey] + deltaX, 50),
+	//   };
+	// });
+
 	return (
 		<React.Fragment key={dataKey}>
 			<div
@@ -98,11 +116,13 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, res
 				axis="x"
 				defaultClassName="DragHandle"
 				defaultClassNameDragging="DragHandleActive"
-				onDrag={(event, { deltaX }) =>
-					resizeColumn({
+				onDrag={(event, { deltaX }) => {
+					if (!dataKey) return;
+					return resizeColumn({
 						dataKey: dataKey,
 						deltaX,
-					})}
+					});
+				}}
 				position={{ x: 0 }}
 				zIndex={999}
 			>
@@ -115,4 +135,4 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, res
 			</Draggable>
 		</React.Fragment>
 	);
-}
+});
