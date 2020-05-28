@@ -127,12 +127,14 @@ export function SpreadsheetProvider({ children }) {
 	};
 
 	function columnWidthReducer(state, action) {
-		const { type } = action;
+		const { type, dataKey, deltaX } = action;
 		switch (type) {
-			// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
+			case 'ADD_COLUMN_WIDTH': {
+				console.log(dataKey);
+				return { ...state, widths: { ...state.widths, [dataKey]: 100 } };
+			}
 			case 'RESIZE_COLUMN': {
 				const { widths } = state;
-				const { dataKey, deltaX } = action;
 				const colWidth = widths[dataKey] || 0;
 				return { ...state, widths: { ...state.widths, [dataKey]: Math.max(colWidth + deltaX, 50) } };
 			}

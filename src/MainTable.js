@@ -23,13 +23,14 @@ export default React.memo(function TableView() {
 	const dispatchColumnWidthAction = useColumnWidthDispatch();
 	const [ visibleColumns, setVisibleColumns ] = useState(1);
 	const [ visibleRows, setVisibleRows ] = useState(1);
+	const [ tableWidth, setTableWidth ] = useState(1000);
 
 	// When a new column is created, set the default width to 100px;
-	useEffect(() => {
-		columns.forEach((col) => {
-			dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey: col.id, deltaX: 100 });
-		});
-	}, []);
+	// useEffect(() => {
+	// 	columns.forEach((col) => {
+	// 		dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey: col.id, deltaX: 100 });
+	// 	});
+	// }, []);
 
 	useEffect(
 		() => {
@@ -41,13 +42,19 @@ export default React.memo(function TableView() {
 
 	const columnsDiff = visibleColumns - columns.length;
 
-	function sumOfColumnWidths(columns) {
-		let total = 0;
-		for (let i = 0; i < columns.length; i++) {
-			total += columns[i];
-		}
-		return total;
-	}
+	useEffect(
+		() => {
+			function sumOfColumnWidths(columns) {
+				let total = 0;
+				for (let i = 0; i < columns.length; i++) {
+					total += columns[i];
+				}
+				return total;
+			}
+			setTableWidth(sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth);
+		},
+		[ widths ],
+	);
 
 	const emptyRow = {};
 
@@ -66,7 +73,7 @@ export default React.memo(function TableView() {
 				{({ height }) => (
 					<Table
 						overscanRowCount={0}
-						width={sumOfColumnWidths(Object.values(widths)) + columnsDiff * blankColumnWidth}
+						width={tableWidth}
 						height={height}
 						headerHeight={25}
 						rowHeight={30}
@@ -121,7 +128,7 @@ function renderBlankColumns(totalColumnCount, columns, blankColumnWidth, cellRen
 				cellRenderer={cellRendererCallback(null)}
 				columnIndex={columnIndex}
 				dataKey={''}
-				headerRenderer={(props) => <HeaderRenderer {...props} columnIndex={columnIndex} />}
+				headerRenderer={(props) => <HeaderRenderer {...props} columnIndex={columnIndex + 1} />}
 				label={''}
 				width={blankColumnWidth}
 				style={{

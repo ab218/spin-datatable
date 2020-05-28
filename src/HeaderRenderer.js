@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
@@ -35,7 +35,7 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 		if (!dataKey) {
 			// TODO: Fix these seemingly magic numbers
 			if (columnIndex >= columns.length - 1) {
-				createNewColumns(columnIndex + 2 - columns.length);
+				createNewColumns(columnIndex + 1 - columns.length);
 				return;
 			}
 		}
@@ -46,6 +46,13 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 			column: columns.find((col) => col.id === dataKey),
 		});
 	}
+
+	useEffect(
+		() => {
+			dispatchColumnWidthAction({ type: 'ADD_COLUMN_WIDTH', dataKey });
+		},
+		[ dataKey ],
+	);
 
 	const resizeColumn = ({ dataKey, deltaX }) => {
 		dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey, deltaX });
