@@ -1,7 +1,6 @@
 import React from 'react';
-import NormalCell from './Cell/NormalCell';
+import ValueCell from './Cell/ValueCell';
 import BlankCell from './Cell/BlankCell';
-import BlankClickableCell from './Cell/BlankClickableCell';
 import NoColumnNoRowCell from './Cell/NoColumnNoRowCell';
 
 export default React.memo(function CellRenderer({
@@ -13,17 +12,10 @@ export default React.memo(function CellRenderer({
 	columnID,
 	rowsLength,
 }) {
-	if (rowID && !columnID) {
-		return <BlankCell rowIndex={rowIndex} columnIndex={columnIndex} />;
-	} else if (rowIndex === rowsLength) {
-		// This is a blank clickable row
-		return <BlankClickableCell columnID={columnID} rowIndex={rowIndex} columnIndex={columnIndex} />;
-	} else if (!rowID) {
-		// No column ID and no Row ID. The cells in these rows cannot be clicked.
-		return <NoColumnNoRowCell />;
-	} else if (columnID) {
+	const blankClickableRow = rowIndex === rowsLength;
+	if ((rowID && columnID) || blankClickableRow) {
 		return (
-			<NormalCell
+			<ValueCell
 				key={`Row${rowIndex}Col${columnIndex}`}
 				column={column}
 				columnID={columnID}
@@ -31,7 +23,13 @@ export default React.memo(function CellRenderer({
 				columnIndex={columnIndex}
 				rowIndex={rowIndex}
 				cellValue={cellData}
+				blankClickableRow={blankClickableRow}
 			/>
 		);
+	} else if (rowID && !columnID) {
+		return <BlankCell rowIndex={rowIndex} columnIndex={columnIndex} />;
+	} else if (!rowID) {
+		// No column ID and no Row ID. The cells in these rows cannot be clicked.
+		return <NoColumnNoRowCell />;
 	}
 });

@@ -5,11 +5,7 @@ export default React.memo(function BlankClickableCell({ columnID, rowIndex, colu
 	const dispatchSelectAction = useSelectDispatch();
 	// Cells that are one row beyond the total number of rows that can be clicked
 	function onMouseDown(event) {
-		// prevent text from being highlighted on drag select cells
 		event.preventDefault();
-		// if (contextMenuOpen) {
-		// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-		// }
 		dispatchSelectAction({ type: 'SELECT_CELL', row: rowIndex, column: columnIndex });
 	}
 

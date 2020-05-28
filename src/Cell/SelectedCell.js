@@ -2,26 +2,23 @@ import React from 'react';
 import {
 	useSpreadsheetDispatch,
 	useSelectDispatch,
-	// useRowsDispatch,
+	useRowsDispatch,
 	useRowsState,
 } from '../context/SpreadsheetProvider';
 import {
 	ACTIVATE_CELL,
-	// CLOSE_CONTEXT_MENU,
-	// CREATE_ROWS,
-	// DELETE_VALUES,
-	// TRANSLATE_SELECTED_CELL,
+	CREATE_ROWS,
 	OPEN_CONTEXT_MENU,
 	REMOVE_SELECTED_CELLS,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	FORMULA,
 	STRING,
 } from '../constants';
-// import { cursorKeyToRowColMapper } from '../Spreadsheet';
 
 export default React.memo(function SelectedCell({ column, columnIndex, columnID, rowIndex, cellValue }) {
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const dispatchRowsAction = useRowsDispatch();
 	const { rows, columns } = useRowsState();
 
 	function changeActiveCell(row, column, selectionActive, columnID) {
@@ -43,6 +40,9 @@ export default React.memo(function SelectedCell({ column, columnIndex, columnID,
 		// }
 		if (event.button === 0 && column && column.type !== FORMULA) {
 			dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+			if (rowIndex === rows.length) {
+				dispatchRowsAction({ type: CREATE_ROWS, rowCount: 1 });
+			}
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnID);
 		}
 	}

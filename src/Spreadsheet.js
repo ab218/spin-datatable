@@ -33,7 +33,7 @@ import {
 	TRANSLATE_SELECTED_CELL,
 	FORMULA,
 } from './constants';
-import TableView from './TableView';
+import TableView from './MainTable';
 
 export const checkIfValidNumber = (str) => {
 	if (str.match(/^-?\d*\.?\d*$/)) {
