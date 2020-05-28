@@ -124,7 +124,7 @@ export function spreadsheetReducer(state, action) {
 			return {
 				...state,
 				columnTypeModalOpen,
-				selectedColumn: colName ? getCol(state.columns, colName) : column,
+				selectedColumn: colName ? getCol(action.columns, colName) : column,
 				modalError: null,
 			};
 		}

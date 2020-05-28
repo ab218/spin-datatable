@@ -5,6 +5,7 @@ import {
 	useSelectDispatch,
 	useSelectState,
 	useRowsDispatch,
+	useRowsState,
 } from './context/SpreadsheetProvider';
 import {
 	CLOSE_CONTEXT_MENU,
@@ -32,6 +33,7 @@ export default function ContextMenu({ paste }) {
 		// layout,
 	} = useSpreadsheetState();
 	const { cellSelectionRanges } = useSelectState();
+	const { columns } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
@@ -67,7 +69,12 @@ export default function ContextMenu({ paste }) {
 					<Menu.Item
 						key="1"
 						onClick={() =>
-							dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, colName })}
+							dispatchSpreadsheetAction({
+								type: TOGGLE_COLUMN_TYPE_MODAL,
+								columnTypeModalOpen: true,
+								colName,
+								columns,
+							})}
 					>
 						Column Info...
 					</Menu.Item>
