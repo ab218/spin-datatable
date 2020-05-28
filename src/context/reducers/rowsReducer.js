@@ -163,7 +163,7 @@ export function rowsReducer(state, action) {
 			};
 		}
 		case DELETE_ROWS: {
-			const filteredRows = state.rows.filter((row) => !state.uniqueRowIDs.includes(row.id));
+			const filteredRows = state.rows.filter((row) => !action.uniqueRowIDs.includes(row.id));
 			return {
 				...state,
 				rows: filteredRows,

@@ -21,19 +21,15 @@ export default React.memo(function TableView() {
 	const { rows, columns } = useRowsState();
 	const { widths } = useColumnWidthState();
 	const dispatchColumnWidthAction = useColumnWidthDispatch();
-	// const [ widths, setWidths ] = useState({});
 	const [ visibleColumns, setVisibleColumns ] = useState(1);
 	const [ visibleRows, setVisibleRows ] = useState(1);
 
 	// When a new column is created, set the default width to 100px;
-	useEffect(
-		() => {
-			columns.forEach((col) => {
-				dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey: col.id, deltaX: 100 });
-			});
-		},
-		[ columns ],
-	);
+	useEffect(() => {
+		columns.forEach((col) => {
+			dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey: col.id, deltaX: 100 });
+		});
+	}, []);
 
 	useEffect(
 		() => {

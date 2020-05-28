@@ -32,7 +32,7 @@ export default function ContextMenu({ paste }) {
 		contextMenuRowIndex,
 		// layout,
 	} = useSpreadsheetState();
-	const { cellSelectionRanges } = useSelectState();
+	const { cellSelectionRanges, uniqueRowIDs } = useSelectState();
 	const { columns } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
@@ -119,7 +119,7 @@ export default function ContextMenu({ paste }) {
 				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
 						onClick={() => {
-							dispatchRowsAction({ type: DELETE_ROWS, rowIndex: contextMenuRowIndex });
+							dispatchRowsAction({ type: DELETE_ROWS, rowIndex: contextMenuRowIndex, uniqueRowIDs });
 							dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 						}}
 						key="19"
