@@ -75,17 +75,6 @@ export function selectReducer(state, action) {
 				currentCellSelectionRange: null,
 			};
 		}
-		case SET_FILTERS: {
-			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
-			return {
-				...state,
-				selectedColumns: selectedColumns || state.selectedColumns,
-				filters: {
-					stringFilters: stringFilterCopy,
-					numberFilters: numberFilters || state.filters.numberFilters,
-				},
-			};
-		}
 		case DELETE_FILTER: {
 			return { ...state, filters, selectedColumns };
 		}
@@ -240,6 +229,17 @@ export function selectReducer(state, action) {
 		}
 		case SELECT_BLOCK_OF_CELLS: {
 			return { ...state, cellSelectionRanges, uniqueColumnIDs, selectedRowIDs };
+		}
+		case SET_FILTERS: {
+			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
+			return {
+				...state,
+				selectedColumns: selectedColumns || state.selectedColumns,
+				filters: {
+					stringFilters: stringFilterCopy,
+					numberFilters: numberFilters || state.filters.numberFilters,
+				},
+			};
 		}
 		case SET_SELECTED_COLUMN: {
 			return { ...state, selectedColumns };

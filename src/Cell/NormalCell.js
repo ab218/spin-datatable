@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tooltip } from 'antd';
-import { useSelectDispatch } from '../context/SpreadsheetProvider';
+import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
 import {
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	SELECT_CELL,
@@ -15,8 +15,9 @@ function formatForNumberColumn(cellValue, column) {
 	}
 }
 
-export default React.memo(function NormalCell({ cellValue, columnIndex, column, rowIndex, rows, columns, rowID }) {
+export default React.memo(function NormalCell({ cellValue, columnIndex, column, rowIndex, rowID }) {
 	// const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const { columns, rows } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
 	function onMouseDown(event) {
 		// prevent text from being highlighted on drag select cells

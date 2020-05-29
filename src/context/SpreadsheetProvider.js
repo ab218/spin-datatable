@@ -1,6 +1,7 @@
 import React, { useReducer } from 'react';
 import { selectReducer } from './reducers/selectReducer';
 import { spreadsheetReducer } from './reducers/spreadsheetReducer';
+import { columnWidthReducer } from './reducers/columnWidthReducer';
 import { rowsReducer } from './reducers/rowsReducer';
 import { createRows } from './helpers';
 import { statsColumns, potatoLiverData } from './dummyData';
@@ -122,31 +123,10 @@ export function SpreadsheetProvider({ children }) {
 		valuesColumnsCounter: 0,
 	};
 
-	const initialColumnWidthState = {
-		widths: {},
-	};
-
-	function columnWidthReducer(state, action) {
-		const { type, dataKey, deltaX } = action;
-		switch (type) {
-			case 'ADD_COLUMN_WIDTH': {
-				return { ...state, widths: { ...state.widths, [dataKey]: 100 } };
-			}
-			case 'RESIZE_COLUMN': {
-				const { widths } = state;
-				const colWidth = widths[dataKey] || 0;
-				return { ...state, widths: { ...state.widths, [dataKey]: Math.max(colWidth + deltaX, 50) } };
-			}
-			default: {
-				throw new Error(`Unhandled action type: ${type}`);
-			}
-		}
-	}
-
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);
 	const [ selectState, changeSelectState ] = useReducer(selectReducer, initialSelectState);
 	const [ rowsState, changeRowsState ] = useReducer(rowsReducer, initialRowsState);
-	const [ columnWidthState, changeColumnWidthState ] = useReducer(columnWidthReducer, initialColumnWidthState);
+	const [ columnWidthState, changeColumnWidthState ] = useReducer(columnWidthReducer, { widths: {} });
 	return (
 		<ColumnWidthDispatchContext.Provider value={changeColumnWidthState}>
 			<ColumnWidthStateContext.Provider value={columnWidthState}>
