@@ -81,9 +81,6 @@ export default React.memo(function ActiveCell(props) {
 				}}
 				ref={inputRef}
 				onKeyDown={(e) => onKeyDown(e, rows, rowIndex, columns, columnIndex)}
-				onChange={(e) => {
-					e.preventDefault();
-				}}
 			/>
 		</div>
 	);
