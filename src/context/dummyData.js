@@ -16,16 +16,16 @@ export const statsColumns = [
 	{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution', description: '' },
 ];
 
-// const startingColumn = [
-// 	{
-// 		id: '_abc1_',
-// 		modelingType: CONTINUOUS,
-// 		type: NUMBER,
-// 		units: '',
-// 		label: 'Column 1',
-// 		description: '',
-// 	},
-// ];
+export const startingColumn = [
+	{
+		id: '_abc1_',
+		modelingType: CONTINUOUS,
+		type: NUMBER,
+		units: '',
+		label: 'Column 1',
+		description: '',
+	},
+];
 
 export const potatoLiverData = `35	3	11.66667	Liver
 32	5.9	5.42373	Liver

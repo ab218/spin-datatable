@@ -4,7 +4,7 @@ import { spreadsheetReducer } from './reducers/spreadsheetReducer';
 import { columnWidthReducer } from './reducers/columnWidthReducer';
 import { rowsReducer } from './reducers/rowsReducer';
 import { createRows } from './helpers';
-import { statsColumns, potatoLiverData } from './dummyData';
+import { statsColumns, potatoLiverData, startingColumn } from './dummyData';
 
 const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
@@ -77,7 +77,6 @@ export function useSelectDispatch() {
 
 export function SpreadsheetProvider({ children }) {
 	const initialState = {
-		// activeCell: null,
 		analysisModalOpen: false,
 		analysisWindowOpen: false,
 		barChartModalOpen: false,
@@ -113,13 +112,14 @@ export function SpreadsheetProvider({ children }) {
 	};
 
 	const initialRowsState = {
-		columns: statsColumns,
+		columns: startingColumn,
 		excludedRows: [],
-		rows: createRows(potatoLiverData, statsColumns),
-		inverseDependencyMap: {
-			_abc1_: [ '_abc3_' ],
-			_abc2_: [ '_abc3_' ],
-		},
+		rows: [],
+		// inverseDependencyMap: {
+		// 	_abc1_: [ '_abc3_' ],
+		// 	_abc2_: [ '_abc3_' ],
+		// },
+		inverseDependencyMap: {},
 		valuesColumnsCounter: 0,
 	};
 

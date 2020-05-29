@@ -74,7 +74,7 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 				onMouseEnter={onMouseEnter}
 				style={{
 					textAlign: column.type === STRING ? 'left' : 'right',
-					backgroundColor: isNotANumber ? 'pink' : 'none',
+					backgroundColor: isNotANumber ? 'pink' : 'transparent',
 					height: '100%',
 					width: '100%',
 					lineHeight: 2,

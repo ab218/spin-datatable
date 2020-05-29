@@ -1,43 +1,49 @@
-import React, { useState, useEffect, useRef } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useEffect, useRef, useCallback } from 'react';
 import { STRING } from '../constants';
 import { cursorKeyToRowColMapper } from '../Spreadsheet';
-import { ACTIVATE_CELL, UPDATE_CELL, FORMULA } from '../constants';
+import { ACTIVATE_CELL, CREATE_ROWS, UPDATE_CELL, FORMULA } from '../constants';
 import { useRowsState, useSelectDispatch, useRowsDispatch } from '../context/SpreadsheetProvider';
-export default React.memo(function ActiveCell({ columnIndex, rowIndex, column, handleContextMenu, value }) {
+export default React.memo(function ActiveCell(props) {
+	const { columnIndex, rowIndex, column, handleContextMenu, value } = props;
 	const dispatchRowsAction = useRowsDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const { columns, rows } = useRowsState();
-	const [ currentValue, setCurrentValue ] = useState('');
 	const inputRef = useRef(null);
 
 	function changeActiveCell(row, column, selectionActive, columnID) {
 		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
 	}
 
-	function updateCell(currentValue, rowIndex, columnIndex) {
-		// Don't allow formula column cells to be edited
-		const formulaColumns = columns.map((col) => (col.type === FORMULA ? columns.indexOf(col) : null));
-		if (!formulaColumns.includes(columnIndex - 1)) {
-			dispatchRowsAction({
-				type: UPDATE_CELL,
-				rowIndex,
-				columnIndex: columnIndex - 1,
-				cellValue: currentValue,
-			});
-		}
-	}
+	const updateCellCallback = useCallback(
+		function updateCell(currentValue, rowIndex, columnIndex) {
+			// Don't allow formula column cells to be edited
+			const formulaColumns = columns.map((col) => (col.type === FORMULA ? columns.indexOf(col) : null));
+			if (!formulaColumns.includes(columnIndex - 1)) {
+				dispatchRowsAction({
+					type: UPDATE_CELL,
+					rowIndex,
+					columnIndex: columnIndex - 1,
+					cellValue: currentValue,
+				});
+			}
+		},
+		[ rowIndex, columnIndex ],
+	);
 
 	useEffect(
 		() => {
+			if (rowIndex === rows.length) {
+				dispatchRowsAction({ type: CREATE_ROWS, rowCount: 1 });
+			}
 			return () => {
-				if (currentValue !== value) {
-					// eslint-disable-next-line react-hooks/exhaustive-deps
-					updateCell(inputRef.current.value, rowIndex, columnIndex);
+				const currentValue = inputRef.current.value;
+				if (currentValue && currentValue !== value) {
+					updateCellCallback(currentValue, rowIndex, columnIndex);
 				}
 			};
 		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[ rowIndex, columnIndex ],
+		[ inputRef ],
 	);
 
 	const onKeyDown = (event, rows, rowIndex, columns, columnIndex) => {
@@ -77,7 +83,6 @@ export default React.memo(function ActiveCell({ columnIndex, rowIndex, column, h
 				onKeyDown={(e) => onKeyDown(e, rows, rowIndex, columns, columnIndex)}
 				onChange={(e) => {
 					e.preventDefault();
-					setCurrentValue(e.target.value);
 				}}
 			/>
 		</div>

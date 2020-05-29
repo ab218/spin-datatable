@@ -197,7 +197,6 @@ export default function Spreadsheet() {
 				}
 			}
 		}
-		console.log('attach');
 		document.addEventListener('keydown', onKeyDown);
 		return () => {
 			document.removeEventListener('keydown', onKeyDown);
