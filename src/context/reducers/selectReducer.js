@@ -147,8 +147,8 @@ export function selectReducer(state, action) {
 		case SELECT_CELL: {
 			const { cellSelectionRanges = [] } = state;
 			// track lastSelection to know where to begin range selection on drag
-			const lastSelection = { row, column };
-			const selectedCell = { top: row, bottom: row, left: column, right: column };
+			const lastSelection = { row: rowIndex, column: columnIndex };
+			const selectedCell = { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex };
 			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(selectedCell);
 			const currentRowIDs = selectionActive
 				? !state.uniqueRowIDs.includes(rowID) ? state.uniqueRowIDs.concat(rowID) : state.uniqueRowIDs

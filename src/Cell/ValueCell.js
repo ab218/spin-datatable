@@ -108,6 +108,7 @@ export default React.memo(function ValueCell({
 			cellValue={cellValue}
 			columnIndex={columnIndex}
 			column={column}
+			rowID={rowID}
 			rowIndex={rowIndex}
 		/>
 	);

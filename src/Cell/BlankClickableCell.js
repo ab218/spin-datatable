@@ -6,7 +6,7 @@ export default React.memo(function BlankClickableCell({ columnID, rowIndex, colu
 	// Cells that are one row beyond the total number of rows that can be clicked
 	function onMouseDown(event) {
 		event.preventDefault();
-		dispatchSelectAction({ type: 'SELECT_CELL', row: rowIndex, column: columnIndex });
+		dispatchSelectAction({ type: 'SELECT_CELL', rowIndex, columnIndex, columnID });
 	}
 
 	if (columnID) {

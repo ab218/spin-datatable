@@ -15,7 +15,7 @@ function formatForNumberColumn(cellValue, column) {
 	}
 }
 
-export default React.memo(function NormalCell({ cellValue, columnIndex, column, rowIndex, rows, columns }) {
+export default React.memo(function NormalCell({ cellValue, columnIndex, column, rowIndex, rows, columns, rowID }) {
 	// const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	function onMouseDown(event) {
@@ -24,7 +24,7 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 		// if (contextMenuOpen) {
 		// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		// }
-		dispatchSelectAction({ type: SELECT_CELL, row: rowIndex, column: columnIndex });
+		dispatchSelectAction({ type: SELECT_CELL, rowIndex, columnIndex, columnID: column.id, rowID });
 	}
 
 	function onMouseEnter(event) {
