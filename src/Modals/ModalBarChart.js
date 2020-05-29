@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { useSpreadsheetState, useSpreadsheetDispatch, useRowsState } from '../context/SpreadsheetProvider';
 import { createBarChart } from '../analysis-output/Analysis';
 import { TOGGLE_BAR_CHART_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
-import { createRandomID } from '../SpreadsheetProvider';
+import { createRandomID } from '../context/helpers';
 
 export default function AnalysisModal({ setPopup }) {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -14,7 +14,8 @@ export default function AnalysisModal({ setPopup }) {
 	const [ groupingColData, setGroupingColData ] = useState([]);
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
-	const { excludedRows, barChartModalOpen, columns, rows } = useSpreadsheetState();
+	const { barChartModalOpen } = useSpreadsheetState();
+	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {

@@ -1,9 +1,17 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react';
-import './App.css';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import React, { useEffect } from 'react';
+import {
+	useSpreadsheetState,
+	useSpreadsheetDispatch,
+	useSelectDispatch,
+	useRowsState,
+	useRowsDispatch,
+	useSelectState,
+	useColumnWidthDispatch,
+} from './context/SpreadsheetProvider';
 import Draggable from 'react-draggable';
 import {
+	CREATE_COLUMNS,
 	CLOSE_CONTEXT_MENU,
 	OPEN_CONTEXT_MENU,
 	REMOVE_SELECTED_CELLS,
@@ -11,23 +19,45 @@ import {
 	TOGGLE_COLUMN_TYPE_MODAL,
 } from './constants';
 
-export default function HeaderRenderer({ dataKey, label, units, columnIndex, createNewColumns, resizeColumn }) {
-	const { columns, contextMenuOpen, uniqueColumnIDs } = useSpreadsheetState();
+export default React.memo(function HeaderRenderer({ dataKey, label, units, columnIndex }) {
+	const { contextMenuOpen } = useSpreadsheetState();
+	const { uniqueColumnIDs } = useSelectState();
+	const { columns, rows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const dispatchSelectAction = useSelectDispatch();
+	const dispatchRowsAction = useRowsDispatch();
+	const dispatchColumnWidthAction = useColumnWidthDispatch();
+
+	function createNewColumns(columnCount) {
+		dispatchRowsAction({ type: CREATE_COLUMNS, columnCount });
+	}
 	function openModal(e) {
 		if (!dataKey) {
-			if (columnIndex >= columns.length) {
+			// TODO: Fix these seemingly magic numbers
+			if (columnIndex >= columns.length - 1) {
 				createNewColumns(columnIndex + 1 - columns.length);
 				return;
 			}
 		}
-		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 		dispatchSpreadsheetAction({
 			type: TOGGLE_COLUMN_TYPE_MODAL,
 			columnTypeModalOpen: true,
 			column: columns.find((col) => col.id === dataKey),
 		});
 	}
+
+	useEffect(
+		() => {
+			dispatchColumnWidthAction({ type: 'ADD_COLUMN_WIDTH', dataKey });
+		},
+		[ dataKey ],
+	);
+
+	const resizeColumn = ({ dataKey, deltaX }) => {
+		dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey, deltaX });
+	};
+
 	return (
 		<React.Fragment key={dataKey}>
 			<div
@@ -46,8 +76,9 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, cre
 						if (contextMenuOpen) {
 							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 						}
-						dispatchSpreadsheetAction({
+						dispatchSelectAction({
 							type: SELECT_COLUMN,
+							rows: rows,
 							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
@@ -58,8 +89,9 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, cre
 				onContextMenu={(e) => {
 					if (columnIndex < columns.length) {
 						e.preventDefault();
-						dispatchSpreadsheetAction({
+						dispatchSelectAction({
 							type: SELECT_COLUMN,
+							rows: rows,
 							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
@@ -80,11 +112,13 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, cre
 				axis="x"
 				defaultClassName="DragHandle"
 				defaultClassNameDragging="DragHandleActive"
-				onDrag={(event, { deltaX }) =>
-					resizeColumn({
+				onDrag={(event, { deltaX }) => {
+					if (!dataKey) return;
+					return resizeColumn({
 						dataKey: dataKey,
 						deltaX,
-					})}
+					});
+				}}
 				position={{ x: 0 }}
 				zIndex={999}
 			>
@@ -97,4 +131,4 @@ export default function HeaderRenderer({ dataKey, label, units, columnIndex, cre
 			</Draggable>
 		</React.Fragment>
 	);
-}
+});

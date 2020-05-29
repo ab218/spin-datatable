@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button } from 'antd';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import { useSelectState, useRowsState, useSelectDispatch } from '../context/SpreadsheetProvider';
 import { SET_SELECTED_COLUMN } from '../constants';
 
 export default function AddColumnButton({ clickedColumn }) {
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { rows, selectedColumns } = useSpreadsheetState();
+	const dispatchSelectAction = useSelectDispatch();
+	const { selectedColumns } = useSelectState();
+	const { rows } = useRowsState();
 	function addColumn() {
 		if (!selectedColumns.some(({ id }) => id === clickedColumn.id)) {
 			const colVals = rows.map((row) => Number(row[clickedColumn.id])).filter((x) => x);
@@ -16,7 +17,7 @@ export default function AddColumnButton({ clickedColumn }) {
 				colMin,
 				colMax,
 			};
-			dispatchSpreadsheetAction({ type: SET_SELECTED_COLUMN, selectedColumns: selectedColumns.concat(columnObject) });
+			dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: selectedColumns.concat(columnObject) });
 		}
 	}
 	return (

@@ -1,20 +1,25 @@
 import React, { useEffect } from 'react';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
+import {
+	useSpreadsheetState,
+	useSpreadsheetDispatch,
+	useSelectDispatch,
+	useSelectState,
+	useRowsDispatch,
+	useRowsState,
+} from './context/SpreadsheetProvider';
 import {
 	CLOSE_CONTEXT_MENU,
 	COPY_VALUES,
+	DELETE_COLUMN,
 	DELETE_ROWS,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
 	REMOVE_SELECTED_CELLS,
-	// SET_GROUPED_COLUMNS,
 	SORT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
-	// TOGGLE_LAYOUT,
 	UNEXCLUDE_ROWS,
 } from './constants';
 import { Menu } from 'antd';
-import './App.css';
 
 const { SubMenu } = Menu;
 
@@ -24,10 +29,14 @@ export default function ContextMenu({ paste }) {
 		colName,
 		contextMenuOpen,
 		contextMenuPosition,
-		// layout,
 		contextMenuRowIndex,
+		// layout,
 	} = useSpreadsheetState();
+	const { cellSelectionRanges, uniqueRowIDs } = useSelectState();
+	const { columns } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const dispatchSelectAction = useSelectDispatch();
+	const dispatchRowsAction = useRowsDispatch();
 
 	const onClick = (e) => {
 		if (contextMenuOpen) {
@@ -52,7 +61,7 @@ export default function ContextMenu({ paste }) {
 			menu.style.top = `${top}px`;
 		}
 	});
-
+	// TODO FIX BUG WITH DELETE COLUMN. Residual text.
 	if (contextMenuType === 'column') {
 		return (
 			<div onClick={onClick} className="menu">
@@ -60,11 +69,16 @@ export default function ContextMenu({ paste }) {
 					<Menu.Item
 						key="1"
 						onClick={() =>
-							dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, columnTypeModalOpen: true, colName })}
+							dispatchSpreadsheetAction({
+								type: TOGGLE_COLUMN_TYPE_MODAL,
+								columnTypeModalOpen: true,
+								colName,
+								columns,
+							})}
 					>
 						Column Info...
 					</Menu.Item>
-					<Menu.Item key="4" onClick={() => dispatchSpreadsheetAction({ type: 'DELETE_COLUMN', colName })}>
+					<Menu.Item key="4" onClick={() => dispatchRowsAction({ type: DELETE_COLUMN, colName })}>
 						Delete Column
 					</Menu.Item>
 					{/* <Menu.Item key="2" onClick={setGroupedColumns}>
@@ -80,8 +94,8 @@ export default function ContextMenu({ paste }) {
 						<Menu.Item
 							key="4"
 							onClick={() => {
-								dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-								dispatchSpreadsheetAction({ type: SORT_COLUMN, colName, descending: true });
+								dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+								dispatchRowsAction({ type: SORT_COLUMN, colName, descending: true });
 							}}
 						>
 							Descending
@@ -89,8 +103,8 @@ export default function ContextMenu({ paste }) {
 						<Menu.Item
 							key="5"
 							onClick={() => {
-								dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-								dispatchSpreadsheetAction({ type: SORT_COLUMN, colName, descending: false });
+								dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+								dispatchRowsAction({ type: SORT_COLUMN, colName, descending: false });
 							}}
 						>
 							Ascending
@@ -105,8 +119,8 @@ export default function ContextMenu({ paste }) {
 				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: DELETE_ROWS, rowIndex: contextMenuRowIndex });
-							dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+							dispatchRowsAction({ type: DELETE_ROWS, rowIndex: contextMenuRowIndex, uniqueRowIDs });
+							dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 						}}
 						key="19"
 					>
@@ -114,7 +128,7 @@ export default function ContextMenu({ paste }) {
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: EXCLUDE_ROWS });
+							dispatchRowsAction({ type: EXCLUDE_ROWS, cellSelectionRanges });
 						}}
 						key="20"
 					>
@@ -122,7 +136,7 @@ export default function ContextMenu({ paste }) {
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
-							dispatchSpreadsheetAction({ type: UNEXCLUDE_ROWS });
+							dispatchRowsAction({ type: UNEXCLUDE_ROWS, cellSelectionRanges });
 						}}
 						key="21"
 					>
@@ -138,14 +152,14 @@ export default function ContextMenu({ paste }) {
 			<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 				<Menu.Item
 					onClick={() => {
-						dispatchSpreadsheetAction({ type: COPY_VALUES });
-						dispatchSpreadsheetAction({ type: DELETE_VALUES });
+						dispatchRowsAction({ type: COPY_VALUES, cellSelectionRanges });
+						dispatchRowsAction({ type: DELETE_VALUES, cellSelectionRanges });
 					}}
 					key="17"
 				>
 					Cut
 				</Menu.Item>
-				<Menu.Item onClick={() => dispatchSpreadsheetAction({ type: COPY_VALUES })} key="18">
+				<Menu.Item onClick={() => dispatchRowsAction({ type: COPY_VALUES, cellSelectionRanges })} key="18">
 					Copy
 				</Menu.Item>
 				<Menu.Item onClick={paste} key="19">

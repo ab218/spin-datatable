@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import Spreadsheet from './Spreadsheet';
-import { SpreadsheetProvider } from './SpreadsheetProvider';
+import { SpreadsheetProvider } from './context/SpreadsheetProvider';
 // import eventBus from './EventBusSubscriptions.js';
 
 function App() {

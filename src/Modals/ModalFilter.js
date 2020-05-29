@@ -4,7 +4,13 @@ import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
 import { SelectColumn } from './ModalShared';
-import { useSpreadsheetState, useSpreadsheetDispatch } from '../SpreadsheetProvider';
+import {
+	useSpreadsheetState,
+	useSpreadsheetDispatch,
+	useSelectDispatch,
+	useSelectState,
+	useRowsState,
+} from '../context/SpreadsheetProvider';
 import {
 	FILTER_COLUMN,
 	TOGGLE_FILTER_MODAL,
@@ -18,14 +24,17 @@ export default function AntModal() {
 	const [ clickedColumn, setClickedColumn ] = useState(null);
 
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { filterModalOpen, columns, filters, selectedColumns } = useSpreadsheetState();
+	const dispatchSelectAction = useSelectDispatch();
+	const { filterModalOpen } = useSpreadsheetState();
+	const { columns, rows } = useRowsState();
+	const { filters, selectedColumns } = useSelectState();
 
 	function handleClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
 
 	function handleCancel() {
-		dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
 
@@ -38,8 +47,8 @@ export default function AntModal() {
 			return filtersCopy;
 		}
 		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnID);
-		dispatchSpreadsheetAction({ type: DELETE_FILTER, filters: deleteFilter(), selectedColumns: filteredColumns });
-		dispatchSpreadsheetAction({ type: FILTER_COLUMN });
+		dispatchSelectAction({ type: DELETE_FILTER, filters: deleteFilter(), selectedColumns: filteredColumns });
+		dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
 	}
 
 	return (
@@ -79,7 +88,7 @@ export default function AntModal() {
 }
 
 function FilterColumnSlider({ column, removeColumn }) {
-	const { selectedColumns } = useSpreadsheetState();
+	const { selectedColumns } = useSelectState();
 	const { id, colMin, colMax, label, min, max } = column;
 
 	return (
@@ -100,14 +109,14 @@ function FilterColumnSlider({ column, removeColumn }) {
 }
 
 function FilterColumnPicker({ column, removeColumn }) {
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { rows } = useSpreadsheetState();
+	const dispatchSelectAction = useSelectDispatch();
+	const { rows, columns } = useRowsState();
 	const [ checkedText, setCheckedText ] = useState();
 
 	useEffect(
 		() => {
-			dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: checkedText });
-			dispatchSpreadsheetAction({ type: FILTER_COLUMN });
+			dispatchSelectAction({ type: SET_FILTERS, stringFilter: checkedText });
+			dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[ checkedText ],

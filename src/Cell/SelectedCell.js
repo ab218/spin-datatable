@@ -1,35 +1,61 @@
 import React from 'react';
-import { useSpreadsheetDispatch, useSpreadsheetState } from '../SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU, REMOVE_SELECTED_CELLS, FORMULA, STRING } from '../constants';
-import '../App.css';
+import {
+	useSpreadsheetDispatch,
+	useSelectDispatch,
+	useRowsDispatch,
+	useRowsState,
+} from '../context/SpreadsheetProvider';
+import {
+	ACTIVATE_CELL,
+	CREATE_ROWS,
+	OPEN_CONTEXT_MENU,
+	REMOVE_SELECTED_CELLS,
+	MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	FORMULA,
+	STRING,
+} from '../constants';
 
-export default function SelectedCell({
-	changeActiveCell,
-	column,
-	columnIndex,
-	columnID,
-	handleContextMenu,
-	modifyCellSelectionRange,
-	rowIndex,
-	cellValue,
-}) {
+export default React.memo(function SelectedCell({ column, columnIndex, columnID, rowIndex, cellValue }) {
+	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	const { contextMenuOpen } = useSpreadsheetState();
+	const dispatchRowsAction = useRowsDispatch();
+	const { rows, columns } = useRowsState();
+
+	function changeActiveCell(row, column, selectionActive, columnID) {
+		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
+	}
+
+	function handleContextMenu(e) {
+		e.preventDefault();
+		return dispatchSpreadsheetAction({
+			type: OPEN_CONTEXT_MENU,
+			contextMenuPosition: { left: e.pageX, top: e.pageY },
+		});
+	}
 
 	function onMouseDown(event) {
 		event.preventDefault();
-		if (contextMenuOpen) {
-			dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-		}
+		// if (contextMenuOpen) {
+		// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
+		// }
 		if (event.button === 0 && column && column.type !== FORMULA) {
-			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+			dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+			if (rowIndex === rows.length) {
+				dispatchRowsAction({ type: CREATE_ROWS, rowCount: 1 });
+			}
 			changeActiveCell(rowIndex, columnIndex, event.ctrlKey || event.shiftKey || event.metaKey, columnID);
 		}
 	}
 
 	function onMouseEnter(event) {
 		if (typeof event.buttons === 'number' && event.buttons > 0) {
-			modifyCellSelectionRange(rowIndex, columnIndex, true);
+			dispatchSelectAction({
+				type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
+				endRangeRow: rowIndex,
+				endRangeColumn: columnIndex,
+				rows,
+				columns,
+			});
 		}
 	}
 
@@ -67,6 +93,7 @@ export default function SelectedCell({
 				lineHeight: 2,
 				padding: '0 5px',
 			}}
+			// onKeyDown={onKeyDown}
 			onContextMenu={handleContextMenu}
 			onMouseEnter={onMouseEnter}
 			onMouseDown={onMouseDown}
@@ -74,4 +101,4 @@ export default function SelectedCell({
 			{cellValue}
 		</div>
 	);
-}
+});

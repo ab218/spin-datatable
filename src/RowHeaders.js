@@ -1,18 +1,37 @@
 import React from 'react';
 import { Icon } from 'antd';
-import './App.css';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import { CLOSE_CONTEXT_MENU, OPEN_CONTEXT_MENU, SELECT_ROW } from './constants';
+import {
+	useSpreadsheetState,
+	useRowsState,
+	useSpreadsheetDispatch,
+	useSelectDispatch,
+	useRowsDispatch,
+	useSelectState,
+} from './context/SpreadsheetProvider';
+import {
+	CLOSE_CONTEXT_MENU,
+	CREATE_ROWS,
+	MODIFY_CURRENT_SELECTION_CELL_RANGE,
+	OPEN_CONTEXT_MENU,
+	SELECT_ROW,
+} from './constants';
 
-export default function RowHeaders({ modifyCellSelectionRange, createNewRows, rowIndex, rowData }) {
+export default function RowHeaders({ rowIndex, rowData }) {
+	const { contextMenuOpen } = useSpreadsheetState();
+	const { uniqueRowIDs } = useSelectState();
+	const { columns, rows, excludedRows } = useRowsState();
+	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	const dispatchSelectAction = useSelectDispatch();
+	const dispatchRowsAction = useRowsDispatch();
+	function createNewRows(rowCount) {
+		dispatchRowsAction({ type: CREATE_ROWS, rowCount });
+	}
 	function rowHeadersOnDoubleClick(e, rowIndex) {
 		e.preventDefault();
 		if (rowIndex + 1 > rows.length) {
 			createNewRows(rowIndex + 1 - rows.length);
 		}
 	}
-	const { contextMenuOpen, excludedRows, rows, uniqueRowIDs } = useSpreadsheetState();
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	// only show row numbers of existing rows
 	return (
 		<div
@@ -20,7 +39,7 @@ export default function RowHeaders({ modifyCellSelectionRange, createNewRows, ro
 				if (rowIndex < rows.length) {
 					e.preventDefault();
 					// if (e.target.style.backgroundColor !== 'rgb(160,185,225)') {
-					// 	dispatchSpreadsheetAction({
+					// 	dispatchSelectAction({
 					// 		type: SELECT_ROW,
 					// 		rowIndex,
 					// 	});
@@ -39,8 +58,9 @@ export default function RowHeaders({ modifyCellSelectionRange, createNewRows, ro
 					if (contextMenuOpen) {
 						dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 					}
-					dispatchSpreadsheetAction({
+					dispatchSelectAction({
 						type: SELECT_ROW,
+						columns: columns,
 						rowID: rowData.id,
 						rowIndex,
 						selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
@@ -49,7 +69,13 @@ export default function RowHeaders({ modifyCellSelectionRange, createNewRows, ro
 			}}
 			onMouseEnter={(e) => {
 				if (typeof e.buttons === 'number' && e.buttons > 0) {
-					modifyCellSelectionRange(rowIndex, 1);
+					dispatchSelectAction({
+						type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
+						rows,
+						columns,
+						endRangeRow: rowIndex,
+						endRangeColumn: 1,
+					});
 				}
 			}}
 			onDoubleClick={(e) => rowHeadersOnDoubleClick(e, rowIndex)}

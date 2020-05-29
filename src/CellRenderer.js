@@ -1,157 +1,35 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
-import './App.css';
-import { useSpreadsheetState, useSpreadsheetDispatch } from './SpreadsheetProvider';
-import ActiveCell from './Cell/ActiveCell';
-import SelectedCell from './Cell/SelectedCell';
-import NormalCell from './Cell/NormalCell';
-import { CLOSE_CONTEXT_MENU, OPEN_CONTEXT_MENU } from './constants';
+import ValueCell from './Cell/ValueCell';
+import BlankCell from './Cell/BlankCell';
+import NoColumnNoRowCell from './Cell/NoColumnNoRowCell';
 
-export default function CellRenderer({
+export default React.memo(function CellRenderer({
 	rowIndex,
 	columnIndex,
 	rowID,
 	cellData,
 	column,
 	columnID,
-	createNewColumns,
-	createNewRows,
-	changeActiveCell,
-	modifyCellSelectionRange,
-	selectCell,
-	updateCell,
+	rowsLength,
 }) {
-	const {
-		activeCell,
-		cellSelectionRanges,
-		currentCellSelectionRange,
-		columns,
-		contextMenuOpen,
-		newInputCellValue,
-		rows,
-	} = useSpreadsheetState();
-
-	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-
-	function isSelectedCell(rowIndex, columnIndex) {
-		function withinRange(value) {
-			const { top, right, bottom, left } = value;
-			if (columnIndex === null) {
-				return rowIndex >= top && rowIndex <= bottom;
-			} else if (rowIndex === null) {
-				return columnIndex >= left && columnIndex <= right;
-			} else {
-				return rowIndex >= top && rowIndex <= bottom && columnIndex >= left && columnIndex <= right;
-			}
-		}
-		// const withinASelectedRange = cellSelectionRanges.some(withinRange);
-		// return withinASelectedRange || (currentCellSelectionRange && withinRange(currentCellSelectionRange));
-		const emptyArray = [];
-		return cellSelectionRanges.concat(currentCellSelectionRange || emptyArray).some(withinRange);
-	}
-
-	function handleContextMenu(e) {
-		e.preventDefault();
-		dispatchSpreadsheetAction({ type: OPEN_CONTEXT_MENU, contextMenuPosition: { left: e.pageX, top: e.pageY } });
-	}
-
-	if (activeCell && activeCell.row === rowIndex && activeCell.column === columnIndex) {
+	const blankClickableRow = rowIndex === rowsLength;
+	if ((rowID && columnID) || blankClickableRow) {
 		return (
-			<ActiveCell
-				updateCell={updateCell}
-				column={column}
-				handleContextMenu={handleContextMenu}
-				key={`row${rowIndex}col${columnIndex}`}
-				columnIndex={columnIndex}
-				createNewRows={createNewRows}
-				rowIndex={rowIndex}
-				rows={rows}
-				value={newInputCellValue || cellData}
-			/>
-		);
-	} else if (isSelectedCell(rowIndex, columnIndex)) {
-		// } else if (uniqueColumnIDs.includes(columnID) && uniqueRowIDs.includes(rowID)) {
-		// } else if (idsInclude(rowID, columnID, uniqueRowIDs, uniqueColumnIDs)) {
-		return (
-			<SelectedCell
-				handleContextMenu={handleContextMenu}
+			<ValueCell
 				key={`Row${rowIndex}Col${columnIndex}`}
-				changeActiveCell={changeActiveCell}
 				column={column}
 				columnID={columnID}
-				columnIndex={columnIndex}
 				rowID={rowID}
+				columnIndex={columnIndex}
 				rowIndex={rowIndex}
 				cellValue={cellData}
-				modifyCellSelectionRange={modifyCellSelectionRange}
+				blankClickableRow={blankClickableRow}
 			/>
 		);
-	} else if (rowIndex === rows.length) {
-		// This is a blank clickable row
-		if (columnID) {
-			return (
-				<div
-					style={{ backgroundColor: 'white', height: '100%', width: '100%' }}
-					onMouseDown={(e) => {
-						e.preventDefault();
-						if (contextMenuOpen) {
-							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-						}
-						selectCell(rowIndex, columnIndex, e.ctrlKey || e.shiftKey || e.metaKey);
-					}}
-				/>
-			);
-		} else {
-			// Cells in blank clickable row not in a defined column
-			return (
-				<div
-					onDoubleClick={(e) => {
-						e.preventDefault();
-						if (contextMenuOpen) {
-							dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-						}
-						if (columnIndex > columns.length) {
-							createNewColumns(columnIndex - columns.length);
-						}
-					}}
-					style={{ backgroundColor: '#eee', height: '100%', width: '100%' }}
-				/>
-			);
-		}
+	} else if (rowID && !columnID) {
+		return <BlankCell rowIndex={rowIndex} columnIndex={columnIndex} />;
 	} else if (!rowID) {
-		// The cells in these rows cannot be clicked
-		return <div className="non-interactive-cell" style={{ backgroundColor: '#eee', height: '100%', width: '100%' }} />;
-	} else if (columnID) {
-		return (
-			<NormalCell
-				key={`Row${rowIndex}Col${columnIndex}`}
-				columns={columns}
-				column={column}
-				columnID={columnID}
-				columnIndex={columnIndex}
-				modifyCellSelectionRange={modifyCellSelectionRange}
-				rowID={rowID}
-				rowIndex={rowIndex}
-				selectCell={selectCell}
-				cellValue={cellData}
-			/>
-		);
-	} else {
-		return (
-			// cells in defined rows but undefined columns
-			<div
-				style={{ backgroundColor: '#eee', height: '100%', width: '100%' }}
-				key={`row${rowIndex}col${columnIndex}`}
-				onDoubleClick={(e) => {
-					e.preventDefault();
-					if (contextMenuOpen) {
-						dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-					}
-					if (columnIndex > columns.length) {
-						createNewColumns(columnIndex - columns.length);
-					}
-				}}
-			/>
-		);
+		// No column ID and no Row ID. The cells in these rows cannot be clicked.
+		return <NoColumnNoRowCell />;
 	}
-}
+});

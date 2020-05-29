@@ -1,47 +1,90 @@
-import React from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useEffect, useRef, useCallback } from 'react';
 import { STRING } from '../constants';
-export default class ActiveCell extends React.PureComponent {
-	constructor(props) {
-		super(props);
-		this.state = {
-			currentValue: '',
-		};
-		this.input = React.createRef();
+import { cursorKeyToRowColMapper } from '../Spreadsheet';
+import { ACTIVATE_CELL, CREATE_ROWS, UPDATE_CELL, FORMULA } from '../constants';
+import { useRowsState, useSelectDispatch, useRowsDispatch } from '../context/SpreadsheetProvider';
+export default React.memo(function ActiveCell(props) {
+	const { columnIndex, rowIndex, column, handleContextMenu, value } = props;
+	const dispatchRowsAction = useRowsDispatch();
+	const dispatchSelectAction = useSelectDispatch();
+	const { columns, rows } = useRowsState();
+	const inputRef = useRef(null);
+
+	function changeActiveCell(row, column, selectionActive, columnID) {
+		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
 	}
 
-	componentWillUnmount() {
-		const { columnIndex, rowIndex, updateCell } = this.props;
-		const { currentValue } = this.state;
-		// Don't update blank cell if nothing was changed
-		if (currentValue || this.props.value) {
-			updateCell(this.input.current.value, rowIndex, columnIndex);
+	const updateCellCallback = useCallback(
+		function updateCell(currentValue, rowIndex, columnIndex) {
+			// Don't allow formula column cells to be edited
+			const formulaColumns = columns.map((col) => (col.type === FORMULA ? columns.indexOf(col) : null));
+			if (!formulaColumns.includes(columnIndex - 1)) {
+				dispatchRowsAction({
+					type: UPDATE_CELL,
+					rowIndex,
+					columnIndex: columnIndex - 1,
+					cellValue: currentValue,
+				});
+			}
+		},
+		[ rowIndex, columnIndex ],
+	);
+
+	useEffect(
+		() => {
+			if (rowIndex === rows.length) {
+				dispatchRowsAction({ type: CREATE_ROWS, rowCount: 1 });
+			}
+			return () => {
+				const currentValue = inputRef.current.value;
+				if (currentValue && currentValue !== value) {
+					updateCellCallback(currentValue, rowIndex, columnIndex);
+				}
+			};
+		},
+		[ inputRef ],
+	);
+
+	const onKeyDown = (event, rows, rowIndex, columns, columnIndex) => {
+		switch (event.key) {
+			case 'ArrowDown':
+			case 'ArrowUp':
+			case 'Enter':
+			case 'Tab':
+				event.preventDefault();
+				const { row, column } = cursorKeyToRowColMapper[event.key](
+					rowIndex,
+					columnIndex,
+					rows.length,
+					columns.length,
+					event.shiftKey,
+				);
+				changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
+				break;
+			default:
+				break;
 		}
-	}
+	};
 
-	render() {
-		const { column, createNewRows, rows, rowIndex } = this.props;
-		return (
-			<div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => this.props.handleContextMenu(e)}>
-				<input
-					autoFocus
-					onFocus={(e) => e.target.select()}
-					defaultValue={this.props.value}
-					type="text"
-					style={{
-						textAlign: column && column.type === STRING ? 'left' : 'right',
-						height: '100%',
-						width: '100%',
-					}}
-					ref={this.input}
-					onChange={(e) => {
-						e.preventDefault();
-						if (rowIndex + 1 > rows.length) {
-							createNewRows(rowIndex + 1 - rows.length);
-						}
-						this.setState({ currentValue: e.target.value });
-					}}
-				/>
-			</div>
-		);
-	}
-}
+	return (
+		<div style={{ height: '100%', width: '100%' }} onContextMenu={(e) => handleContextMenu(e)}>
+			<input
+				autoFocus
+				onFocus={(e) => e.target.select()}
+				defaultValue={value}
+				type="text"
+				style={{
+					textAlign: column && column.type === STRING ? 'left' : 'right',
+					height: '100%',
+					width: '100%',
+				}}
+				ref={inputRef}
+				onKeyDown={(e) => onKeyDown(e, rows, rowIndex, columns, columnIndex)}
+				onChange={(e) => {
+					e.preventDefault();
+				}}
+			/>
+		</div>
+	);
+});
