@@ -183,7 +183,6 @@ export function rowsReducer(state, action) {
 			);
 			function mapRows(rows, copiedValues, destinationColumns, destinationRows) {
 				const indexOfFirstDestinationRow = rows.findIndex((row) => row.id === destinationRows[0]);
-				console.log(indexOfFirstDestinationRow, rows.length, destinationRows);
 				// We create an updated copy of the rows that are to be changed as a result of the paste operation
 				const newRowValues = [];
 				for (let copiedValuesIndex = 0; copiedValuesIndex < copiedValues.length; copiedValuesIndex++) {
