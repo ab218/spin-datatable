@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useCallback } from 'react';
-import { useRowsState, useColumnWidthState, useColumnWidthDispatch } from './context/SpreadsheetProvider';
+import { useRowsState, useColumnWidthState } from './context/SpreadsheetProvider';
 import CellRenderer from './CellRenderer';
 import AnalysisMenu from './AnalysisMenu';
 import Sidebar from './Sidebar';
@@ -20,17 +20,9 @@ export const checkIfValidNumber = (str) => {
 export default React.memo(function TableView() {
 	const { rows, columns } = useRowsState();
 	const { widths } = useColumnWidthState();
-	const dispatchColumnWidthAction = useColumnWidthDispatch();
 	const [ visibleColumns, setVisibleColumns ] = useState(1);
 	const [ visibleRows, setVisibleRows ] = useState(1);
 	const [ tableWidth, setTableWidth ] = useState(1000);
-
-	// When a new column is created, set the default width to 100px;
-	// useEffect(() => {
-	// 	columns.forEach((col) => {
-	// 		dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey: col.id, deltaX: 100 });
-	// 	});
-	// }, []);
 
 	useEffect(
 		() => {

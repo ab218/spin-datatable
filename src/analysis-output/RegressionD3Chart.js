@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import './analysis-window.css';
+import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
 
 const normalPointSize = 2;
 const highlightedPointColor = 'red';
@@ -68,7 +69,18 @@ const drawBasicPath = (points, name, title, svg, pathTooltip) => {
 		});
 };
 
-function drawHistogramBorders(svg, yPoints, xPoints, histogramBinTooltip) {
+function drawHistogramBorders(
+	svg,
+	yPoints,
+	xPoints,
+	histogramBinTooltip,
+	dispatchSelectAction,
+	excludedRows,
+	rows,
+	columns,
+	colY,
+	colX,
+) {
 	// Histogram borders. Lower number = higher bars
 	const barHeight = 150;
 	const barsY = d3.scaleLinear().range([ height, barHeight ]);
@@ -103,15 +115,13 @@ function drawHistogramBorders(svg, yPoints, xPoints, histogramBinTooltip) {
 	}
 
 	function onClickSelectCells(thisBar, bar, col) {
-		// let metaKeyPressed = false;
-		if (d3.event.metaKey) {
-			// metaKeyPressed = true;
-		} else {
-			d3.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
-			d3.selectAll('rect').style('fill', normalBarFill);
+		const metaKeyPressed = d3.event.metaKey;
+		if (!metaKeyPressed) {
+			svg.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
+			svg.selectAll('rect').style('fill', normalBarFill);
 		}
 		thisBar.style('fill', clickedBarFill);
-		d3
+		svg
 			.selectAll('.point')
 			.filter((d) => {
 				const binMin = bar.x0;
@@ -126,6 +136,16 @@ function drawHistogramBorders(svg, yPoints, xPoints, histogramBinTooltip) {
 			})
 			.attr('r', clickedBarPointSize)
 			.style('fill', clickedBarFill);
+
+		const selectedColumn = col === 'x' ? colX.id : colY.id;
+		const columnIndex = columns.findIndex((col) => col.id === selectedColumn);
+		if (!metaKeyPressed) {
+			dispatchSelectAction({ type: 'REMOVE_SELECTED_CELLS' });
+		}
+		const rowIndexes = rows.reduce((acc, row, rowIndex) => {
+			return !excludedRows.includes(row.id) && bar.includes(Number(row[selectedColumn])) ? acc.concat(rowIndex) : acc;
+		}, []);
+		dispatchSelectAction({ type: 'SELECT_CELLS', rowIndexes, columnIndex: columnIndex, rows, columns });
 	}
 	// Histogram Bar X axis
 	svg
@@ -211,7 +231,8 @@ function onMouseLeavePoint(d, thisPoint, pointTooltip) {
 export default function D3Container({ data, chartOptions, CI, alpha }) {
 	const d3Container = useRef(null);
 	const { reg1, reg2, reg3, reg4, reg5, reg6, colY, colX, coordinates } = data;
-
+	const dispatchSelectAction = useSelectDispatch();
+	const { excludedRows, rows, columns } = useRowsState();
 	const {
 		histogramBorders,
 		linearRegressionLine,
@@ -384,7 +405,18 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 			const histogramBinTooltip = chartContainer.select('#histogram-border-tooltip');
 			const removeChartElement = (className) => chartContainer.selectAll(className).remove();
 			if (histogramBorders) {
-				drawHistogramBorders(svg, yPoints, xPoints, histogramBinTooltip);
+				drawHistogramBorders(
+					svg,
+					yPoints,
+					xPoints,
+					histogramBinTooltip,
+					dispatchSelectAction,
+					excludedRows,
+					rows,
+					columns,
+					colY,
+					colX,
+				);
 			} else {
 				removeChartElement(`.histogramBorders`);
 			}

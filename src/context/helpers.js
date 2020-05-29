@@ -182,7 +182,7 @@ export function updateRow(row, columnID, columns, dependencyMap) {
 			}
 			return {
 				...rowSoFar,
-				[columnID]: nerdamer(updatedFormula).text('decimals'),
+				[columnID]: nerdamer(updatedFormula).text('decimals', 6),
 			};
 		}, row);
 		return updatedRow;

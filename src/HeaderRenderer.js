@@ -57,17 +57,6 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 	const resizeColumn = ({ dataKey, deltaX }) => {
 		dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey, deltaX });
 	};
-	// setWidths((prevWidths) => {
-	//   // for empty columns
-	//   if (!dataKey) {
-	//     return prevWidths;
-	//   }
-	//   return {
-	//     ...prevWidths,
-	//     // don't allow columns to shrink below 50px
-	//     [dataKey]: Math.max(prevWidths[dataKey] + deltaX, 50),
-	//   };
-	// });
 
 	return (
 		<React.Fragment key={dataKey}>

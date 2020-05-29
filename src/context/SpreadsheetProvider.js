@@ -130,7 +130,6 @@ export function SpreadsheetProvider({ children }) {
 		const { type, dataKey, deltaX } = action;
 		switch (type) {
 			case 'ADD_COLUMN_WIDTH': {
-				console.log(dataKey);
 				return { ...state, widths: { ...state.widths, [dataKey]: 100 } };
 			}
 			case 'RESIZE_COLUMN': {
