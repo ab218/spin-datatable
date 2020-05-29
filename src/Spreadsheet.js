@@ -84,6 +84,8 @@ export default function Spreadsheet() {
 		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
 		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
 		const { top, left } = cellSelectionRanges[0];
+		// quick patch to prevent major bug
+		if (top === rows.length) return;
 		const { height, width } = copiedValues2dArrayDimensions;
 		const numberOfColumnsRequired = left - 1 + width - columns.length;
 		const numberOfRowsRequired = top + height - rows.length;
