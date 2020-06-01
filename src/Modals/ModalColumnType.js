@@ -109,6 +109,7 @@ export default function AntModal({ selectedColumn }) {
 				type: columnType,
 				formula: swapLabelsWithIDs(columnFormula, columns),
 				id: selectedColumn.id,
+				description: columnDescription,
 			},
 		});
 		dispatchSpreadsheetAction({ type: CLOSE_COLUMN_TYPE_MODAL });
