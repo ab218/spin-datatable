@@ -3,8 +3,9 @@ import './analysis-window.css';
 import { Dropdown, Menu } from 'antd';
 import { SAVE_VALUES_TO_COLUMN } from '../constants';
 import { useRowsDispatch } from '../context/SpreadsheetProvider';
+import { evaluatePValue } from './RegressionAnalysis';
 
-const paramEstimates = (coeffs, xLabel, centered, xMean) => {
+const paramEstimates = (coeffs, xLabel, centered, xMean, standard_errors, tvalues, pvalues) => {
 	let temp = [];
 	let counter = 2;
 	for (let i = 2; i < coeffs.length; i++) {
@@ -14,6 +15,9 @@ const paramEstimates = (coeffs, xLabel, centered, xMean) => {
 					{centered ? `(${xLabel} - ${xMean})` : xLabel}^{counter}
 				</td>
 				<td className="small right">{coeffs[i].toFixed(4) / 1}</td>
+				<td className="small right">{standard_errors[i].toFixed(4) / 1}</td>
+				<td className="small right">{tvalues[i].toFixed(4) / 1}</td>
+				<td className="small right">{evaluatePValue(pvalues[i])}</td>
 			</tr>,
 		);
 		counter++;
@@ -21,7 +25,7 @@ const paramEstimates = (coeffs, xLabel, centered, xMean) => {
 	return temp;
 };
 
-const paramEstimateTable = (coeffs, xLabel, centered, xMean) => (
+const paramEstimateTable = (coeffs, xLabel, centered, xMean, standard_errors, tvalues, pvalues) => (
 	<table>
 		<tbody>
 			<tr>
@@ -32,16 +36,25 @@ const paramEstimateTable = (coeffs, xLabel, centered, xMean) => (
 			<tr>
 				<td className="table-header large">Term</td>
 				<td className="table-header small right">Estimate</td>
+				<td className="table-header small right">Std Error</td>
+				<td className="table-header small right">t Value</td>
+				<td className="table-header small right">p Value</td>
 			</tr>
 			<tr>
 				<td className="header-background large">Intercept</td>
 				<td className="small right">{coeffs[0].toFixed(4) / 1}</td>
+				<td className="small right">{standard_errors[0].toFixed(4) / 1}</td>
+				<td className="small right">{tvalues[0].toFixed(4) / 1}</td>
+				<td className="small right">{evaluatePValue(pvalues[0])}</td>
 			</tr>
 			<tr>
 				<td className="header-background">{xLabel}</td>
 				<td className="small right">{coeffs[1].toFixed(4) / 1}</td>
+				<td className="small right">{standard_errors[1].toFixed(4) / 1}</td>
+				<td className="small right">{tvalues[1].toFixed(4) / 1}</td>
+				<td className="small right">{evaluatePValue(pvalues[1])}</td>
 			</tr>
-			{paramEstimates(coeffs, xLabel, centered, xMean)}
+			{paramEstimates(coeffs, xLabel, centered, xMean, standard_errors, tvalues, pvalues)}
 		</tbody>
 	</table>
 );
@@ -59,7 +72,20 @@ export default function GenerateRegressionTemplate({
 	centered,
 	alpha,
 }) {
-	const { rsquared, rsquared_adj, mse_error, df_model, mse_model, ssr, df_total, df_resid } = polyDegree.stats;
+	const {
+		rsquared,
+		rsquared_adj,
+		mse_error,
+		df_model,
+		mse_model,
+		ssr,
+		df_total,
+		df_resid,
+		standard_errors,
+		tvalues,
+		pvalues,
+		f_pvalue,
+	} = polyDegree.stats;
 	return (
 		<details className={`analysis-details ${className}`} open id={id}>
 			<summary className="analysis-summary-title">
@@ -102,35 +128,39 @@ export default function GenerateRegressionTemplate({
 					<tr>
 						<td className="table-header small">Source</td>
 						<td className="table-header xsmall right">DF</td>
-						<td className="table-header medium right">Sum Of Squares</td>
-						<td className="table-header medium right">Mean Square</td>
+						<td className="table-header small right">Sum Of Squares</td>
+						<td className="table-header small right">Mean Square</td>
 						<td className="table-header small right">F Ratio</td>
+						<td className="table-header small right">F p Value</td>
 					</tr>
 					<tr>
 						<td className="header-background small">Model</td>
 						<td className="xsmall right">{df_model}</td>
-						<td className="medium right">{mse_model.toFixed(4) / 1}</td>
-						<td className="medium right">{mse_model.toFixed(4) / 1}</td>
-						<td className="small right">{(mse_model / mse_error).toFixed(4) / 1}</td>
+						<td className="small right">{mse_model.toFixed(2) / 1}</td>
+						<td className="small right">{mse_model.toFixed(2) / 1}</td>
+						<td className="small right">{(mse_model / mse_error).toFixed(2) / 1}</td>
+						<td className="small right">{evaluatePValue(f_pvalue)}</td>
 					</tr>
 					<tr>
 						<td className="header-background small">Error</td>
 						<td className="xsmall right">{df_resid}</td>
-						<td className="medium right">{ssr.toFixed(4) / 1}</td>
-						<td className="medium right">{mse_error.toFixed(4) / 1}</td>
+						<td className="small right">{ssr.toFixed(2) / 1}</td>
+						<td className="small right">{mse_error.toFixed(2) / 1}</td>
+						<td className="small right" />
 						<td className="small right" />
 					</tr>
 					<tr>
 						<td className="header-background small">C. Total</td>
 						<td className="xsmall right">{df_total}</td>
-						<td className="medium right">{(mse_model + ssr).toFixed(4) / 1}</td>
-						<td className="medium right" />
+						<td className="small right">{(mse_model + ssr).toFixed(2) / 1}</td>
+						<td className="small right" />
+						<td className="small right" />
 						<td className="small right" />
 					</tr>
 				</tbody>
 			</table>
 			<div style={{ height: '10px' }} />
-			{paramEstimateTable(coeffs, xLabel, centered, xMean)}
+			{paramEstimateTable(coeffs, xLabel, centered, xMean, standard_errors, tvalues, pvalues)}
 		</details>
 	);
 }
