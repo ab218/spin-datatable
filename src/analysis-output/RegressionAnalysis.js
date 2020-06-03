@@ -126,7 +126,7 @@ function SummaryStatsTable({ data }) {
 
 const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
 
-const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
+export const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
 
 const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
 	let temp = `${yLabel} = ${coeffs[0].toFixed(4) / 1} ${addOrSubtract(coeffs[1])} ${Math.abs(coeffs[1]).toFixed(4) /
