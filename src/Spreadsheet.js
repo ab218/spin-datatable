@@ -59,7 +59,7 @@ export default function Spreadsheet() {
 
 	useEffect(() => {
 		// Activate cell top leftmost cell on first load
-		dispatchSelectAction({ type: ACTIVATE_CELL, row: 0, column: 1 });
+		// dispatchSelectAction({ type: ACTIVATE_CELL, row: 0, column: 1 });
 		// Wake up cloud functions
 		pingCloudFunctions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps

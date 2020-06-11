@@ -86,7 +86,7 @@ export default function AnalysisModal({ setPopup }) {
 		// }
 
 		async function linearRegression() {
-			if (colXArr.length >= 3 && colYArr.length >= 3) {
+			if (colXArr.length >= 10 && colYArr.length >= 10) {
 				try {
 					// function removeTargetClickEvent(event) {
 					// 	if (event.data === 'closed') {
@@ -141,7 +141,9 @@ export default function AnalysisModal({ setPopup }) {
 					setError('Something went wrong while performing analysis');
 				}
 			} else {
-				setError('Columns must each contain at least 3 values to perform this analysis');
+				setError(
+					'Analyzing fewer than 10 cases is not advised. Columns must each contain at least 10 values to perform this analysis.',
+				);
 				return;
 			}
 		}

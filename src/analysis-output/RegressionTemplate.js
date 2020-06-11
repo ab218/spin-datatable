@@ -29,7 +29,7 @@ const paramEstimateTable = (coeffs, xLabel, centered, xMean, standard_errors, tv
 	<table>
 		<tbody>
 			<tr>
-				<td colSpan={2} className="table-subtitle">
+				<td colSpan={5} className="table-subtitle">
 					Parameter Estimates
 				</td>
 			</tr>
@@ -121,7 +121,7 @@ export default function GenerateRegressionTemplate({
 			<table>
 				<tbody>
 					<tr>
-						<td colSpan={5} className="table-subtitle">
+						<td colSpan={6} className="table-subtitle">
 							Analysis of Variance
 						</td>
 					</tr>

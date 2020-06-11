@@ -20,14 +20,14 @@ export function createRandomLetterString() {
 }
 
 // quickly build rows out of copy/pasted data
-export function createRows(table, statsColumns) {
+export function createRows(table, columns) {
 	const tableRows = table.split('\n');
 	const table2d = tableRows.map((row) => row.split('\t'));
 	const rows = [];
 	for (let i = 0; i < table2d.length; i++) {
 		const obj = { id: createRandomID() };
-		for (let j = 0; j < statsColumns.length; j++) {
-			obj[statsColumns[j].id] = table2d[i][j];
+		for (let j = 0; j < columns.length; j++) {
+			obj[columns[j].id] = table2d[i][j];
 		}
 		rows.push(obj);
 	}
