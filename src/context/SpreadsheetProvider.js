@@ -3,12 +3,8 @@ import { selectReducer } from './reducers/selectReducer';
 import { spreadsheetReducer } from './reducers/spreadsheetReducer';
 import { columnWidthReducer } from './reducers/columnWidthReducer';
 import { rowsReducer } from './reducers/rowsReducer';
-// import { createRows } from './helpers';
-import {
-	// statsColumns,
-	// potatoLiverData,
-	startingColumn,
-} from './dummyData';
+import { potatoLiverData, startingColumn, statsColumns } from './dummyData';
+import { createRows } from './helpers';
 
 const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
@@ -102,7 +98,7 @@ export function SpreadsheetProvider({ children }) {
 	const initialSelectState = {
 		activeCell: null,
 		cellSelectionRanges: [],
-		currentCellSelectionRange: null,
+		currentCellSelectionRange: [],
 		filters: {
 			stringFilters: [],
 			numberFilters: [],
@@ -116,14 +112,16 @@ export function SpreadsheetProvider({ children }) {
 	};
 
 	const initialRowsState = {
-		columns: startingColumn,
+		// columns: startingColumn,
+		// rows: [],
+		// inverseDependencyMap: {},
+		columns: statsColumns,
+		rows: createRows(potatoLiverData, statsColumns),
+		inverseDependencyMap: {
+			_abc1_: [ '_abc3_' ],
+			_abc2_: [ '_abc3_' ],
+		},
 		excludedRows: [],
-		rows: [],
-		// inverseDependencyMap: {
-		// 	_abc1_: [ '_abc3_' ],
-		// 	_abc2_: [ '_abc3_' ],
-		// },
-		inverseDependencyMap: {},
 		valuesColumnsCounter: 0,
 	};
 
