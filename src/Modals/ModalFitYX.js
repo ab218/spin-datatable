@@ -141,9 +141,7 @@ export default function AnalysisModal({ setPopup }) {
 					setError('Something went wrong while performing analysis');
 				}
 			} else {
-				setError(
-					'Analyzing fewer than 10 cases is not advised. Columns must each contain at least 10 values to perform this analysis.',
-				);
+				setError('Columns must each contain at least 10 values to perform this analysis.');
 				return;
 			}
 		}
