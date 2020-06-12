@@ -207,7 +207,8 @@ function mapPoints(arr1, arr2) {
 	for (let i = 0; i < arr1.length; i++) {
 		output.push([ arr1[i], arr2[i] ]);
 	}
-	return output;
+	const sortedOutput = output.sort((a, b) => b[0] - a[0]);
+	return sortedOutput;
 }
 
 function onMouseEnterPoint(d, thisPoint, colXLabel, colYLabel, pointTooltip) {
@@ -524,23 +525,12 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		const hitboxClassObs = `.${curveClass}Obs-hitbox`;
 		// const pathTooltip = chartContainer.select('#regression-line-tooltip');
 		const removeChartElement = (className) => chartContainer.selectAll(className).remove();
+		const coordinatesX = coordinates.map((coord) => coord[0]);
 		if (CI && CI[degree].fit) {
 			removeChartElement(dotCurveClassFit);
 			removeChartElement(hitboxClassFit);
-			drawBasicPath(
-				mapPoints(xPoints, data.ci[alpha].mean_ci_upper.sort((a, b) => b - a)),
-				curveClassFit,
-				title,
-				svg,
-				null,
-			);
-			drawBasicPath(
-				mapPoints(xPoints, data.ci[alpha].mean_ci_lower.sort((a, b) => b - a)),
-				curveClassFit,
-				title,
-				svg,
-				null,
-			);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].mean_ci_upper), curveClassFit, title, svg, null);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].mean_ci_lower), curveClassFit, title, svg, null);
 		} else {
 			removeChartElement(dotCurveClassFit);
 			removeChartElement(hitboxClassFit);
@@ -548,20 +538,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		if (CI && CI[degree].obs) {
 			removeChartElement(dotCurveClassObs);
 			removeChartElement(hitboxClassObs);
-			drawBasicPath(
-				mapPoints(xPoints, data.ci[alpha].obs_ci_upper.sort((a, b) => b - a)),
-				curveClassObs,
-				title,
-				svg,
-				null,
-			);
-			drawBasicPath(
-				mapPoints(xPoints, data.ci[alpha].obs_ci_lower.sort((a, b) => b - a)),
-				curveClassObs,
-				title,
-				svg,
-				null,
-			);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].obs_ci_upper), curveClassObs, title, svg, null);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].obs_ci_lower), curveClassObs, title, svg, null);
 		} else {
 			removeChartElement(dotCurveClassObs);
 			removeChartElement(hitboxClassObs);
