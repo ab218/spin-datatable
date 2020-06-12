@@ -399,8 +399,13 @@ const menu = (title, id, conf, setCI, CI) => (
 );
 
 function ChartOptionsLegend({ chartOptions, setCI, CI }) {
-	function ChartOption({ title, color, id, conf }) {
-		return (
+	function ChartOption({ title, color, id, conf, hideDropdown }) {
+		console.log(hideDropdown);
+		return hideDropdown ? (
+			<div>
+				<Icon type="minus" style={{ cursor: 'pointer', fontSize: '20px', color }} /> {title}
+			</div>
+		) : (
 			<Dropdown
 				placement={'topRight'}
 				getPopupContainer={(triggerNode) => triggerNode.parentNode}
@@ -414,12 +419,24 @@ function ChartOptionsLegend({ chartOptions, setCI, CI }) {
 	}
 	return (
 		<div style={{ paddingLeft: '30px' }}>
-			{chartOptions.linearRegressionLine && <ChartOption conf id="degree1" title={'Linear Fit'} color={'steelblue'} />}
-			{chartOptions.degree2Poly && <ChartOption conf id="degree2" title={'Quadratic Fit'} color={'green'} />}
-			{chartOptions.degree3Poly && <ChartOption conf id="degree3" title={'Cubic Fit'} color={'darkmagenta'} />}
-			{chartOptions.degree4Poly && <ChartOption id="degree4" title={'Quartic Fit'} color={'saddlebrown'} />}
-			{chartOptions.degree5Poly && <ChartOption id="degree5" title={'5th Degree Fit'} color={'goldenrod'} />}
-			{chartOptions.degree6Poly && <ChartOption id="degree6" title={'6th Degree Fit'} color={'thistle'} />}
+			{chartOptions.linearRegressionLine && (
+				<ChartOption hideDropdown={false} conf id="degree1" title={'Linear Fit'} color={'steelblue'} />
+			)}
+			{chartOptions.degree2Poly && (
+				<ChartOption hideDropdown={false} conf id="degree2" title={'Quadratic Fit'} color={'green'} />
+			)}
+			{chartOptions.degree3Poly && (
+				<ChartOption hideDropdown={false} conf id="degree3" title={'Cubic Fit'} color={'darkmagenta'} />
+			)}
+			{chartOptions.degree4Poly && (
+				<ChartOption hideDropdown={true} id="degree4" title={'Quartic Fit'} color={'saddlebrown'} />
+			)}
+			{chartOptions.degree5Poly && (
+				<ChartOption hideDropdown={true} id="degree5" title={'5th Degree Fit'} color={'goldenrod'} />
+			)}
+			{chartOptions.degree6Poly && (
+				<ChartOption hideDropdown={true} id="degree6" title={'6th Degree Fit'} color={'thistle'} />
+			)}
 		</div>
 	);
 }
