@@ -25,7 +25,15 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 		// if (contextMenuOpen) {
 		// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 		// }
-		dispatchSelectAction({ type: SELECT_CELL, rowIndex, columnIndex, columnID: column.id, rowID });
+
+		dispatchSelectAction({
+			selectionActive: event.metaKey || event.ctrlKey,
+			type: SELECT_CELL,
+			rowIndex,
+			columnIndex,
+			columnID: column.id,
+			rowID,
+		});
 	}
 
 	function onMouseEnter(event) {
