@@ -79,8 +79,11 @@ export default function Spreadsheet() {
 			return;
 		}
 		const copiedValues = await navigator.clipboard.readText();
-		const copiedValuesStringified = JSON.stringify(copiedValues).replace(/(?:\\[rn]|[\r\n])/g, '\\n');
-		const copiedValuesRows = JSON.parse(copiedValuesStringified).split('\n');
+		// stringify to get character codes for tabs and carriage returns
+		const copiedValuesStringified = JSON.stringify(copiedValues);
+		// replace \r and \r\n with \n
+		const stringifiedValuesReplaced = copiedValuesStringified.replace(/(?:\\[rn]|[\r\n]+)+/g, '\\n');
+		const copiedValuesRows = JSON.parse(stringifiedValuesReplaced).split('\n');
 		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
 		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
 		const { top, left } = cellSelectionRanges[0];
