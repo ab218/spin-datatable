@@ -20,12 +20,6 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 	const { columns, rows } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
 	function onMouseDown(event) {
-		// prevent text from being highlighted on drag select cells
-		event.preventDefault();
-		// if (contextMenuOpen) {
-		// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-		// }
-
 		dispatchSelectAction({
 			selectionActive: event.metaKey || event.ctrlKey,
 			type: SELECT_CELL,

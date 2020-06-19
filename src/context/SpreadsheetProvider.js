@@ -83,16 +83,12 @@ export function SpreadsheetProvider({ children }) {
 		// First column created will be "Column 2"
 		columnCounter: 1,
 		columnTypeModalOpen: false,
-		colHeaderContext: false,
 		colName: null,
 		contextMenuOpen: false,
 		contextMenuPosition: null,
 		contextMenuRowIndex: null,
 		distributionModalOpen: false,
 		filterModalOpen: false,
-		layout: true,
-		mappedColumns: {},
-		modalError: false,
 	};
 
 	const initialSelectState = {
@@ -121,6 +117,7 @@ export function SpreadsheetProvider({ children }) {
 			_abc1_: [ '_abc3_' ],
 			_abc2_: [ '_abc3_' ],
 		},
+		modalError: null,
 		excludedRows: [],
 		valuesColumnsCounter: 0,
 	};

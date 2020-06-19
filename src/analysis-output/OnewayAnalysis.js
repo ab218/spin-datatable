@@ -116,7 +116,7 @@ const SummaryOfFit = ({ summary_table, colX, anova, means_std }) => {
 					</tr>
 					<tr>
 						<td className="table-header large">Mean of Response</td>
-						<td className="right small">{summary_table.y_mean}</td>
+						<td className="right small">{summary_table.y_mean.toFixed(4) / 1}</td>
 					</tr>
 					<tr>
 						<td className="table-header large">Observations</td>
@@ -142,9 +142,9 @@ const SummaryOfFit = ({ summary_table, colX, anova, means_std }) => {
 					</tr>
 					<tr>
 						<td className="header-background">{colX.label}</td>
-						<td className="right xsmall">{anova.df.x}</td>
-						<td className="right small">{anova.sum_sq.x}</td>
-						<td className="right small">{anova.mean_sq.x}</td>
+						<td className="right xsmall">{anova.df.x.toFixed(4) / 1}</td>
+						<td className="right small">{anova.sum_sq.x.toFixed(4) / 1}</td>
+						<td className="right small">{anova.mean_sq.x.toFixed(4) / 1}</td>
 						<td className="right small">{anova.F.x.toFixed(4) / 1}</td>
 						<td className="right small">{evaluatePValue(anova['PR(>F)'].x)}</td>
 					</tr>
@@ -213,7 +213,7 @@ function renderMeansStdTable(means_std) {
 			<tr key={i}>
 				<td className="header-background">{x[i]}</td>
 				<td className="right">{count[i]}</td>
-				<td className="right">{mean[i]}</td>
+				<td className="right">{mean[i].toFixed(4) / 1}</td>
 				<td className="right">{std[i].toFixed(4) / 1}</td>
 				<td className="right">{sem[i].toFixed(4) / 1}</td>
 			</tr>,
@@ -249,11 +249,11 @@ function renderQuantilesTable(x_groups_lists) {
 			<tr key={i}>
 				<td className="header-background">{x[i]}</td>
 				<td className="right">{y[i][0]}</td>
-				<td className="right">{d3.quantile(y[i], 0.1)}</td>
-				<td className="right">{d3.quantile(y[i], 0.25)}</td>
-				<td className="right">{d3.quantile(y[i], 0.5)}</td>
-				<td className="right">{d3.quantile(y[i], 0.75)}</td>
-				<td className="right">{d3.quantile(y[i], 0.9)}</td>
+				<td className="right">{d3.quantile(y[i], 0.1).toFixed(4) / 1}</td>
+				<td className="right">{d3.quantile(y[i], 0.25).toFixed(4) / 1}</td>
+				<td className="right">{d3.quantile(y[i], 0.5).toFixed(4) / 1}</td>
+				<td className="right">{d3.quantile(y[i], 0.75).toFixed(4) / 1}</td>
+				<td className="right">{d3.quantile(y[i], 0.9).toFixed(4) / 1}</td>
 				<td className="right">{y[i][y[i].length - 1]}</td>
 			</tr>,
 		);

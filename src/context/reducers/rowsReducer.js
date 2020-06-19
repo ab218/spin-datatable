@@ -46,7 +46,9 @@ export function rowsReducer(state, action) {
 	// state.eventBus.fire(type, event);
 	// console.log('dispatched:', type, 'with action:', action, 'state: ', state);
 	switch (type) {
-		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
+		case 'CLEAR_ERROR': {
+			return { ...state, modalError: null };
+		}
 		case COPY_VALUES: {
 			// TODO: There should be a line break if the row is undefined values
 			// TODO: There should be no line break for the first row when you copy
@@ -370,7 +372,7 @@ export function rowsReducer(state, action) {
 					columns: updatedColumns,
 					// columnTypeModalOpen: false,
 					// selectedColumn: null,
-					// modalError: null,
+					modalError: null,
 					rows: updatedRows.length > 0 ? updatedRows : rows,
 					inverseDependencyMap,
 				};
@@ -379,8 +381,8 @@ export function rowsReducer(state, action) {
 			return {
 				...state,
 				columns: updatedColumns,
+				modalError: null,
 				// columnTypeModalOpen: false,
-				// modalError: null,
 				// selectedColumn: null,
 			};
 		}

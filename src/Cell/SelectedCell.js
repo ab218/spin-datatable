@@ -35,9 +35,6 @@ export default React.memo(function SelectedCell({ column, columnIndex, columnID,
 
 	function onMouseDown(event) {
 		event.preventDefault();
-		// if (contextMenuOpen) {
-		// 	dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-		// }
 		if (event.button === 0 && column && column.type !== FORMULA) {
 			dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 			if (rowIndex === rows.length) {

@@ -1,17 +1,31 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React from 'react';
-import { Divider, Layout } from 'antd';
-import { SELECT_COLUMN } from './constants';
+import React, { useState } from 'react';
+import { Divider, Layout, Input } from 'antd';
+import { SELECT_COLUMN, REMOVE_SELECTED_CELLS } from './constants';
 import { useSelectState, useSelectDispatch, useRowsState } from './context/SpreadsheetProvider';
 import { createModelingTypeIcon } from './Modals/ModalShared';
 
-export default function Sidebar() {
+export default React.memo(function Sidebar() {
 	const { uniqueColumnIDs, uniqueRowIDs } = useSelectState();
 	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
+	const [ tableName, setTableName ] = useState(null);
 	return (
 		<Layout.Sider width={'20em'} style={{ textAlign: 'left' }} theme={'light'}>
-			<table style={{ marginTop: '100px', marginLeft: '10px', width: '100%' }}>
+			<Input
+				style={{ borderLeft: 'none', borderTop: 'none', borderRight: 'none', borderRadius: 0 }}
+				size="large"
+				placeholder="Untitled Data Table"
+				value={tableName}
+				onClick={(e) => {
+					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+					// e.target.focus();
+				}}
+				onChange={(e) => {
+					setTableName(e.target.value);
+				}}
+			/>
+			<table style={{ userSelect: 'none', marginTop: '100px', marginLeft: '10px', width: '100%' }}>
 				<tbody>
 					<tr>
 						<td style={{ fontWeight: 'bold' }}>Columns</td>
@@ -39,7 +53,7 @@ export default function Sidebar() {
 				</tbody>
 			</table>
 			<Divider />
-			<table style={{ marginLeft: '10px', width: '100%' }}>
+			<table style={{ userSelect: 'none', marginLeft: '10px', width: '100%' }}>
 				<tbody>
 					<tr>
 						<td style={{ width: '80%', fontWeight: 'bold' }}>Rows</td>
@@ -62,4 +76,4 @@ export default function Sidebar() {
 			<Divider />
 		</Layout.Sider>
 	);
-}
+});

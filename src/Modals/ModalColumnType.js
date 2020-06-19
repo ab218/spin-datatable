@@ -27,7 +27,7 @@ export default function AntModal({ selectedColumn }) {
 	const dispatchRowsAction = useRowsDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { columnTypeModalOpen } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
+	const { columns, rows, modalError } = useRowsState();
 	const { formula, description, label, modelingType, type, units } = selectedColumn;
 	const formulaFromState = formula && formula.expression;
 	const [ columnFormula, setColumnFormula ] = useState(swapIDsWithLabels(formulaFromState, columns) || '');
@@ -83,6 +83,24 @@ export default function AntModal({ selectedColumn }) {
 		return formulaWithLabels || formula;
 	}
 
+	useEffect(
+		() => {
+			if (modalError) {
+				return setError(modalError);
+			}
+		},
+		[ modalError ],
+	);
+
+	// close modal if column is updated by checking if columns has changed
+	useEffect(
+		() => {
+			return () => dispatchSpreadsheetAction({ type: CLOSE_COLUMN_TYPE_MODAL });
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ columns ],
+	);
+
 	function handleClose() {
 		const lettersAndSpacesOnlyReg = /^[0-9a-zA-Z\s]*$/;
 		if (!columnName) {
@@ -107,12 +125,11 @@ export default function AntModal({ selectedColumn }) {
 				units: columnUnits,
 				modelingType: columnModelingType,
 				type: columnType,
-				formula: swapLabelsWithIDs(columnFormula, columns),
+				formula: columnType === FORMULA ? swapLabelsWithIDs(columnFormula, columns) : null,
 				id: selectedColumn.id,
 				description: columnDescription,
 			},
 		});
-		dispatchSpreadsheetAction({ type: CLOSE_COLUMN_TYPE_MODAL });
 	}
 
 	function formatInput(formula) {

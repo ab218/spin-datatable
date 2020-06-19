@@ -34,6 +34,7 @@ import {
 	FORMULA,
 } from './constants';
 import TableView from './MainTable';
+import Sidebar from './Sidebar';
 
 export const checkIfValidNumber = (str) => {
 	if (str.match(/^-?\d*\.?\d*$/)) {
@@ -176,7 +177,7 @@ export default function Spreadsheet() {
 						dispatchRowsAction({ type: DELETE_VALUES, cellSelectionRanges });
 						break;
 					case 'Escape':
-						dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
+						dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 						break;
 					case 'ArrowDown':
 					case 'ArrowUp':
@@ -219,18 +220,19 @@ export default function Spreadsheet() {
 			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			<div
-				style={{ height: '100%', display: 'flex' }}
+				style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
 				// onKeyDown={onKeyDown}
 				onMouseDown={(e) => {
-					e.preventDefault();
-					return dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
+					dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
 				}}
 				onMouseUp={(e) => {
-					e.preventDefault();
-					return dispatchSelectAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
+					dispatchSelectAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
 				}}
 			>
-				<TableView />
+				<div style={{ display: 'flex', height: '100%' }}>
+					<Sidebar />
+					<TableView />
+				</div>
 			</div>
 		</div>
 	);
