@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { InputNumber, Slider, Row, Col } from 'antd';
 import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
-import { FILTER_COLUMN, SET_FILTERS, NUMBER } from '../constants';
+import { FILTER_COLUMN, SET_FILTERS, NUMBER, FORMULA } from '../constants';
 
 export default function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
 	const dispatchSelectAction = useSelectDispatch();
@@ -10,8 +10,8 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 	const [ max, setMax ] = useState(currentMax || colMax);
 
 	const onChange = (value) => {
-		setMin(value[0]);
-		setMax(value[1]);
+		setMin(value[0].toFixed(2) / 1);
+		setMax(value[1].toFixed(2) / 1);
 	};
 
 	function updateSelectedRows() {
@@ -21,7 +21,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		dispatchSelectAction({
 			type: SET_FILTERS,
 			selectedColumns: newCopy,
-			numberFilters: newCopy.filter((col) => col.type === NUMBER),
+			numberFilters: newCopy.filter((col) => col.type === NUMBER || col.type === FORMULA),
 		});
 		dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
 	}
@@ -83,6 +83,7 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 					min={colMin}
 					max={colMax}
 					step={findGCD(colMin, colMax) / 1000}
+					tipFormatter={(value) => value.toFixed(2)}
 					range
 					value={[ min, max ]}
 					onChange={onChange}

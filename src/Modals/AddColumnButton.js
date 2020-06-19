@@ -3,17 +3,18 @@ import { Button } from 'antd';
 import { useSelectState, useRowsState, useSelectDispatch } from '../context/SpreadsheetProvider';
 import { SET_SELECTED_COLUMN } from '../constants';
 
-export default function AddColumnButton({ clickedColumn }) {
+export default React.memo(function AddColumnButton({ column }) {
 	const dispatchSelectAction = useSelectDispatch();
 	const { selectedColumns } = useSelectState();
 	const { rows } = useRowsState();
+	const addedColumns = selectedColumns.some(({ id }) => id === column.id);
 	function addColumn() {
-		if (!selectedColumns.some(({ id }) => id === clickedColumn.id)) {
-			const colVals = rows.map((row) => Number(row[clickedColumn.id])).filter((x) => x);
+		if (!addedColumns) {
+			const colVals = rows.map((row) => Number(row[column.id])).filter((x) => x);
 			const colMax = Math.max(...colVals);
 			const colMin = Math.min(...colVals);
 			const columnObject = {
-				...clickedColumn,
+				...column,
 				colMin,
 				colMax,
 			};
@@ -21,8 +22,8 @@ export default function AddColumnButton({ clickedColumn }) {
 		}
 	}
 	return (
-		<Button disabled={!clickedColumn} style={{ width: 100, margin: '10px 0' }} onClick={addColumn}>
-			Add
+		<Button disabled={addedColumns} style={{ width: 300 }} onClick={addColumn}>
+			{column.label}
 		</Button>
 	);
-}
+});

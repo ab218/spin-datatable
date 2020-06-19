@@ -3,7 +3,6 @@ import { Modal, Select } from 'antd';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
-import { SelectColumn } from './ModalShared';
 import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
@@ -21,8 +20,6 @@ import {
 } from '../constants';
 
 export default function AntModal() {
-	const [ clickedColumn, setClickedColumn ] = useState(null);
-
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const { filterModalOpen } = useSpreadsheetState();
@@ -64,13 +61,8 @@ export default function AntModal() {
 				style={{ display: 'flex', justifyContent: 'center' }}
 			>
 				<div style={{ width: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-					<SelectColumn
-						title={'Select Column'}
-						columns={columns}
-						setSelectedColumn={setClickedColumn}
-						style={{ width: '300px' }}
-					/>
-					<AddColumnButton clickedColumn={clickedColumn} />
+					{columns.map((column) => <AddColumnButton column={column} />)}
+					<div style={{ height: 30 }} />
 					{selectedColumns &&
 						selectedColumns.length > 0 &&
 						selectedColumns.map(
