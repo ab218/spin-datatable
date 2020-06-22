@@ -60,7 +60,6 @@ export function spreadsheetReducer(state, action) {
 				...state,
 				columnTypeModalOpen,
 				selectedColumn: colName ? getCol(action.columns, colName) : column,
-				modalError: null,
 			};
 		}
 		case CLOSE_COLUMN_TYPE_MODAL: {
@@ -68,7 +67,6 @@ export function spreadsheetReducer(state, action) {
 				...state,
 				columnTypeModalOpen: false,
 				selectedColumn: null,
-				modalError: null,
 			};
 		}
 		// EVENT: Distribution Modal opened/closed

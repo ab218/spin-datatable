@@ -5,7 +5,6 @@ export default React.memo(function BlankClickableCell({ columnID, rowIndex, colu
 	const dispatchSelectAction = useSelectDispatch();
 	// Cells that are one row beyond the total number of rows that can be clicked
 	function onMouseDown(event) {
-		event.preventDefault();
 		dispatchSelectAction({ type: 'SELECT_CELL', rowIndex, columnIndex, columnID });
 	}
 

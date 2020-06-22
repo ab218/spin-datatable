@@ -3,7 +3,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRowsState, useColumnWidthState } from './context/SpreadsheetProvider';
 import CellRenderer from './CellRenderer';
 import AnalysisMenu from './AnalysisMenu';
-import Sidebar from './Sidebar';
 import RowHeaders from './RowHeaders';
 import HeaderRenderer from './HeaderRenderer';
 import { Column, Table, AutoSizer } from 'react-virtualized';
@@ -59,34 +58,31 @@ export default React.memo(function TableView() {
 
 	return (
 		// Height 100% necessary for autosizer to work
-		<div style={{ height: '100%', width: '100%', display: 'flex' }}>
-			<Sidebar />
-			<AutoSizer>
-				{({ height }) => (
-					<Table
-						overscanRowCount={0}
-						width={tableWidth}
-						height={height}
-						headerHeight={25}
-						rowHeight={30}
-						rowCount={visibleRows}
-						rowGetter={({ index }) => rows[index] || emptyRow}
-						rowStyle={{ alignItems: 'stretch' }}
-					>
-						<Column
-							width={100}
-							label={''}
-							dataKey={'rowHeaderColumn'}
-							headerRenderer={() => <AnalysisMenu />}
-							cellRenderer={(props) => <RowHeaders {...props} />}
-							style={{ margin: 0 }}
-						/>
-						{renderColumns(columns, cellRendererCallback, widths)}
-						{visibleColumns && renderBlankColumns(visibleColumns, columns, blankColumnWidth, cellRendererCallback)}
-					</Table>
-				)}
-			</AutoSizer>
-		</div>
+		<AutoSizer>
+			{({ height }) => (
+				<Table
+					overscanRowCount={0}
+					width={tableWidth}
+					height={height}
+					headerHeight={25}
+					rowHeight={30}
+					rowCount={visibleRows}
+					rowGetter={({ index }) => rows[index] || emptyRow}
+					rowStyle={{ alignItems: 'stretch' }}
+				>
+					<Column
+						width={100}
+						label={''}
+						dataKey={'rowHeaderColumn'}
+						headerRenderer={() => <AnalysisMenu />}
+						cellRenderer={(props) => <RowHeaders {...props} />}
+						style={{ margin: 0 }}
+					/>
+					{renderColumns(columns, cellRendererCallback, widths)}
+					{visibleColumns && renderBlankColumns(visibleColumns, columns, blankColumnWidth, cellRendererCallback)}
+				</Table>
+			)}
+		</AutoSizer>
 	);
 });
 
