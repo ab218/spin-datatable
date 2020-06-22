@@ -1,28 +1,32 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState } from 'react';
+import React from 'react';
 import { Divider, Layout, Input } from 'antd';
-import { SELECT_COLUMN, REMOVE_SELECTED_CELLS } from './constants';
-import { useSelectState, useSelectDispatch, useRowsState } from './context/SpreadsheetProvider';
+import { SELECT_COLUMN, REMOVE_SELECTED_CELLS, SET_TABLE_NAME } from './constants';
+import { useSelectState, useSelectDispatch, useRowsState, useRowsDispatch } from './context/SpreadsheetProvider';
 import { createModelingTypeIcon } from './Modals/ModalShared';
 
 export default React.memo(function Sidebar() {
 	const { uniqueColumnIDs, uniqueRowIDs } = useSelectState();
-	const { columns, rows, excludedRows } = useRowsState();
+	const { columns, rows, excludedRows, dataTableName } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
-	const [ tableName, setTableName ] = useState(null);
+	const dispatchRowsAction = useRowsDispatch();
 	return (
 		<Layout.Sider width={'20em'} style={{ textAlign: 'left' }} theme={'light'}>
 			<Input
 				style={{ borderLeft: 'none', borderTop: 'none', borderRight: 'none', borderRadius: 0 }}
 				size="large"
 				placeholder="Untitled Data Table"
-				value={tableName}
+				defaultValue={dataTableName}
 				onClick={(e) => {
 					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
-					// e.target.focus();
 				}}
-				onChange={(e) => {
-					setTableName(e.target.value);
+				onKeyDown={(e) => {
+					if (e.key === 'Enter') {
+						e.target.blur();
+					}
+				}}
+				onBlur={(e) => {
+					dispatchRowsAction({ type: SET_TABLE_NAME, dataTableName: e.target.value });
 				}}
 			/>
 			<table style={{ userSelect: 'none', marginTop: '100px', marginLeft: '10px', width: '100%' }}>

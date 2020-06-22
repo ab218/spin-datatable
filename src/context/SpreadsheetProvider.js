@@ -112,6 +112,7 @@ export function SpreadsheetProvider({ children }) {
 		// rows: [],
 		// inverseDependencyMap: {},
 		columns: statsColumns,
+		dataTableName: null,
 		rows: createRows(potatoLiverData, statsColumns),
 		inverseDependencyMap: {
 			_abc1_: [ '_abc3_' ],

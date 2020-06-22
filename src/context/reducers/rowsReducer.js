@@ -20,6 +20,7 @@ import {
 	UNEXCLUDE_ROWS,
 	PASTE_VALUES,
 	SAVE_VALUES_TO_COLUMN,
+	SET_TABLE_NAME,
 	SORT_COLUMN,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
@@ -35,6 +36,7 @@ export function rowsReducer(state, action) {
 		columnIndex,
 		columnCount,
 		copiedValues2dArray,
+		dataTableName,
 		descending,
 		values,
 		rowCount,
@@ -288,6 +290,12 @@ export function rowsReducer(state, action) {
 				rows: newRows,
 				columns,
 				valuesColumnsCounter,
+			};
+		}
+		case SET_TABLE_NAME: {
+			return {
+				...state,
+				dataTableName,
 			};
 		}
 		case SORT_COLUMN: {
