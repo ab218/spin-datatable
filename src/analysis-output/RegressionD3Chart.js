@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import './analysis-window.css';
 import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
-
+import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from '../constants';
 const normalPointSize = 2;
 const highlightedPointColor = 'red';
 const highlightedPointSize = normalPointSize * 2.5;
@@ -30,7 +30,7 @@ function createPoints(rangeX, step, equation) {
 	});
 }
 
-const drawBasicPath = (points, name, title, svg, pathTooltip) => {
+const drawBasicPath = (points, name, title, svg, pathTooltip, animate) => {
 	const path = svg
 		.append('path')
 		.data([ points ])
@@ -42,13 +42,15 @@ const drawBasicPath = (points, name, title, svg, pathTooltip) => {
 	const totalLength = path.node().getTotalLength();
 
 	//animate the line chart line drawing using path information
-	path
-		.attr('stroke-dasharray', totalLength + ' ' + totalLength)
-		.attr('stroke-dashoffset', totalLength)
-		.transition()
-		.duration(500)
-		.ease(d3.easeLinear)
-		.attr('stroke-dashoffset', 0);
+	if (animate) {
+		path
+			.attr('stroke-dasharray', totalLength + ' ' + totalLength)
+			.attr('stroke-dashoffset', totalLength)
+			.transition()
+			.duration(500)
+			.ease(d3.easeLinear)
+			.attr('stroke-dashoffset', 0);
+	}
 
 	// invisible hitbox
 	svg
@@ -140,12 +142,12 @@ function drawHistogramBorders(
 		const selectedColumn = col === 'x' ? colX.id : colY.id;
 		const columnIndex = columns.findIndex((col) => col.id === selectedColumn);
 		if (!metaKeyPressed) {
-			dispatchSelectAction({ type: 'REMOVE_SELECTED_CELLS' });
+			dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 		}
 		const rowIndexes = rows.reduce((acc, row, rowIndex) => {
 			return !excludedRows.includes(row.id) && bar.includes(Number(row[selectedColumn])) ? acc.concat(rowIndex) : acc;
 		}, []);
-		dispatchSelectAction({ type: 'SELECT_CELLS', rowIndexes, columnIndex: columnIndex, rows, columns });
+		dispatchSelectAction({ type: SELECT_CELLS, rowIndexes, columnIndex: columnIndex, rows, columns });
 	}
 	// Histogram Bar X axis
 	svg
@@ -429,7 +431,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 	useEffect(
 		() => {
 			if (linearRegressionLine) {
-				drawBasicPath(linearRegressionPoints, 'linearRegressionLine', 'Linear Regression Line', svg, pathTooltip);
+				drawBasicPath(linearRegressionPoints, 'linearRegressionLine', 'Linear Regression Line', svg, pathTooltip, true);
 			} else {
 				removeChartElement('.linearRegressionLine');
 				removeChartElement(`.linearRegressionLine-hitbox`);
@@ -443,7 +445,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree2Poly) {
-					drawBasicPath(degree2Points, 'degree2PolyLine', 'Quadratic Regression Line', svg, pathTooltip);
+					drawBasicPath(degree2Points, 'degree2PolyLine', 'Quadratic Regression Line', svg, pathTooltip, true);
 				} else {
 					removeChartElement(`.degree2PolyLine`);
 					removeChartElement(`.degree2PolyLine-hitbox`);
@@ -458,7 +460,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree3Poly) {
-					drawBasicPath(degree3Points, 'degree3PolyLine', 'Quadratic Regression Line', svg, pathTooltip);
+					drawBasicPath(degree3Points, 'degree3PolyLine', 'Quadratic Regression Line', svg, pathTooltip, true);
 				} else {
 					removeChartElement(`.degree3PolyLine`);
 					removeChartElement(`.degree3PolyLine-hitbox`);
@@ -473,7 +475,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree4Poly) {
-					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quadratic Regression Line', svg, pathTooltip);
+					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quadratic Regression Line', svg, pathTooltip, true);
 				} else {
 					removeChartElement(`.degree4PolyLine`);
 					removeChartElement(`.degree4PolyLine-hitbox`);
@@ -488,7 +490,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree5Poly) {
-					drawBasicPath(degree5Points, 'degree5PolyLine', '5th Degree Regression Line', svg, pathTooltip);
+					drawBasicPath(degree5Points, 'degree5PolyLine', '5th Degree Regression Line', svg, pathTooltip, true);
 				} else {
 					removeChartElement(`.degree5PolyLine`);
 					removeChartElement(`.degree5PolyLine-hitbox`);
@@ -503,7 +505,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree6Poly) {
-					drawBasicPath(degree6Points, 'degree6PolyLine', '6th Degree Regression Line', svg, pathTooltip);
+					drawBasicPath(degree6Points, 'degree6PolyLine', '6th Degree Regression Line', svg, pathTooltip, true);
 				} else {
 					removeChartElement(`.degree6PolyLine`);
 					removeChartElement(`.degree6PolyLine-hitbox`);
@@ -529,8 +531,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		if (CI && CI[degree].fit) {
 			removeChartElement(dotCurveClassFit);
 			removeChartElement(hitboxClassFit);
-			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].mean_ci_upper), curveClassFit, title, svg, null);
-			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].mean_ci_lower), curveClassFit, title, svg, null);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_upper), curveClassFit, title, svg, null);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_lower), curveClassFit, title, svg, null);
 		} else {
 			removeChartElement(dotCurveClassFit);
 			removeChartElement(hitboxClassFit);
@@ -538,8 +540,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		if (CI && CI[degree].obs) {
 			removeChartElement(dotCurveClassObs);
 			removeChartElement(hitboxClassObs);
-			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].obs_ci_upper), curveClassObs, title, svg, null);
-			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha].obs_ci_lower), curveClassObs, title, svg, null);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_upper), curveClassObs, title, svg, null);
+			drawBasicPath(mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_lower), curveClassObs, title, svg, null);
 		} else {
 			removeChartElement(dotCurveClassObs);
 			removeChartElement(hitboxClassObs);
@@ -548,26 +550,26 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 
 	useEffect(
 		() => {
-			updateConfCurves('degree1', reg1, 'linearRegressionLineCI', 'Linear Regression CI');
+			updateConfCurves('linearRegressionLine', reg1, 'linearRegressionLineCI', 'Linear Regression CI');
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[ CI.degree1, alpha ],
+		[ CI['linearRegressionLine'], alpha['linearRegressionLine'] ],
 	);
 
 	useEffect(
 		() => {
-			updateConfCurves('degree2', reg2, 'degree2PolyLineCI', 'Quadratic Regression CI');
+			updateConfCurves('degree2Poly', reg2, 'degree2PolyLineCI', 'Quadratic Regression CI');
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[ CI.degree2, alpha ],
+		[ CI['degree2Poly'], alpha['degree2Poly'] ],
 	);
 
 	useEffect(
 		() => {
-			updateConfCurves('degree3', reg3, 'degree3PolyLineCI', 'Cubic Regression CI');
+			updateConfCurves('degree3Poly', reg3, 'degree3PolyLineCI', 'Cubic Regression CI');
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[ CI.degree3, alpha ],
+		[ CI['degree3Poly'], alpha['degree3Poly'] ],
 	);
 
 	return <div ref={d3Container} />;
