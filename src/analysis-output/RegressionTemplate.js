@@ -115,7 +115,10 @@ export default function GenerateRegressionTemplate({
 						</tr>
 					</tbody>
 				</table>
-				{alpha && <SaveDropdown alpha={alpha} title={title} polyDegree={polyDegree} xLabel={xLabel} yLabel={yLabel} />}
+				{alpha &&
+				alpha[id] && (
+					<SaveDropdown id={id} alpha={alpha} title={title} polyDegree={polyDegree} xLabel={xLabel} yLabel={yLabel} />
+				)}
 			</div>
 			<div style={{ height: '20px' }} />
 			<table>
@@ -165,9 +168,9 @@ export default function GenerateRegressionTemplate({
 	);
 }
 
-function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha }) {
+function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha, id }) {
 	const dispatchRowsAction = useRowsDispatch();
-	const menu = (title, id) => (
+	const menu = (title) => (
 		<Menu>
 			<Menu.ItemGroup title={title}>
 				<Menu.Item
@@ -196,38 +199,38 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha }) {
 					onClick={() => {
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha].mean_ci_lower,
+							values: polyDegree.ci[alpha[id]].mean_ci_lower,
 							xLabel,
 							yLabel,
 						});
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha].mean_ci_upper,
+							values: polyDegree.ci[alpha[id]].mean_ci_upper,
 							xLabel,
 							yLabel,
 						});
 					}}
 				>
 					{/* eg: conf95, regex to remove letters */}
-					Save {alpha.replace(/\D/g, '')}% Confidence Intervals (fit)
+					Save {alpha[id].replace(/\D/g, '')}% Confidence Intervals (fit)
 				</Menu.Item>
 				<Menu.Item
 					onClick={() => {
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha].obs_ci_lower,
+							values: polyDegree.ci[alpha[id]].obs_ci_lower,
 							xLabel,
 							yLabel,
 						});
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha].obs_ci_upper,
+							values: polyDegree.ci[alpha[id]].obs_ci_upper,
 							xLabel,
 							yLabel,
 						});
 					}}
 				>
-					Save {alpha.replace(/\D/g, '')}% Confidence Intervals (obs)
+					Save {alpha[id].replace(/\D/g, '')}% Confidence Intervals (obs)
 				</Menu.Item>
 			</Menu.ItemGroup>
 		</Menu>
