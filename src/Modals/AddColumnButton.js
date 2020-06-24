@@ -22,7 +22,7 @@ export default React.memo(function AddColumnButton({ column }) {
 		}
 	}
 	return (
-		<Button disabled={addedColumns} style={{ width: 300 }} onClick={addColumn}>
+		<Button disabled={addedColumns} style={{ width: 150 }} onClick={addColumn}>
 			{column.label}
 		</Button>
 	);

@@ -464,8 +464,8 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
 				<tbody>
 					<tr>
 						<td style={{ width: '150px' }} />
-						<td colSpan={2} style={{ width: '100px' }}>
-							Confid Curves
+						<td colSpan={2} style={{ width: '100px', textDecoration: 'underline' }}>
+							Confid Regions
 						</td>
 						<td style={{ width: '100px' }} />
 					</tr>

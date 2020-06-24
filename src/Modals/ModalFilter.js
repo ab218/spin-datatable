@@ -49,20 +49,20 @@ export default function AntModal() {
 	}
 
 	return (
-		<div>
-			<Modal
-				className="ant-modal"
-				destroyOnClose
-				width={500}
-				onCancel={handleCancel}
-				onOk={handleClose}
-				title={`Data Filter`}
-				visible={filterModalOpen}
-				style={{ display: 'flex', justifyContent: 'center' }}
-			>
-				<div style={{ width: 450, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+		<Modal
+			className="ant-modal"
+			width={800}
+			onCancel={handleCancel}
+			onOk={handleClose}
+			title={`Data Filter`}
+			visible={filterModalOpen}
+			bodyStyle={{ maxHeight: 300 }}
+		>
+			<div style={{ width: '100%', display: 'flex', justifyContent: 'space-around' }}>
+				<div style={{ width: '20%', height: 250, overflowY: 'scroll' }}>
 					{columns.map((column) => <AddColumnButton column={column} />)}
-					<div style={{ height: 30 }} />
+				</div>
+				<div style={{ width: '60%', height: 250, overflowY: 'scroll' }}>
 					{selectedColumns &&
 						selectedColumns.length > 0 &&
 						selectedColumns.map(
@@ -74,8 +74,8 @@ export default function AntModal() {
 								),
 						)}
 				</div>
-			</Modal>
-		</div>
+			</div>
+		</Modal>
 	);
 }
 
