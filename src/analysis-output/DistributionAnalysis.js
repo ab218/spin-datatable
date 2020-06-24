@@ -18,10 +18,12 @@ export default function DistributionAnalysis({ data, setPopup }) {
 
 	const [ bins, setBins ] = useState(numberOfBins);
 
+	const title = `Distribution of ${colObj.label} ${colObj.units ? '(' + colObj.units + ')' : ''}`;
+
 	return (
-		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} windowWidth={500} setPopup={setPopup}>
+		<Popup key={data.id} id={data.id} title={title} windowWidth={500} setPopup={setPopup}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
-				<TitleText colObj={colObj} />
+				<TitleText title={title} />
 				<DistributionD3Chart
 					colObj={colObj}
 					min={min}
@@ -42,11 +44,7 @@ export default function DistributionAnalysis({ data, setPopup }) {
 	);
 }
 
-const TitleText = ({ colObj }) => (
-	<div className="analysis-title">
-		Distribution of {colObj.label} {colObj.units ? '(' + colObj.units + ')' : ''}
-	</div>
-);
+const TitleText = ({ title }) => <div className="analysis-title">{title}</div>;
 
 const SummaryStatistics = ({ boxDataSorted, vals, skew, kurtosis }) => (
 	<div style={{ width: '50%', margin: '10px auto' }}>

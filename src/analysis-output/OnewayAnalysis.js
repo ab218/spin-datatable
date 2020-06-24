@@ -22,6 +22,9 @@ export default function OnewayAnalysis({ data, setPopup }) {
 
 	const [ chartOptions, setChartOptions ] = useState({ pooledMean: false, boxPlots: false });
 
+	const title = `Oneway Analysis of ${colY.label} ${colY.units ? '(' + colY.units + ')' : ''} By ${colX.label}
+  ${colX.units ? '(' + colX.units + ')' : ''}`;
+
 	function handleChartOptions(value) {
 		const pooledMean = value.includes('pooledMean');
 		const boxPlots = value.includes('boxPlots');
@@ -33,9 +36,9 @@ export default function OnewayAnalysis({ data, setPopup }) {
 	}
 
 	return (
-		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} windowWidth={1000} setPopup={setPopup}>
+		<Popup key={data.id} id={data.id} title={title} windowWidth={1000} setPopup={setPopup}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
-				<TitleText colY={colY} colX={colX} />
+				<TitleText title={title} />
 				<div style={{ display: 'flex' }}>
 					<div>
 						<OnewayD3Chart
@@ -84,12 +87,7 @@ function ChartOptionsSelect({ handleChartOptions }) {
 	);
 }
 
-const TitleText = ({ colY, colX }) => (
-	<h1>
-		Oneway Analysis of {colY.label} {colY.units ? '(' + colY.units + ')' : ''} By {colX.label}{' '}
-		{colX.units ? '(' + colX.units + ')' : ''}
-	</h1>
-);
+const TitleText = ({ title }) => <h1>{title}</h1>;
 
 const SummaryOfFit = ({ summary_table, colX, anova, means_std }) => {
 	return (

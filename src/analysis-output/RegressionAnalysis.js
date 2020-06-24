@@ -64,12 +64,8 @@ function ChartOptionsSelect({ handleChartOptions }) {
 	);
 }
 
-function ChartTitle({ colY, colX }) {
-	return (
-		<div className="analysis-title">{`Bivariate Fit of ${colY.label} ${colY.units
-			? '(' + colY.units + ')'
-			: ''} By ${colX.label} ${colX.units ? '(' + colX.units + ')' : ''}`}</div>
-	);
+function ChartTitle({ title }) {
+	return <div className="analysis-title">{title}</div>;
 }
 
 function SummaryStatsTable({ data }) {
@@ -273,10 +269,15 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		degree5Poly,
 		degree6Poly,
 	} = chartOptions;
+
+	const title = `Bivariate Fit of ${colY.label} ${colY.units
+		? '(' + colY.units + ')'
+		: ''} By ${colX.label} ${colX.units ? '(' + colX.units + ')' : ''}`;
+
 	return (
-		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} setPopup={setPopup} windowWidth={1000}>
+		<Popup key={data.id} id={data.id} title={title} setPopup={setPopup} windowWidth={1000}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
-				<ChartTitle colY={colY} colX={colX} />
+				<ChartTitle title={title} />
 				<div style={{ display: 'flex' }}>
 					<div style={{ textAlign: 'left' }}>
 						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
