@@ -60,6 +60,7 @@ const paramEstimateTable = (coeffs, xLabel, centered, xMean, standard_errors, tv
 );
 
 export default function GenerateRegressionTemplate({
+	coordinates,
 	title,
 	id,
 	className,
@@ -117,7 +118,15 @@ export default function GenerateRegressionTemplate({
 				</table>
 				{alpha &&
 				alpha[id] && (
-					<SaveDropdown id={id} alpha={alpha} title={title} polyDegree={polyDegree} xLabel={xLabel} yLabel={yLabel} />
+					<SaveDropdown
+						coordinates={coordinates}
+						id={id}
+						alpha={alpha}
+						title={title}
+						polyDegree={polyDegree}
+						xLabel={xLabel}
+						yLabel={yLabel}
+					/>
 				)}
 			</div>
 			<div style={{ height: '20px' }} />
@@ -168,16 +177,26 @@ export default function GenerateRegressionTemplate({
 	);
 }
 
-function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha, id }) {
+function SaveDropdown({
+	coordinates,
+	title,
+	polyDegree: { stats: { predicted, residuals }, ci },
+	xLabel,
+	yLabel,
+	alpha,
+	id,
+}) {
 	const dispatchRowsAction = useRowsDispatch();
-	const menu = (title) => (
+	const includedRows = coordinates.map((coord) => coord[2]);
+	const menu = () => (
 		<Menu>
 			<Menu.ItemGroup title={title}>
 				<Menu.Item
 					onClick={() =>
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.stats.predicted,
+							values: predicted,
+							includedRows,
 							xLabel,
 							yLabel,
 						})}
@@ -188,7 +207,8 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha, id }) {
 					onClick={() =>
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.stats.residuals,
+							values: residuals,
+							includedRows,
 							xLabel,
 							yLabel,
 						})}
@@ -199,13 +219,15 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha, id }) {
 					onClick={() => {
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha[id]].mean_ci_lower,
+							values: ci[alpha[id]].mean_ci_lower,
+							includedRows,
 							xLabel,
 							yLabel,
 						});
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha[id]].mean_ci_upper,
+							values: ci[alpha[id]].mean_ci_upper,
+							includedRows,
 							xLabel,
 							yLabel,
 						});
@@ -218,13 +240,15 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha, id }) {
 					onClick={() => {
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha[id]].obs_ci_lower,
+							values: ci[alpha[id]].obs_ci_lower,
+							includedRows,
 							xLabel,
 							yLabel,
 						});
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: polyDegree.ci[alpha[id]].obs_ci_upper,
+							values: ci[alpha[id]].obs_ci_upper,
+							includedRows,
 							xLabel,
 							yLabel,
 						});
@@ -236,7 +260,7 @@ function SaveDropdown({ title, polyDegree, xLabel, yLabel, alpha, id }) {
 		</Menu>
 	);
 	return (
-		<Dropdown.Button getPopupContainer={(triggerNode) => triggerNode.parentNode} overlay={menu(title, polyDegree)}>
+		<Dropdown.Button getPopupContainer={(triggerNode) => triggerNode.parentNode} overlay={menu()}>
 			Save Values to Table
 		</Dropdown.Button>
 	);

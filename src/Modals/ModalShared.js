@@ -8,6 +8,7 @@ export const styles = {
 		border: '1px solid lightgray',
 		width: 220,
 		minHeight: 100,
+		overflowY: 'scroll',
 	},
 	flexColumn: {
 		display: 'flex',
@@ -98,7 +99,7 @@ export function SelectColumn({ columns, groupingColData, setSelectedColumn, styl
 	return (
 		<div>
 			{title}
-			<Card bordered style={{ marginTop: 20, ...cardWithBorder }}>
+			<Card bordered style={{ height: '200px', marginTop: 20, ...cardWithBorder }}>
 				<Radio.Group style={radioGroup} buttonStyle="solid">
 					{/* display only columns with labels and some data */}
 					{columns.length > 0 ? (

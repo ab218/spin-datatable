@@ -6,7 +6,13 @@ import './analysis-window.css';
 export default function BarChartAnalysis({ data, setPopup }) {
 	const { colX, colY, colZ, coordinates, colXId, colYId, colZId, colXScale } = data;
 	return (
-		<Popup key={data.id} id={data.id} title={`Popup ${data.id}`} windowWidth={1000} setPopup={setPopup}>
+		<Popup
+			key={data.id}
+			id={data.id}
+			title={`Bar Chart - ${colY.label} vs ${colX.label}`}
+			windowWidth={1000}
+			setPopup={setPopup}
+		>
 			<TitleText colY={colY} colX={colX} />
 			<BarChartD3Chart
 				colX={colX}
