@@ -135,7 +135,6 @@ function SummaryStatsTable({ data }) {
 }
 
 const addOrSubtract = (value) => (value >= 0 ? '+' : '-');
-
 export const evaluatePValue = (pValue) => (pValue < 0.0001 ? '<0.0001' : pValue.toFixed(4) / 1);
 
 const generateEquationTemplate = (coeffs, xLabel, yLabel, centered) => {
@@ -166,7 +165,9 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		cent_reg4,
 		cent_reg5,
 		cent_reg6,
+		coordinates,
 	} = data;
+
 	const [ CI, setCI ] = useState({
 		linearRegressionLine: { fit: false, obs: false },
 		degree2Poly: { fit: false, obs: false },
@@ -293,6 +294,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								key={'linearRegressionLine'}
 								title={'Linear Fit'}
 								id={'linearRegressionLine'}
+								coordinates={coordinates}
 								className={null}
 								equation={linearEquationTemplate}
 								polyDegree={reg1}
@@ -307,9 +309,10 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						)}
 						{degree2Poly && (
 							<GenerateRegressionTemplate
-								key={'degree2PolyLine'}
+								key={'degree2Poly'}
 								title={'Quadratic Fit'}
-								id={'degree2PolyLine'}
+								id={'degree2Poly'}
+								coordinates={coordinates}
 								className={null}
 								equation={centeredPoly ? centeredQuadraticEquationTemplate : quadraticEquationTemplate}
 								polyDegree={centeredPoly ? cent_reg2 : reg2}
@@ -324,9 +327,10 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						)}
 						{degree3Poly && (
 							<GenerateRegressionTemplate
-								key={'degree3PolyLine'}
+								key={'degree3Poly'}
 								title={'Cubic Fit'}
-								id={'degree3PolyLine'}
+								id={'degree3Poly'}
+								coordinates={coordinates}
 								className={null}
 								equation={centeredPoly ? centeredCubicEquationTemplate : cubicEquationTemplate}
 								polyDegree={centeredPoly ? cent_reg3 : reg3}
@@ -341,9 +345,10 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						)}
 						{degree4Poly && (
 							<GenerateRegressionTemplate
-								key={'degree4PolyLine'}
+								key={'degree4Poly'}
 								title={'Quartic Fit'}
-								id={'degree4PolyLine'}
+								id={'degree4Poly'}
+								coordinates={coordinates}
 								className={null}
 								equation={centeredPoly ? centeredQuarticEquationTemplate : quarticEquationTemplate}
 								polyDegree={cent_reg4}
@@ -356,9 +361,10 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						)}
 						{degree5Poly && (
 							<GenerateRegressionTemplate
-								key={'degree5PolyLine'}
+								key={'degree5Poly'}
 								title={'5th Degree Fit'}
-								id={'degree5PolyLine'}
+								id={'degree5Poly'}
+								coordinates={coordinates}
 								className={null}
 								equation={centeredPoly ? centeredDegree5EquationTemplate : degree5EquationTemplate}
 								polyDegree={centeredPoly ? cent_reg5 : reg5}
@@ -371,9 +377,10 @@ export default function RegressionAnalysis({ data, setPopup }) {
 						)}
 						{degree6Poly && (
 							<GenerateRegressionTemplate
-								key={'degree6PolyLine'}
+								key={'degree6Poly'}
 								title={'6th Degree Fit'}
-								id={'degree6PolyLine'}
+								id={'degree6Poly'}
+								coordinates={coordinates}
 								className={null}
 								equation={centeredPoly ? centeredDegree6EquationTemplate : degree6EquationTemplate}
 								polyDegree={centeredPoly ? cent_reg6 : reg6}

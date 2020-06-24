@@ -42,6 +42,9 @@ export function rowsReducer(state, action) {
 		rowCount,
 		rowIndex,
 		updatedColumn,
+		includedRows,
+		xLabel,
+		yLabel,
 	} = action;
 	// const { type, ...event } = action;
 	const { type } = action;
@@ -279,12 +282,18 @@ export function rowsReducer(state, action) {
 				modelingType: CONTINUOUS,
 				type: NUMBER,
 				label: `Values ${valuesColumnsCounter}`,
-				description: `Generated from [${action.yLabel} by ${action.xLabel}] Bivariate Analysis output window.`,
+				description: `Generated from [${yLabel} by ${xLabel}] Bivariate Analysis output window.`,
 			};
-			const columns = state.columns.concat(newColumn);
-			const newRows = state.rows.map((row, i) => {
-				return { ...row, [newColumn.id]: values[i] };
+			let counter = 0;
+			const newRows = state.rows.map((row, rowIndex) => {
+				if (includedRows.includes(rowIndex + 1)) {
+					const newRow = { ...row, [newColumn.id]: values[counter] };
+					counter++;
+					return newRow;
+				}
+				return { ...row };
 			});
+			const columns = state.columns.concat(newColumn);
 			return {
 				...state,
 				rows: newRows,
