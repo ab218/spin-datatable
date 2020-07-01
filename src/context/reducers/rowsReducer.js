@@ -18,10 +18,13 @@ import {
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
 	UNEXCLUDE_ROWS,
+	FILTER_EXCLUDE_ROWS,
 	PASTE_VALUES,
+	REDO,
 	SAVE_VALUES_TO_COLUMN,
 	SET_TABLE_NAME,
 	SORT_COLUMN,
+	UNDO,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 	CONTINUOUS,
@@ -130,13 +133,24 @@ export function rowsReducer(state, action) {
 				return { id, modelingType: CONTINUOUS, type: NUMBER, label: `Column ${columnCounter}`, description: '' };
 			});
 			const columns = state.columns.concat(newColumns);
-			return { ...state, columns, columnCounter };
+			return {
+				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
+				columns,
+				columnCounter,
+			};
 		}
 		case CREATE_ROWS: {
 			const newRows = Array(rowCount).fill(undefined).map((_) => {
 				return { id: createRandomID() };
 			});
-			return { ...state, rows: state.rows.concat(newRows) };
+			return {
+				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
+				rows: state.rows.concat(newRows),
+			};
 		}
 		case DELETE_COLUMN: {
 			// BUG: If deleting all columns, row headers remain
@@ -161,6 +175,8 @@ export function rowsReducer(state, action) {
 			});
 			return {
 				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
 				rows: updatedFormulaRows,
 				columns: filteredColumns,
 				// currentCellSelectionRange: null,
@@ -173,6 +189,8 @@ export function rowsReducer(state, action) {
 			const filteredRows = state.rows.filter((row) => !action.uniqueRowIDs.includes(row.id));
 			return {
 				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
 				rows: filteredRows,
 			};
 		}
@@ -215,6 +233,8 @@ export function rowsReducer(state, action) {
 
 			return {
 				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
 				rows: mapRows(state.rows, copiedValues2dArray, selectedColumnIDs, selectedRowIDs),
 			};
 		}
@@ -257,7 +277,12 @@ export function rowsReducer(state, action) {
 					}
 				});
 			}, state.rows);
-			return { ...state, rows: newRows };
+			return {
+				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
+				rows: newRows,
+			};
 		}
 		case EXCLUDE_ROWS: {
 			const { excludedRows, rows } = state;
@@ -274,6 +299,9 @@ export function rowsReducer(state, action) {
 				...state,
 				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
 			};
+		}
+		case FILTER_EXCLUDE_ROWS: {
+			return { ...state, excludedRows: action.rowIDs };
 		}
 		case SAVE_VALUES_TO_COLUMN: {
 			let valuesColumnsCounter = state.valuesColumnsCounter + 1;
@@ -296,6 +324,8 @@ export function rowsReducer(state, action) {
 			const columns = state.columns.concat(newColumn);
 			return {
 				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
 				rows: newRows,
 				columns,
 				valuesColumnsCounter,
@@ -326,7 +356,46 @@ export function rowsReducer(state, action) {
 							: a[targetColumn.id].localeCompare(b[targetColumn.id]),
 				);
 			}
-			return { ...state, rows: deepCopyRows };
+			return {
+				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
+				rows: deepCopyRows,
+			};
+		}
+		case UNDO: {
+			const { history, redoHistory } = state;
+			const prevHistory = history[history.length - 1];
+			const newHistory = history.slice(0, -1);
+
+			if (history.length > 0) {
+				return {
+					...state,
+					redoHistory: [ ...redoHistory, { rows: state.rows, columns: state.columns } ],
+					history: newHistory,
+					rows: prevHistory.rows,
+					columns: prevHistory.columns,
+				};
+			}
+			return {
+				...state,
+			};
+		}
+		case REDO: {
+			const { history, redoHistory } = state;
+			const prevRedo = redoHistory[redoHistory.length - 1];
+			const newRedoHistory = redoHistory.slice(0, -1);
+
+			if (redoHistory.length > 0) {
+				return {
+					...state,
+					history: [ ...history, { rows: state.rows, columns: state.columns } ],
+					redoHistory: newRedoHistory,
+					rows: prevRedo.rows,
+					columns: prevRedo.columns,
+				};
+			}
+			return { ...state };
 		}
 		// EVENT: Cell updated
 		case UPDATE_CELL: {
@@ -345,7 +414,12 @@ export function rowsReducer(state, action) {
 			}
 
 			const changedRows = Object.assign(newRows, { [rowIndex]: rowCopy });
-			return { ...state, rows: changedRows };
+			return {
+				...state,
+				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
+				redoHistory: [],
+				rows: changedRows,
+			};
 		}
 		case UPDATE_COLUMN: {
 			const { rows, columns } = state;
@@ -390,6 +464,8 @@ export function rowsReducer(state, action) {
 					// columnTypeModalOpen: false,
 					// selectedColumn: null,
 					modalError: null,
+					history:
+						updatedRows.length > 0 ? [ ...state.history, { rows: state.rows, columns: state.columns } ] : state.history,
 					rows: updatedRows.length > 0 ? updatedRows : rows,
 					inverseDependencyMap,
 				};

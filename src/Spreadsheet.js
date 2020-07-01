@@ -156,6 +156,14 @@ export default function Spreadsheet() {
 					event.preventDefault();
 					dispatchSelectAction({ type: SELECT_ALL_CELLS, rows, columns });
 					return;
+				} else if (event.key === 'z') {
+					event.preventDefault();
+					if (event.shiftKey) {
+						dispatchRowsAction({ type: 'REDO' });
+						return;
+					}
+					dispatchRowsAction({ type: 'UNDO' });
+					return;
 				}
 				return;
 			}

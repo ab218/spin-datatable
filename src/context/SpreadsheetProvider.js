@@ -123,6 +123,8 @@ export function SpreadsheetProvider({ children }) {
 			_abc2_: [ '_abc3_' ],
 		},
 		modalError: null,
+		history: [],
+		redoHistory: [],
 		excludedRows: [],
 		valuesColumnsCounter: 0,
 	};

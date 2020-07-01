@@ -2,10 +2,10 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import { STRING } from '../constants';
 import { cursorKeyToRowColMapper } from '../Spreadsheet';
-import { ACTIVATE_CELL, CREATE_ROWS, UPDATE_CELL, FORMULA } from '../constants';
+import { ACTIVATE_CELL, CREATE_ROWS, REDO, UNDO, REMOVE_SELECTED_CELLS, UPDATE_CELL, FORMULA } from '../constants';
 import { useRowsState, useSelectDispatch, useRowsDispatch } from '../context/SpreadsheetProvider';
 export default React.memo(function ActiveCell(props) {
-	const { columnIndex, rowIndex, column, handleContextMenu, value } = props;
+	const { columnIndex, rowIndex, column, handleContextMenu, value: oldValue } = props;
 	const dispatchRowsAction = useRowsDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const { columns, rows } = useRowsState();
@@ -38,7 +38,7 @@ export default React.memo(function ActiveCell(props) {
 			}
 			return () => {
 				const currentValue = inputRef.current.value;
-				if (currentValue && currentValue !== value) {
+				if (currentValue && currentValue !== oldValue) {
 					updateCellCallback(currentValue, rowIndex, columnIndex);
 				}
 			};
@@ -48,6 +48,11 @@ export default React.memo(function ActiveCell(props) {
 
 	const onKeyDown = (event, rows, rowIndex, columns, columnIndex) => {
 		switch (event.key) {
+			case 'Escape':
+				// revert back to previous value
+				inputRef.current.value = oldValue;
+				dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+				break;
 			case 'ArrowDown':
 			case 'ArrowUp':
 			case 'Enter':
@@ -62,6 +67,14 @@ export default React.memo(function ActiveCell(props) {
 				);
 				changeActiveCell(row, column, event.ctrlKey || event.shiftKey || event.metaKey);
 				break;
+			case 'z':
+				event.preventDefault();
+				if (event.shiftKey) {
+					dispatchRowsAction({ type: REDO });
+					return;
+				}
+				dispatchRowsAction({ type: UNDO });
+				return;
 			default:
 				break;
 		}
@@ -72,7 +85,7 @@ export default React.memo(function ActiveCell(props) {
 			<input
 				autoFocus
 				onFocus={(e) => e.target.select()}
-				defaultValue={value}
+				defaultValue={oldValue}
 				type="text"
 				style={{
 					textAlign: column && column.type === STRING ? 'left' : 'right',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Select } from 'antd';
+import { Checkbox, Button, Modal, Select } from 'antd';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
@@ -25,6 +25,8 @@ export default function AntModal() {
 	const { filterModalOpen } = useSpreadsheetState();
 	const { columns, rows } = useRowsState();
 	const { filters, selectedColumns } = useSelectState();
+	const [ selectRows, setSelectRows ] = useState(true);
+	const [ includeRows, setIncludeRows ] = useState(false);
 
 	function handleClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
@@ -48,15 +50,34 @@ export default function AntModal() {
 		dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
 	}
 
+	const ModalFooter = () => (
+		<div key="footer-div" style={{ width: '100%', height: 40, display: 'flex', justifyContent: 'space-between' }}>
+			<span style={{ display: 'flex' }}>
+				{/* <Checkbox checked={selectRows} onChange={() => setSelectRows((prev) => !prev)}>
+					Select
+				</Checkbox>
+				<Checkbox checked={includeRows} onChange={() => setIncludeRows((prev) => !prev)}>
+					Include
+				</Checkbox> */}
+			</span>
+			<span>
+				{/* <Button key="back">Cancel</Button> */}
+				<Button onClick={handleClose} key="submit" type="primary">
+					Finish
+				</Button>
+			</span>
+		</div>
+	);
+
 	return (
 		<Modal
 			className="ant-modal"
 			width={800}
 			onCancel={handleCancel}
-			onOk={handleClose}
 			title={`Data Filter`}
 			visible={filterModalOpen}
 			bodyStyle={{ maxHeight: 300 }}
+			footer={<ModalFooter />}
 		>
 			<div style={{ width: '100%', display: 'flex', justifyContent: 'space-around' }}>
 				<div style={{ width: '20%', height: 250, overflowY: 'scroll' }}>
@@ -68,9 +89,21 @@ export default function AntModal() {
 						selectedColumns.map(
 							(col, i) =>
 								col.type === STRING ? (
-									<FilterColumnPicker removeColumn={removeColumn} key={i} column={col} />
+									<FilterColumnPicker
+										includeRows={includeRows}
+										selectRows={selectRows}
+										removeColumn={removeColumn}
+										key={i}
+										column={col}
+									/>
 								) : (
-									<FilterColumnSlider removeColumn={removeColumn} key={i} column={col} />
+									<FilterColumnSlider
+										includeRows={includeRows}
+										selectRows={selectRows}
+										removeColumn={removeColumn}
+										key={i}
+										column={col}
+									/>
 								),
 						)}
 				</div>
@@ -79,13 +112,15 @@ export default function AntModal() {
 	);
 }
 
-function FilterColumnSlider({ column, removeColumn }) {
+function FilterColumnSlider({ includeRows, selectRows, column, removeColumn }) {
 	const { selectedColumns } = useSelectState();
 	const { id, colMin, colMax, label, min, max } = column;
 
 	return (
 		<div style={{ paddingLeft: 10, paddingBottom: 10, marginBottom: 20, display: 'flex' }}>
 			<IntegerStep
+				includeRows={includeRows}
+				selectRows={selectRows}
 				currentMin={min}
 				currentMax={max}
 				key={id}
@@ -100,7 +135,7 @@ function FilterColumnSlider({ column, removeColumn }) {
 	);
 }
 
-function FilterColumnPicker({ column, removeColumn }) {
+function FilterColumnPicker({ includeRows, selectRows, column, removeColumn }) {
 	const dispatchSelectAction = useSelectDispatch();
 	const { rows, columns } = useRowsState();
 	const [ checkedText, setCheckedText ] = useState();
@@ -108,7 +143,9 @@ function FilterColumnPicker({ column, removeColumn }) {
 	useEffect(
 		() => {
 			dispatchSelectAction({ type: SET_FILTERS, stringFilter: checkedText });
-			dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
+			if (selectRows) {
+				dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
+			}
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[ checkedText ],
