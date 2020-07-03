@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { pingCloudFunctions } from './analysis-output/Analysis';
 import {
 	useSpreadsheetState,
@@ -17,7 +16,6 @@ import DistributionModal from './Modals/ModalDistribution';
 import FilterModal from './Modals/ModalFilter';
 import AnalysisModal from './Modals/ModalFitYX';
 import { selectRowAndColumnIDs } from './context/helpers';
-// import TestCounter from './TestCounter';
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
@@ -31,10 +29,13 @@ import {
 	SELECT_ALL_CELLS,
 	SELECT_BLOCK_OF_CELLS,
 	TRANSLATE_SELECTED_CELL,
+	UNDO,
+	REDO,
 	FORMULA,
 } from './constants';
 import TableView from './MainTable';
 import Sidebar from './Sidebar';
+import useEventListener from './useEventListener';
 
 export const checkIfValidNumber = (str) => {
 	if (str.match(/^-?\d*\.?\d*$/)) {
@@ -68,106 +69,117 @@ export default function Spreadsheet() {
 
 	// When a new column is created, set the default width to 100px;
 
-	async function paste() {
-		// safari doesn't have navigator.clipboard
-		if (!navigator.clipboard) {
-			console.log('navigator.clipboard not supported by safari/edge');
-			return;
-		}
-		// TODO: Fix this bug properly
-		if (!cellSelectionRanges[0]) {
-			console.log('no cell selection range');
-			return;
-		}
-		const copiedValues = await navigator.clipboard.readText();
-		// stringify to get character codes for tabs and carriage returns
-		const copiedValuesStringified = JSON.stringify(copiedValues);
-		// replace \r and \r\n with \n
-		const stringifiedValuesReplaced = copiedValuesStringified.replace(/(?:\\[rn]|[\r\n]+)+/g, '\\n');
-		const copiedValuesRows = JSON.parse(stringifiedValuesReplaced).split('\n');
-		const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
-		const copiedValues2dArrayDimensions = { height: copiedValues2dArray.length, width: copiedValues2dArray[0].length };
-		const { top, left } = cellSelectionRanges[0];
-		// quick patch to prevent major bug
-		// if (top === rows.length) return;
-		const { height, width } = copiedValues2dArrayDimensions;
-		const numberOfColumnsRequired = left - 1 + width - columns.length;
-		const numberOfRowsRequired = top + height - rows.length;
-		if (numberOfRowsRequired > 0) {
-			dispatchRowsAction({ type: CREATE_ROWS, rowCount: numberOfRowsRequired });
-		}
-		if (numberOfColumnsRequired > 0) {
-			dispatchRowsAction({ type: CREATE_COLUMNS, columnCount: numberOfColumnsRequired });
-		}
-		const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-			top,
-			left,
-			top + height - 1,
-			left + width - 1,
-			columns,
-			rows,
-		);
+	const paste = useCallback(
+		async () => {
+			// safari doesn't have navigator.clipboard
+			if (!navigator.clipboard) {
+				console.log('navigator.clipboard not supported by safari/edge');
+				return;
+			}
+			// TODO: Fix this bug properly
+			if (!cellSelectionRanges[0]) {
+				console.log('no cell selection range');
+				return;
+			}
+			const copiedValues = await navigator.clipboard.readText();
+			// stringify to get character codes for tabs and carriage returns
+			const copiedValuesStringified = JSON.stringify(copiedValues);
+			// replace \r and \r\n with \n
+			const stringifiedValuesReplaced = copiedValuesStringified.replace(/(?:\\[rn]|[\r\n]+)+/g, '\\n');
+			const copiedValuesRows = JSON.parse(stringifiedValuesReplaced).split('\n');
+			const copiedValues2dArray = copiedValuesRows.map((clipRow) => clipRow.split('\t'));
+			const copiedValues2dArrayDimensions = {
+				height: copiedValues2dArray.length,
+				width: copiedValues2dArray[0].length,
+			};
+			const { top, left } = cellSelectionRanges[0];
+			// quick patch to prevent major bug
+			// if (top === rows.length) return;
+			const { height, width } = copiedValues2dArrayDimensions;
+			const numberOfColumnsRequired = left - 1 + width - columns.length;
+			const numberOfRowsRequired = top + height - rows.length;
+			if (numberOfRowsRequired > 0) {
+				dispatchRowsAction({ type: CREATE_ROWS, rowCount: numberOfRowsRequired });
+			}
+			if (numberOfColumnsRequired > 0) {
+				dispatchRowsAction({ type: CREATE_COLUMNS, columnCount: numberOfColumnsRequired });
+			}
+			const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
+				top,
+				left,
+				top + height - 1,
+				left + width - 1,
+				columns,
+				rows,
+			);
 
-		dispatchRowsAction({
-			type: PASTE_VALUES,
-			copiedValues2dArray,
-			top,
-			left,
-			height,
-			width,
-		});
+			dispatchRowsAction({
+				type: PASTE_VALUES,
+				copiedValues2dArray,
+				top,
+				left,
+				height,
+				width,
+			});
 
-		const newCellSelectionRanges = [
-			{
-				top: top,
-				left: left,
-				bottom: top + height - 1,
-				right: left + width - 1,
-			},
-		];
-		dispatchSelectAction({
-			type: SELECT_BLOCK_OF_CELLS,
-			uniqueColumnIDs: selectedColumnIDs,
-			uniqueRowIDs: selectedRowIDs,
-			cellSelectionRanges: newCellSelectionRanges,
-		});
-	}
+			const newCellSelectionRanges = [
+				{
+					top: top,
+					left: left,
+					bottom: top + height - 1,
+					right: left + width - 1,
+				},
+			];
+			dispatchSelectAction({
+				type: SELECT_BLOCK_OF_CELLS,
+				uniqueColumnIDs: selectedColumnIDs,
+				uniqueRowIDs: selectedRowIDs,
+				cellSelectionRanges: newCellSelectionRanges,
+			});
+		},
+		[ cellSelectionRanges, columns, dispatchRowsAction, dispatchSelectAction, rows ],
+	);
 
-	useEffect(() => {
-		function onKeyDown(event) {
+	const onKeyDown = useCallback(
+		(event) => {
+			const { key, shiftKey, metaKey, ctrlKey } = event;
 			if (activeCell || barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
 				return;
 			}
-			if (!activeCell && cellSelectionRanges.length === 0) {
-				return;
+			let rowIndex = 0;
+			let columnIndex = 0;
+			if (cellSelectionRanges.length !== 0) {
+				columnIndex = cellSelectionRanges[0].left - 1;
+				rowIndex = cellSelectionRanges[0].top;
 			}
-			const columnIndex = activeCell ? activeCell.column - 1 : cellSelectionRanges[0].left - 1;
-			const rowIndex = activeCell ? activeCell.row : cellSelectionRanges[0].top;
 
-			if (event.metaKey || event.ctrlKey) {
+			if (metaKey || ctrlKey) {
 				// prevent cell input if holding ctrl/meta
-				if (event.key === 'c') {
-					dispatchRowsAction({ type: COPY_VALUES, cellSelectionRanges });
-					return;
-				} else if (event.key === 'v') {
-					paste();
-					return;
-				} else if (event.key === 'a') {
-					event.preventDefault();
-					dispatchSelectAction({ type: SELECT_ALL_CELLS, rows, columns });
-					return;
-				} else if (event.key === 'z') {
-					event.preventDefault();
-					if (event.shiftKey) {
-						dispatchRowsAction({ type: 'REDO' });
+				switch (key) {
+					case 'c':
+						if (cellSelectionRanges.length === 0) return;
+						dispatchRowsAction({ type: COPY_VALUES, cellSelectionRanges });
 						return;
-					}
-					dispatchRowsAction({ type: 'UNDO' });
-					return;
+					case 'v':
+						paste();
+						return;
+					case 'a':
+						event.preventDefault();
+						dispatchSelectAction({ type: SELECT_ALL_CELLS, rows, columns });
+						return;
+					case 'z':
+						event.preventDefault();
+						if (shiftKey) {
+							dispatchRowsAction({ type: REDO });
+							return;
+						}
+						dispatchRowsAction({ type: UNDO });
+						return;
+					default:
+						break;
 				}
-				return;
 			}
-			if (event.key.length === 1) {
+			if (key.length === 1) {
 				if (rowIndex + 1 > rows.length) {
 					dispatchRowsAction({ type: CREATE_ROWS, rowCount: rows });
 				}
@@ -176,12 +188,13 @@ export default function Spreadsheet() {
 						type: ACTIVATE_CELL,
 						row: rowIndex,
 						column: columnIndex + 1,
-						newInputCellValue: event.key,
+						newInputCellValue: key,
 					});
 				}
 			} else {
-				switch (event.key) {
+				switch (key) {
 					case 'Backspace':
+						if (cellSelectionRanges.length === 0) return;
 						dispatchRowsAction({ type: DELETE_VALUES, cellSelectionRanges });
 						break;
 					case 'Escape':
@@ -192,7 +205,7 @@ export default function Spreadsheet() {
 					case 'ArrowLeft':
 					case 'ArrowRight':
 						event.preventDefault();
-						const { row, column } = cursorKeyToRowColMapper[event.key](
+						const { row, column } = cursorKeyToRowColMapper[key](
 							rowIndex,
 							columnIndex + 1,
 							rows.length,
@@ -210,12 +223,23 @@ export default function Spreadsheet() {
 						break;
 				}
 			}
-		}
-		document.addEventListener('keydown', onKeyDown);
-		return () => {
-			document.removeEventListener('keydown', onKeyDown);
-		};
-	});
+		},
+		[
+			activeCell,
+			analysisModalOpen,
+			barChartModalOpen,
+			cellSelectionRanges,
+			columns,
+			distributionModalOpen,
+			dispatchRowsAction,
+			dispatchSelectAction,
+			filterModalOpen,
+			paste,
+			rows,
+		],
+	);
+
+	useEventListener('keydown', onKeyDown);
 
 	return (
 		// Height 100% necessary for autosizer to work
@@ -228,16 +252,11 @@ export default function Spreadsheet() {
 			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			<div
-				style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
-				// onKeyDown={onKeyDown}
-				onMouseDown={(e) => {
-					dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU });
-				}}
-				onMouseUp={(e) => {
-					dispatchSelectAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS });
-				}}
+				style={{ height: '100%' }}
+				onMouseDown={() => dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU })}
+				onMouseUp={() => dispatchSelectAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS })}
 			>
-				<div style={{ display: 'flex', height: '100%' }}>
+				<div style={{ display: 'flex', height: '100%', width: '100%' }}>
 					<Sidebar />
 					<TableView />
 				</div>

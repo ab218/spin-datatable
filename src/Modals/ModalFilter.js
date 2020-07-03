@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Checkbox, Button, Modal, Select } from 'antd';
+import {
+	// Checkbox,
+	Button,
+	Modal,
+	Select,
+} from 'antd';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
@@ -25,8 +30,14 @@ export default function AntModal() {
 	const { filterModalOpen } = useSpreadsheetState();
 	const { columns, rows } = useRowsState();
 	const { filters, selectedColumns } = useSelectState();
-	const [ selectRows, setSelectRows ] = useState(true);
-	const [ includeRows, setIncludeRows ] = useState(false);
+	const [
+		selectRows,
+		// setSelectRows
+	] = useState(true);
+	const [
+		includeRows,
+		// setIncludeRows
+	] = useState(false);
 
 	function handleClose() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
