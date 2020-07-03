@@ -16,7 +16,6 @@ function formatForNumberColumn(cellValue, column) {
 }
 
 export default React.memo(function NormalCell({ cellValue, columnIndex, column, rowIndex, rowID }) {
-	// const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const { columns, rows } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
 	function onMouseDown(event) {
@@ -73,7 +72,7 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 			<div
 				key={`row${rowIndex}col${columnIndex}`}
 				onMouseDown={onMouseDown}
-				onMouseEnter={onMouseEnter}
+				onMouseOver={onMouseEnter}
 				style={{
 					textAlign: column.type === STRING ? 'left' : 'right',
 					backgroundColor: isNotANumber ? 'pink' : 'transparent',

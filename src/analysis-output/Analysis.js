@@ -106,19 +106,16 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	);
 	console.log(result.data); // gcloud
 	// console.log(result.data.body); // Lambda
-	const { mean_y, std_y, count, quantiles, histogram, skew, kurtosis } = result.data;
+	const { mean_y, std_y, quantiles } = result.data;
 	return {
 		analysisType: 'distribution',
-		count,
 		colObj: colY,
 		mean: mean_y,
 		stdev: std_y,
 		vals,
 		boxPlotData: quantiles,
-		histogram,
-		skew,
-		kurtosis,
 		numberOfBins,
+		...result.data,
 	};
 }
 
