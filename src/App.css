@@ -125,7 +125,7 @@
 
 .ReactVirtualized__Table {
 	display: inline-block;
-	border: 2px solid rgba(0, 0, 0, 0.1);
+	/* border: 2px solid rgba(0, 0, 0, 0.1); */
 }
 
 /* .ReactVirtualized__Table__rowColumn {
@@ -204,6 +204,13 @@
 /* For Row headers column to be the same height as main table */
 .ReactVirtualized__Table__Grid {
 	height: auto !important;
+}
+
+.ReactVirtualized__Table__headerRow {
+	z-index: 2;
+	position: sticky;
+	top: 0;
+	background-color: white;
 }
 
 .error {

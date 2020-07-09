@@ -79,7 +79,8 @@ export default React.memo(function TableView() {
 
 		const isInLeftEdge = viewportX < edgeLeft;
 		const isInRightEdge = viewportX > edgeRight;
-		const isInTopEdge = viewportY < edgeTop;
+		// prevent scrolling up when column headers clicked
+		const isInTopEdge = (viewportY < 60 && viewportY > 30) || viewportY < 0;
 		const isInBottomEdge = viewportY > edgeBottom;
 
 		// If the mouse is not in the viewport edge, there's no need to calculate
@@ -209,7 +210,7 @@ export default React.memo(function TableView() {
 		<WindowScroller>
 			{({ height, scrollTop, onScroll }) => (
 				<div style={{ display: 'flex' }}>
-					<div style={{ position: 'sticky', left: '19%', zIndex: 3 }}>
+					<div style={{ position: 'sticky', left: '20vw', zIndex: 3 }}>
 						<Table
 							autoheight
 							height={height}

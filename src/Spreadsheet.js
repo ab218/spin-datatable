@@ -278,7 +278,7 @@ export default function Spreadsheet() {
 				>
 					<Sidebar />
 				</div>
-				<div style={{ width: '80%' }}>
+				<div style={{ width: '80vw' }}>
 					<TableView />
 				</div>
 			</div>
