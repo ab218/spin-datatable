@@ -47,11 +47,11 @@ export default function HamburgerMenu() {
 	);
 
 	return (
-		<div style={{ textAlign: 'right', marginRight: 10, width: '100%', fontSize: 18 }}>
+		<div style={{ textAlign: 'right', width: '100%', fontSize: 18, backgroundColor: 'white', zIndex: 1 }}>
 			<Dropdown overlay={menu}>
 				<Icon
 					className={'hamburger'}
-					style={{ margin: '0 auto', color: 'blue' }}
+					style={{ marginRight: 10, color: 'blue' }}
 					onClick={() => setCollapsed(!collapsed)}
 					type={'line-chart'}
 				/>

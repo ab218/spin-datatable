@@ -68,13 +68,15 @@ export default function ContextMenu({ paste }) {
 				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
 						key="1"
-						onClick={() =>
+						onClick={() => {
+							dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 							dispatchSpreadsheetAction({
 								type: TOGGLE_COLUMN_TYPE_MODAL,
 								columnTypeModalOpen: true,
 								colName,
 								columns,
-							})}
+							});
+						}}
 					>
 						Column Info...
 					</Menu.Item>

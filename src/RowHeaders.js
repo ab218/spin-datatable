@@ -38,12 +38,6 @@ export default function RowHeaders({ rowIndex, rowData }) {
 			onContextMenu={(e) => {
 				if (rowIndex < rows.length) {
 					e.preventDefault();
-					// if (e.target.style.backgroundColor !== 'rgb(160,185,225)') {
-					// 	dispatchSelectAction({
-					// 		type: SELECT_ROW,
-					// 		rowIndex,
-					// 	});
-					// }
 					dispatchSpreadsheetAction({
 						type: OPEN_CONTEXT_MENU,
 						contextMenuType: 'row',
@@ -74,7 +68,7 @@ export default function RowHeaders({ rowIndex, rowData }) {
 						rows,
 						columns,
 						endRangeRow: rowIndex,
-						endRangeColumn: 1,
+						endRangeColumn: 0,
 					});
 				}
 			}}

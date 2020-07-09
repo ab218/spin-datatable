@@ -56,7 +56,7 @@
 }
 
 .menu {
-	z-index: 3;
+	z-index: 100;
 	text-align: left;
 	width: 220px;
 	box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
@@ -199,6 +199,11 @@
 
 .sidebar-column-selected {
 	background-color: rgb(160, 185, 225) !important;
+}
+
+/* For Row headers column to be the same height as main table */
+.ReactVirtualized__Table__Grid {
+	height: auto !important;
 }
 
 .error {

@@ -1,10 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, {
-	useEffect,
-	// useRef,
-	useState,
-	useCallback,
-} from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRowsState, useColumnWidthState } from './context/SpreadsheetProvider';
 import CellRenderer from './CellRenderer';
 import AnalysisMenu from './AnalysisMenu';
@@ -23,7 +18,6 @@ export const checkIfValidNumber = (str) => {
 };
 
 export default React.memo(function TableView() {
-	// const tableRef = useRef(null);
 	const { rows, columns } = useRowsState();
 	const { widths } = useColumnWidthState();
 	const [ visibleColumns, setVisibleColumns ] = useState(1);
@@ -212,59 +206,78 @@ export default React.memo(function TableView() {
 
 	return (
 		// Height 100% necessary for autosizer to work
-		<div>
-			<WindowScroller>
-				{({ height, onChildScroll, scrollTop }) => (
-					<Table
-						autoHeight
-						scrollTop={scrollTop}
-						onScroll={onChildScroll}
-						overscanRowCount={0}
-						width={tableWidth}
-						// ref={tableRef}
-						height={height}
-						headerHeight={25}
-						rowHeight={30}
-						rowCount={visibleRows}
-						rowGetter={({ index }) => rows[index] || emptyRow}
-						rowStyle={{ alignItems: 'stretch' }}
-					>
-						<Column
+		<WindowScroller>
+			{({ height, scrollTop, onScroll }) => (
+				<div style={{ display: 'flex' }}>
+					<div style={{ position: 'sticky', left: '19%', zIndex: 3 }}>
+						<Table
+							autoheight
+							height={height}
+							scrollTop={scrollTop}
+							onScroll={onScroll}
+							overscanRowCount={0}
 							width={100}
-							label={''}
-							dataKey={'rowHeaderColumn'}
-							headerRenderer={() => <AnalysisMenu />}
-							cellRenderer={(props) => <RowHeaders {...props} />}
-							style={{ margin: 0 }}
-						/>
-						{renderColumns(columns, cellRendererCallback, widths)}
-						{visibleColumns && renderBlankColumns(visibleColumns, columns, blankColumnWidth, cellRendererCallback)}
-					</Table>
-				)}
-			</WindowScroller>
-		</div>
+							headerHeight={25}
+							rowHeight={30}
+							rowGetter={({ index }) => rows[index] || emptyRow}
+							rowCount={visibleRows}
+							rowStyle={{ alignItems: 'stretch' }}
+						>
+							<Column
+								width={100}
+								label={''}
+								dataKey={'rowHeaderColumn'}
+								headerRenderer={() => <AnalysisMenu />}
+								cellRenderer={(props) => <RowHeaders {...props} />}
+								style={{ margin: 0 }}
+							/>
+						</Table>
+					</div>
+					<div>
+						<Table
+							autoHeight
+							height={height}
+							scrollTop={scrollTop}
+							onScroll={onScroll}
+							overscanRowCount={0}
+							width={tableWidth}
+							headerHeight={25}
+							rowHeight={30}
+							rowCount={visibleRows}
+							rowGetter={({ index }) => rows[index] || emptyRow}
+							rowStyle={{ alignItems: 'stretch' }}
+						>
+							{renderColumns(columns, cellRendererCallback, widths)}
+							{visibleColumns && renderBlankColumns(visibleColumns, columns, blankColumnWidth, cellRendererCallback)}
+						</Table>
+					</div>
+				</div>
+			)}
+		</WindowScroller>
 	);
 });
 
 function renderColumns(columns, cellRendererCallback, widths) {
-	return columns.map((column, columnIndex) => (
-		<Column
-			key={columnIndex}
-			cellRenderer={cellRendererCallback(column)}
-			columnIndex={columnIndex}
-			dataKey={(column && column.id) || ''}
-			headerRenderer={(props) => (
-				<HeaderRenderer {...props} column={column} columnIndex={columnIndex} units={column && column.units} />
-			)}
-			label={(column && column.label) || ''}
-			width={widths[column.id] || 100}
-			style={{
-				border: '1px solid #ddd',
-				borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
-				margin: 0,
-			}}
-		/>
-	));
+	return columns.map((column, columnIndex) => {
+		return (
+			<Column
+				key={columnIndex}
+				cellRenderer={cellRendererCallback(column)}
+				columnIndex={columnIndex}
+				dataKey={(column && column.id) || ''}
+				headerRenderer={(props) => (
+					<HeaderRenderer {...props} column={column} columnIndex={columnIndex} units={column && column.units} />
+				)}
+				label={(column && column.label) || ''}
+				width={widths[column.id] || 100}
+				style={{
+					border: '1px solid #ddd',
+					borderLeft: columnIndex === 0 ? '1 px solid #ddd' : 'none',
+					margin: 0,
+				}}
+			/>
+		);
+	});
 }
 
 function renderBlankColumns(totalColumnCount, columns, blankColumnWidth, cellRendererCallback) {

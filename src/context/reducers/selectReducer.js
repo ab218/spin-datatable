@@ -87,9 +87,9 @@ export function selectReducer(state, action) {
 			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
 				return {
 					top: rowIndex,
-					left: 1,
+					left: 0,
 					bottom: rowIndex,
-					right: columns.length,
+					right: columns.length - 1,
 				};
 			});
 			return {
@@ -107,7 +107,7 @@ export function selectReducer(state, action) {
 				startRangeRow: lastSelection.row,
 				startRangeColumn: lastSelection.column,
 				endRangeRow,
-				endRangeColumn,
+				endRangeColumn: endRangeColumn,
 			});
 			const totalCellSelectionRanges = state.cellSelectionRanges.concat(currentCellSelectionRange);
 			const uniqueRowIDs = generateUniqueRowIDs(totalCellSelectionRanges, rows);
@@ -158,16 +158,16 @@ export function selectReducer(state, action) {
 			const { cellSelectionRanges } = state;
 			const allCellsInRow = {
 				top: rowIndex,
-				left: 1,
+				left: 0,
 				bottom: rowIndex,
-				right: columns.length,
+				right: columns.length - 1,
 			};
 			return {
 				...state,
 				activeCell: null,
 				currentCellSelectionRange: allCellsInRow,
 				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
-				lastSelection: { column: columns.length, row: rowIndex },
+				lastSelection: { column: columns.length - 1, row: rowIndex },
 				uniqueRowIDs: [ rowID ],
 				uniqueColumnIDs: columns.map((col) => col.id),
 			};
@@ -175,14 +175,14 @@ export function selectReducer(state, action) {
 		// This is used when a rows array is supplied. Histogram bar clicks.
 		case SELECT_CELLS: {
 			const { cellSelectionRanges = [] } = state;
-			const columnIndexOffset = 1;
-			const computedColumnIndex = columnIndex + columnIndexOffset;
+			// const columnIndexOffset = 1;
+			// const computedColumnIndex = columnIndex + columnIndexOffset;
 			const rowIDs = rowIndexes.map((row) => rows[row].id);
 			const newSelectedCells = rowIndexes.map((rowIndex) => ({
 				top: rowIndex,
 				bottom: rowIndex,
-				left: computedColumnIndex,
-				right: computedColumnIndex,
+				left: columnIndex,
+				right: columnIndex,
 			}));
 			const newCellSelectionRanges = cellSelectionRanges.concat(newSelectedCells);
 			return {
@@ -196,9 +196,9 @@ export function selectReducer(state, action) {
 		case SELECT_ALL_CELLS: {
 			const allCells = {
 				top: 0,
-				left: 1,
+				left: 0,
 				bottom: rows.length - 1,
-				right: columns.length,
+				right: columns.length - 1,
 			};
 			return {
 				...state,
@@ -214,9 +214,9 @@ export function selectReducer(state, action) {
 			const { rows } = action;
 			const allCellsInColumn = {
 				top: 0,
-				left: columnIndex + 1,
+				left: columnIndex,
 				bottom: rows.length - 1,
-				right: columnIndex + 1,
+				right: columnIndex,
 			};
 			return {
 				...state,
@@ -248,7 +248,7 @@ export function selectReducer(state, action) {
 		case TRANSLATE_SELECTED_CELL: {
 			const newCellSelectionRanges = [ { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex } ];
 			const rowID = rows[rowIndex].id;
-			const columnID = columns[columnIndex - 1].id;
+			const columnID = columns[columnIndex].id;
 			return {
 				...state,
 				cellSelectionRanges: newCellSelectionRanges,
