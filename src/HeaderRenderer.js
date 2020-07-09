@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
@@ -11,9 +11,11 @@ import {
 } from './context/SpreadsheetProvider';
 import Draggable from 'react-draggable';
 import {
+	ADD_COLUMN_WIDTH,
 	CREATE_COLUMNS,
 	CLOSE_CONTEXT_MENU,
 	OPEN_CONTEXT_MENU,
+	RESIZE_COLUMN,
 	REMOVE_SELECTED_CELLS,
 	SELECT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
@@ -26,14 +28,13 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
-	const dispatchColumnWidthAction = useColumnWidthDispatch();
+	const [ selected, setSelected ] = useState(null);
 
 	function createNewColumns(columnCount) {
 		dispatchRowsAction({ type: CREATE_COLUMNS, columnCount });
 	}
 	function openModal(e) {
 		if (!dataKey) {
-			// TODO: Fix these seemingly magic numbers
 			if (columnIndex >= columns.length - 1) {
 				createNewColumns(columnIndex + 1 - columns.length);
 				return;
@@ -49,26 +50,24 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 
 	useEffect(
 		() => {
-			dispatchColumnWidthAction({ type: 'ADD_COLUMN_WIDTH', dataKey });
+			setSelected(uniqueColumnIDs.includes(dataKey));
 		},
-		[ dataKey ],
+		[ uniqueColumnIDs ],
 	);
-
-	const resizeColumn = ({ dataKey, deltaX }) => {
-		dispatchColumnWidthAction({ type: 'RESIZE_COLUMN', dataKey, deltaX });
-	};
 
 	return (
 		<React.Fragment key={dataKey}>
 			<div
 				className={
-					uniqueColumnIDs.includes(dataKey) ? (
+					selected ? (
 						'ReactVirtualized__Table__headerTruncatedText column-header-selected'
 					) : (
 						'ReactVirtualized__Table__headerTruncatedText'
 					)
 				}
 				style={{
+					position: 'sticky',
+					top: 0,
 					userSelect: 'none',
 				}}
 				onClick={(e) => {
@@ -78,7 +77,7 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 						}
 						dispatchSelectAction({
 							type: SELECT_COLUMN,
-							rows: rows,
+							rows,
 							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
@@ -91,7 +90,7 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 						e.preventDefault();
 						dispatchSelectAction({
 							type: SELECT_COLUMN,
-							rows: rows,
+							rows,
 							columnID: dataKey,
 							columnIndex,
 							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
@@ -108,27 +107,34 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 				{label}
 				{units ? ` (${units})` : ''}
 			</div>
-			<Draggable
-				axis="x"
-				defaultClassName="DragHandle"
-				defaultClassNameDragging="DragHandleActive"
-				onDrag={(event, { deltaX }) => {
-					if (!dataKey) return;
-					return resizeColumn({
-						dataKey: dataKey,
-						deltaX,
-					});
-				}}
-				position={{ x: 0 }}
-				zIndex={999}
-			>
-				<span
-					style={{ userSelect: 'none' }}
-					className={uniqueColumnIDs.includes(dataKey) ? 'DragHandleIcon-selected' : 'DragHandleIcon'}
-				>
-					⋮
-				</span>
-			</Draggable>
+			<DraggableHeader dataKey={dataKey} selected={selected} />
 		</React.Fragment>
+	);
+});
+
+const DraggableHeader = React.memo(function DraggableHeader({ dataKey, selected }) {
+	const dispatchColumnWidthAction = useColumnWidthDispatch();
+	useEffect(() => {
+		dispatchColumnWidthAction({ type: ADD_COLUMN_WIDTH, dataKey });
+	}, []);
+	const resizeColumn = useCallback(
+		(_, { deltaX }) => {
+			dispatchColumnWidthAction({ type: RESIZE_COLUMN, dataKey, deltaX });
+		},
+		[ dataKey ],
+	);
+	return (
+		<Draggable
+			axis="x"
+			defaultClassName="DragHandle"
+			defaultClassNameDragging="DragHandleActive"
+			onDrag={resizeColumn}
+			position={{ x: 0 }}
+			zIndex={10}
+		>
+			<span style={{ userSelect: 'none' }} className={selected ? 'DragHandleIcon-selected' : 'DragHandleIcon'}>
+				⋮
+			</span>
+		</Draggable>
 	);
 });

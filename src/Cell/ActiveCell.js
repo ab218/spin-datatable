@@ -19,11 +19,11 @@ export default React.memo(function ActiveCell(props) {
 		function updateCell(currentValue, rowIndex, columnIndex) {
 			// Don't allow formula column cells to be edited
 			const formulaColumns = columns.map((col) => (col.type === FORMULA ? columns.indexOf(col) : null));
-			if (!formulaColumns.includes(columnIndex - 1)) {
+			if (!formulaColumns.includes(columnIndex)) {
 				dispatchRowsAction({
 					type: UPDATE_CELL,
 					rowIndex,
-					columnIndex: columnIndex - 1,
+					columnIndex,
 					cellValue: currentValue,
 				});
 			}

@@ -56,7 +56,7 @@
 }
 
 .menu {
-	z-index: 3;
+	z-index: 100;
 	text-align: left;
 	width: 220px;
 	box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
@@ -125,7 +125,9 @@
 
 .ReactVirtualized__Table {
 	display: inline-block;
-	border: 2px solid rgba(0, 0, 0, 0.1);
+	border-right: 1px solid #b3b3b3;
+	border-bottom: 1px solid #b3b3b3;
+	/* border: 2px solid rgba(0, 0, 0, 0.1); */
 }
 
 /* .ReactVirtualized__Table__rowColumn {
@@ -199,6 +201,19 @@
 
 .sidebar-column-selected {
 	background-color: rgb(160, 185, 225) !important;
+}
+
+/* For Row headers column to be the same height as main table */
+.ReactVirtualized__Table__Grid {
+	height: auto !important;
+}
+
+.ReactVirtualized__Table__headerRow {
+	z-index: 2;
+	position: sticky;
+	top: 0;
+	background-color: white;
+	border-bottom: 1px solid #b3b3b3;
 }
 
 .error {

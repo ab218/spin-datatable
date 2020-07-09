@@ -93,7 +93,7 @@ export function generateUniqueRowIDs(cellSelectionRanges, rows) {
 
 export function generateUniqueColumnIDs(cellSelectionRanges, columns) {
 	const range = (start, end) => Array(end - start).fill().map((_, i) => start + i);
-	const selectedColumns = cellSelectionRanges.map((column) => range(column.left - 1, column.right));
+	const selectedColumns = cellSelectionRanges.map((column) => range(column.left, column.right + 1));
 	const flattenedColumnIndexes = selectedColumns.flat();
 	const columnIDs = columns.map((column, i) => flattenedColumnIndexes.includes(i) && column.id).filter((x) => x);
 	return columnIDs;
@@ -124,7 +124,7 @@ export function returnIntersectionOrNonEmptyArray(arr1, arr2) {
 export function selectRowAndColumnIDs(top, left, bottom, right, columns, rows) {
 	const colPos = columns
 		.map((col, i) => {
-			return i >= left - 1 && i <= right - 1 && col.id;
+			return i >= left && i <= right && col.id;
 		})
 		.filter((x) => x);
 	const rowPos = rows

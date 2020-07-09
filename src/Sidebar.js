@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React from 'react';
-import { Divider, Layout, Input } from 'antd';
+import { Divider, Input } from 'antd';
 import { SELECT_COLUMN, REMOVE_SELECTED_CELLS, SET_TABLE_NAME } from './constants';
 import { useSelectState, useSelectDispatch, useRowsState, useRowsDispatch } from './context/SpreadsheetProvider';
 import { createModelingTypeIcon } from './Modals/ModalShared';
@@ -11,7 +11,12 @@ export default React.memo(function Sidebar() {
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
 	return (
-		<Layout.Sider width={'20em'} style={{ textAlign: 'left' }} theme={'light'}>
+		<div
+			style={{
+				height: '100%',
+				width: '95%',
+			}}
+		>
 			<Input
 				style={{ borderLeft: 'none', borderTop: 'none', borderRight: 'none', borderRadius: 0 }}
 				size="large"
@@ -78,6 +83,6 @@ export default React.memo(function Sidebar() {
 				</tbody>
 			</table>
 			<Divider />
-		</Layout.Sider>
+		</div>
 	);
 });

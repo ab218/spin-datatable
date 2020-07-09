@@ -1,11 +1,12 @@
 import React from 'react';
 import { useSelectDispatch } from '../context/SpreadsheetProvider';
+import { SELECT_CELL } from '../constants';
 
 export default React.memo(function BlankClickableCell({ columnID, rowIndex, columnIndex }) {
 	const dispatchSelectAction = useSelectDispatch();
 	// Cells that are one row beyond the total number of rows that can be clicked
 	function onMouseDown(event) {
-		dispatchSelectAction({ type: 'SELECT_CELL', rowIndex, columnIndex, columnID });
+		dispatchSelectAction({ type: SELECT_CELL, rowIndex, columnIndex, columnID });
 	}
 
 	if (columnID) {

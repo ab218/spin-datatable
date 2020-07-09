@@ -96,7 +96,7 @@ export default function Spreadsheet() {
 			// quick patch to prevent major bug
 			// if (top === rows.length) return;
 			const { height, width } = copiedValues2dArrayDimensions;
-			const numberOfColumnsRequired = left - 1 + width - columns.length;
+			const numberOfColumnsRequired = left + width - columns.length;
 			const numberOfRowsRequired = top + height - rows.length;
 			if (numberOfRowsRequired > 0) {
 				dispatchRowsAction({ type: CREATE_ROWS, rowCount: numberOfRowsRequired });
@@ -143,13 +143,20 @@ export default function Spreadsheet() {
 	const onKeyDown = useCallback(
 		(event) => {
 			const { key, shiftKey, metaKey, ctrlKey } = event;
-			if (activeCell || barChartModalOpen || distributionModalOpen || analysisModalOpen || filterModalOpen) {
+			if (
+				activeCell ||
+				barChartModalOpen ||
+				distributionModalOpen ||
+				analysisModalOpen ||
+				filterModalOpen ||
+				selectedColumn
+			) {
 				return;
 			}
 			let rowIndex = 0;
 			let columnIndex = 0;
 			if (cellSelectionRanges.length !== 0) {
-				columnIndex = cellSelectionRanges[0].left - 1;
+				columnIndex = cellSelectionRanges[0].left;
 				rowIndex = cellSelectionRanges[0].top;
 			}
 
@@ -179,7 +186,7 @@ export default function Spreadsheet() {
 						break;
 				}
 			}
-			if (key.length === 1) {
+			if (cellSelectionRanges.length !== 0 && key.length === 1) {
 				if (rowIndex + 1 > rows.length) {
 					dispatchRowsAction({ type: CREATE_ROWS, rowCount: rows });
 				}
@@ -187,7 +194,7 @@ export default function Spreadsheet() {
 					dispatchSelectAction({
 						type: ACTIVATE_CELL,
 						row: rowIndex,
-						column: columnIndex + 1,
+						column: columnIndex,
 						newInputCellValue: key,
 					});
 				}
@@ -207,9 +214,9 @@ export default function Spreadsheet() {
 						event.preventDefault();
 						const { row, column } = cursorKeyToRowColMapper[key](
 							rowIndex,
-							columnIndex + 1,
-							rows.length,
-							columns.length,
+							columnIndex,
+							rows.length - 1,
+							columns.length - 1,
 						);
 						dispatchSelectAction({
 							type: TRANSLATE_SELECTED_CELL,
@@ -226,16 +233,17 @@ export default function Spreadsheet() {
 		},
 		[
 			activeCell,
-			analysisModalOpen,
 			barChartModalOpen,
-			cellSelectionRanges,
-			columns,
 			distributionModalOpen,
-			dispatchRowsAction,
-			dispatchSelectAction,
+			analysisModalOpen,
 			filterModalOpen,
+			selectedColumn,
+			cellSelectionRanges,
+			dispatchRowsAction,
 			paste,
+			dispatchSelectAction,
 			rows,
+			columns,
 		],
 	);
 
@@ -252,12 +260,25 @@ export default function Spreadsheet() {
 			{analysisModalOpen && <AnalysisModal setPopup={setPopup} />}
 			{filterModalOpen && <FilterModal selectedColumn={selectedColumn} />}
 			<div
-				style={{ height: '100%' }}
+				style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'space-between' }}
 				onMouseDown={() => dispatchSpreadsheetAction({ type: CLOSE_CONTEXT_MENU })}
 				onMouseUp={() => dispatchSelectAction({ type: ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS })}
 			>
-				<div style={{ display: 'flex', height: '100%', width: '100%' }}>
+				<div
+					style={{
+						width: '20vw',
+						height: '100vh',
+						zIndex: 10,
+						backgroundColor: 'white',
+						textAlign: 'left',
+						position: 'sticky',
+						top: 0,
+						left: 0,
+					}}
+				>
 					<Sidebar />
+				</div>
+				<div style={{ width: '80vw' }}>
 					<TableView />
 				</div>
 			</div>
@@ -271,11 +292,11 @@ export const cursorKeyToRowColMapper = {
 		return { row: Math.max(row - 1, 0), column };
 	},
 	ArrowDown: function(row, column, numberOfRows) {
-		return { row: Math.min(row + 1, numberOfRows - 1), column };
+		return { row: Math.min(row + 1, numberOfRows), column };
 	},
 	ArrowLeft: function(row, column) {
 		// Column should be minimum of 1 due to side row header
-		return { row, column: Math.max(column - 1, 1) };
+		return { row, column: Math.max(column - 1, 0) };
 	},
 	ArrowRight: function(row, column, _, numberOfColumns) {
 		return { row, column: Math.min(column + 1, numberOfColumns) };
@@ -285,13 +306,13 @@ export const cursorKeyToRowColMapper = {
 	},
 	Tab: function(row, column, numberOfRows, numberOfColumns, shiftKey) {
 		if (shiftKey) {
-			if (column !== 1) return { row, column: column - 1 };
-			else if (column === 1 && row === 0) return { row: numberOfRows - 1, column: numberOfColumns };
-			else if (column === 1 && row !== 0) return { row: row - 1, column: numberOfColumns };
+			if (column !== 0) return { row, column: column - 1 };
+			else if (column === 0 && row === 0) return { row: numberOfRows - 1, column: numberOfColumns - 1 };
+			else if (column === 0 && row !== 0) return { row: row - 1, column: numberOfColumns - 1 };
 		} else {
-			if (column < numberOfColumns) return { row, column: column + 1 };
-			else if (column === numberOfColumns && row === numberOfRows - 1) return { row: 0, column: 1 };
-			else if (column === numberOfColumns) return { row: row + 1, column: 1 };
+			if (column < numberOfColumns - 1) return { row, column: column + 1 };
+			else if (column === numberOfColumns - 1 && row === numberOfRows - 1) return { row: 0, column: 0 };
+			else if (column === numberOfColumns - 1) return { row: row + 1, column: 0 };
 		}
 	},
 };
