@@ -210,7 +210,7 @@ export default React.memo(function TableView() {
 		<WindowScroller>
 			{({ height, scrollTop, onScroll }) => (
 				<div style={{ display: 'flex' }}>
-					<div style={{ position: 'sticky', left: '20vw', zIndex: 3 }}>
+					<div style={{ position: 'sticky', left: '20vw', zIndex: 3, borderLeft: '1px solid #b3b3b3' }}>
 						<Table
 							autoheight
 							height={height}

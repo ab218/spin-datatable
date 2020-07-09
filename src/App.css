@@ -125,6 +125,8 @@
 
 .ReactVirtualized__Table {
 	display: inline-block;
+	border-right: 1px solid #b3b3b3;
+	border-bottom: 1px solid #b3b3b3;
 	/* border: 2px solid rgba(0, 0, 0, 0.1); */
 }
 
@@ -211,6 +213,7 @@
 	position: sticky;
 	top: 0;
 	background-color: white;
+	border-bottom: 1px solid #b3b3b3;
 }
 
 .error {
