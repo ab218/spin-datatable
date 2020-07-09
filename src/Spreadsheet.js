@@ -186,7 +186,7 @@ export default function Spreadsheet() {
 						break;
 				}
 			}
-			if (key.length === 1) {
+			if (cellSelectionRanges.length !== 0 && key.length === 1) {
 				if (rowIndex + 1 > rows.length) {
 					dispatchRowsAction({ type: CREATE_ROWS, rowCount: rows });
 				}
