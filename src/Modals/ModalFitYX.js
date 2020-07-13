@@ -6,18 +6,7 @@ import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import { createRandomID } from '../context/helpers';
-import {
-	// REMOVE_SELECTED_CELLS,
-	// SELECT_CELLS,
-	ORDINAL,
-	CONTINUOUS,
-	NOMINAL,
-	BIVARIATE,
-	LOGISTIC,
-	ONEWAY,
-	CONTINGENCY,
-	// SAVE_VALUES_TO_COLUMN,
-} from '../constants';
+import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from '../constants';
 import VariableLegend from './FitYXLegend';
 
 export default function AnalysisModal({ setPopup }) {

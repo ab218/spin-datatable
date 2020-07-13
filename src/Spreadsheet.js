@@ -60,8 +60,6 @@ export default function Spreadsheet() {
 	const [ popup, setPopup ] = useState([]);
 
 	useEffect(() => {
-		// Activate cell top leftmost cell on first load
-		// dispatchSelectAction({ type: ACTIVATE_CELL, row: 0, column: 1 });
 		// Wake up cloud functions
 		pingCloudFunctions();
 		// eslint-disable-next-line react-hooks/exhaustive-deps

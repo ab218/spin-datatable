@@ -5,7 +5,7 @@ import {
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	REMOVE_SELECTED_CELLS,
 	SELECT_CELL,
-	SELECT_CELLS,
+	SELECT_CELLS_BY_IDS,
 	SELECT_ALL_CELLS,
 	SELECT_ROW,
 	SELECT_BLOCK_OF_CELLS,
@@ -173,11 +173,11 @@ export function selectReducer(state, action) {
 			};
 		}
 		// This is used when a rows array is supplied. Histogram bar clicks.
-		case SELECT_CELLS: {
+		case SELECT_CELLS_BY_IDS: {
 			const { cellSelectionRanges = [] } = state;
-			// const columnIndexOffset = 1;
-			// const computedColumnIndex = columnIndex + columnIndexOffset;
-			const rowIDs = rowIndexes.map((row) => rows[row].id);
+			const { rowIDs, columnID, rows, columns } = action;
+			const rowIndexes = rowIDs.map((rowID) => rows.findIndex((row) => row.id === rowID));
+			const columnIndex = columns.findIndex((column) => column.id === columnID);
 			const newSelectedCells = rowIndexes.map((rowIndex) => ({
 				top: rowIndex,
 				bottom: rowIndex,
@@ -190,7 +190,7 @@ export function selectReducer(state, action) {
 				activeCell: null,
 				cellSelectionRanges: newCellSelectionRanges,
 				uniqueRowIDs: rowIDs,
-				uniqueColumnIDs: [ columns[columnIndex].id ],
+				uniqueColumnIDs: [ columnID ],
 			};
 		}
 		case SELECT_ALL_CELLS: {
