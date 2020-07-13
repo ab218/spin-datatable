@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
-import './analysis-window.css';
 import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
 import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from '../constants';
 const normalPointSize = 2;

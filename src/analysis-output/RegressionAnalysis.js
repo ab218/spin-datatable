@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Popup from './PopupWindow';
+import './analysis-window.css';
 import { Checkbox, Select, Icon } from 'antd';
 import GenerateRegressionTemplate from './RegressionTemplate';
 import RegressionD3Chart from './RegressionD3Chart';
-import './analysis-window.css';
 const { Option } = Select;
 
 function SetAlphaLevel({ alpha, setAlpha, id }) {

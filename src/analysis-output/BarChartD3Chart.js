@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import * as d3 from 'd3';
-import './analysis-window.css';
 
 export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId, colYId, colZId, colXScale }) {
 	const mainChartContainer = useRef(null);
