@@ -1,3 +1,4 @@
+/* [ '#56B4E9', '#E69F00', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7', '#999999' ] */
 .analysis-title {
 	text-align: center;
 	font-size: 20;
@@ -29,14 +30,14 @@ body {
 
 .linearRegressionLine {
 	stroke-width: 2px;
-	color: steelblue;
-	stroke: steelblue;
+	color: #56b4e9;
+	stroke: #56b4e9;
 	z-index: 1;
 }
 
 .linearRegressionLineCIFit {
 	stroke-width: 1px;
-	stroke: steelblue;
+	stroke: #56b4e9;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
@@ -49,7 +50,7 @@ body {
 
 .linearRegressionLineCIObs {
 	stroke-width: 1px;
-	stroke: steelblue;
+	stroke: #56b4e9;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
@@ -68,13 +69,13 @@ body {
 
 .degree2PolyLine {
 	stroke-width: 2px;
-	stroke: green;
+	stroke: #e69f00;
 	z-index: 1;
 }
 
 .degree2PolyLineCIFit {
 	stroke-width: 1px;
-	stroke: green;
+	stroke: #e69f00;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
@@ -87,7 +88,7 @@ body {
 
 .degree2PolyLineCIObs {
 	stroke-width: 1px;
-	stroke: green;
+	stroke: #e69f00;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
@@ -106,7 +107,7 @@ body {
 
 .degree3PolyLine {
 	stroke-width: 2px;
-	stroke: darkmagenta;
+	stroke: #009e73;
 	z-index: 1;
 }
 
@@ -118,7 +119,7 @@ body {
 
 .degree3PolyLineCIFit {
 	stroke-width: 1px;
-	stroke: darkmagenta;
+	stroke: #009e73;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
@@ -131,7 +132,7 @@ body {
 
 .degree3PolyLineCIObs {
 	stroke-width: 1px;
-	stroke: darkmagenta;
+	stroke: #009e73;
 	stroke-dasharray: 10, 5;
 	z-index: 1;
 }
@@ -144,7 +145,7 @@ body {
 
 .degree4PolyLine {
 	stroke-width: 2px;
-	stroke: saddlebrown;
+	stroke: #f0e442;
 	z-index: 1;
 }
 
@@ -156,7 +157,7 @@ body {
 
 .degree5PolyLine {
 	stroke-width: 2px;
-	stroke: goldenrod;
+	stroke: #0072b2;
 	z-index: 1;
 }
 
@@ -168,7 +169,7 @@ body {
 
 .degree6PolyLine {
 	stroke-width: 2px;
-	stroke: thistle;
+	stroke: #d55e00;
 	z-index: 1;
 }
 
@@ -216,7 +217,12 @@ body {
 	pointer-events: none;
 	text-align: left;
 	height: 60px;
-	background: lightyellow;
+	background: white;
+}
+
+.tooltip-margin-left-bold {
+	margin-left: 3px;
+	font-weight: bold;
 }
 
 .mean {

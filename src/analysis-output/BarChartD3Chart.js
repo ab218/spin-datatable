@@ -6,7 +6,11 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId,
 	const subChartContainer = useRef(null);
 	const uniqueGroups = [ ...new Set(coordinates.map((row) => row.group)) ];
 
-	const barTooltip = d3.select('body').append('div').attr('class', 'bar tooltip').style('opacity', 0);
+	const barTooltip = d3
+		.select(mainChartContainer.current)
+		.append('div')
+		.attr('class', 'bar tooltip')
+		.style('opacity', 0);
 
 	function onMouseOverBars(d, thisBar) {
 		d3.select(thisBar).transition().duration(50).style('opacity', 0.6);
@@ -151,7 +155,7 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId,
 			.delay(function(d, i) {
 				return i * 50;
 			})
-			.attr('width', colXScale === 'Continuous' ? 3 : x.bandwidth())
+			.attr('width', colXScale === 'Continuous' ? 4 : x.bandwidth())
 			.attr('height', (d) => y(0) - y(d.y))
 			.attr('fill', (d) => color(d['group']));
 
@@ -201,7 +205,7 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId,
 
 	const color = d3
 		.scaleOrdinal()
-		.range([ '#A569BD', '#A93226', '#2980B9', '#16A085', '#2ECC71', '#F1C40F', '#CA6F1E' ]);
+		.range([ '#56B4E9', '#E69F00', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7', '#999999' ]);
 	// data, height, width, subGraph, title
 	chart(coordinates, 650, 650, false, false);
 	const separateGroups = (data, group) => data.filter((data) => data.group.includes(group));

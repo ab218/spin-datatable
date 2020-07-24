@@ -50,7 +50,7 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 	useEffect(
 		() => {
 			if (d3Container.current) {
-				const pointTooltip = d3
+				const tileToolTip = d3
 					.select(d3Container.current)
 					.append('div')
 					.attr('class', 'contingency-tooltip')
@@ -165,13 +165,13 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 					.attr('width', (d) => d.x1 - d.x0 - 3)
 					.attr('height', (d) => d.y1 - d.y0 - 3)
 					.on(`mouseover`, function(d) {
-						onMouseEnterPoint(d.data.values[0], this, pointTooltip);
+						onMouseEnterTile(tileToolTip);
 					})
 					.on('mousemove', function(d) {
-						onMouseMovePoint(d.data.values[0], this, pointTooltip);
+						onMouseMoveTile(d.data.values[0], this, tileToolTip);
 					})
 					.on(`mouseleave`, function(d) {
-						onMouseLeavePoint(d.data.values[0], this, pointTooltip);
+						onMouseLeaveTile(tileToolTip);
 					});
 
 				// cell
@@ -194,19 +194,32 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 		[],
 	);
 
-	function onMouseMovePoint(d, thisPoint, pointTooltip) {
-		pointTooltip
-			.html(`${d.value} rows <br>${colX.label}: ${d.x} <br>${colY.label}: ${d.y}`)
-			.style('left', d3.event.pageX + 'px')
+	let timeout;
+
+	function onMouseMoveTile(d, thisPoint, tileToolTip) {
+		tileToolTip
+			.html(
+				`
+      <div>
+        <div class="tooltip-margin-left-bold">${d.value} row${d.value === 1 ? '' : 's'}</div>
+        <div><span class="tooltip-margin-left-bold">${colX.label}:</span><span> ${d.x}</span></div>
+        <div><span class="tooltip-margin-left-bold">${colY.label}:</span><span> ${d.y}</span></div>
+      </div>
+      `,
+			)
+			.style('left', d3.event.pageX + 10 + 'px')
 			.style('top', d3.event.pageY - 28 + 'px');
 	}
 
-	function onMouseEnterPoint(d, thisPoint, pointTooltip) {
-		pointTooltip.transition().duration(500).style('opacity', 0.9);
+	function onMouseEnterTile(tileToolTip) {
+		timeout = setTimeout(() => {
+			return tileToolTip.transition().duration(300).style('opacity', 0.9);
+		}, 500);
 	}
 
-	function onMouseLeavePoint(d, thisPoint, pointTooltip) {
-		pointTooltip.transition().duration(100).style('opacity', 0);
+	function onMouseLeaveTile(tileToolTip) {
+		clearTimeout(timeout);
+		tileToolTip.transition().duration(100).style('opacity', 0);
 	}
 
 	return <div ref={d3Container} />;
