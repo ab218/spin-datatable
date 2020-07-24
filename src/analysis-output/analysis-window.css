@@ -354,3 +354,8 @@ body {
 .centered-text {
 	text-align: center;
 }
+
+.select-checkmark {
+	width: 20px;
+	font-weight: bold;
+}

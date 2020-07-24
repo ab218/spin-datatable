@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Popup from './PopupWindow';
-import { Dropdown, Menu } from 'antd';
+import { Dropdown, Icon, Menu } from 'antd';
 import ContingencyD3Chart from './ContingencyD3Chart';
 import './MosaicPlot.js';
 
@@ -8,10 +8,10 @@ export default function ContingencyAnalysis({ data, setPopup }) {
 	const { contingency, colX, colY, chi2, p, dof, log_chi2, log_p, coordinates, expected } = data;
 	const [ contingencyOptions, setContingencyOptions ] = useState({
 		includeCount: true,
-		includeTotal: false,
-		includeCol: false,
-		includeRow: false,
-		includeExpected: false,
+		includeTotal: true,
+		includeCol: true,
+		includeRow: true,
+		includeExpected: true,
 	});
 	const parsedContingency = JSON.parse(contingency);
 	const contingencyKeys = Object.keys(parsedContingency);
@@ -46,7 +46,7 @@ export default function ContingencyAnalysis({ data, setPopup }) {
 						totals={totals}
 						colX={colX}
 						colY={colY}
-						coordinates={coordinates}
+						n={coordinates.length}
 					/>
 					<div style={{ overflowY: 'scroll', height: '800px' }}>
 						<Tests
@@ -77,6 +77,7 @@ const TitleText = ({ title }) => <h1>{title}</h1>;
 
 const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) => {
 	const { includeCount, includeRow, includeCol, includeTotal, includeExpected } = contingencyOptions;
+	const [ visible, setVisible ] = useState(false);
 	const menu = (
 		<Menu multiple>
 			<Menu.ItemGroup>
@@ -87,7 +88,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 						})}
 				>
 					<div style={{ display: 'flex' }}>
-						<span style={{ width: '20px', fontWeight: 'bold' }}>{includeCount ? '✓' : ' '}</span>
+						<span className="select-checkmark">{includeCount ? '✓' : ' '}</span>
 						<span>Count</span>
 					</div>
 				</Menu.Item>
@@ -98,7 +99,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 						})}
 				>
 					<div style={{ display: 'flex' }}>
-						<span style={{ width: '20px', fontWeight: 'bold' }}>{includeTotal ? '✓' : ' '}</span>
+						<span className="select-checkmark">{includeTotal ? '✓' : ' '}</span>
 						<span>Total %</span>
 					</div>
 				</Menu.Item>
@@ -109,7 +110,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 						})}
 				>
 					<div style={{ display: 'flex' }}>
-						<span style={{ width: '20px', fontWeight: 'bold' }}>{includeCol ? '✓' : ' '}</span>
+						<span className="select-checkmark">{includeCol ? '✓' : ' '}</span>
 						<span>Col %</span>
 					</div>
 				</Menu.Item>
@@ -120,7 +121,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 						})}
 				>
 					<div style={{ display: 'flex' }}>
-						<span style={{ width: '20px', fontWeight: 'bold' }}>{includeRow ? '✓' : ' '}</span>
+						<span className="select-checkmark">{includeRow ? '✓' : ' '}</span>
 						<span>Row %</span>
 					</div>
 				</Menu.Item>
@@ -131,7 +132,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 						})}
 				>
 					<div style={{ display: 'flex' }}>
-						<span style={{ width: '20px', fontWeight: 'bold' }}>{includeExpected ? '✓' : ' '}</span>
+						<span className="select-checkmark">{includeExpected ? '✓' : ' '}</span>
 						<span>Expected</span>
 					</div>
 				</Menu.Item>
@@ -139,13 +140,25 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 		</Menu>
 	);
 	return (
-		<Dropdown getPopupContainer={(triggerNode) => triggerNode.parentNode} overlay={menu}>
-			<button style={{ marginBottom: '10px' }}>Options</button>
+		<Dropdown
+			onVisibleChange={(flag) => setVisible(flag)}
+			visible={visible}
+			getPopupContainer={(triggerNode) => triggerNode.parentNode}
+			placement="topCenter"
+			overlay={menu}
+		>
+			<div style={{ pointer: 'cursor', whiteSpace: 'pre' }}>
+				{includeCount && `Count\n`}
+				{includeTotal && `Total %\n`}
+				{includeCol && `Col %\n`}
+				{includeRow && `Row %\n`}
+				{includeExpected && `Expected\n`}
+			</div>
 		</Dropdown>
 	);
 };
 
-const ContingencyTable = ({ n, contingencyOptions, contingency, expected }) => {
+const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingency, expected, n }) => {
 	const { includeCount, includeRow, includeCol, includeTotal, includeExpected } = contingencyOptions;
 	// TODO: If text is too long, use elipsis
 	const contingencyKeys = Object.keys(contingency);
@@ -186,16 +199,14 @@ const ContingencyTable = ({ n, contingencyOptions, contingency, expected }) => {
 						style={{
 							width: '70px',
 							maxWidth: '70px',
-							whiteSpace: 'pre',
 							paddingLeft: '5px',
 						}}
 						className="bordered"
 					>
-						{includeCount && `Count\n`}
-						{includeTotal && `Total %\n`}
-						{includeCol && `Col %\n`}
-						{includeRow && `Row %\n`}
-						{includeExpected && `Expected\n`}
+						<ContingencyTableOptions
+							contingencyOptions={contingencyOptions}
+							setContingencyOptions={setContingencyOptions}
+						/>
 					</td>
 					{keysOfFirstRow.map((category, i) => (
 						<td
@@ -308,13 +319,13 @@ const Tests = ({
 	return (
 		<details open style={{ padding: '10px 30px', textAlign: 'center' }}>
 			<summary className="analysis-summary-title">Contingency Table</summary>
-			<div style={{ textAlign: 'left' }}>
-				<ContingencyTableOptions
-					contingencyOptions={contingencyOptions}
-					setContingencyOptions={setContingencyOptions}
-				/>
-				<ContingencyTable n={n} expected={expected} contingencyOptions={contingencyOptions} contingency={contingency} />
-			</div>
+			<ContingencyTable
+				setContingencyOptions={setContingencyOptions}
+				n={n}
+				expected={expected}
+				contingencyOptions={contingencyOptions}
+				contingency={contingency}
+			/>
 			<table>
 				<tbody>
 					<tr>

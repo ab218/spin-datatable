@@ -13,7 +13,7 @@ function trimText(text, threshold) {
 	return text.substr(0, threshold).concat('...');
 }
 
-export default function D3Container({ colX, colY, groups, data, totals }) {
+export default function D3Container({ colX, colY, groups, data, totals, n }) {
 	const d3Container = useRef(null);
 	const groupKeys = totals.flatMap((key) => Object.keys(key));
 	const x = d3.scaleBand().domain(groups).rangeRound([ 0, width - margin.right ]).paddingInner(1).paddingOuter(0.5);
@@ -21,8 +21,6 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 	const newY = d3.scaleLinear().domain([ 0, 100 ]).range([ 0, 500 ]);
 	const yAxis = d3.axisLeft().scale(y).ticks(4, 's');
 	const xAxis = d3.axisBottom().scale(x).ticks(10, 's').tickSizeOuter(0);
-
-	const format = (d) => d.toLocaleString();
 	const color = d3
 		.scaleOrdinal([ '#56B4E9', '#E69F00', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7', '#999999' ])
 		.domain(data.map((d) => d.y));
@@ -50,7 +48,7 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 	useEffect(
 		() => {
 			if (d3Container.current) {
-				const tileToolTip = d3
+				const tileTooltip = d3
 					.select(d3Container.current)
 					.append('div')
 					.attr('class', 'contingency-tooltip')
@@ -122,7 +120,7 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 				const flatTotals = totals.reduce((acc, curr) => {
 					return { ...acc, ...curr };
 				}, []);
-				// const groupKeys = totals.flatMap((key) => Object.keys(key));
+				console.log(flatTotals);
 				const stackedData = d3.stack().keys(groupKeys)([ flatTotals ]);
 
 				// totals column
@@ -133,7 +131,13 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 					.attr('fill', (d) => color(d.key))
 					.selectAll('rect')
 					// enter a second time = loop subgroup per subgroup to add all rectangles
-					.data((d) => d)
+					.data((d) => {
+						// trick to bring the key to the next loop
+						const newArr = [];
+						d[0].key = d.key;
+						newArr.push(d[0]);
+						return newArr;
+					})
 					.enter();
 
 				stackedGroups
@@ -146,6 +150,22 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 						return (height - margin.top - margin.bottom) * (newY(d[1]) - newY(d[0])) / 100;
 					})
 					.attr('width', 10)
+					.on(`mouseover`, function(d) {
+						onMouseEnterTile(tileTooltip);
+					})
+					.on('mousemove', function(d) {
+						const groupHtml = `
+              <div>
+                <div><span class="tooltip-margin-left-bold">${d.key}</span><span></span></div>
+                <div><span class="tooltip-margin-left-bold">Frequency: </span>
+                <span>${((d[1] - d[0]) / n * 100).toFixed()}</span></div>
+              </div>
+              `;
+						onMouseMoveTile(tileTooltip, groupHtml);
+					})
+					.on(`mouseleave`, function(d) {
+						onMouseLeaveTile(tileTooltip);
+					})
 					.attr('transform', 'translate(' + 0 + ',' + margin.top + ')');
 
 				stacked
@@ -165,13 +185,21 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 					.attr('width', (d) => d.x1 - d.x0 - 3)
 					.attr('height', (d) => d.y1 - d.y0 - 3)
 					.on(`mouseover`, function(d) {
-						onMouseEnterTile(tileToolTip);
+						onMouseEnterTile(tileTooltip);
 					})
 					.on('mousemove', function(d) {
-						onMouseMoveTile(d.data.values[0], this, tileToolTip);
+						const { value, x, y } = d.data.values[0];
+						const tileHtml = `
+            <div>
+              <div class="tooltip-margin-left-bold">${value} row${value === 1 ? '' : 's'}</div>
+              <div><span class="tooltip-margin-left-bold">${colX.label}:</span><span> ${x}</span></div>
+              <div><span class="tooltip-margin-left-bold">${colY.label}:</span><span> ${y}</span></div>
+            </div>
+            `;
+						onMouseMoveTile(tileTooltip, tileHtml);
 					})
 					.on(`mouseleave`, function(d) {
-						onMouseLeaveTile(tileToolTip);
+						onMouseLeaveTile(tileTooltip);
 					});
 
 				// cell
@@ -196,30 +224,19 @@ export default function D3Container({ colX, colY, groups, data, totals }) {
 
 	let timeout;
 
-	function onMouseMoveTile(d, thisPoint, tileToolTip) {
-		tileToolTip
-			.html(
-				`
-      <div>
-        <div class="tooltip-margin-left-bold">${d.value} row${d.value === 1 ? '' : 's'}</div>
-        <div><span class="tooltip-margin-left-bold">${colX.label}:</span><span> ${d.x}</span></div>
-        <div><span class="tooltip-margin-left-bold">${colY.label}:</span><span> ${d.y}</span></div>
-      </div>
-      `,
-			)
-			.style('left', d3.event.pageX + 10 + 'px')
-			.style('top', d3.event.pageY - 28 + 'px');
+	function onMouseMoveTile(tileTooltip, html) {
+		tileTooltip.html(html).style('left', d3.event.pageX + 10 + 'px').style('top', d3.event.pageY - 28 + 'px');
 	}
 
-	function onMouseEnterTile(tileToolTip) {
+	function onMouseEnterTile(tileTooltip) {
 		timeout = setTimeout(() => {
-			return tileToolTip.transition().duration(300).style('opacity', 0.9);
+			return tileTooltip.transition().duration(300).style('opacity', 0.9);
 		}, 500);
 	}
 
-	function onMouseLeaveTile(tileToolTip) {
+	function onMouseLeaveTile(tileTooltip) {
 		clearTimeout(timeout);
-		tileToolTip.transition().duration(100).style('opacity', 0);
+		tileTooltip.transition().duration(100).style('opacity', 0);
 	}
 
 	return <div ref={d3Container} />;
