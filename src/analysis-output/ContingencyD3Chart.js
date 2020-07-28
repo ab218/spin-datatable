@@ -8,10 +8,16 @@ const height = 500;
 const svgWidth = width + margin.left + margin.right;
 const svgHeight = height + margin.top + margin.bottom;
 
-function trimText(text, threshold) {
-	if (text.length <= threshold) return text;
-	return text.substr(0, threshold).concat('...');
-}
+const wrap = function() {
+	const self = d3.select(this);
+	let textLength = self.node().getComputedTextLength();
+	let text = self.text();
+	while (textLength > 50 && text.length > 0) {
+		text = text.slice(0, -1);
+		self.text(text + '...');
+		textLength = self.node().getComputedTextLength();
+	}
+};
 
 export default function D3Container({ colX, colY, groups, data, totals, n }) {
 	const d3Container = useRef(null);
@@ -62,7 +68,7 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					.attr('width', svgWidth)
 					.attr('height', svgHeight)
 					.append('g')
-					.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+					.attr('transform', `translate(${margin.left},${margin.top})`);
 
 				const node = svg
 					.selectAll('g')
@@ -73,7 +79,7 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 				// text label for the x axis
 				svg
 					.append('text')
-					.attr('transform', 'translate(' + width / 2 + ' ,' + height + ')')
+					.attr('transform', `translate(${width / 2},${height + margin.top})`)
 					.style('text-anchor', 'middle')
 					.style('font-size', '18px')
 					.text(colX.label);
@@ -92,9 +98,16 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 				svg
 					.append('g')
 					.attr('class', 'x axis')
-					.attr('transform', 'translate(0,' + (height - margin.bottom) + ')')
+					.attr('transform', `translate(0,${height - margin.bottom})`)
 					.style('font-size', '12px')
-					.call(xAxis);
+					.call(xAxis)
+					.selectAll('text')
+					.style('text-anchor', 'end')
+					.attr('dx', '-.8em')
+					.attr('dy', '.15em')
+					.attr('transform', 'rotate(-65)')
+					.each(wrap);
+
 				// remove x axis line
 				svg.select('.domain').remove();
 				svg
@@ -102,7 +115,7 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					.style('font-size', '12px')
 					.attr('class', 'y axis')
 					.call(yAxis)
-					.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+					.attr('transform', `translate(${margin.left},${margin.top})`);
 				// svg
 				// 	.append('g')
 				// 	.style('font-size', '12px')
@@ -120,7 +133,6 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 				const flatTotals = totals.reduce((acc, curr) => {
 					return { ...acc, ...curr };
 				}, []);
-				console.log(flatTotals);
 				const stackedData = d3.stack().keys(groupKeys)([ flatTotals ]);
 
 				// totals column
@@ -140,6 +152,7 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					})
 					.enter();
 
+				const groupPadding = 2;
 				stackedGroups
 					.append('rect')
 					.attr('x', width + 20)
@@ -147,7 +160,7 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 						return (height - margin.top - margin.bottom) * newY(d[0]) / 100;
 					})
 					.attr('height', (d) => {
-						return (height - margin.top - margin.bottom) * (newY(d[1]) - newY(d[0])) / 100;
+						return (height - margin.top - margin.bottom) * (newY(d[1]) - newY(d[0])) / 100 - groupPadding;
 					})
 					.attr('width', 10)
 					.on(`mouseover`, function(d) {
@@ -166,24 +179,27 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					.on(`mouseleave`, function(d) {
 						onMouseLeaveTile(tileTooltip);
 					})
-					.attr('transform', 'translate(' + 0 + ',' + margin.top + ')');
+					.attr('transform', `translate(0,${margin.top})`);
 
 				stacked
 					.append('text')
-					.text((d) => trimText(d.key, 7))
+					.text((d) => d.key)
 					.attr('y', (d) => {
 						return (height - margin.bottom - margin.top) * ((newY(d[0][1]) + newY(d[0][0])) / 2) / 100;
 					})
-					.attr('x', width - margin.right)
+					.attr('x', width + 15)
+					.attr('text-anchor', 'end')
 					.style('fill', 'black')
-					.attr('transform', 'translate(' + 0 + ',' + margin.top + ')');
+					.attr('transform', `translate(0,${margin.top})`)
+					.each(wrap);
 
+				const tilePadding = 3;
 				// mosaic tiles
 				cell
 					.append('rect')
 					.attr('fill', (d) => color(d.data.key))
-					.attr('width', (d) => d.x1 - d.x0 - 3)
-					.attr('height', (d) => d.y1 - d.y0 - 3)
+					.attr('width', (d) => d.x1 - d.x0 - tilePadding)
+					.attr('height', (d) => d.y1 - d.y0 - tilePadding)
 					.on(`mouseover`, function(d) {
 						onMouseEnterTile(tileTooltip);
 					})

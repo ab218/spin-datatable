@@ -39,31 +39,29 @@ export default function ContingencyAnalysis({ data, setPopup }) {
 		<Popup key={data.id} id={data.id} title={title} windowWidth={1000} setPopup={setPopup}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<TitleText title={title} />
-				<div style={{ display: 'flex' }}>
-					<ContingencyD3Chart
-						groups={contingencyKeys}
-						data={mosaicData}
-						totals={totals}
+				<ContingencyD3Chart
+					groups={contingencyKeys}
+					data={mosaicData}
+					totals={totals}
+					colX={colX}
+					colY={colY}
+					n={coordinates.length}
+				/>
+				<div style={{ overflowY: 'scroll', height: '800px' }}>
+					<Tests
+						contingencyOptions={contingencyOptions}
+						setContingencyOptions={setContingencyOptions}
+						contingency={parsedContingency}
+						n={coordinates.length}
+						expected={expected}
 						colX={colX}
 						colY={colY}
-						n={coordinates.length}
+						chi2={chi2}
+						p={p}
+						dof={dof}
+						log_chi2={log_chi2}
+						log_p={log_p}
 					/>
-					<div style={{ overflowY: 'scroll', height: '800px' }}>
-						<Tests
-							contingencyOptions={contingencyOptions}
-							setContingencyOptions={setContingencyOptions}
-							contingency={parsedContingency}
-							n={coordinates.length}
-							expected={expected}
-							colX={colX}
-							colY={colY}
-							chi2={chi2}
-							p={p}
-							dof={dof}
-							log_chi2={log_chi2}
-							log_p={log_p}
-						/>
-					</div>
 				</div>
 			</div>
 		</Popup>
@@ -147,13 +145,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 			placement="topCenter"
 			overlay={menu}
 		>
-			<div style={{ pointer: 'cursor', whiteSpace: 'pre' }}>
-				{includeCount && `Count\n`}
-				{includeTotal && `Total %\n`}
-				{includeCol && `Col %\n`}
-				{includeRow && `Row %\n`}
-				{includeExpected && `Expected\n`}
-			</div>
+			<Icon className="hamburger" type="funnel-plot" />
 		</Dropdown>
 	);
 };
@@ -192,7 +184,7 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 	});
 
 	return (
-		<table style={{ fontSize: '14px', width: '100%', marginBottom: '30px' }}>
+		<table style={{ fontSize: '14px', margin: '0 auto 30px' }}>
 			<thead>
 				<tr style={{ textAlign: 'left' }}>
 					<td
@@ -207,6 +199,13 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 							contingencyOptions={contingencyOptions}
 							setContingencyOptions={setContingencyOptions}
 						/>
+						<div style={{ pointer: 'cursor', whiteSpace: 'pre' }}>
+							{includeCount && `Count\n`}
+							{includeTotal && `Total %\n`}
+							{includeCol && `Col %\n`}
+							{includeRow && `Row %\n`}
+							{includeExpected && `Expected\n`}
+						</div>
 					</td>
 					{keysOfFirstRow.map((category, i) => (
 						<td
@@ -326,7 +325,7 @@ const Tests = ({
 				contingencyOptions={contingencyOptions}
 				contingency={contingency}
 			/>
-			<table>
+			<table style={{ margin: '0 auto' }}>
 				<tbody>
 					<tr>
 						<td colSpan={2} className="table-subtitle">
@@ -344,7 +343,7 @@ const Tests = ({
 				</tbody>
 			</table>
 			<div style={{ height: '30px' }} />
-			<table>
+			<table style={{ margin: '0 auto' }}>
 				<tbody>
 					<tr>
 						<td className="table-header medium">Test</td>
