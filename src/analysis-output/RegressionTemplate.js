@@ -1,5 +1,4 @@
 import React from 'react';
-import './analysis-window.css';
 import { Dropdown, Menu } from 'antd';
 import { SAVE_VALUES_TO_COLUMN } from '../constants';
 import { useRowsDispatch } from '../context/SpreadsheetProvider';

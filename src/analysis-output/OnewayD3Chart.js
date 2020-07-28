@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import './analysis-window.css';
 
 // magic globals
 const margin = { top: 100, right: 50, bottom: 20, left: 50 };

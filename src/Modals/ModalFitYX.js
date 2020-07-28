@@ -1,23 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch, useRowsState } from '../context/SpreadsheetProvider';
-import { performLinearRegressionAnalysis, performOnewayAnalysis } from '../analysis-output/Analysis';
+import {
+	performLinearRegressionAnalysis,
+	performOnewayAnalysis,
+	performContingencyAnalysis,
+} from '../analysis-output/Analysis';
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import { createRandomID } from '../context/helpers';
-import {
-	// REMOVE_SELECTED_CELLS,
-	// SELECT_CELLS,
-	ORDINAL,
-	CONTINUOUS,
-	NOMINAL,
-	BIVARIATE,
-	LOGISTIC,
-	ONEWAY,
-	CONTINGENCY,
-	// SAVE_VALUES_TO_COLUMN,
-} from '../constants';
+import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from '../constants';
 import VariableLegend from './FitYXLegend';
 
 export default function AnalysisModal({ setPopup }) {
@@ -73,68 +66,14 @@ export default function AnalysisModal({ setPopup }) {
 		const colXArr = XYCols.map((a) => a[0]);
 		const colYArr = XYCols.map((a) => a[1]);
 
-		// function receiveMessage(event, popup, results) {
-		// 	// target window is ready, time to send data.
-		// 	if (event.data === 'ready') {
-		// 		// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
-		// 		if (typeof results === 'string') {
-		// 			return alert('Something went wrong. Check your data and try again.');
-		// 		}
-		// 		popup.postMessage(results, '*');
-		// 		window.removeEventListener('message', receiveMessage);
-		// 	}
-		// }
-
 		async function linearRegression() {
 			if (colXArr.length >= 10 && colYArr.length >= 10) {
 				try {
-					// function removeTargetClickEvent(event) {
-					// 	if (event.data === 'closed') {
-					// 		window.removeEventListener('message', targetClickEvent);
-					// 		window.removeEventListener('message', removeTargetClickEvent);
-					// 	}
-					// }
-
-					// function saveResiduals(event) {
-					// 	if (event.data.message !== 'save-residuals') return;
-					// 	const { residuals } = event.data;
-					// 	dispatchSpreadsheetAction({ type: SAVE_VALUES_TO_COLUMN, residuals, colX, colY });
-					// }
-
-					// function targetClickEvent(event) {
-					// 	if (event.data.message === 'clicked') {
-					// 		const selectedColumn = event.data.col === 'x' ? xColData[0] : yColData[0];
-					// 		const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
-					// 		if (!event.data.metaKeyPressed) {
-					// 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-					// 		}
-					// 		const rowIndices = rows.reduce((acc, row, rowIndex) => {
-					// 			// TODO Shouldn't be using Number here?
-					// 			return !excludedRows.includes(row.id) && event.data.vals.includes(Number(row[selectedColumn.id]))
-					// 				? acc.concat(rowIndex)
-					// 				: acc;
-					// 		}, []);
-					// 		dispatchSpreadsheetAction({ type: SELECT_CELLS, rows: rowIndices, column: columnIndex });
-					// 	}
-					// }
-
 					setPerformingAnalysis(true);
 					const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
-					// const popup = window.open(
-					// 	window.location.href + 'regression.html',
-					// 	'',
-					// 	'left=9999,top=100,width=800,height=850',
-					// );
 					setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
-
 					setPerformingAnalysis(false);
 					handleModalClose();
-
-					// set event listener and wait for target to be ready
-					// window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
-					// window.addEventListener('message', targetClickEvent);
-					// window.addEventListener('message', saveResiduals);
-					// window.addEventListener('message', removeTargetClickEvent);
 				} catch (e) {
 					console.log(e);
 					setPerformingAnalysis(false);
@@ -150,21 +89,41 @@ export default function AnalysisModal({ setPopup }) {
 				setPerformingAnalysis(true);
 				const results = await performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols);
 				setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
-				// const popup = window.open(window.location.href + 'oneway.html', '', 'left=9999,top=100,width=800,height=850');
 				setPerformingAnalysis(false);
 				handleModalClose();
-
-				// window.addEventListener('message', (event) => receiveMessage(event, popup, results), false);
 			} catch (e) {
 				console.log(e);
 				setPerformingAnalysis(false);
 				setError('Something went wrong while performing analysis');
 			}
 		}
-		if (analysisType === BIVARIATE) {
-			linearRegression();
-		} else if (analysisType === ONEWAY) {
-			oneway();
+
+		async function contingency() {
+			try {
+				setPerformingAnalysis(true);
+				const results = await performContingencyAnalysis(colXArr, colYArr, colX, colY, XYCols);
+				setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+				setPerformingAnalysis(false);
+				handleModalClose();
+			} catch (e) {
+				console.log(e);
+				setPerformingAnalysis(false);
+				setError('Something went wrong while performing analysis');
+			}
+		}
+
+		switch (analysisType) {
+			case BIVARIATE: {
+				return linearRegression();
+			}
+			case ONEWAY: {
+				return oneway();
+			}
+			case CONTINGENCY: {
+				return contingency();
+			}
+			default:
+				return null;
 		}
 	}
 
@@ -198,7 +157,7 @@ export default function AnalysisModal({ setPopup }) {
 
 	useEffect(
 		() => {
-			if (analysisType && (analysisType === LOGISTIC || analysisType === CONTINGENCY)) {
+			if (analysisType && analysisType === LOGISTIC) {
 				setError(`${analysisType} Analysis currently unsupported`);
 				return;
 			}
@@ -225,10 +184,7 @@ export default function AnalysisModal({ setPopup }) {
 							</Button>
 							<Button
 								disabled={
-									xColData.length === 0 ||
-									yColData.length === 0 ||
-									performingAnalysis ||
-									(analysisType === LOGISTIC || analysisType === CONTINGENCY)
+									xColData.length === 0 || yColData.length === 0 || performingAnalysis || analysisType === LOGISTIC
 								}
 								key="submit"
 								type="primary"
@@ -242,12 +198,7 @@ export default function AnalysisModal({ setPopup }) {
 			>
 				<div style={styles.flexSpaced}>
 					<div>
-						<SelectColumn
-							// selectedColumn={selectedColumn}
-							title={'Select Column'}
-							columns={filteredColumns}
-							setSelectedColumn={setSelectedColumn}
-						/>
+						<SelectColumn title="Select Column" columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
 						<VariableLegend yColData={yColData} xColData={xColData} />
 					</div>
 					<div style={{ width: 400 }}>
@@ -273,8 +224,7 @@ export default function AnalysisModal({ setPopup }) {
 					{xColData.length !== 0 &&
 					yColData.length !== 0 && (
 						<h4 style={{ textAlign: 'right' }}>
-							Perform {analysisType} Analysis{' '}
-							{(analysisType === LOGISTIC || analysisType === CONTINGENCY) && '(Currently unsupported)'}
+							Perform {analysisType} Analysis {analysisType === LOGISTIC && '(Currently unsupported)'}
 						</h4>
 					)}
 				</div>

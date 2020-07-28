@@ -1,8 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import './analysis-window.css';
 import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
-import { REMOVE_SELECTED_CELLS, SELECT_CELLS } from '../constants';
+import { REMOVE_SELECTED_CELLS, SELECT_CELLS_BY_IDS } from '../constants';
 
 // set the dimensions and margins of the graph
 const margin = { top: 20, right: 30, bottom: 40, left: 70 };
@@ -62,17 +61,13 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 			})
 			.attr('r', clickedBarPointSize)
 			.style('fill', clickedBarFill);
-		const selectedColumn = colObj;
-		const columnIndex = columns.findIndex((col) => col.id === selectedColumn.id);
 		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 
-		const rowIndexes = rows.reduce((acc, row, rowIndex) => {
-			// TODO Shouldn't be using Number here. won't work for string values
-			return !excludedRows.includes(row.id) && values.includes(Number(row[selectedColumn.id]))
-				? acc.concat(rowIndex)
-				: acc;
+		const rowIDs = rows.reduce((acc, row) => {
+			// TODO:Don't use Number. Won't work for strings.
+			return !excludedRows.includes(row.id) && values.includes(Number(row[colObj.id])) ? acc.concat(row.id) : acc;
 		}, []);
-		dispatchSelectAction({ type: SELECT_CELLS, rows: rows, rowIndexes, columns: columns, columnIndex: columnIndex });
+		dispatchSelectAction({ type: SELECT_CELLS_BY_IDS, rowIDs, columnID: colObj.id, rows, columns });
 	}
 
 	// Add axes

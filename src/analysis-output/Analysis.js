@@ -4,6 +4,7 @@ import RegressionAnalysis from './RegressionAnalysis';
 import DistributionAnalysis from './DistributionAnalysis';
 import OnewayAnalysis from './OnewayAnalysis';
 import BarChartAnalysis from './BarChartAnalysis';
+import ContingencyAnalysis from './ContingencyAnalysis';
 
 export default function AnalysisContainer({ popup, setPopup }) {
 	if (!popup.length === 0) {
@@ -18,6 +19,8 @@ export default function AnalysisContainer({ popup, setPopup }) {
 			return <OnewayAnalysis key={i} data={data} setPopup={setPopup} />;
 		} else if (data.analysisType === 'barChart') {
 			return <BarChartAnalysis key={i} data={data} setPopup={setPopup} />;
+		} else if (data.analysisType === 'contingency') {
+			return <ContingencyAnalysis key={i} data={data} setPopup={setPopup} />;
 		}
 		return null;
 	});
@@ -27,9 +30,11 @@ export async function pingCloudFunctions() {
 	const linearRegression = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/regression';
 	const distribution = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution';
 	const oneway = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway';
+	const contingency = 'https://us-central1-optimum-essence-210921.cloudfunctions.net/contingency';
 	axios.post(linearRegression, { ping: 'ping' }, { crossDomain: true });
 	axios.post(oneway, { ping: 'ping' }, { crossDomain: true });
 	axios.post(distribution, { ping: 'ping' }, { crossDomain: true });
+	axios.post(contingency, { ping: 'ping' }, { crossDomain: true });
 }
 
 // bug: if the group only has one data point in it, the cloud function fails.
@@ -86,6 +91,29 @@ export async function performLinearRegressionAnalysis(colXArr, colYArr, colX, co
 		colY,
 		colXMean: mean([ ...colXArr ]),
 		colYMean: mean([ ...colYArr ]),
+		coordinates: XYCols,
+	};
+}
+
+export async function performContingencyAnalysis(colXArr, colYArr, colX, colY, XYCols) {
+	const result = await axios.post(
+		'https://us-central1-optimum-essence-210921.cloudfunctions.net/contingency',
+		{ x: colXArr, y: colYArr },
+		{
+			crossDomain: true,
+		},
+	);
+
+	console.log(result.data);
+
+	// const mean = (numbers) => numbers.reduce((acc, val) => acc + Number(val), 0) / numbers.length;
+	return {
+		analysisType: 'contingency',
+		...result.data,
+		colX,
+		colY,
+		// colXMean: mean([ ...colXArr ]),
+		// colYMean: mean([ ...colYArr ]),
 		coordinates: XYCols,
 	};
 }
