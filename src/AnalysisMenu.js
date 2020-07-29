@@ -22,7 +22,7 @@ export default function HamburgerMenu() {
 					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 				}}
 			>
-				Distribution
+				Descriptives
 			</Menu.Item>
 			<Menu.Item
 				onClick={() => {

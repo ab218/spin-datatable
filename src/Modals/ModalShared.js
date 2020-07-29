@@ -53,11 +53,12 @@ function addColumnToList(col, setCol, selectedColumn) {
 	setCol((prevState) => prevState.concat(selectedColumn));
 }
 
-export function CaratButtons({ data, setData, label, selectedColumn }) {
+export function CaratButtons({ notAllowed, data, setData, label, selectedColumn }) {
+	const notAllowedType = selectedColumn && notAllowed && notAllowed.includes(selectedColumn.modelingType);
 	return (
 		<div style={styles.flexColumn}>
 			<Button
-				disabled={!selectedColumn || data.length !== 0}
+				disabled={!selectedColumn || notAllowedType || data.length !== 0}
 				style={{ marginBottom: 5 }}
 				onClick={() => addColumnToList(data, setData, selectedColumn)}
 			>
@@ -134,10 +135,16 @@ export function SelectColumn({ columns, groupingColData, setSelectedColumn, styl
 	);
 }
 
-export function VariableSelector({ styleProps, data, setData, selectedColumn, label, performingAnalysis }) {
+export function VariableSelector({ notAllowed, styleProps, data, setData, selectedColumn, label, performingAnalysis }) {
 	return (
 		<div style={{ ...styles.flexSpaced, ...styleProps }}>
-			<CaratButtons data={data} setData={setData} selectedColumn={selectedColumn} label={label} />
+			<CaratButtons
+				notAllowed={notAllowed}
+				data={data}
+				setData={setData}
+				selectedColumn={selectedColumn}
+				label={label}
+			/>
 			<SelectedColumn data={data} removeData={setData} performingAnalysis={performingAnalysis} />
 		</div>
 	);
