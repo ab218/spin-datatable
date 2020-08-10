@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Icon } from 'antd';
 import {
 	useSpreadsheetState,
@@ -16,13 +16,42 @@ import {
 	SELECT_ROW,
 } from './constants';
 
-export default function RowHeaders({ rowIndex, rowData }) {
+export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 	const { contextMenuOpen } = useSpreadsheetState();
-	const { uniqueRowIDs } = useSelectState();
+	const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
 	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
+	const [ selected, setSelected ] = useState();
+
+	useEffect(
+		() => {
+			const inCurrent =
+				currentCellSelectionRange &&
+				currentCellSelectionRange.top <= rowIndex &&
+				currentCellSelectionRange.bottom >= rowIndex;
+			const inRanges = cellSelectionRanges.find(
+				(cellRange) => cellRange.top <= rowIndex && cellRange.bottom >= rowIndex,
+			);
+			setSelected(inCurrent || inRanges);
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ currentCellSelectionRange, cellSelectionRanges ],
+	);
+
+	// useEffect(
+	// 	() => {
+	// 		if (cellSelectionObject[rowData.id]) {
+	// 			setSelected(true);
+	// 			return;
+	// 		}
+	// 		setSelected(false);
+	// 	},
+	// 	// eslint-disable-next-line react-hooks/exhaustive-deps
+	// 	[ cellSelectionObject ],
+	// );
+
 	function createNewRows(rowCount) {
 		dispatchRowsAction({ type: CREATE_ROWS, rowCount });
 	}
@@ -73,7 +102,7 @@ export default function RowHeaders({ rowIndex, rowData }) {
 				}
 			}}
 			onDoubleClick={(e) => rowHeadersOnDoubleClick(e, rowIndex)}
-			className={rowData.id && uniqueRowIDs.includes(rowData.id) ? 'selected-row-number-cell' : 'row-number-cell'}
+			className={selected ? 'selected-row-number-cell' : 'row-number-cell'}
 			style={{
 				borderBottom: '1px solid rgb(221, 221, 221)',
 				userSelect: 'none',
@@ -84,4 +113,4 @@ export default function RowHeaders({ rowIndex, rowData }) {
 			<span style={{ position: 'absolute', right: 0, marginRight: 10 }}>{rows.length > rowIndex && rowIndex + 1}</span>
 		</div>
 	);
-}
+});

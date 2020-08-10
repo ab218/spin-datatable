@@ -23,12 +23,37 @@ import {
 
 export default React.memo(function HeaderRenderer({ dataKey, label, units, columnIndex }) {
 	const { contextMenuOpen } = useSpreadsheetState();
-	const { uniqueColumnIDs } = useSelectState();
 	const { columns, rows } = useRowsState();
+	const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
 	const [ selected, setSelected ] = useState(null);
+
+	useEffect(
+		() => {
+			const inCurrent =
+				currentCellSelectionRange &&
+				currentCellSelectionRange.left <= columnIndex &&
+				currentCellSelectionRange.right >= columnIndex;
+			const inRanges = cellSelectionRanges.find(
+				(cellRange) => cellRange.left <= columnIndex && cellRange.right >= columnIndex,
+			);
+			setSelected(inCurrent || inRanges);
+		},
+		[ currentCellSelectionRange, cellSelectionRanges ],
+	);
+
+	// useEffect(
+	// 	() => {
+	// 		if (Object.values(cellSelectionObject).find((row) => row.includes(dataKey))) {
+	// 			setSelected(true);
+	// 			return;
+	// 		}
+	// 		setSelected(false);
+	// 	},
+	// 	[ cellSelectionObject ],
+	// );
 
 	function createNewColumns(columnCount) {
 		dispatchRowsAction({ type: CREATE_COLUMNS, columnCount });
@@ -47,13 +72,6 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 			column: columns.find((col) => col.id === dataKey),
 		});
 	}
-
-	useEffect(
-		() => {
-			setSelected(uniqueColumnIDs.includes(dataKey));
-		},
-		[ uniqueColumnIDs ],
-	);
 
 	return (
 		<React.Fragment key={dataKey}>

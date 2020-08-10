@@ -18,7 +18,10 @@ export default React.memo(function ValueCell({
 	const { newInputCellValue } = useSpreadsheetState();
 	const { activeCell, cellSelectionRanges, currentCellSelectionRange } = useSelectState();
 
-	function isSelectedCell(rowIndex, columnIndex) {
+	function isSelectedCell() {
+		// if (cellSelectionObject[rowID]) {
+		// 	return cellSelectionObject[rowID].includes(columnID);
+		// }
 		function withinRange(value) {
 			const { top, right, bottom, left } = value;
 			if (columnIndex === null) {
@@ -43,7 +46,7 @@ export default React.memo(function ValueCell({
 				value={newInputCellValue || cellValue}
 			/>
 		);
-	} else if (columnID && isSelectedCell(rowIndex, columnIndex)) {
+	} else if (columnID && isSelectedCell()) {
 		return (
 			<SelectedCell
 				key={`Row${rowIndex}Col${columnIndex}`}
