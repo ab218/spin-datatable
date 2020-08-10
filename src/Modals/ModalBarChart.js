@@ -85,25 +85,7 @@ export default function AnalysisModal({ setPopup }) {
 			// 		window.removeEventListener('message', removeTargetClickEvent);
 			// 	}
 			// }
-
-			// function targetClickEvent(event) {
-			// 	if (event.data.message === 'clicked') {
-			// 		if (!event.data.metaKeyPressed) {
-			// 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-			// 		}
-			// 		if (event.data.label && event.data.colZ) {
-			// 			dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: { [colZ.id]: event.data.colZ.text } });
-			// 			dispatchSpreadsheetAction({ type: FILTER_COLUMN });
-			// 			return;
-			// 		}
-			// 		const selectedRow = event.data.rowID;
-			// 		dispatchSpreadsheetAction({
-			// 			type: SELECT_ROW,
-			// 			rowID: selectedRow,
-			// 			rowIndex: rows.findIndex((row) => row.id === selectedRow),
-			// 		});
-			// 	}
-			// }
+			//}
 			setPerformingAnalysis(false);
 			dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
 

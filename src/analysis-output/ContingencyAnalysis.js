@@ -16,23 +16,17 @@ export default function ContingencyAnalysis({ data, setPopup }) {
 	const parsedContingency = JSON.parse(contingency);
 	const contingencyKeys = Object.keys(parsedContingency);
 	const groupKeys = Object.keys(parsedContingency[contingencyKeys[0]]);
-	const columnTotals = groupKeys.map((key) => {
-		return contingencyKeys
-			.map((row, i) => {
-				return parsedContingency[row][key];
-			})
-			.reduce((acc, curr) => {
-				return acc + curr;
-			});
-	});
+	const columnTotals = groupKeys.map((key) =>
+		contingencyKeys.map((row, i) => parsedContingency[row][key]).reduce((acc, curr) => acc + curr),
+	);
 	const totals = groupKeys.map((key, i) => {
 		return { [key]: columnTotals[i] };
 	});
-	const mosaicData = contingencyKeys.flatMap((key) => {
-		return groupKeys.map((group) => {
+	const mosaicData = contingencyKeys.flatMap((key) =>
+		groupKeys.map((group) => {
 			return { x: key, y: group, value: parsedContingency[key][group] };
-		});
-	});
+		}),
+	);
 	const title = `Contingency Analysis of ${colY.label} ${colY.units ? '(' + colY.units + ')' : ''} By ${colX.label}
   ${colX.units ? '(' + colX.units + ')' : ''}`;
 	return (
