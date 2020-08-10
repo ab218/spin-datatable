@@ -3,11 +3,7 @@ import { selectReducer } from './reducers/selectReducer';
 import { spreadsheetReducer } from './reducers/spreadsheetReducer';
 import { columnWidthReducer } from './reducers/columnWidthReducer';
 import { rowsReducer } from './reducers/rowsReducer';
-import {
-	potatoLiverData,
-	// startingColumn,
-	statsColumns,
-} from './dummyData';
+import { potatoLiverData, startingColumn, statsColumns } from './dummyData';
 import { createRows } from './helpers';
 
 const SpreadsheetStateContext = React.createContext();
@@ -99,34 +95,37 @@ export function SpreadsheetProvider({ children }) {
 		activeCell: null,
 		cellSelectionRanges: [],
 		currentCellSelectionRange: [],
-		filters: {
-			stringFilters: [],
-			numberFilters: [],
-		},
 		lastSelection: { row: 1, column: 1 },
 		selectDisabled: false,
 		selectedColumns: [],
-		selectedRowIDs: [],
-		uniqueRowIDs: [],
-		uniqueColumnIDs: [],
+		// cellSelectionObject: [],
 	};
 
 	const initialRowsState = {
 		// columns: startingColumn,
 		// rows: [],
 		// inverseDependencyMap: {},
-		columns: statsColumns,
 		dataTableName: null,
+		columns: statsColumns,
 		rows: createRows(potatoLiverData, statsColumns),
 		inverseDependencyMap: {
 			_abc1_: [ '_abc3_' ],
 			_abc2_: [ '_abc3_' ],
 		},
+		excludedRows: [],
 		modalError: null,
 		history: [],
 		redoHistory: [],
-		excludedRows: [],
+		saveFilters: false,
+		savedFilters: [],
 		valuesColumnsCounter: 0,
+		filters: {
+			stringFilters: [],
+			numberFilters: [],
+		},
+		filteredRows: [],
+		filteredRowIDs: [],
+		filteredColumnIDs: [],
 	};
 
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);

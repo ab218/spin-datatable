@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-	// Checkbox,
-	Button,
-	Modal,
-	Select,
-} from 'antd';
+import { Button, Input, Modal, Select } from 'antd';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
@@ -14,6 +9,7 @@ import {
 	useSelectDispatch,
 	useSelectState,
 	useRowsState,
+	useRowsDispatch,
 } from '../context/SpreadsheetProvider';
 import {
 	FILTER_COLUMN,
@@ -22,30 +18,42 @@ import {
 	SET_FILTERS,
 	DELETE_FILTER,
 	STRING,
+	SET_SELECTED_COLUMN,
 } from '../constants';
 
 export default function AntModal() {
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
+	const dispatchRowsAction = useRowsDispatch();
 	const { filterModalOpen } = useSpreadsheetState();
-	const { columns, rows } = useRowsState();
-	const { filters, selectedColumns } = useSelectState();
-	const [
-		selectRows,
-		// setSelectRows
-	] = useState(true);
-	const [
-		includeRows,
-		// setIncludeRows
-	] = useState(false);
+	const { columns, filters } = useRowsState();
+	const { selectedColumns } = useSelectState();
+	const [ filterName, setFilterName ] = useState('');
+	const [ saveModalVisible, setSaveModalVisible ] = useState(false);
 
 	function handleClose() {
+		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+		dispatchRowsAction({
+			type: DELETE_FILTER,
+			filters: { numberFilters: [], stringFilters: [] },
+		});
+		dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: [] });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
 
-	function handleCancel() {
-		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+	function handleSaveOk() {
+		dispatchRowsAction({ type: 'SAVE_FILTER', filters, filterName });
+		dispatchRowsAction({
+			type: DELETE_FILTER,
+			filters: { numberFilters: [], stringFilters: [] },
+		});
+		setSaveModalVisible(false);
+		dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: [] });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
+	}
+
+	function handleSaveCancel() {
+		setSaveModalVisible(false);
 	}
 
 	function removeColumn(columnID) {
@@ -57,8 +65,9 @@ export default function AntModal() {
 			return filtersCopy;
 		}
 		const filteredColumns = selectedColumns.filter((sel) => sel.id !== columnID);
-		dispatchSelectAction({ type: DELETE_FILTER, filters: deleteFilter(), selectedColumns: filteredColumns });
-		dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
+		dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: filteredColumns });
+		dispatchRowsAction({ type: DELETE_FILTER, filters: deleteFilter() });
+		dispatchRowsAction({ type: FILTER_COLUMN });
 	}
 
 	const ModalFooter = () => (
@@ -72,9 +81,8 @@ export default function AntModal() {
 				</Checkbox> */}
 			</span>
 			<span>
-				{/* <Button key="back">Cancel</Button> */}
-				<Button onClick={handleClose} key="submit" type="primary">
-					Finish
+				<Button onClick={(e) => setSaveModalVisible(true)} key="save" type="primary">
+					Save
 				</Button>
 			</span>
 		</div>
@@ -84,15 +92,23 @@ export default function AntModal() {
 		<Modal
 			className="ant-modal"
 			width={800}
-			onCancel={handleCancel}
+			onCancel={handleClose}
 			title={`Data Filter`}
 			visible={filterModalOpen}
 			bodyStyle={{ maxHeight: 300 }}
 			footer={<ModalFooter />}
 		>
+			<Modal title="Save Filter As..." visible={saveModalVisible} onOk={handleSaveOk} onCancel={handleSaveCancel}>
+				<Input
+					style={{ width: '100%' }}
+					maxLength={100}
+					value={filterName}
+					onChange={(e) => setFilterName(e.target.value)}
+				/>
+			</Modal>
 			<div style={{ width: '100%', display: 'flex', justifyContent: 'space-around' }}>
 				<div style={{ width: '20%', height: 250, overflowY: 'scroll' }}>
-					{columns.map((column) => <AddColumnButton column={column} />)}
+					{columns.map((column) => <AddColumnButton key={column.id} column={column} />)}
 				</div>
 				<div style={{ width: '60%', height: 250, overflowY: 'scroll' }}>
 					{selectedColumns &&
@@ -100,21 +116,9 @@ export default function AntModal() {
 						selectedColumns.map(
 							(col, i) =>
 								col.type === STRING ? (
-									<FilterColumnPicker
-										includeRows={includeRows}
-										selectRows={selectRows}
-										removeColumn={removeColumn}
-										key={i}
-										column={col}
-									/>
+									<FilterColumnPicker removeColumn={removeColumn} key={i} column={col} />
 								) : (
-									<FilterColumnSlider
-										includeRows={includeRows}
-										selectRows={selectRows}
-										removeColumn={removeColumn}
-										key={i}
-										column={col}
-									/>
+									<FilterColumnSlider removeColumn={removeColumn} key={i} column={col} />
 								),
 						)}
 				</div>
@@ -123,15 +127,12 @@ export default function AntModal() {
 	);
 }
 
-function FilterColumnSlider({ includeRows, selectRows, column, removeColumn }) {
+function FilterColumnSlider({ column, removeColumn }) {
 	const { selectedColumns } = useSelectState();
 	const { id, colMin, colMax, label, min, max } = column;
-
 	return (
 		<div style={{ paddingLeft: 10, paddingBottom: 10, marginBottom: 20, display: 'flex' }}>
 			<IntegerStep
-				includeRows={includeRows}
-				selectRows={selectRows}
 				currentMin={min}
 				currentMax={max}
 				key={id}
@@ -146,17 +147,15 @@ function FilterColumnSlider({ includeRows, selectRows, column, removeColumn }) {
 	);
 }
 
-function FilterColumnPicker({ includeRows, selectRows, column, removeColumn }) {
-	const dispatchSelectAction = useSelectDispatch();
+function FilterColumnPicker({ column, removeColumn }) {
+	const dispatchRowsAction = useRowsDispatch();
 	const { rows, columns } = useRowsState();
 	const [ checkedText, setCheckedText ] = useState();
 
 	useEffect(
 		() => {
-			dispatchSelectAction({ type: SET_FILTERS, stringFilter: checkedText });
-			if (selectRows) {
-				dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
-			}
+			dispatchRowsAction({ type: SET_FILTERS, stringFilter: checkedText });
+			dispatchRowsAction({ type: FILTER_COLUMN, rows, columns });
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[ checkedText ],

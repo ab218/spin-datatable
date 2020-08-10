@@ -7,21 +7,28 @@ import {
 	findCyclicDependencies,
 	updateRows,
 	generateUniqueRowIDs,
+	filterRowsByColumnRange,
+	filterRowsByString,
+	returnIntersectionOrNonEmptyArray,
 } from '../helpers';
 
 import {
 	COPY_VALUES,
 	CREATE_COLUMNS,
 	CREATE_ROWS,
+	DELETE_FILTER,
 	DELETE_ROWS,
 	DELETE_COLUMN,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
 	UNEXCLUDE_ROWS,
+	FILTER_COLUMN,
 	FILTER_EXCLUDE_ROWS,
 	PASTE_VALUES,
 	REDO,
+	SAVE_FILTER,
 	SAVE_VALUES_TO_COLUMN,
+	SET_FILTERS,
 	SET_TABLE_NAME,
 	SORT_COLUMN,
 	UNDO,
@@ -179,14 +186,12 @@ export function rowsReducer(state, action) {
 				redoHistory: [],
 				rows: updatedFormulaRows,
 				columns: filteredColumns,
-				// currentCellSelectionRange: null,
-				// cellSelectionRanges: [],
-				// selectedRowIDs: [],
-				// activeCell: null,
 			};
 		}
 		case DELETE_ROWS: {
-			const filteredRows = state.rows.filter((row) => !action.uniqueRowIDs.includes(row.id));
+			const { cellSelectionRanges } = action;
+			const selectedRowIDs = generateUniqueRowIDs(cellSelectionRanges, state.rows);
+			const filteredRows = state.rows.filter((row) => !selectedRowIDs.includes(row.id));
 			return {
 				...state,
 				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
@@ -246,6 +251,20 @@ export function rowsReducer(state, action) {
 				const { [key]: value, ...rest } = container;
 				return rest;
 			}
+			// const newRowsWithCellSelectionObject = state.rows.map((row) => {
+			// 	let newRow = { ...row };
+			// 	if (cellSelectionObject[row.id]) {
+			// 		cellSelectionObject[row.id].forEach((columnID) => {
+			// 			delete newRow[columnID];
+			// 			if (Array.isArray(state.inverseDependencyMap[columnID])) {
+			// 				for (const dependencyColumnID of state.inverseDependencyMap[columnID]) {
+			// 					return (newRow = updateRow(newRow, dependencyColumnID, state.columns, state.inverseDependencyMap));
+			// 				}
+			// 			}
+			// 		});
+			// 	}
+			// 	return newRow;
+			// });
 			const newRows = cellSelectionRanges.reduce((rows, { top, left, bottom, right }) => {
 				const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
 					top,
@@ -300,8 +319,56 @@ export function rowsReducer(state, action) {
 				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
 			};
 		}
+		case FILTER_COLUMN: {
+			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
+			const filteredRowsByString = filterRowsByString(state.rows, state.filters);
+			const intersection = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
+			const filteredRowIDs = intersection.map((row) => row.id);
+			const selectedRowIndexes = intersection.map((row) => state.rows.findIndex((stateRow) => stateRow.id === row.id));
+			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
+				return {
+					top: rowIndex,
+					left: 0,
+					bottom: rowIndex,
+					right: state.columns.length - 1,
+				};
+			});
+			return {
+				...state,
+				activeCell: null,
+				filteredRows: selectedRowObjects,
+				filteredRowIDs,
+				filteredColumnIDs: state.columns.map((col) => col.id),
+			};
+		}
+		case SET_FILTERS: {
+			const { includeRows, selectRows, selectedColumns, numberFilters, stringFilter } = action;
+			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
+			return {
+				...state,
+				// selectedColumns: selectedColumns || state.selectedColumns,
+				filters: {
+					selectedColumns: selectedColumns || state.selectedColumns,
+					includeRows,
+					selectRows,
+					stringFilters: stringFilterCopy,
+					numberFilters: numberFilters || state.filters.numberFilters,
+				},
+			};
+		}
 		case FILTER_EXCLUDE_ROWS: {
-			return { ...state, excludedRows: action.rowIDs };
+			const { rows } = state;
+			const { filteredRows } = action;
+			return { ...state, excludedRows: generateUniqueRowIDs(filteredRows, rows) };
+		}
+		case SAVE_FILTER: {
+			const { filters, filterName, includeRows, selectRows } = action;
+			const newFilter = { ...filters, filterName, includeRows, selectRows };
+			return { ...state, savedFilters: state.savedFilters.concat(newFilter) };
+		}
+		case DELETE_FILTER: {
+			const { filters } = action;
+			return { ...state, filters };
 		}
 		case SAVE_VALUES_TO_COLUMN: {
 			let valuesColumnsCounter = state.valuesColumnsCounter + 1;
@@ -461,8 +528,6 @@ export function rowsReducer(state, action) {
 				return {
 					...state,
 					columns: updatedColumns,
-					// columnTypeModalOpen: false,
-					// selectedColumn: null,
 					modalError: null,
 					history:
 						updatedRows.length > 0 ? [ ...state.history, { rows: state.rows, columns: state.columns } ] : state.history,
@@ -475,8 +540,6 @@ export function rowsReducer(state, action) {
 				...state,
 				columns: updatedColumns,
 				modalError: null,
-				// columnTypeModalOpen: false,
-				// selectedColumn: null,
 			};
 		}
 		default: {

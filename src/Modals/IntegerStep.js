@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { InputNumber, Slider, Row, Col } from 'antd';
-import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
+import { useRowsDispatch } from '../context/SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER, FORMULA } from '../constants';
 
 export default function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
-	const dispatchSelectAction = useSelectDispatch();
-	const { rows, columns } = useRowsState();
+	const dispatchRowsAction = useRowsDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
 
@@ -18,12 +17,12 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		const newCopy = selectedColumns.slice();
 		const index = newCopy.findIndex((col) => col.id === columnID);
 		newCopy[index] = { ...selectedColumns[index], min, max };
-		dispatchSelectAction({
+		dispatchRowsAction({
 			type: SET_FILTERS,
 			selectedColumns: newCopy,
 			numberFilters: newCopy.filter((col) => col.type === NUMBER || col.type === FORMULA),
 		});
-		dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
+		dispatchRowsAction({ type: FILTER_COLUMN });
 	}
 
 	function findGCD(x, y) {
