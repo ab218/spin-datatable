@@ -135,7 +135,7 @@ export default function AnalysisModal({ setPopup }) {
 			>
 				<div style={styles.flexSpaced}>
 					<SelectColumn
-						title={'Select Column'}
+						title={'Select Columns'}
 						groupingColData={groupingColData[0]}
 						columns={filteredColumns}
 						setSelectedColumn={setSelectedColumn}

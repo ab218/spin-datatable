@@ -8,8 +8,8 @@ import {
 	updateRows,
 	generateUniqueRowIDs,
 	filterRowsByColumnRange,
-	filterRowsByString,
 	returnIntersectionOrNonEmptyArray,
+	rowHasTheseColumns,
 } from '../helpers';
 
 import {
@@ -321,7 +321,7 @@ export function rowsReducer(state, action) {
 		}
 		case FILTER_COLUMN: {
 			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
-			const filteredRowsByString = filterRowsByString(state.rows, state.filters);
+			const filteredRowsByString = state.rows.filter(rowHasTheseColumns, state.filters.stringFilters);
 			const intersection = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
 			const filteredRowIDs = intersection.map((row) => row.id);
 			const selectedRowIndexes = intersection.map((row) => state.rows.findIndex((stateRow) => stateRow.id === row.id));
@@ -342,19 +342,23 @@ export function rowsReducer(state, action) {
 			};
 		}
 		case SET_FILTERS: {
-			const { includeRows, selectRows, selectedColumns, numberFilters, stringFilter } = action;
-			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
+			const { selectedColumns, numberFilters, stringFilters } = action;
+			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilters };
 			return {
 				...state,
-				// selectedColumns: selectedColumns || state.selectedColumns,
 				filters: {
-					selectedColumns: selectedColumns || state.selectedColumns,
-					includeRows,
-					selectRows,
+					selectedColumns,
 					stringFilters: stringFilterCopy,
 					numberFilters: numberFilters || state.filters.numberFilters,
 				},
 			};
+		}
+		case 'HIGHLIGHT_FILTERED_ROWS': {
+			const { filteredRowIDs } = action;
+			return { ...state, filteredRowIDs };
+		}
+		case 'REMOVE_HIGHLIGHTED_FILTERED_ROWS': {
+			return { ...state, filteredRowIDs: [] };
 		}
 		case FILTER_EXCLUDE_ROWS: {
 			const { rows } = state;
@@ -362,13 +366,27 @@ export function rowsReducer(state, action) {
 			return { ...state, excludedRows: generateUniqueRowIDs(filteredRows, rows) };
 		}
 		case SAVE_FILTER: {
-			const { filters, filterName, includeRows, selectRows } = action;
-			const newFilter = { ...filters, filterName, includeRows, selectRows };
+			const { filters, filterName } = action;
+			const newFilter = {
+				...filters,
+				id: createRandomID(),
+				filterName,
+				filteredRowIDs: state.filteredRowIDs,
+				filteredRows: state.filteredRows,
+			};
 			return { ...state, savedFilters: state.savedFilters.concat(newFilter) };
+		}
+		case 'REMOVE_SIDEBAR_FILTER': {
+			const { filter } = action;
+			const newFilters = state.savedFilters.filter((filt) => filt.id !== filter.id);
+			return { ...state, savedFilters: newFilters };
 		}
 		case DELETE_FILTER: {
 			const { filters } = action;
 			return { ...state, filters };
+		}
+		case 'REMOVE_FILTERED_ROWS': {
+			return { ...state, filteredRowIDs: [] };
 		}
 		case SAVE_VALUES_TO_COLUMN: {
 			let valuesColumnsCounter = state.valuesColumnsCounter + 1;

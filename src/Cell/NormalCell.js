@@ -16,8 +16,20 @@ function formatForNumberColumn(cellValue, column) {
 }
 
 export default React.memo(function NormalCell({ cellValue, columnIndex, column, rowIndex, rowID }) {
-	const { columns, rows } = useRowsState();
+	const { columns, rows, filteredRowIDs } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
+	function determineBackgroundColor() {
+		if (filteredRowIDs && filteredRowIDs.length > 0 && filteredRowIDs.includes(rowID)) {
+			return 'lightgreen';
+		}
+		if (cellValue && column.type === NUMBER) {
+			if (isNaN(cellValue)) {
+				return 'pink';
+			}
+		}
+		return 'transparent';
+	}
+
 	function onMouseDown(event) {
 		dispatchSelectAction({
 			selectionActive: event.metaKey || event.ctrlKey,
@@ -75,7 +87,7 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 				onMouseOver={onMouseEnter}
 				style={{
 					textAlign: column.type === STRING ? 'left' : 'right',
-					backgroundColor: isNotANumber ? 'pink' : 'transparent',
+					backgroundColor: determineBackgroundColor(),
 					height: '100%',
 					width: '100%',
 					lineHeight: 2,

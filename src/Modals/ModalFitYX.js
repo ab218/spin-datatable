@@ -198,7 +198,7 @@ export default function AnalysisModal({ setPopup }) {
 			>
 				<div style={styles.flexSpaced}>
 					<div>
-						<SelectColumn title="Select Column" columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
+						<SelectColumn title="Select Columns" columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
 						<VariableLegend yColData={yColData} xColData={xColData} />
 					</div>
 					<div style={{ width: 400 }}>

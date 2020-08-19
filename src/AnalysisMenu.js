@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Menu, Icon, Dropdown } from 'antd';
 import { useSpreadsheetDispatch, useSelectDispatch } from './context/SpreadsheetProvider';
 import {
@@ -10,7 +10,6 @@ import {
 } from './constants';
 
 export default function HamburgerMenu() {
-	const [ collapsed, setCollapsed ] = useState(false);
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 
@@ -49,12 +48,7 @@ export default function HamburgerMenu() {
 	return (
 		<div style={{ textAlign: 'right', width: '100%', fontSize: 18, backgroundColor: 'white', zIndex: 1 }}>
 			<Dropdown overlay={menu}>
-				<Icon
-					className={'hamburger'}
-					style={{ marginRight: 10, color: 'blue' }}
-					onClick={() => setCollapsed(!collapsed)}
-					type={'line-chart'}
-				/>
+				<Icon className={'hamburger'} style={{ marginRight: 10, color: 'blue' }} type={'line-chart'} />
 			</Dropdown>
 		</div>
 	);

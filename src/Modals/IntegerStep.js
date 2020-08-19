@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState } from 'react';
 import { InputNumber, Slider, Row, Col } from 'antd';
 import { useRowsDispatch } from '../context/SpreadsheetProvider';
@@ -13,17 +14,19 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 		setMax(value[1].toFixed(2) / 1);
 	};
 
-	function updateSelectedRows() {
-		const newCopy = selectedColumns.slice();
-		const index = newCopy.findIndex((col) => col.id === columnID);
-		newCopy[index] = { ...selectedColumns[index], min, max };
-		dispatchRowsAction({
-			type: SET_FILTERS,
-			selectedColumns: newCopy,
-			numberFilters: newCopy.filter((col) => col.type === NUMBER || col.type === FORMULA),
-		});
-		dispatchRowsAction({ type: FILTER_COLUMN });
-	}
+	const updateSelectedRows = React.useCallback(
+		function updateSelectedRows() {
+			const index = selectedColumns.findIndex((col) => col.id === columnID);
+			selectedColumns[index] = { ...selectedColumns[index], min, max };
+			dispatchRowsAction({
+				type: SET_FILTERS,
+				selectedColumns: selectedColumns,
+				numberFilters: selectedColumns.filter((col) => col.type === NUMBER || col.type === FORMULA),
+			});
+			dispatchRowsAction({ type: FILTER_COLUMN });
+		},
+		[ columnID, max, min, selectedColumns ],
+	);
 
 	function findGCD(x, y) {
 		if (typeof x !== 'number' || typeof y !== 'number') return false;
@@ -51,8 +54,8 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 						alignSelf: 'center',
 						fontSize: '1.1em',
 						width: '100%',
-						textAlign: 'center',
 						justifyContent: 'space-evenly',
+						textAlign: 'center',
 						alignItems: 'center',
 					}}
 				>

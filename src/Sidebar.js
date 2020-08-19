@@ -1,41 +1,56 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import { Divider, Input, Checkbox } from 'antd';
-import { FILTER_SELECT_ROWS, SELECT_COLUMN, REMOVE_SELECTED_CELLS, SET_TABLE_NAME } from './constants';
+import { Divider, Dropdown, Input, Icon, Menu } from 'antd';
+import {
+	FILTER_SELECT_ROWS,
+	REMOVE_SELECTED_CELLS,
+	SELECT_COLUMN,
+	SET_FILTERS,
+	SET_SELECTED_COLUMN,
+	SET_TABLE_NAME,
+	TOGGLE_FILTER_MODAL,
+} from './constants';
 import {
 	useSelectDispatch,
 	useRowsState,
 	useRowsDispatch,
 	useSpreadsheetDispatch,
+	useSpreadsheetState,
 } from './context/SpreadsheetProvider';
 import { createModelingTypeIcon } from './Modals/ModalShared';
 
 export default React.memo(function Sidebar() {
-	const { columns, rows, excludedRows, dataTableName, savedFilters, filteredRows } = useRowsState();
+	const { columns, rows, excludedRows, dataTableName, savedFilters } = useRowsState();
+	const { filterModalOpen } = useSpreadsheetState();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+	// const dispatchFilterAction = useFilterDispatch();
 	const dispatchRowsAction = useRowsDispatch();
-	const [ filterClicked, setFilterClicked ] = useState(false);
-	function filterOnclick(filter) {
-		const { includeRows, selectRows, selectedColumns, stringFilter, numberFilters } = filter;
-		setFilterClicked((prev) => !prev);
-		dispatchRowsAction({
-			type: 'SET_FILTERS',
-			selectedColumns,
-			stringFilter,
-			numberFilters,
-			includeRows,
-			selectRows,
-		});
-		dispatchRowsAction({ type: 'FILTER_COLUMN', rows, columns });
-	}
+	const [ filterClicked, setFilterClicked ] = useState([]);
 
 	useEffect(
 		() => {
-			dispatchSelectAction({ type: FILTER_SELECT_ROWS, filteredRows });
+			if (filterClicked.length > 0) {
+				dispatchSelectAction({ type: FILTER_SELECT_ROWS, filters: filterClicked });
+			} else {
+				dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+			}
 		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		[ filteredRows ],
+		[ filterClicked ],
+	);
+
+	const menu = (filter) => (
+		<Menu>
+			<Menu.Item
+				onClick={(e) => {
+					dispatchRowsAction({ type: 'REMOVE_SIDEBAR_FILTER', filter });
+					dispatchRowsAction({ type: 'REMOVE_HIGHLIGHTED_FILTERED_ROWS' });
+					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+				}}
+			>
+				Delete Filter
+			</Menu.Item>
+		</Menu>
 	);
 
 	return (
@@ -121,27 +136,51 @@ export default React.memo(function Sidebar() {
 								<td style={{ width: '80%', fontWeight: 'bold' }}>Filters</td>
 								<td style={{ width: '20%', fontWeight: 'bold' }} />
 							</tr>
-							{savedFilters.map((filter) => (
-								<tr>
-									<td
-										onClick={() => {
-											const { stringFilter, numberFilters, selectedColumns } = filter;
+							{savedFilters.map((filter) => {
+								const { stringFilters, numberFilters, selectedColumns, filteredRowIDs } = filter;
+								const checked = filterClicked.findIndex((f) => f.id === filter.id) !== -1;
+								return (
+									<tr
+										key={filter.filterName}
+										className={checked ? 'sidebar-column-selected' : ''}
+										onClick={(e) => {
+											setFilterClicked(
+												(prev) => (checked ? prev.filter((f) => f.id !== filter.id) : prev.concat(filter)),
+											);
+										}}
+										onMouseOver={() => {
 											dispatchRowsAction({
-												type: 'SET_FILTERS',
+												type: 'HIGHLIGHT_FILTERED_ROWS',
+												filteredRowIDs,
+											});
+										}}
+										onMouseOut={() => {
+											if (!filterModalOpen) {
+												dispatchRowsAction({
+													type: 'REMOVE_HIGHLIGHTED_FILTERED_ROWS',
+												});
+											}
+										}}
+										onDoubleClick={() => {
+											dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns });
+											dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true });
+											dispatchRowsAction({
+												type: SET_FILTERS,
 												selectedColumns,
-												stringFilter,
+												stringFilters,
 												numberFilters,
 											});
-											dispatchSpreadsheetAction({ type: 'TOGGLE_FILTER_MODAL', filterModalOpen: true });
 										}}
 									>
-										{filter.filterName || 'Filter'}
-									</td>
-									<td>
-										<Checkbox clicked={filterClicked} onClick={(e) => filterOnclick(filter)} />
-									</td>
-								</tr>
-							))}
+										<td>{filter.filterName || 'Filter'}</td>
+										<td>
+											<Dropdown overlay={() => menu(filter)}>
+												<Icon type={'menu'} />
+											</Dropdown>
+										</td>
+									</tr>
+								);
+							})}
 						</tbody>
 					</table>
 					<Divider />

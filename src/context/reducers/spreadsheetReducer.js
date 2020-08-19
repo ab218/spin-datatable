@@ -81,7 +81,7 @@ export function spreadsheetReducer(state, action) {
 			return {
 				...state,
 				filterModalOpen,
-				filters: { numberFilters: [], stringFilters: [] },
+				filters: { numberFilters: [], stringFilters: {} },
 			};
 		}
 		default: {

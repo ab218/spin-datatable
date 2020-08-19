@@ -14,7 +14,7 @@ import {
 	TRANSLATE_SELECTED_CELL,
 } from '../../constants';
 
-import { getRangeBoundaries, selectRowAndColumnIDs } from '../helpers';
+import { getRangeBoundaries, getUniqueListBy } from '../helpers';
 
 export function selectReducer(state, action) {
 	const {
@@ -29,7 +29,6 @@ export function selectReducer(state, action) {
 		newInputCellValue,
 		row,
 		rowIndex,
-		rows,
 		selectionActive,
 	} = action;
 
@@ -57,11 +56,14 @@ export function selectReducer(state, action) {
 			};
 		}
 		case FILTER_SELECT_ROWS: {
-			const { filteredRows } = action;
+			const { filters } = action;
+			const mergedSelectedRows = filters.flatMap((filter) => filter.filteredRows);
+			const uniques = getUniqueListBy(mergedSelectedRows, 'top');
+
 			return {
 				...state,
-				cellSelectionRanges: filteredRows,
-				currentCellSelectionRange: filteredRows,
+				cellSelectionRanges: uniques,
+				currentCellSelectionRange: uniques,
 			};
 		}
 

@@ -34,19 +34,25 @@ export function createRows(table, columns) {
 	return rows;
 }
 
+export function getUniqueListBy(arr, key) {
+	return [ ...new Map(arr.map((item) => [ item[key], item ])).values() ];
+}
+
 export function filterRowsByColumnRange(selectedColumns, rows) {
 	return rows.filter(rowValueWithinTheseColumnRanges, selectedColumns);
 }
 
-export function filterRowsByString(rows, filters) {
-	const newFilteredRowsByStringArray = [];
-	rows.map((row) => {
-		return Object.keys(filters.stringFilters).forEach((key) => {
-			return filters.stringFilters[key].includes(row[key]) ? newFilteredRowsByStringArray.push(row) : null;
-		});
-	});
-	return newFilteredRowsByStringArray;
+function rowValueWithinTheseColumnRanges(row) {
+	const columns = this;
+	return columns.every(
+		(column) => row[column.id] >= (column.min || column.colMin) && row[column.id] <= (column.max || column.colMax),
+	);
 }
+
+export function rowHasTheseColumns(row) {
+	return Object.keys(row).some((columnID) => this[columnID] && this[columnID].includes(row[columnID]));
+}
+
 function findIntersectionOfTwoArrays(arr1, arr2) {
 	return arr2.filter((a) => arr1.some((b) => a === b));
 }
@@ -103,13 +109,6 @@ export function getCol(columns, colName) {
 	return columns.find((col) => col.label === colName);
 }
 
-function rowValueWithinTheseColumnRanges(row) {
-	const columns = this;
-	return columns.every(
-		(column) => row[column.id] >= (column.min || column.colMin) && row[column.id] <= (column.max || column.colMax),
-	);
-}
-
 export function returnIntersectionOrNonEmptyArray(arr1, arr2) {
 	const intersectionOfArr1AndArr2 = findIntersectionOfTwoArrays(arr1, arr2);
 	if (arr1.length !== 0 && arr2.length !== 0) {
@@ -138,7 +137,6 @@ export function selectRowAndColumnIDs(top, left, bottom, right, columns, rows) {
 function swapIDsForValuesInRow(oldExpression, row, columns) {
 	let newExpression = '';
 	Object.keys(row).forEach((rowKey) => {
-		// console.log(oldExpression, rowKey);
 		if (newExpression.includes(rowKey) || oldExpression.includes(rowKey)) {
 			newExpression = newExpression
 				? newExpression.split(rowKey).join(row[rowKey])
