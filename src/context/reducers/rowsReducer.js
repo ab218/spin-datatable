@@ -251,20 +251,6 @@ export function rowsReducer(state, action) {
 				const { [key]: value, ...rest } = container;
 				return rest;
 			}
-			// const newRowsWithCellSelectionObject = state.rows.map((row) => {
-			// 	let newRow = { ...row };
-			// 	if (cellSelectionObject[row.id]) {
-			// 		cellSelectionObject[row.id].forEach((columnID) => {
-			// 			delete newRow[columnID];
-			// 			if (Array.isArray(state.inverseDependencyMap[columnID])) {
-			// 				for (const dependencyColumnID of state.inverseDependencyMap[columnID]) {
-			// 					return (newRow = updateRow(newRow, dependencyColumnID, state.columns, state.inverseDependencyMap));
-			// 				}
-			// 			}
-			// 		});
-			// 	}
-			// 	return newRow;
-			// });
 			const newRows = cellSelectionRanges.reduce((rows, { top, left, bottom, right }) => {
 				const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
 					top,

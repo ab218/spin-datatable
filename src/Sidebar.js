@@ -3,7 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Divider, Dropdown, Input, Icon, Menu } from 'antd';
 import {
 	FILTER_SELECT_ROWS,
+	HIGHLIGHT_FILTERED_ROWS,
+	REMOVE_HIGHLIGHTED_FILTERED_ROWS,
 	REMOVE_SELECTED_CELLS,
+	REMOVE_SIDEBAR_FILTER,
 	SELECT_COLUMN,
 	SET_FILTERS,
 	SET_SELECTED_COLUMN,
@@ -24,7 +27,6 @@ export default React.memo(function Sidebar() {
 	const { filterModalOpen } = useSpreadsheetState();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
-	// const dispatchFilterAction = useFilterDispatch();
 	const dispatchRowsAction = useRowsDispatch();
 	const [ filterClicked, setFilterClicked ] = useState([]);
 
@@ -43,8 +45,8 @@ export default React.memo(function Sidebar() {
 		<Menu>
 			<Menu.Item
 				onClick={(e) => {
-					dispatchRowsAction({ type: 'REMOVE_SIDEBAR_FILTER', filter });
-					dispatchRowsAction({ type: 'REMOVE_HIGHLIGHTED_FILTERED_ROWS' });
+					dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
+					dispatchRowsAction({ type: REMOVE_HIGHLIGHTED_FILTERED_ROWS });
 					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 				}}
 			>
@@ -151,14 +153,14 @@ export default React.memo(function Sidebar() {
 											}}
 											onMouseOver={() => {
 												dispatchRowsAction({
-													type: 'HIGHLIGHT_FILTERED_ROWS',
+													type: HIGHLIGHT_FILTERED_ROWS,
 													filteredRowIDs,
 												});
 											}}
 											onMouseOut={() => {
 												if (!filterModalOpen) {
 													dispatchRowsAction({
-														type: 'REMOVE_HIGHLIGHTED_FILTERED_ROWS',
+														type: REMOVE_HIGHLIGHTED_FILTERED_ROWS,
 													});
 												}
 											}}
@@ -175,8 +177,8 @@ export default React.memo(function Sidebar() {
 										>
 											<td>{filter.filterName || 'Filter'}</td>
 											<td>
-												<Dropdown overlay={() => menu(filter)}>
-													<Icon type={'down'} placement={'topRight'} />
+												<Dropdown placement={'topRight'} overlay={() => menu(filter)}>
+													<Icon type={'down'} />
 												</Dropdown>
 											</td>
 										</tr>

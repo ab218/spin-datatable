@@ -75,26 +75,6 @@ export function selectReducer(state, action) {
 				endRangeRow,
 				endRangeColumn: endRangeColumn,
 			});
-			// function getSelectionObject({ startRangeRow, startRangeColumn, endRangeRow, endRangeColumn, rows, columns }) {
-			// 	const top = Math.min(startRangeRow, endRangeRow);
-			// 	const bottom = Math.max(startRangeRow, endRangeRow);
-			// 	const left = Math.min(startRangeColumn, endRangeColumn);
-			// 	const right = Math.max(startRangeColumn, endRangeColumn);
-			// 	const { selectedRowIDs, selectedColumnIDs } = selectRowAndColumnIDs(top, left, bottom, right, columns, rows);
-			// 	const returnObj = {};
-			// 	for (let i = 0; i < selectedRowIDs.length; i++) {
-			// 		returnObj[selectedRowIDs[i]] = selectedColumnIDs;
-			// 	}
-			// 	return returnObj;
-			// }
-			// const cellSelectionObject = getSelectionObject({
-			// 	startRangeRow: lastSelection.row,
-			// 	startRangeColumn: lastSelection.column,
-			// 	endRangeRow,
-			// 	endRangeColumn,
-			// 	rows,
-			// 	columns,
-			// });
 			return state.currentCellSelectionRange
 				? {
 						...state,
@@ -124,7 +104,6 @@ export function selectReducer(state, action) {
 				lastSelection,
 				cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [],
 				currentCellSelectionRange: selectedCell,
-				// cellSelectionObject: { [action.rowID]: [ columnID ] },
 			};
 		}
 		case SELECT_ROW: {
@@ -187,20 +166,6 @@ export function selectReducer(state, action) {
 		case SELECT_COLUMN: {
 			const { cellSelectionRanges } = state;
 			const { rows } = action;
-
-			// const selectAllCellsInColumn = (rows) => {
-			// 	let returnObj = {};
-			// 	for (let i = 0; i < rows.length; i++) {
-			// 		const row = rows[i];
-			// 		returnObj[row.id] = [ columnID ];
-			// 	}
-			// 	return returnObj;
-			// };
-			// const mergeCellObjects = () => {
-			// 	return Object.entries(state.cellSelectionObject).reduce((acc, curr) => {
-			// 		return { ...acc, [curr[0]]: [ ...curr[1], columnID ] };
-			// 	}, selectAllCellsInColumn(rows));
-			// };
 			const allCellsInColumn = {
 				top: 0,
 				left: columnIndex,
@@ -212,7 +177,6 @@ export function selectReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: allCellsInColumn,
 				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
-				// cellSelectionObject: selectionActive ? mergeCellObjects() : selectAllCellsInColumn(rows),
 			};
 		}
 		case SELECT_BLOCK_OF_CELLS: {
@@ -224,13 +188,10 @@ export function selectReducer(state, action) {
 		// EVENT: Selected Cell translated
 		case TRANSLATE_SELECTED_CELL: {
 			const newCellSelectionRanges = [ { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex } ];
-			// const rowID = rows[rowIndex].id;
-			// const columnID = columns[columnIndex].id;
 			return {
 				...state,
 				cellSelectionRanges: newCellSelectionRanges,
 				currentCellSelectionRange: null,
-				// cellSelectionObject: { [rowID]: [ columnID ] },
 			};
 		}
 		default: {
