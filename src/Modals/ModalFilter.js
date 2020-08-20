@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Modal, Select } from 'antd';
+import ErrorMessage from './ErrorMessage';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
@@ -27,17 +28,23 @@ const FilterModal = React.memo(function AntModal() {
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
 	const { filterModalOpen } = useSpreadsheetState();
-	const { columns, filters, filteredRowIDs } = useRowsState();
+	const { columns, filters, filteredRowIDs, savedFilters } = useRowsState();
 	const { selectedColumns } = useSelectState();
-	const [ filterName, setFilterName ] = useState('');
-	const [ saveModalVisible, setSaveModalVisible ] = useState(false);
+	const defaultFilterName = 'Data Filter';
+	const [ filterName, setFilterName ] = useState(defaultFilterName);
+	const [ error, setError ] = useState('');
 
 	useEffect(
 		() => {
 			if (Object.keys(filters.stringFilters).length || filters.numberFilters.length) {
 				let template = '';
-				filters.numberFilters.forEach((numberFilter) => {
-					template += `${numberFilter.min} ≤ ${numberFilter.label} ≤ ${numberFilter.max}`;
+				filters.numberFilters.forEach((numberFilter, i) => {
+					if (numberFilter.min && numberFilter.max) {
+						template += `${numberFilter.min} ≤ ${numberFilter.label} ≤ ${numberFilter.max}`;
+					}
+					if (i !== filters.numberFilters.length - 1) {
+						template += ` & `;
+					}
 				});
 				setFilterName(template);
 			}
@@ -57,19 +64,26 @@ const FilterModal = React.memo(function AntModal() {
 	}
 
 	function handleSaveOk() {
+		if (selectedColumns.length === 0) {
+			return setError('You must select at least one column.');
+		}
+		if (filters.numberFilters.length === 0 && Object.keys(filters.stringFilters).length === 0) {
+			return setError('You must create at least one condition for your filter.');
+		}
+		if (filterName === '') {
+			return setError('Filter name cannot be blank.');
+		}
+		if (savedFilters.findIndex((filter) => filterName === filter.filterName) !== -1) {
+			return setError('Filter name is already in use. Please choose a unique name.');
+		}
 		dispatchRowsAction({ type: SAVE_FILTER, filters, filterName });
 		dispatchRowsAction({
 			type: DELETE_FILTER,
 			filters: { numberFilters: [], stringFilters: {} },
 		});
 		dispatchRowsAction({ type: 'REMOVE_FILTERED_ROWS' });
-		setSaveModalVisible(false);
 		dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: [] });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
-	}
-
-	function handleSaveCancel() {
-		setSaveModalVisible(false);
 	}
 
 	function removeColumn(columnID) {
@@ -87,13 +101,29 @@ const FilterModal = React.memo(function AntModal() {
 	}
 
 	const ModalFooter = () => (
-		<div key="footer-div" style={{ width: '100%', height: 40, display: 'flex', justifyContent: 'space-between' }}>
-			<span style={{ display: 'flex' }}>{filteredRowIDs.length} selected.</span>
-			<span>
-				<Button onClick={(e) => setSaveModalVisible(true)} key="save" type="primary">
-					Save
-				</Button>
-			</span>
+		<div>
+			<div key="footer-div" style={{ width: '100%', height: 40, display: 'flex', justifyContent: 'space-between' }}>
+				<span style={{ display: 'flex', width: '33%' }}>{filteredRowIDs.length} selected.</span>
+				<span style={{ display: 'flex', width: '67%' }}>
+					<Input
+						style={{ width: '100%', marginRight: '10px' }}
+						maxLength={100}
+						defaultValue={filterName}
+						onBlur={(e) => {
+							setFilterName(e.target.value);
+						}}
+						onPressEnter={(e) => {
+							setFilterName(e.target.value);
+						}}
+					/>
+					<Button onClick={handleSaveOk} key="save" type="primary">
+						Save
+					</Button>
+				</span>
+			</div>
+			<div style={{ height: '40px', textAlign: 'center' }}>
+				<ErrorMessage error={error} setError={setError} />
+			</div>
 		</div>
 	);
 
@@ -102,19 +132,11 @@ const FilterModal = React.memo(function AntModal() {
 			className="ant-modal"
 			width={800}
 			onCancel={handleClose}
-			title={`Data Filter`}
+			title={filterName || 'Data Filter'}
 			visible={filterModalOpen}
 			bodyStyle={{ maxHeight: 300 }}
 			footer={<ModalFooter />}
 		>
-			<Modal title="Save Filter As..." visible={saveModalVisible} onOk={handleSaveOk} onCancel={handleSaveCancel}>
-				<Input
-					style={{ width: '100%' }}
-					maxLength={100}
-					value={filterName}
-					onChange={(e) => setFilterName(e.target.value)}
-				/>
-			</Modal>
 			<div style={{ width: '100%', display: 'flex', justifyContent: 'space-around' }}>
 				<div style={{ width: '20%', height: 250, overflowY: 'scroll' }}>
 					{columns.map((column) => <AddColumnButton key={column.id} column={column} />)}

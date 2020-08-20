@@ -140,45 +140,48 @@ export default React.memo(function Sidebar() {
 								const { stringFilters, numberFilters, selectedColumns, filteredRowIDs } = filter;
 								const checked = filterClicked.findIndex((f) => f.id === filter.id) !== -1;
 								return (
-									<tr
-										key={filter.filterName}
-										className={checked ? 'sidebar-column-selected' : ''}
-										onClick={(e) => {
-											setFilterClicked(
-												(prev) => (checked ? prev.filter((f) => f.id !== filter.id) : prev.concat(filter)),
-											);
-										}}
-										onMouseOver={() => {
-											dispatchRowsAction({
-												type: 'HIGHLIGHT_FILTERED_ROWS',
-												filteredRowIDs,
-											});
-										}}
-										onMouseOut={() => {
-											if (!filterModalOpen) {
+									<React.Fragment>
+										<tr
+											key={filter.filterName}
+											className={checked ? 'sidebar-column-selected' : ''}
+											onClick={(e) => {
+												setFilterClicked(
+													(prev) => (checked ? prev.filter((f) => f.id !== filter.id) : prev.concat(filter)),
+												);
+											}}
+											onMouseOver={() => {
 												dispatchRowsAction({
-													type: 'REMOVE_HIGHLIGHTED_FILTERED_ROWS',
+													type: 'HIGHLIGHT_FILTERED_ROWS',
+													filteredRowIDs,
 												});
-											}
-										}}
-										onDoubleClick={() => {
-											dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns });
-											dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true });
-											dispatchRowsAction({
-												type: SET_FILTERS,
-												selectedColumns,
-												stringFilters,
-												numberFilters,
-											});
-										}}
-									>
-										<td>{filter.filterName || 'Filter'}</td>
-										<td>
-											<Dropdown overlay={() => menu(filter)}>
-												<Icon type={'menu'} />
-											</Dropdown>
-										</td>
-									</tr>
+											}}
+											onMouseOut={() => {
+												if (!filterModalOpen) {
+													dispatchRowsAction({
+														type: 'REMOVE_HIGHLIGHTED_FILTERED_ROWS',
+													});
+												}
+											}}
+											onDoubleClick={() => {
+												dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns });
+												dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true });
+												dispatchRowsAction({
+													type: SET_FILTERS,
+													selectedColumns,
+													stringFilters,
+													numberFilters,
+												});
+											}}
+										>
+											<td>{filter.filterName || 'Filter'}</td>
+											<td>
+												<Dropdown overlay={() => menu(filter)}>
+													<Icon type={'down'} placement={'topRight'} />
+												</Dropdown>
+											</td>
+										</tr>
+										<tr style={{ height: '10px' }} />
+									</React.Fragment>
 								);
 							})}
 						</tbody>
