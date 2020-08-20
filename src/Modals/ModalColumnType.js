@@ -16,7 +16,7 @@ import {
 	TOGGLE_COLUMN_TYPE_MODAL,
 	UPDATE_COLUMN,
 	NUMBER,
-	STRING,
+	TEXT,
 	FORMULA,
 	CONTINUOUS,
 	ORDINAL,
@@ -143,7 +143,7 @@ export default function AntModal({ selectedColumn }) {
 
 	useEffect(
 		() => {
-			if (columnType === STRING && columnModelingType === CONTINUOUS) {
+			if (columnType === TEXT && columnModelingType === CONTINUOUS) {
 				setColumnModelingType(NOMINAL);
 			}
 		},
@@ -246,7 +246,7 @@ export default function AntModal({ selectedColumn }) {
 					<h4>Type</h4>
 					<Dropdown
 						modelingTypeIcons={false}
-						menuItems={[ NUMBER, STRING, FORMULA ]}
+						menuItems={[ NUMBER, TEXT, FORMULA ]}
 						setColumnType={setColumnType}
 						columnType={columnType}
 					/>
@@ -255,7 +255,7 @@ export default function AntModal({ selectedColumn }) {
 					<h4>Scale</h4>
 					<Dropdown
 						modelingTypeIcons={true}
-						disabledType={columnType === STRING ? CONTINUOUS : ''}
+						disabledType={columnType === TEXT ? CONTINUOUS : ''}
 						menuItems={[ CONTINUOUS, ORDINAL, NOMINAL ]}
 						setColumnType={setColumnModelingType}
 						columnType={columnModelingType}

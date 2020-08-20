@@ -1,4 +1,4 @@
-import { CONTINUOUS, NOMINAL, STRING, FORMULA, NUMBER } from './../constants';
+import { CONTINUOUS, NOMINAL, TEXT, FORMULA, NUMBER } from './../constants';
 
 // dummy data
 export const statsColumns = [
@@ -13,8 +13,8 @@ export const statsColumns = [
 		label: 'Rate',
 		description: '',
 	},
-	{ id: '_abc4_', modelingType: NOMINAL, type: STRING, units: '', label: 'Catalase Solution', description: '' },
-	{ id: '_abc5_', modelingType: NOMINAL, type: STRING, units: '', label: 'Animal', description: '' },
+	{ id: '_abc4_', modelingType: NOMINAL, type: TEXT, units: '', label: 'Catalase Solution', description: '' },
+	{ id: '_abc5_', modelingType: NOMINAL, type: TEXT, units: '', label: 'Animal', description: '' },
 ];
 
 export const startingColumn = [

@@ -21,7 +21,7 @@ import {
 	REMOVE_SELECTED_CELLS,
 	SET_FILTERS,
 	DELETE_FILTER,
-	STRING,
+	TEXT,
 } from '../constants';
 
 export default function AntModal() {
@@ -99,7 +99,7 @@ export default function AntModal() {
 						selectedColumns.length > 0 &&
 						selectedColumns.map(
 							(col, i) =>
-								col.type === STRING ? (
+								col.type === TEXT ? (
 									<FilterColumnPicker
 										includeRows={includeRows}
 										selectRows={selectRows}
