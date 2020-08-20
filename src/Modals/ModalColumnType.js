@@ -3,7 +3,7 @@ import katex from 'katex';
 import nerdamer from 'nerdamer';
 import { Button, Icon, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
-import Dropdown from './Dropdown';
+import Radio from './Radio';
 import ErrorMessage from './ErrorMessage';
 import {
 	useSpreadsheetState,
@@ -244,7 +244,7 @@ export default function AntModal({ selectedColumn }) {
 				</span>
 				<span className="modal-span">
 					<h4>Type</h4>
-					<Dropdown
+					<Radio
 						modelingTypeIcons={false}
 						menuItems={[ NUMBER, TEXT, FORMULA ]}
 						setColumnType={setColumnType}
@@ -253,7 +253,7 @@ export default function AntModal({ selectedColumn }) {
 				</span>
 				<span className="modal-span">
 					<h4>Scale</h4>
-					<Dropdown
+					<Radio
 						modelingTypeIcons={true}
 						disabledType={columnType === TEXT ? CONTINUOUS : ''}
 						menuItems={[ CONTINUOUS, ORDINAL, NOMINAL ]}

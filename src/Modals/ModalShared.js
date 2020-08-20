@@ -58,11 +58,17 @@ export function CaratButtons({ data, setData, label, selectedColumn }) {
 		<div style={styles.flexColumn}>
 			<Button
 				disabled={!selectedColumn || data.length !== 0}
-				style={{ marginBottom: 5 }}
+				style={{
+					marginBottom: 5,
+					display: 'flex',
+					justifyContent: 'space-between',
+					alignItems: 'center',
+					paddingRight: '5px',
+				}}
 				onClick={() => addColumnToList(data, setData, selectedColumn)}
 			>
-				{label}
-				<Icon type="right" style={{ marginLeft: 40 }} />
+				<span>{label}</span>
+				<Icon type="right" />
 			</Button>
 		</div>
 	);
