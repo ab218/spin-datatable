@@ -205,7 +205,7 @@ export default function AnalysisModal({ setPopup }) {
 						Cast Selected Columns into Roles
 						<VariableSelector
 							data={yColData}
-							label="Y"
+							label="Y, Outcome"
 							performingAnalysis={performingAnalysis}
 							setData={setYColData}
 							selectedColumn={selectedColumn}
@@ -213,7 +213,7 @@ export default function AnalysisModal({ setPopup }) {
 						/>
 						<VariableSelector
 							data={xColData}
-							label="X"
+							label="X, Factor"
 							performingAnalysis={performingAnalysis}
 							setData={setXColData}
 							selectedColumn={selectedColumn}

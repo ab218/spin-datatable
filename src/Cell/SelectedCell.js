@@ -12,7 +12,7 @@ import {
 	REMOVE_SELECTED_CELLS,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	FORMULA,
-	STRING,
+	TEXT,
 } from '../constants';
 
 export default React.memo(function SelectedCell({ column, columnIndex, columnID, rowIndex, cellValue }) {
@@ -61,7 +61,7 @@ export default React.memo(function SelectedCell({ column, columnIndex, columnID,
 			<div
 				key={`row${rowIndex}col${columnIndex}`}
 				style={{
-					textAlign: column.type === STRING ? 'left' : 'right',
+					textAlign: column.type === TEXT ? 'left' : 'right',
 					width: '100%',
 					height: '100%',
 					backgroundColor: '#C0C0C0',
@@ -82,7 +82,7 @@ export default React.memo(function SelectedCell({ column, columnIndex, columnID,
 		<div
 			key={`row${rowIndex}col${columnIndex}`}
 			style={{
-				textAlign: column.type === STRING ? 'left' : 'right',
+				textAlign: column.type === TEXT ? 'left' : 'right',
 				width: '100%',
 				height: '100%',
 				backgroundColor: '#C0C0C0',

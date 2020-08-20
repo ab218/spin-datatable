@@ -49,7 +49,7 @@ function ChartOptionsSelect({ handleChartOptions }) {
 			onChange={handleChartOptions}
 			maxTagCount={0}
 			maxTagPlaceholder={(e) => {
-				return 'Select Chart Options';
+				return 'Display Options';
 			}}
 		>
 			<Option key={'Show Histogram Borders'}>Show Histogram Borders</Option>

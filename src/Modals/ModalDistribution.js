@@ -57,7 +57,7 @@ export default function DistributionModal({ setPopup }) {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				title="Distribution"
+				title="Descriptive Analysis"
 				visible={distributionModalOpen}
 				width={550}
 				bodyStyle={{ background: '#ECECEC' }}

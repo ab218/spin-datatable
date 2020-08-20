@@ -6,7 +6,7 @@ import {
 	SELECT_CELL,
 	// CLOSE_CONTEXT_MENU,
 	NUMBER,
-	STRING,
+	TEXT,
 } from '../constants';
 
 function formatForNumberColumn(cellValue, column) {
@@ -49,7 +49,7 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 					onMouseDown={onMouseDown}
 					onMouseEnter={onMouseEnter}
 					style={{
-						textAlign: column.type === STRING ? 'left' : 'right',
+						textAlign: column.type === TEXT ? 'left' : 'right',
 						backgroundColor: 'pink',
 						height: '100%',
 						width: '100%',
@@ -74,7 +74,7 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 				onMouseDown={onMouseDown}
 				onMouseOver={onMouseEnter}
 				style={{
-					textAlign: column.type === STRING ? 'left' : 'right',
+					textAlign: column.type === TEXT ? 'left' : 'right',
 					backgroundColor: isNotANumber ? 'pink' : 'transparent',
 					height: '100%',
 					width: '100%',

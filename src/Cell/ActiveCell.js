@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useCallback } from 'react';
-import { STRING } from '../constants';
+import { TEXT } from '../constants';
 import { cursorKeyToRowColMapper } from '../Spreadsheet';
 import { ACTIVATE_CELL, CREATE_ROWS, REDO, UNDO, REMOVE_SELECTED_CELLS, UPDATE_CELL, FORMULA } from '../constants';
 import { useRowsState, useSelectDispatch, useRowsDispatch } from '../context/SpreadsheetProvider';
@@ -88,7 +88,7 @@ export default React.memo(function ActiveCell(props) {
 				defaultValue={oldValue}
 				type="text"
 				style={{
-					textAlign: column && column.type === STRING ? 'left' : 'right',
+					textAlign: column && column.type === TEXT ? 'left' : 'right',
 					height: '100%',
 					width: '100%',
 				}}
