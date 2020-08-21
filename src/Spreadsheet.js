@@ -15,7 +15,6 @@ import ColumnTypeModal from './Modals/ModalColumnType';
 import DistributionModal from './Modals/ModalDistribution';
 import FilterModal from './Modals/ModalFilter';
 import AnalysisModal from './Modals/ModalFitYX';
-import { selectRowAndColumnIDs } from './context/helpers';
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,

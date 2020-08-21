@@ -3,16 +3,13 @@ import { selectReducer } from './reducers/selectReducer';
 import { spreadsheetReducer } from './reducers/spreadsheetReducer';
 import { columnWidthReducer } from './reducers/columnWidthReducer';
 import { rowsReducer } from './reducers/rowsReducer';
-import { filterReducer } from './reducers/filterReducer';
-import { potatoLiverData, startingColumn, statsColumns } from './dummyData';
+import { potatoLiverData, statsColumns } from './dummyData';
 import { createRows } from './helpers';
 
 const SpreadsheetStateContext = React.createContext();
 const SpreadsheetDispatchContext = React.createContext();
 const SelectStateContext = React.createContext();
 const SelectDispatchContext = React.createContext();
-const FilterStateContext = React.createContext();
-const FilterDispatchContext = React.createContext();
 const RowsStateContext = React.createContext();
 const RowsDispatchContext = React.createContext();
 const ColumnWidthStateContext = React.createContext();
@@ -48,21 +45,6 @@ export function useRowsDispatch() {
 	return context;
 }
 
-export function useFilterState() {
-	const context = React.useContext(FilterStateContext);
-	if (context === undefined) {
-		throw new Error('useFilterState must be used within a SpreadsheetProvider');
-	}
-	return context;
-}
-export function useFilterDispatch() {
-	const context = React.useContext(FilterDispatchContext);
-	if (context === undefined) {
-		throw new Error('useFilterDispatch must be used within a SpreadsheetProvider');
-	}
-	return context;
-}
-
 export function useSpreadsheetState() {
 	const context = React.useContext(SpreadsheetStateContext);
 	if (context === undefined) {
@@ -94,7 +76,6 @@ export function useSelectDispatch() {
 }
 
 export function SpreadsheetProvider({ children }) {
-	const initialFilterState = {};
 	const initialState = {
 		analysisModalOpen: false,
 		analysisWindowOpen: false,
@@ -148,7 +129,6 @@ export function SpreadsheetProvider({ children }) {
 	};
 
 	const [ state, changeSpreadsheet ] = useReducer(spreadsheetReducer, initialState);
-	const [ filterState, changeFilterState ] = useReducer(filterReducer, initialFilterState);
 	const [ selectState, changeSelectState ] = useReducer(selectReducer, initialSelectState);
 	const [ rowsState, changeRowsState ] = useReducer(rowsReducer, initialRowsState);
 	const [ columnWidthState, changeColumnWidthState ] = useReducer(columnWidthReducer, { widths: {} });
@@ -159,15 +139,9 @@ export function SpreadsheetProvider({ children }) {
 					<SpreadsheetDispatchContext.Provider value={changeSpreadsheet}>
 						<RowsStateContext.Provider value={rowsState}>
 							<RowsDispatchContext.Provider value={changeRowsState}>
-								<FilterStateContext.Provider value={filterState}>
-									<FilterDispatchContext.Provider value={changeFilterState}>
-										<SelectStateContext.Provider value={selectState}>
-											<SelectDispatchContext.Provider value={changeSelectState}>
-												{children}
-											</SelectDispatchContext.Provider>
-										</SelectStateContext.Provider>
-									</FilterDispatchContext.Provider>
-								</FilterStateContext.Provider>
+								<SelectStateContext.Provider value={selectState}>
+									<SelectDispatchContext.Provider value={changeSelectState}>{children}</SelectDispatchContext.Provider>
+								</SelectStateContext.Provider>
 							</RowsDispatchContext.Provider>
 						</RowsStateContext.Provider>
 					</SpreadsheetDispatchContext.Provider>

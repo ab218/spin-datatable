@@ -18,6 +18,7 @@ import {
 	REMOVE_SELECTED_CELLS,
 	SET_FILTERS,
 	DELETE_FILTER,
+	REMOVE_FILTERED_ROWS,
 	SAVE_FILTER,
 	SET_SELECTED_COLUMN,
 	STRING,
@@ -58,7 +59,7 @@ const FilterModal = React.memo(function AntModal() {
 			type: DELETE_FILTER,
 			filters: { numberFilters: [], stringFilters: {} },
 		});
-		dispatchRowsAction({ type: 'REMOVE_FILTERED_ROWS' });
+		dispatchRowsAction({ type: REMOVE_FILTERED_ROWS });
 		dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: [] });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
@@ -81,7 +82,7 @@ const FilterModal = React.memo(function AntModal() {
 			type: DELETE_FILTER,
 			filters: { numberFilters: [], stringFilters: {} },
 		});
-		dispatchRowsAction({ type: 'REMOVE_FILTERED_ROWS' });
+		dispatchRowsAction({ type: REMOVE_FILTERED_ROWS });
 		dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: [] });
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
