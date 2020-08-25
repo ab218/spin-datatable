@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch, useRowsState } from '../context/SpreadsheetProvider';
-import {
-	performLinearRegressionAnalysis,
-	performOnewayAnalysis,
-	performContingencyAnalysis,
-} from '../analysis-output/Analysis';
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { createRandomID } from '../context/helpers';
 import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from '../constants';
 import VariableLegend from './FitYXLegend';
 
-export default function AnalysisModal({ setPopup }) {
+export function receiveMessage(event, popup, results) {
+	// target window is ready, time to send data.
+	if (event.data === 'ready') {
+		// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
+		if (typeof results === 'string') {
+			return alert('Something went wrong. Check your data and try again.');
+		}
+		popup.postMessage(results, '*');
+		window.removeEventListener('message', receiveMessage);
+	}
+}
+
+export default function AnalysisModal() {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
 	const [ xColData, setXColData ] = useState([]);
 	const [ yColData, setYColData ] = useState([]);
@@ -70,23 +76,8 @@ export default function AnalysisModal({ setPopup }) {
 			if (colXArr.length >= 10 && colYArr.length >= 10) {
 				try {
 					setPerformingAnalysis(true);
-					// const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
 					const payload = { analysisType: 'regression', colXArr, colYArr, colX, colY, XYCols };
-					const popup = window.open('http://localhost:3001/', '', 'left=9999,top=100,width=800,height=850');
-
-					function receiveMessage(event, popup, results) {
-						// target window is ready, time to send data.
-						if (event.data === 'ready') {
-							// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
-							if (typeof results === 'string') {
-								return alert('Something went wrong. Check your data and try again.');
-							}
-							popup.postMessage(results, '*');
-							window.removeEventListener('message', receiveMessage);
-						}
-					}
-					// window.postMessage(results, 'http://localhost:3001');
-					// setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+					const popup = window.open('http://localhost:3001/', '', 'left=9999,top=100,width=1000,height=850');
 					window.addEventListener('message', (event) => receiveMessage(event, popup, payload), false);
 					setPerformingAnalysis(false);
 					handleModalClose();
@@ -103,8 +94,9 @@ export default function AnalysisModal({ setPopup }) {
 		async function oneway() {
 			try {
 				setPerformingAnalysis(true);
-				const results = await performOnewayAnalysis(colXArr, colYArr, colX, colY, XYCols);
-				setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+				const payload = { analysisType: 'oneway', colXArr, colYArr, colX, colY, XYCols };
+				const popup = window.open('http://localhost:3001/', '', 'left=9999,top=100,width=1000,height=850');
+				window.addEventListener('message', (event) => receiveMessage(event, popup, payload), false);
 				setPerformingAnalysis(false);
 				handleModalClose();
 			} catch (e) {
@@ -117,8 +109,9 @@ export default function AnalysisModal({ setPopup }) {
 		async function contingency() {
 			try {
 				setPerformingAnalysis(true);
-				const results = await performContingencyAnalysis(colXArr, colYArr, colX, colY, XYCols);
-				setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+				const payload = { analysisType: 'contingency', colXArr, colYArr, colX, colY, XYCols };
+				const popup = window.open('http://localhost:3001/', '', 'left=9999,top=100,width=1000,height=850');
+				window.addEventListener('message', (event) => receiveMessage(event, popup, payload), false);
 				setPerformingAnalysis(false);
 				handleModalClose();
 			} catch (e) {

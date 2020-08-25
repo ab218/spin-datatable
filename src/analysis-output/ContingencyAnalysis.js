@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Popup from './PopupWindow';
 import { Dropdown, Icon, Menu } from 'antd';
 import ContingencyD3Chart from './ContingencyD3Chart';
-import './MosaicPlot.js';
 
 export default function ContingencyAnalysis({ data, setPopup }) {
 	const { contingency, colX, colY, chi2, p, dof, log_chi2, log_p, coordinates, expected } = data;
@@ -168,7 +167,6 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 		const rowOfValues = Object.values(contingency[key]);
 		return rowOfValues.reduce((acc, curr) => curr + acc, 0);
 	});
-
 	const mappedContingency = contingencyKeys.map((key, i) => {
 		const rowOfValues = Object.values(contingency[key]);
 		return rowOfValues.map((val, j) => {

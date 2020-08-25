@@ -3,10 +3,9 @@ import React, { useState } from 'react';
 import { Modal, Button, Input } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch, useRowsState } from '../context/SpreadsheetProvider';
 import { TOGGLE_DISTRIBUTION_MODAL } from '../constants';
-import { performDistributionAnalysis } from '../analysis-output/Analysis';
 import { SelectColumn, styles } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
-import { createRandomID } from '../context/helpers';
+import { receiveMessage } from './ModalFitYX';
 
 export default function DistributionModal({ setPopup }) {
 	const { distributionModalOpen } = useSpreadsheetState();
@@ -34,8 +33,12 @@ export default function DistributionModal({ setPopup }) {
 			return;
 		}
 		setPerformingAnalysis(true);
-		const results = await performDistributionAnalysis(yColData, colVals, numberOfBins);
-		setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+
+		const payload = { analysisType: 'distribution', yColData, colVals, numberOfBins };
+		const popup = window.open('http://localhost:3001/', '', 'left=9999,top=100,width=1000,height=850');
+		window.addEventListener('message', (event) => receiveMessage(event, popup, payload), false);
+
+		// const results = await performDistributionAnalysis(yColData, colVals, numberOfBins);
 		setPerformingAnalysis(false);
 		dispatchSpreadsheetAction({ type: TOGGLE_DISTRIBUTION_MODAL, distributionModalOpen: false });
 	}
