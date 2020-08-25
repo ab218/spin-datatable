@@ -42,7 +42,6 @@ export function selectReducer(state, action) {
 		row,
 		rowID,
 		rowIndex,
-		rowIndexes,
 		rows,
 		selectionActive,
 		selectedRowIDs,

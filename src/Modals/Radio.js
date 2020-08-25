@@ -1,5 +1,5 @@
 import React from 'react';
-import { Radio, Icon } from 'antd';
+import { Radio } from 'antd';
 import { createModelingTypeIcon } from './ModalShared';
 
 export default function RadioButtons({ columnType, setColumnType, menuItems, modelingTypeIcons, disabledType }) {

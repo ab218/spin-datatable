@@ -70,8 +70,24 @@ export default function AnalysisModal({ setPopup }) {
 			if (colXArr.length >= 10 && colYArr.length >= 10) {
 				try {
 					setPerformingAnalysis(true);
-					const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
-					setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+					// const results = await performLinearRegressionAnalysis(colXArr, colYArr, colX, colY, XYCols);
+					const payload = { analysisType: 'regression', colXArr, colYArr, colX, colY, XYCols };
+					const popup = window.open('http://localhost:3001/', '', 'left=9999,top=100,width=800,height=850');
+
+					function receiveMessage(event, popup, results) {
+						// target window is ready, time to send data.
+						if (event.data === 'ready') {
+							// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
+							if (typeof results === 'string') {
+								return alert('Something went wrong. Check your data and try again.');
+							}
+							popup.postMessage(results, '*');
+							window.removeEventListener('message', receiveMessage);
+						}
+					}
+					// window.postMessage(results, 'http://localhost:3001');
+					// setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+					window.addEventListener('message', (event) => receiveMessage(event, popup, payload), false);
 					setPerformingAnalysis(false);
 					handleModalClose();
 				} catch (e) {
