@@ -45,18 +45,14 @@ export default React.memo(function Sidebar() {
 		<Menu>
 			<Menu.Item
 				onClick={(e) => {
-					dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
-					dispatchRowsAction({ type: REMOVE_HIGHLIGHTED_FILTERED_ROWS });
-					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+					dispatchRowsAction({ type: 'FILTER_EXCLUDE_ROWS', filter, rows, columns });
 				}}
 			>
 				Exclude rows
 			</Menu.Item>
 			<Menu.Item
 				onClick={(e) => {
-					dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
-					dispatchRowsAction({ type: REMOVE_HIGHLIGHTED_FILTERED_ROWS });
-					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+					dispatchRowsAction({ type: 'FILTER_UNEXCLUDE_ROWS', filter, rows, columns });
 				}}
 			>
 				Unexclude rows

@@ -305,6 +305,21 @@ export function rowsReducer(state, action) {
 				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
 			};
 		}
+		case 'FILTER_EXCLUDE_ROWS': {
+			const { filter: { filteredRowIDs } } = action;
+			return {
+				...state,
+				excludedRows: [ ...new Set(state.excludedRows.concat(filteredRowIDs)) ],
+			};
+		}
+		case 'FILTER_UNEXCLUDE_ROWS': {
+			const { filter: { filteredRowIDs } } = action;
+
+			return {
+				...state,
+				excludedRows: state.excludedRows.filter((row) => !filteredRowIDs.includes(row)),
+			};
+		}
 		case FILTER_COLUMN: {
 			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
 			const filteredRowsByString = state.rows.filter(rowHasTheseColumns, state.filters.stringFilters);

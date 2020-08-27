@@ -120,6 +120,17 @@ export function returnIntersectionOrNonEmptyArray(arr1, arr2) {
 	}
 }
 
+export function selectRowsFromRowIDs(rowIDs, rows, columns) {
+	return rows
+		.map((row, i) => {
+			if (rowIDs.includes(row.id)) {
+				return { top: i, bottom: i, left: 0, right: columns.length };
+			}
+			return null;
+		})
+		.filter((x) => x);
+}
+
 export function selectRowAndColumnIDs(top, left, bottom, right, columns, rows) {
 	const colPos = columns
 		.map((col, i) => {
