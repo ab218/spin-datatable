@@ -501,6 +501,24 @@ export function rowsReducer(state, action) {
 				.concat(columnCopy)
 				.concat(columns.slice(originalPosition + 1));
 
+			const prevColumn = columns.find((col) => col.id === columnCopy.id);
+
+			function removeDependenciesFromMap() {
+				const inverseDependencyMapCopy = { ...state.inverseDependencyMap };
+				const inverseDependencyMapCopyKeys = Object.keys(inverseDependencyMapCopy);
+				inverseDependencyMapCopyKeys.forEach((key) => {
+					if (inverseDependencyMapCopy[key].includes(columnCopy.id)) {
+						const filteredDependencies = inverseDependencyMapCopy[key].filter((id) => id !== columnCopy.id);
+						if (filteredDependencies.length === 0) {
+							delete inverseDependencyMapCopy[key];
+						} else {
+							inverseDependencyMapCopy[key] = filteredDependencies;
+						}
+					}
+				});
+				return inverseDependencyMapCopy;
+			}
+
 			if (columnCopy.formula && columnCopy.formula.expression && columnCopy.formula.expression.trim()) {
 				const formulaColumns = updatedColumns.filter(({ type }) => {
 					return type === FORMULA;
@@ -544,6 +562,10 @@ export function rowsReducer(state, action) {
 				...state,
 				columns: updatedColumns,
 				modalError: null,
+				inverseDependencyMap:
+					prevColumn.type === 'Formula' && columnCopy.type !== 'Formula'
+						? removeDependenciesFromMap()
+						: state.inverseDependencyMap,
 			};
 		}
 		default: {
