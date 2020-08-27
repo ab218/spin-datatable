@@ -56,9 +56,17 @@ export function selectReducer(state, action) {
 			};
 		}
 		case FILTER_SELECT_ROWS: {
-			const { filters } = action;
-			const mergedSelectedRows = filters.flatMap((filter) => filter.filteredRows);
-			const uniques = getUniqueListBy(mergedSelectedRows, 'top');
+			const { filters, rows, columns } = action;
+			const mergedRowIDs = filters.flatMap((filter) => filter.filteredRowIDs);
+			const mappedRows = rows
+				.map((row, i) => {
+					if (mergedRowIDs.includes(row.id)) {
+						return { top: i, bottom: i, left: 0, right: columns.length };
+					}
+					return null;
+				})
+				.filter((x) => x);
+			const uniques = getUniqueListBy(mappedRows, 'top');
 
 			return {
 				...state,

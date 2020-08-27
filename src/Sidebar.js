@@ -33,7 +33,7 @@ export default React.memo(function Sidebar() {
 	useEffect(
 		() => {
 			if (filterClicked.length > 0) {
-				dispatchSelectAction({ type: FILTER_SELECT_ROWS, filters: filterClicked });
+				dispatchSelectAction({ type: FILTER_SELECT_ROWS, filters: filterClicked, rows, columns });
 			} else {
 				dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 			}
@@ -43,6 +43,24 @@ export default React.memo(function Sidebar() {
 
 	const menu = (filter) => (
 		<Menu>
+			<Menu.Item
+				onClick={(e) => {
+					dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
+					dispatchRowsAction({ type: REMOVE_HIGHLIGHTED_FILTERED_ROWS });
+					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+				}}
+			>
+				Exclude rows
+			</Menu.Item>
+			<Menu.Item
+				onClick={(e) => {
+					dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
+					dispatchRowsAction({ type: REMOVE_HIGHLIGHTED_FILTERED_ROWS });
+					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+				}}
+			>
+				Unexclude rows
+			</Menu.Item>
 			<Menu.Item
 				onClick={(e) => {
 					dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
