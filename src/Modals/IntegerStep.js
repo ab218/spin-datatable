@@ -4,7 +4,15 @@ import { InputNumber, Slider, Row, Col } from 'antd';
 import { useRowsDispatch } from '../context/SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER, FORMULA } from '../constants';
 
-export default function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
+export default React.memo(function IntegerStep({
+	columnID,
+	colMin,
+	colMax,
+	currentMin,
+	currentMax,
+	label,
+	selectedColumns,
+}) {
 	const dispatchRowsAction = useRowsDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
@@ -42,7 +50,13 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 
 	function handleInputChange(value, setState) {
 		if (isNaN(value)) return;
-		setState(value);
+		setState((prev) => {
+			// update filters when dials are used
+			if (prev === value + 1 || prev === value - 1) {
+				updateSelectedRows();
+			}
+			return value;
+		});
 	}
 
 	return (
@@ -94,4 +108,4 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 			</Col>
 		</Row>
 	);
-}
+});
