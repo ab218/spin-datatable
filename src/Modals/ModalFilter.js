@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Modal, Select } from 'antd';
+import { Button, Icon, Input, Modal, Select } from 'antd';
 import ErrorMessage from './ErrorMessage';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
@@ -20,6 +20,7 @@ import {
 	DELETE_FILTER,
 	REMOVE_FILTERED_ROWS,
 	SAVE_FILTER,
+	SAVE_NEW_FILTER,
 	SET_SELECTED_COLUMN,
 	STRING,
 } from '../constants';
@@ -32,13 +33,17 @@ const FilterModal = React.memo(function AntModal() {
 	const { columns, filters, filteredRowIDs, savedFilters } = useRowsState();
 	const { selectedColumns } = useSelectState();
 	const defaultFilterName = 'Data Filter';
-	const [ filterName, setFilterName ] = useState(defaultFilterName);
+	const [ script, setScript ] = useState(filters.script || '');
+	const [ filterName, setFilterName ] = useState(filters.filterName || '');
 	const [ error, setError ] = useState('');
+	const [ rename, setRename ] = useState('');
+	const [ renameModalOpen, setRenameModalOpen ] = useState(false);
 
 	useEffect(
+		// set filter name on update
 		() => {
-			if (Object.keys(filters.stringFilters).length || filters.numberFilters.length) {
-				let template = '';
+			let template = '';
+			if (filters.numberFilters.length) {
 				filters.numberFilters.forEach((numberFilter, i) => {
 					if (numberFilter.min && numberFilter.max) {
 						template += `${numberFilter.min} ≤ ${numberFilter.label} ≤ ${numberFilter.max}`;
@@ -47,10 +52,23 @@ const FilterModal = React.memo(function AntModal() {
 						template += ` & `;
 					}
 				});
-				setFilterName(template);
 			}
+			if (Object.keys(filters.stringFilters).length) {
+				if (filters.numberFilters.length) {
+					template += ' & ';
+				}
+				Object.entries(filters.stringFilters).forEach((filter, i) => {
+					const foundColumn = columns.find((col) => col.id === filter[0]);
+					const columnLabel = foundColumn.label;
+					template += `${columnLabel} includes: ${filter[1]}`;
+					if (i !== Object.keys(filters.stringFilters).length - 1) {
+						template += ` & `;
+					}
+				});
+			}
+			setScript(template);
 		},
-		[ filters ],
+		[ columns, filters, selectedColumns ],
 	);
 
 	function handleClose() {
@@ -64,20 +82,43 @@ const FilterModal = React.memo(function AntModal() {
 		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
 	}
 
-	function handleSaveOk() {
+	function handleSave() {
 		if (selectedColumns.length === 0) {
 			return setError('You must select at least one column.');
 		}
 		if (filters.numberFilters.length === 0 && Object.keys(filters.stringFilters).length === 0) {
 			return setError('You must create at least one condition for your filter.');
 		}
-		if (filterName === '') {
+		if (filterName === '' && script === '') {
 			return setError('Filter name cannot be blank.');
 		}
-		if (savedFilters.findIndex((filter) => filterName === filter.filterName) !== -1) {
+		dispatchRowsAction({ type: SAVE_FILTER, filters, script, filterName });
+		dispatchRowsAction({
+			type: DELETE_FILTER,
+			filters: { numberFilters: [], stringFilters: {} },
+		});
+		dispatchRowsAction({ type: REMOVE_FILTERED_ROWS });
+		dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns: [] });
+		dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: false });
+	}
+
+	function handleSaveNew() {
+		if (selectedColumns.length === 0) {
+			return setError('You must select at least one column.');
+		}
+		if (filters.numberFilters.length === 0 && Object.keys(filters.stringFilters).length === 0) {
+			return setError('You must create at least one condition for your filter.');
+		}
+		if (filterName === '' && script === '') {
+			return setError('Filter name cannot be blank.');
+		}
+		// if (script !== '' && savedFilters.findIndex((filter) => script === filter.script) !== -1) {
+		// 	return setError('Identical filter already exists. Please edit conditions and try again.');
+		// }
+		if (filterName !== '' && savedFilters.findIndex((filter) => filterName === filter.filterName) !== -1) {
 			return setError('Filter name is already in use. Please choose a unique name.');
 		}
-		dispatchRowsAction({ type: SAVE_FILTER, filters, filterName });
+		dispatchRowsAction({ type: SAVE_NEW_FILTER, filters, script, filterName });
 		dispatchRowsAction({
 			type: DELETE_FILTER,
 			filters: { numberFilters: [], stringFilters: {} },
@@ -104,21 +145,13 @@ const FilterModal = React.memo(function AntModal() {
 	const ModalFooter = () => (
 		<div>
 			<div key="footer-div" style={{ width: '100%', height: 40, display: 'flex', justifyContent: 'space-between' }}>
-				<span style={{ display: 'flex', width: '33%' }}>{filteredRowIDs.length} selected.</span>
-				<span style={{ display: 'flex', width: '67%' }}>
-					<Input
-						style={{ width: '100%', marginRight: '10px' }}
-						maxLength={100}
-						defaultValue={filterName}
-						onBlur={(e) => {
-							setFilterName(e.target.value);
-						}}
-						onPressEnter={(e) => {
-							setFilterName(e.target.value);
-						}}
-					/>
-					<Button onClick={handleSaveOk} key="save" type="primary">
+				<span>{filteredRowIDs.length} selected.</span>
+				<span>
+					<Button disabled={!filters.id} onClick={handleSave} key="save" type="primary">
 						Save
+					</Button>
+					<Button onClick={handleSaveNew} key="saveAs" type="primary">
+						Save New
 					</Button>
 				</span>
 			</div>
@@ -133,11 +166,40 @@ const FilterModal = React.memo(function AntModal() {
 			className="ant-modal"
 			width={800}
 			onCancel={handleClose}
-			title={filterName || 'Data Filter'}
+			title={
+				<div>
+					<span style={{ marginRight: '10px', cursor: 'pointer' }}>
+						<Icon type="form" onClick={() => setRenameModalOpen(true)} />
+					</span>
+					<span>{filterName || script || defaultFilterName}</span>
+				</div>
+			}
 			visible={filterModalOpen}
 			bodyStyle={{ maxHeight: 300 }}
 			footer={<ModalFooter />}
 		>
+			<Modal
+				className="ant-modal"
+				width={400}
+				onCancel={() => setRenameModalOpen(false)}
+				onOk={() => {
+					setFilterName(rename);
+					setRenameModalOpen(false);
+				}}
+				title={'Rename Selection Rule...'}
+				visible={renameModalOpen}
+				bodyStyle={{ maxHeight: 200 }}
+			>
+				<div style={{ width: '100%', display: 'flex', justifyContent: 'space-around' }}>
+					<Input.TextArea
+						style={{ width: '100%', marginRight: '10px' }}
+						maxLength={100}
+						rows={3}
+						value={rename}
+						onChange={(e) => setRename(e.target.value)}
+					/>
+				</div>
+			</Modal>
 			<div style={{ width: '100%', display: 'flex', justifyContent: 'space-around' }}>
 				<div style={{ width: '20%', height: 250, overflowY: 'scroll' }}>
 					{columns.map((column) => <AddColumnButton key={column.id} column={column} />)}
@@ -160,7 +222,6 @@ const FilterModal = React.memo(function AntModal() {
 });
 
 const FilterColumnSlider = React.memo(function FilterColumnSlider({ column, removeColumn }) {
-	const { selectedColumns } = useSelectState();
 	const { id, colMin, colMax, label, min, max } = column;
 	return (
 		<div style={{ paddingLeft: 10, paddingBottom: 10, marginBottom: 20, display: 'flex' }}>
@@ -172,7 +233,6 @@ const FilterColumnSlider = React.memo(function FilterColumnSlider({ column, remo
 				label={label}
 				colMin={colMin}
 				colMax={colMax}
-				selectedColumns={selectedColumns}
 			/>
 			<RemoveColumnButton removeColumn={() => removeColumn(id)} />
 		</div>
@@ -188,7 +248,13 @@ const FilterColumnPicker = React.memo(function FilterColumnPicker({ column, remo
 
 	useEffect(
 		() => {
-			dispatchRowsAction({ type: SET_FILTERS, selectedColumns, stringFilters: checkedText });
+			dispatchRowsAction({
+				type: SET_FILTERS,
+				selectedColumns,
+				stringFilters: checkedText,
+				id: filters.id,
+				filterName: filters.filterName,
+			});
 			dispatchRowsAction({ type: FILTER_COLUMN });
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps

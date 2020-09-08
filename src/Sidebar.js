@@ -153,12 +153,19 @@ export default React.memo(function Sidebar() {
 								<td style={{ width: '20%', fontWeight: 'bold' }} />
 							</tr>
 							{savedFilters.map((filter) => {
-								const { stringFilters, numberFilters, selectedColumns, filteredRowIDs } = filter;
+								const {
+									filteredRowIDs,
+									filterName,
+									id,
+									numberFilters,
+									selectedColumns,
+									script,
+									stringFilters,
+								} = filter;
 								const checked = filterClicked.findIndex((f) => f.id === filter.id) !== -1;
 								return (
-									<React.Fragment>
+									<React.Fragment key={id}>
 										<tr
-											key={filter.filterName}
 											className={checked ? 'sidebar-column-selected' : ''}
 											onClick={(e) => {
 												setFilterClicked(
@@ -184,12 +191,15 @@ export default React.memo(function Sidebar() {
 												dispatchRowsAction({
 													type: SET_FILTERS,
 													selectedColumns,
+													id,
+													filterName,
 													stringFilters,
 													numberFilters,
+													script,
 												});
 											}}
 										>
-											<td>{filter.filterName || 'Filter'}</td>
+											<td>{filterName || script || 'Filter'}</td>
 											<td>
 												<Dropdown placement={'topRight'} overlay={() => menu(filter)}>
 													<Icon type={'down'} />

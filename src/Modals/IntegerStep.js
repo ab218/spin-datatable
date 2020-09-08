@@ -1,22 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState } from 'react';
 import { InputNumber, Slider, Row, Col } from 'antd';
-import { useRowsDispatch } from '../context/SpreadsheetProvider';
+import { useRowsDispatch, useRowsState, useSelectState } from '../context/SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER, FORMULA } from '../constants';
 
-export default React.memo(function IntegerStep({
-	columnID,
-	colMin,
-	colMax,
-	currentMin,
-	currentMax,
-	label,
-	selectedColumns,
-}) {
+export default React.memo(function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label }) {
 	const dispatchRowsAction = useRowsDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
-
+	const { selectedColumns } = useSelectState();
+	const { filters } = useRowsState();
 	const onChange = (value) => {
 		setMin(value[0].toFixed(2) / 1);
 		setMax(value[1].toFixed(2) / 1);
@@ -24,12 +17,15 @@ export default React.memo(function IntegerStep({
 
 	const updateSelectedRows = React.useCallback(
 		function updateSelectedRows() {
+			const { id, filterName } = filters;
 			const index = selectedColumns.findIndex((col) => col.id === columnID);
 			selectedColumns[index] = { ...selectedColumns[index], min, max };
 			dispatchRowsAction({
 				type: SET_FILTERS,
 				selectedColumns: selectedColumns,
 				numberFilters: selectedColumns.filter((col) => col.type === NUMBER || col.type === FORMULA),
+				id,
+				filterName,
 			});
 			dispatchRowsAction({ type: FILTER_COLUMN });
 		},

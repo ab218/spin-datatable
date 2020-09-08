@@ -7,9 +7,9 @@ import {
 	findCyclicDependencies,
 	updateRows,
 	generateUniqueRowIDs,
-	filterRowsByColumnRange,
-	returnIntersectionOrNonEmptyArray,
-	rowHasTheseColumns,
+	getAllFilteredRows,
+	updateFiltersOnPaste,
+	updateFiltersOnCellUpdate,
 } from '../helpers';
 
 import {
@@ -21,16 +21,22 @@ import {
 	DELETE_COLUMN,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
-	UNEXCLUDE_ROWS,
+	HIGHLIGHT_FILTERED_ROWS,
 	FILTER_COLUMN,
 	FILTER_EXCLUDE_ROWS,
+	FILTER_UNEXCLUDE_ROWS,
 	PASTE_VALUES,
 	REDO,
+	REMOVE_FILTERED_ROWS,
+	REMOVE_HIGHLIGHTED_FILTERED_ROWS,
+	REMOVE_SIDEBAR_FILTER,
 	SAVE_FILTER,
+	SAVE_NEW_FILTER,
 	SAVE_VALUES_TO_COLUMN,
 	SET_FILTERS,
 	SET_TABLE_NAME,
 	SORT_COLUMN,
+	UNEXCLUDE_ROWS,
 	UNDO,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
@@ -236,11 +242,17 @@ export function rowsReducer(state, action) {
 					.concat(rows.slice(indexOfFirstDestinationRow + newRowValues.length));
 			}
 
+			const newRows = mapRows(state.rows, copiedValues2dArray, selectedColumnIDs, selectedRowIDs);
+
 			return {
 				...state,
 				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
 				redoHistory: [],
-				rows: mapRows(state.rows, copiedValues2dArray, selectedColumnIDs, selectedRowIDs),
+				rows: newRows,
+				// If there are any saved filters, update them with the new rows data
+				savedFilters: state.savedFilters.length
+					? updateFiltersOnPaste(newRows, state.savedFilters)
+					: state.savedFilters,
 			};
 		}
 		// EVENT: Delete values
@@ -305,14 +317,14 @@ export function rowsReducer(state, action) {
 				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
 			};
 		}
-		case 'FILTER_EXCLUDE_ROWS': {
+		case FILTER_EXCLUDE_ROWS: {
 			const { filter: { filteredRowIDs } } = action;
 			return {
 				...state,
 				excludedRows: [ ...new Set(state.excludedRows.concat(filteredRowIDs)) ],
 			};
 		}
-		case 'FILTER_UNEXCLUDE_ROWS': {
+		case FILTER_UNEXCLUDE_ROWS: {
 			const { filter: { filteredRowIDs } } = action;
 
 			return {
@@ -321,63 +333,64 @@ export function rowsReducer(state, action) {
 			};
 		}
 		case FILTER_COLUMN: {
-			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, state.rows);
-			const filteredRowsByString = state.rows.filter(rowHasTheseColumns, state.filters.stringFilters);
-			const intersection = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
-			const filteredRowIDs = intersection.map((row) => row.id);
-			const selectedRowIndexes = intersection.map((row) => state.rows.findIndex((stateRow) => stateRow.id === row.id));
-			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
-				return {
-					top: rowIndex,
-					left: 0,
-					bottom: rowIndex,
-					right: state.columns.length - 1,
-				};
-			});
+			const allFilteredRows = getAllFilteredRows(state.rows, state.filters);
+			const filteredRowIDs = allFilteredRows.map((row) => row.id);
 			return {
 				...state,
 				activeCell: null,
-				filteredRows: selectedRowObjects,
 				filteredRowIDs,
 				filteredColumnIDs: state.columns.map((col) => col.id),
 			};
 		}
 		case SET_FILTERS: {
-			const { selectedColumns, numberFilters, stringFilters } = action;
+			const { selectedColumns, numberFilters, stringFilters, id, filterName } = action;
 			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilters };
 			return {
 				...state,
 				filters: {
 					selectedColumns,
+					id,
+					filterName,
 					stringFilters: stringFilterCopy,
 					numberFilters: numberFilters || state.filters.numberFilters,
 				},
 			};
 		}
-		case 'HIGHLIGHT_FILTERED_ROWS': {
+		case HIGHLIGHT_FILTERED_ROWS: {
 			const { filteredRowIDs } = action;
 			return { ...state, filteredRowIDs };
 		}
-		case 'REMOVE_HIGHLIGHTED_FILTERED_ROWS': {
+		case REMOVE_HIGHLIGHTED_FILTERED_ROWS: {
 			return { ...state, filteredRowIDs: [] };
 		}
-		case FILTER_EXCLUDE_ROWS: {
-			const { rows } = state;
-			const { filteredRows } = action;
-			return { ...state, excludedRows: generateUniqueRowIDs(filteredRows, rows) };
-		}
 		case SAVE_FILTER: {
-			const { filters, filterName } = action;
+			const { filters, filterName, script } = action;
+			const { id } = filters;
+			console.log(filters);
+			const updatedFilter = {
+				...filters,
+				id,
+				filterName,
+				filteredRowIDs: state.filteredRowIDs,
+				script,
+			};
+
+			const updatedFilters = state.savedFilters.filter((filter) => filter.id !== id).concat(updatedFilter);
+
+			return { ...state, savedFilters: updatedFilters };
+		}
+		case SAVE_NEW_FILTER: {
+			const { filters, filterName, script } = action;
 			const newFilter = {
 				...filters,
 				id: createRandomID(),
 				filterName,
 				filteredRowIDs: state.filteredRowIDs,
-				filteredRows: state.filteredRows,
+				script,
 			};
 			return { ...state, savedFilters: state.savedFilters.concat(newFilter) };
 		}
-		case 'REMOVE_SIDEBAR_FILTER': {
+		case REMOVE_SIDEBAR_FILTER: {
 			const { filter } = action;
 			const newFilters = state.savedFilters.filter((filt) => filt.id !== filter.id);
 			return { ...state, savedFilters: newFilters };
@@ -386,7 +399,7 @@ export function rowsReducer(state, action) {
 			const { filters } = action;
 			return { ...state, filters };
 		}
-		case 'REMOVE_FILTERED_ROWS': {
+		case REMOVE_FILTERED_ROWS: {
 			return { ...state, filteredRowIDs: [] };
 		}
 		case SAVE_VALUES_TO_COLUMN: {
@@ -500,11 +513,16 @@ export function rowsReducer(state, action) {
 			}
 
 			const changedRows = Object.assign(newRows, { [rowIndex]: rowCopy });
+
 			return {
 				...state,
 				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
 				redoHistory: [],
 				rows: changedRows,
+				// If there are any saved filters, update them with the new rows data
+				savedFilters: state.savedFilters.length
+					? updateFiltersOnCellUpdate(state.savedFilters, cellValue, column, row.id)
+					: state.savedFilters,
 			};
 		}
 		case UPDATE_COLUMN: {

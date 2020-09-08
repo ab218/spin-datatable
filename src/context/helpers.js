@@ -1,4 +1,5 @@
 import nerdamer from 'nerdamer';
+import { STRING } from '../constants';
 
 export function createRandomID() {
 	let result = '';
@@ -38,6 +39,56 @@ export function getUniqueListBy(arr, key) {
 	return [ ...new Map(arr.map((item) => [ item[key], item ])).values() ];
 }
 
+export const updateFiltersOnPaste = (rows, filters) => {
+	const newFilters = filters.map((filter) => {
+		const filteredRows = getAllFilteredRows(rows, filter);
+		const filteredRowIDs = filteredRows.map((row) => row.id);
+		return { ...filter, filteredRowIDs };
+	});
+	return newFilters;
+};
+
+export const updateFiltersOnCellUpdate = (filters, cellValue, column, rowID) => {
+	const newFilters = filters.map((filter) => {
+		if (column.type === STRING) {
+			return filter.stringFilters[column.id].includes(cellValue)
+				? { ...filter, filteredRowIDs: [ ...filter.filteredRowIDs, rowID ] }
+				: { ...filter, filteredRowIDs: filter.filteredRowIDs.filter((id) => id !== rowID) };
+		} else {
+			const found = filter.numberFilters.find((numFil) => numFil.id === column.id);
+			if (found) {
+				return cellValue < found.max && cellValue > found.min
+					? { ...filter, filteredRowIDs: [ ...filter.filteredRowIDs, rowID ] }
+					: { ...filter, filteredRowIDs: filter.filteredRowIDs.filter((id) => id !== rowID) };
+			} else {
+				return { ...filter };
+			}
+		}
+	});
+	return newFilters;
+};
+
+export const getAllFilteredRows = (rows, filters) => {
+	const { stringFilters, numberFilters } = filters;
+	const filteredRowsByRange = filterRowsByColumnRange(numberFilters, rows);
+	const filteredRowsByString = Object.keys(stringFilters).length
+		? rows.filter(rowHasAllOfTheseColumns, stringFilters)
+		: [];
+	const intersection = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
+	return intersection;
+};
+
+export function returnIntersectionOrNonEmptyArray(arr1, arr2) {
+	const intersectionOfArr1AndArr2 = findIntersectionOfTwoArrays(arr1, arr2);
+	if (arr1.length !== 0 && arr2.length !== 0) {
+		return intersectionOfArr1AndArr2;
+	} else if (arr1.length === 0) {
+		return arr2;
+	} else if (arr2.length === 0) {
+		return arr1;
+	}
+}
+
 export function filterRowsByColumnRange(selectedColumns, rows) {
 	return rows.filter(rowValueWithinTheseColumnRanges, selectedColumns);
 }
@@ -49,8 +100,20 @@ function rowValueWithinTheseColumnRanges(row) {
 	);
 }
 
-export function rowHasTheseColumns(row) {
-	return Object.keys(row).some((columnID) => this[columnID] && this[columnID].includes(row[columnID]));
+// Filter AND operation
+export function rowHasAllOfTheseColumns(row) {
+	return Object.keys(this).every((key) => {
+		const filteredValue = this[key];
+		const rowValue = row[key];
+		return filteredValue.includes(rowValue);
+	});
+}
+
+// Filter OR operation
+export function rowHasSomeOfTheseColumns(row) {
+	return Object.keys(row).some((columnID) => {
+		return this[columnID] && this[columnID].includes(row[columnID]);
+	});
 }
 
 function findIntersectionOfTwoArrays(arr1, arr2) {
@@ -107,17 +170,6 @@ export function generateUniqueColumnIDs(cellSelectionRanges, columns) {
 
 export function getCol(columns, colName) {
 	return columns.find((col) => col.label === colName);
-}
-
-export function returnIntersectionOrNonEmptyArray(arr1, arr2) {
-	const intersectionOfArr1AndArr2 = findIntersectionOfTwoArrays(arr1, arr2);
-	if (arr1.length !== 0 && arr2.length !== 0) {
-		return intersectionOfArr1AndArr2;
-	} else if (arr1.length === 0) {
-		return arr2;
-	} else if (arr2.length === 0) {
-		return arr1;
-	}
 }
 
 export function selectRowsFromRowIDs(rowIDs, rows, columns) {
