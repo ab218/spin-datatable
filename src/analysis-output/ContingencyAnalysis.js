@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Popup from './PopupWindow';
-import { Dropdown, Icon, Menu } from 'antd';
+import { FunnelPlotOutlined } from '@ant-design/icons';
+import { Dropdown, Menu } from 'antd';
 import ContingencyD3Chart from './ContingencyD3Chart';
 import './MosaicPlot.js';
 
@@ -139,7 +140,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 			placement="topCenter"
 			overlay={menu}
 		>
-			<Icon className="hamburger" type="funnel-plot" />
+			<FunnelPlotOutlined className="hamburger" />
 		</Dropdown>
 	);
 };

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Button, Card, Icon, Radio, Tooltip, Typography } from 'antd';
+import { RightOutlined } from '@ant-design/icons';
+import { Button, Card, Radio, Tooltip, Typography } from 'antd';
 import RemoveColumnButton from './RemoveColumnButton';
 import { ORDINAL, CONTINUOUS, NOMINAL } from '../constants';
 
@@ -63,7 +64,7 @@ export function CaratButtons({ notAllowed, data, setData, label, selectedColumn 
 				onClick={() => addColumnToList(data, setData, selectedColumn)}
 			>
 				{label}
-				<Icon type="right" style={{ marginLeft: 40 }} />
+				<RightOutlined style={{ marginLeft: 40 }} />
 			</Button>
 		</div>
 	);

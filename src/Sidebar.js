@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import { Divider, Input, Icon } from 'antd';
+import { StopOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Divider, Input } from 'antd';
 import {
 	FILTER_SELECT_ROWS,
 	HIGHLIGHT_FILTERED_ROWS,
@@ -191,10 +192,10 @@ export default React.memo(function Sidebar() {
 											<td>{filterName || script || 'Filter'}</td>
 											<td>
 												{appliedFilterExclude.includes(filter.id) ? (
-													<Icon type="checkCircle" style={{ color: 'green', marginRight: 20 }} />
+													<CheckCircleOutlined style={{ color: 'green', marginRight: 20 }} />
 												) : null}
 												{appliedFilterInclude.includes(filter.id) ? (
-													<Icon type="checkCircle" style={{ color: 'green', marginRight: 20 }} />
+													<StopOutlined style={{ color: 'red', marginRight: 20 }} />
 												) : null}
 											</td>
 										</tr>
