@@ -123,6 +123,8 @@ export function SpreadsheetProvider({ children }) {
 			stringFilters: {},
 			numberFilters: [],
 		},
+		appliedFilterExclude: [],
+		appliedFilterInclude: [],
 		filteredRows: [],
 		filteredRowIDs: [],
 		filteredColumnIDs: [],

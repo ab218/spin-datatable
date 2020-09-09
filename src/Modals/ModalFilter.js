@@ -147,12 +147,12 @@ const FilterModal = React.memo(function AntModal() {
 			<div key="footer-div" style={{ width: '100%', height: 40, display: 'flex', justifyContent: 'space-between' }}>
 				<span>{filteredRowIDs.length} selected.</span>
 				<span>
-					<Button disabled={!filters.id} onClick={handleSave} key="save" type="primary">
+					<Button onClick={filters.id ? handleSave : handleSaveNew} key="save" type="primary">
 						Save
 					</Button>
-					<Button onClick={handleSaveNew} key="saveAs" type="primary">
+					{/* <Button onClick={handleSaveNew} key="saveAs" type="primary">
 						Save New
-					</Button>
+					</Button> */}
 				</span>
 			</div>
 			<div style={{ height: '40px', textAlign: 'center' }}>

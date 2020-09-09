@@ -318,18 +318,19 @@ export function rowsReducer(state, action) {
 			};
 		}
 		case FILTER_EXCLUDE_ROWS: {
-			const { filter: { filteredRowIDs } } = action;
+			const { filter: { filteredRowIDs, id } } = action;
 			return {
 				...state,
 				excludedRows: [ ...new Set(state.excludedRows.concat(filteredRowIDs)) ],
+				appliedFilterExclude: state.appliedFilterExclude.concat([ id ]),
 			};
 		}
 		case FILTER_UNEXCLUDE_ROWS: {
-			const { filter: { filteredRowIDs } } = action;
-
+			const { filter: { filteredRowIDs, id } } = action;
 			return {
 				...state,
 				excludedRows: state.excludedRows.filter((row) => !filteredRowIDs.includes(row)),
+				appliedFilterExclude: state.appliedFilterExclude.filter((appliedFilterID) => appliedFilterID !== id),
 			};
 		}
 		case FILTER_COLUMN: {

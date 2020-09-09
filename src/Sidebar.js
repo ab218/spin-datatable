@@ -1,12 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
-import { Divider, Dropdown, Input, Icon, Menu } from 'antd';
+import { Divider, Input, Icon } from 'antd';
 import {
 	FILTER_SELECT_ROWS,
 	HIGHLIGHT_FILTERED_ROWS,
+	OPEN_CONTEXT_MENU,
 	REMOVE_HIGHLIGHTED_FILTERED_ROWS,
 	REMOVE_SELECTED_CELLS,
-	REMOVE_SIDEBAR_FILTER,
 	SELECT_COLUMN,
 	SET_FILTERS,
 	SET_SELECTED_COLUMN,
@@ -23,7 +23,15 @@ import {
 import { createModelingTypeIcon } from './Modals/ModalShared';
 
 export default React.memo(function Sidebar() {
-	const { columns, rows, excludedRows, dataTableName, savedFilters } = useRowsState();
+	const {
+		columns,
+		rows,
+		appliedFilterExclude,
+		appliedFilterInclude,
+		excludedRows,
+		dataTableName,
+		savedFilters,
+	} = useRowsState();
 	const { filterModalOpen } = useSpreadsheetState();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -39,34 +47,6 @@ export default React.memo(function Sidebar() {
 			}
 		},
 		[ filterClicked ],
-	);
-
-	const menu = (filter) => (
-		<Menu>
-			<Menu.Item
-				onClick={(e) => {
-					dispatchRowsAction({ type: 'FILTER_EXCLUDE_ROWS', filter, rows, columns });
-				}}
-			>
-				Exclude rows
-			</Menu.Item>
-			<Menu.Item
-				onClick={(e) => {
-					dispatchRowsAction({ type: 'FILTER_UNEXCLUDE_ROWS', filter, rows, columns });
-				}}
-			>
-				Unexclude rows
-			</Menu.Item>
-			<Menu.Item
-				onClick={(e) => {
-					dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
-					dispatchRowsAction({ type: REMOVE_HIGHLIGHTED_FILTERED_ROWS });
-					dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
-				}}
-			>
-				Delete Filter
-			</Menu.Item>
-		</Menu>
 	);
 
 	return (
@@ -172,6 +152,15 @@ export default React.memo(function Sidebar() {
 													(prev) => (checked ? prev.filter((f) => f.id !== filter.id) : prev.concat(filter)),
 												);
 											}}
+											onContextMenu={(e) => {
+												e.preventDefault();
+												dispatchSpreadsheetAction({
+													type: OPEN_CONTEXT_MENU,
+													contextMenuType: 'cellSelectionRule',
+													contextMenuPosition: { left: e.pageX, top: e.pageY },
+													filter,
+												});
+											}}
 											onMouseOver={() => {
 												dispatchRowsAction({
 													type: HIGHLIGHT_FILTERED_ROWS,
@@ -201,9 +190,12 @@ export default React.memo(function Sidebar() {
 										>
 											<td>{filterName || script || 'Filter'}</td>
 											<td>
-												<Dropdown placement={'topRight'} overlay={() => menu(filter)}>
-													<Icon type={'down'} />
-												</Dropdown>
+												{appliedFilterExclude.includes(filter.id) ? (
+													<Icon type="checkCircle" style={{ color: 'green', marginRight: 20 }} />
+												) : null}
+												{appliedFilterInclude.includes(filter.id) ? (
+													<Icon type="checkCircle" style={{ color: 'green', marginRight: 20 }} />
+												) : null}
 											</td>
 										</tr>
 										<tr style={{ height: '10px' }} />
