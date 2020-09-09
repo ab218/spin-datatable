@@ -56,8 +56,8 @@ export default React.memo(function IntegerStep({ columnID, colMin, colMax, curre
 	}
 
 	return (
-		<Row style={{ maxWidth: 400, display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-			<Col style={{ textAlign: 'center', width: 400 }} span={12}>
+		<Row style={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: 10 }}>
+			<Col style={{ textAlign: 'center', width: '100%' }}>
 				<span
 					style={{
 						display: 'flex',

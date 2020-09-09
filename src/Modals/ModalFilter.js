@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Icon, Input, Modal, Select } from 'antd';
+import { FormOutlined } from '@ant-design/icons';
+import { Button, Input, Modal, Select } from 'antd';
 import ErrorMessage from './ErrorMessage';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
@@ -169,7 +170,7 @@ const FilterModal = React.memo(function AntModal() {
 			title={
 				<div>
 					<span style={{ marginRight: '10px', cursor: 'pointer' }}>
-						<Icon type="form" onClick={() => setRenameModalOpen(true)} />
+						<FormOutlined onClick={() => setRenameModalOpen(true)} />
 					</span>
 					<span>{filterName || script || defaultFilterName}</span>
 				</div>

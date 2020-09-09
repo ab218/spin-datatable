@@ -1,5 +1,6 @@
 import React from 'react';
-import { Menu, Dropdown, Icon } from 'antd';
+import { DownOutlined } from '@ant-design/icons';
+import { Menu, Dropdown } from 'antd';
 import { createModelingTypeIcon } from './ModalShared';
 
 export default function DropdownMenu({ columnType, setColumnType, menuItems, modelingTypeIcons, disabledType }) {
@@ -20,7 +21,7 @@ export default function DropdownMenu({ columnType, setColumnType, menuItems, mod
 		<Dropdown overlay={mapMenu(menuItems)} trigger={[ 'click' ]}>
 			<div style={{ cursor: 'pointer' }} className="ant-dropdown-link">
 				{modelingTypeIcons && createModelingTypeIcon(columnType)}
-				{columnType} <Icon type="down" />
+				{columnType} <DownOutlined />
 			</div>
 		</Dropdown>
 	);

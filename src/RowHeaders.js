@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Icon } from 'antd';
+import { StopOutlined } from '@ant-design/icons';
 import {
 	useSpreadsheetState,
 	useRowsState,
@@ -109,7 +109,7 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 				lineHeight: 2,
 			}}
 		>
-			<span>{excludedRows.includes(rowData.id) && <Icon type="stop" style={{ color: 'red', marginRight: 20 }} />}</span>
+			<span>{excludedRows.includes(rowData.id) && <StopOutlined style={{ color: 'red', marginRight: 20 }} />}</span>
 			<span style={{ position: 'absolute', right: 0, marginRight: 10 }}>{rows.length > rowIndex && rowIndex + 1}</span>
 		</div>
 	);

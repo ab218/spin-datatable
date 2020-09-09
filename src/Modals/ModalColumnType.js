@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import katex from 'katex';
 import nerdamer from 'nerdamer';
-import { Button, Icon, Input, Modal } from 'antd';
+import { RightOutlined } from '@ant-design/icons';
+import { Button, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
 import Dropdown from './Dropdown';
 import ErrorMessage from './ErrorMessage';
@@ -301,7 +302,7 @@ export default function AntModal({ selectedColumn }) {
 														}
 													}}
 												>
-													<Icon type="right" />
+													<RightOutlined />
 												</Button>
 											</div>
 										</div>
