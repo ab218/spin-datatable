@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
+import React, { useEffect, useState, useRef } from 'react';
 
 export default function BuildTitle({ children }) {
 	const [ modalDom, setModalDom ] = useState(null);
@@ -19,62 +18,57 @@ export default function BuildTitle({ children }) {
 	);
 }
 
-class DragM extends React.Component {
-	static propTypes = {
-		children: PropTypes.element.isRequired,
-	};
-	static defaultProps = {
-		//默认是移动children dom,覆盖该方法，可以把tranform行为同步给外部
-		updateTransform: (transformStr, tx, ty, tdom) => {
-			tdom.style.transform = transformStr;
-		},
-	};
-	position = {
+function DragM(props) {
+	const tdom = useRef(null);
+	const position = useRef({
 		startX: 0,
 		startY: 0,
 		dx: 0,
 		dy: 0,
-		tx: 0,
-		ty: 0,
+	});
+	const docMove = (event) => {
+		const tx = event.pageX - position.current.startX;
+		const ty = event.pageY - position.current.startY;
+		const transformStr = `translate(${tx}px,${ty}px)`;
+		props.updateTransform(transformStr);
+		position.current = {
+			...position.current,
+			dx: tx,
+			dy: ty,
+		};
 	};
-	start = (event) => {
-		if (event.button != 0) {
-			//只允许左键，右键问题在于不选择conextmenu就不会触发mouseup事件
+
+	const start = (event) => {
+		if (event.button !== 0) {
 			return;
 		}
-		document.addEventListener('mousemove', this.docMove);
-		this.position.startX = event.pageX - this.position.dx;
-		this.position.startY = event.pageY - this.position.dy;
+		document.addEventListener('mousemove', docMove);
+		position.current = {
+			...position.current,
+			startX: event.pageX - position.current.dx,
+			startY: event.pageY - position.current.dy,
+		};
 	};
-	docMove = (event) => {
-		const tx = event.pageX - this.position.startX;
-		const ty = event.pageY - this.position.startY;
-		const transformStr = `translate(${tx}px,${ty}px)`;
-		this.props.updateTransform(transformStr, tx, ty, this.tdom);
-		this.position.dx = tx;
-		this.position.dy = ty;
+
+	const docMouseUp = () => {
+		document.removeEventListener('mousemove', docMove);
 	};
-	docMouseUp = (event) => {
-		document.removeEventListener('mousemove', this.docMove);
-	};
-	componentDidMount() {
-		this.tdom.addEventListener('mousedown', this.start);
-		//用document移除对mousemove事件的监听
-		document.addEventListener('mouseup', this.docMouseUp);
-	}
-	componentWillUnmount() {
-		this.tdom.removeEventListener('mousedown', this.start);
-		document.removeEventListener('mouseup', this.docMouseUp);
-		document.removeEventListener('mousemove', this.docMove);
-	}
-	render() {
-		const { children } = this.props;
-		const newStyle = { ...children.props.style, cursor: 'move', userSelect: 'none' };
-		return React.cloneElement(React.Children.only(children), {
-			ref: (tdom) => {
-				return (this.tdom = tdom);
-			},
-			style: newStyle,
-		});
-	}
+
+	useEffect(() => {
+		const current = tdom.current;
+		current.addEventListener('mousedown', start);
+		document.addEventListener('mouseup', docMouseUp);
+		return () => {
+			current.removeEventListener('mousedown', start);
+			document.removeEventListener('mouseup', docMouseUp);
+			document.removeEventListener('mousemove', docMove);
+		};
+	});
+
+	const { children } = props;
+	const newStyle = { ...children.props.style, cursor: 'move', userSelect: 'none' };
+	return React.cloneElement(React.Children.only(children), {
+		ref: tdom,
+		style: newStyle,
+	});
 }
