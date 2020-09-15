@@ -7,6 +7,7 @@ import { performDistributionAnalysis } from '../analysis-output/Analysis';
 import { SelectColumn, styles } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
 import { createRandomID } from '../context/helpers';
+import DraggableModal from './DraggableModal';
 
 export default function DistributionModal({ setPopup }) {
 	const { distributionModalOpen } = useSpreadsheetState();
@@ -57,7 +58,7 @@ export default function DistributionModal({ setPopup }) {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				title="Distribution"
+				title={<DraggableModal children="Distribution" />}
 				visible={distributionModalOpen}
 				width={550}
 				bodyStyle={{ background: '#ECECEC' }}
@@ -87,7 +88,7 @@ export default function DistributionModal({ setPopup }) {
 						<Input
 							onChange={(e) => onChangeBinInput(e)}
 							value={numberOfBins}
-							style={{ marginLeft: 10, width: '40%' }}
+							style={{ marginLeft: 10, width: '40%', height: '30px' }}
 						/>
 					</div>
 				</div>

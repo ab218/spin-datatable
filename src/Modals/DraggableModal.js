@@ -12,14 +12,14 @@ export default function BuildTitle({ children }) {
 	}, []);
 
 	return (
-		<DragM updateTransform={updateTransform}>
+		<DraggableModal updateTransform={updateTransform}>
 			<div>{children}</div>
-		</DragM>
+		</DraggableModal>
 	);
 }
 
-function DragM(props) {
-	const tdom = useRef(null);
+function DraggableModal(props) {
+	const draggingModal = useRef(null);
 	const position = useRef({
 		startX: 0,
 		startY: 0,
@@ -55,7 +55,7 @@ function DragM(props) {
 	};
 
 	useEffect(() => {
-		const current = tdom.current;
+		const current = draggingModal.current;
 		current.addEventListener('mousedown', start);
 		document.addEventListener('mouseup', docMouseUp);
 		return () => {
@@ -68,7 +68,7 @@ function DragM(props) {
 	const { children } = props;
 	const newStyle = { ...children.props.style, cursor: 'move', userSelect: 'none' };
 	return React.cloneElement(React.Children.only(children), {
-		ref: tdom,
+		ref: draggingModal,
 		style: newStyle,
 	});
 }

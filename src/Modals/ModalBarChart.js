@@ -6,6 +6,7 @@ import { TOGGLE_BAR_CHART_MODAL, NOMINAL, ORDINAL, CONTINUOUS } from '../constan
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
 import { createRandomID } from '../context/helpers';
+import DraggableModal from './DraggableModal';
 
 export default function AnalysisModal({ setPopup }) {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -110,7 +111,7 @@ export default function AnalysisModal({ setPopup }) {
 				className="ant-modal"
 				onCancel={handleModalClose}
 				onOk={performAnalysis}
-				title="Bar Chart"
+				title={<DraggableModal children="Bar Chart" />}
 				visible={barChartModalOpen}
 				width={750}
 				bodyStyle={{ background: '#ECECEC' }}
