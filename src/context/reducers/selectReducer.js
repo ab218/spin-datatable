@@ -29,7 +29,7 @@ export function selectReducer(state, action) {
 		newInputCellValue,
 		row,
 		rowIndex,
-		selectionActive,
+		metaKeyPressed,
 	} = action;
 
 	// const { type, ...event } = action;
@@ -49,6 +49,7 @@ export function selectReducer(state, action) {
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
+
 			return {
 				...state,
 				cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []),
@@ -81,7 +82,6 @@ export function selectReducer(state, action) {
 				? {
 						...state,
 						currentCellSelectionRange,
-						// cellSelectionObject,
 					}
 				: state;
 		}
@@ -99,12 +99,12 @@ export function selectReducer(state, action) {
 			// track lastSelection to know where to begin range selection on drag
 			const lastSelection = { row: rowIndex, column: columnIndex };
 			const selectedCell = { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex };
-			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(selectedCell);
+			const addSelectedCellToSelectionArray = metaKeyPressed ? cellSelectionRanges : [];
 			return {
 				...state,
 				activeCell: null,
 				lastSelection,
-				cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [],
+				cellSelectionRanges: addSelectedCellToSelectionArray,
 				currentCellSelectionRange: selectedCell,
 			};
 		}
@@ -120,7 +120,7 @@ export function selectReducer(state, action) {
 				...state,
 				activeCell: null,
 				currentCellSelectionRange: allCellsInRow,
-				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
+				cellSelectionRanges: metaKeyPressed ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
 				lastSelection: { column: columns.length - 1, row: rowIndex },
 			};
 		}
@@ -178,7 +178,7 @@ export function selectReducer(state, action) {
 				...state,
 				activeCell: null,
 				currentCellSelectionRange: allCellsInColumn,
-				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
+				cellSelectionRanges: metaKeyPressed ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
 			};
 		}
 		case SELECT_BLOCK_OF_CELLS: {

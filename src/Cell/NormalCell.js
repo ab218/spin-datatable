@@ -32,12 +32,10 @@ export default React.memo(function NormalCell({ cellValue, columnIndex, column, 
 
 	function onMouseDown(event) {
 		dispatchSelectAction({
-			selectionActive: event.metaKey || event.ctrlKey,
+			metaKeyPressed: event.metaKey || event.ctrlKey,
 			type: SELECT_CELL,
 			rowIndex,
 			columnIndex,
-			columnID: column.id,
-			rowID,
 		});
 	}
 

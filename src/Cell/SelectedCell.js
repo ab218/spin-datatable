@@ -21,8 +21,8 @@ export default React.memo(function SelectedCell({ column, columnIndex, columnID,
 	const dispatchRowsAction = useRowsDispatch();
 	const { rows, columns } = useRowsState();
 
-	function changeActiveCell(row, column, selectionActive, columnID) {
-		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
+	function changeActiveCell(row, column, columnID) {
+		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, columnID });
 	}
 
 	function handleContextMenu(e) {

@@ -151,12 +151,13 @@ const FilterModal = React.memo(function AntModal() {
 					<Button onClick={filters.id ? handleSave : handleSaveNew} key="save" type="primary">
 						Save
 					</Button>
-					{/* <Button onClick={handleSaveNew} key="saveAs" type="primary">
-						Save New
-					</Button> */}
 				</span>
 			</div>
 			<div style={{ height: '40px', textAlign: 'center' }}>
+				<div style={{ width: '100%', textAlign: 'left' }}>
+					{script && 'Script: '}
+					{script}
+				</div>
 				<ErrorMessage error={error} setError={setError} />
 			</div>
 		</div>
@@ -172,7 +173,7 @@ const FilterModal = React.memo(function AntModal() {
 					<span style={{ marginRight: '10px', cursor: 'pointer' }}>
 						<FormOutlined onClick={() => setRenameModalOpen(true)} />
 					</span>
-					<span>{filterName || script || defaultFilterName}</span>
+					<span>{filterName || defaultFilterName}</span>
 				</div>
 			}
 			visible={filterModalOpen}

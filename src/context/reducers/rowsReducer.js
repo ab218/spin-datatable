@@ -23,6 +23,8 @@ import {
 	EXCLUDE_ROWS,
 	HIGHLIGHT_FILTERED_ROWS,
 	FILTER_COLUMN,
+	FILTER_INCLUDE_ROWS,
+	FILTER_UNINCLUDE_ROWS,
 	FILTER_EXCLUDE_ROWS,
 	FILTER_UNEXCLUDE_ROWS,
 	PASTE_VALUES,
@@ -198,11 +200,13 @@ export function rowsReducer(state, action) {
 			const { cellSelectionRanges } = action;
 			const selectedRowIDs = generateUniqueRowIDs(cellSelectionRanges, state.rows);
 			const filteredRows = state.rows.filter((row) => !selectedRowIDs.includes(row.id));
+			const updatedExcludedRows = state.excludedRows.filter((id) => !selectedRowIDs.includes(id));
 			return {
 				...state,
 				history: [ ...state.history, { rows: state.rows, columns: state.columns } ],
 				redoHistory: [],
 				rows: filteredRows,
+				excludedRows: updatedExcludedRows,
 			};
 		}
 		// EVENT: Paste
@@ -331,6 +335,22 @@ export function rowsReducer(state, action) {
 				...state,
 				excludedRows: state.excludedRows.filter((row) => !filteredRowIDs.includes(row)),
 				appliedFilterExclude: state.appliedFilterExclude.filter((appliedFilterID) => appliedFilterID !== id),
+			};
+		}
+		case FILTER_INCLUDE_ROWS: {
+			const { filter: { filteredRowIDs, id } } = action;
+			return {
+				...state,
+				includedRows: [ ...new Set(state.includedRows.concat(filteredRowIDs)) ],
+				appliedFilterInclude: state.appliedFilterInclude.concat([ id ]),
+			};
+		}
+		case FILTER_UNINCLUDE_ROWS: {
+			const { filter: { filteredRowIDs, id } } = action;
+			return {
+				...state,
+				includedRows: state.includedRows.filter((row) => !filteredRowIDs.includes(row)),
+				appliedFilterInclude: state.appliedFilterInclude.filter((appliedFilterID) => appliedFilterID !== id),
 			};
 		}
 		case FILTER_COLUMN: {

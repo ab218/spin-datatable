@@ -98,7 +98,7 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 							rows,
 							columnID: dataKey,
 							columnIndex,
-							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
+							metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
 						});
 					}
 				}}
@@ -111,7 +111,7 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 							rows,
 							columnID: dataKey,
 							columnIndex,
-							selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
+							metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
 						});
 						dispatchSpreadsheetAction({
 							type: OPEN_CONTEXT_MENU,

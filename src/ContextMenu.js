@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
@@ -14,6 +14,8 @@ import {
 	DELETE_ROWS,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
+	FILTER_INCLUDE_ROWS,
+	FILTER_UNINCLUDE_ROWS,
 	FILTER_EXCLUDE_ROWS,
 	FILTER_UNEXCLUDE_ROWS,
 	REMOVE_HIGHLIGHTED_FILTERED_ROWS,
@@ -210,13 +212,18 @@ export default function ContextMenu({ paste }) {
 						<span>Exclude these rows</span>
 						<span>{appliedFilterExclude.includes(filter.id) ? '✓' : ''}</span>
 					</Menu.Item>
-					<Menu.Item
-						style={{ display: 'flex', justifyContent: 'space-between' }}
-						onClick={(e) => {
-							dispatchRowsAction({ type: 'FILTER_UNEXCLUDE_ROWS', filter, rows, columns });
-						}}
-					>
-						<span>Include only these rows</span>
+					<Menu.Item style={{ display: 'flex', justifyContent: 'space-between' }}>
+						<span
+							onClick={(e) => {
+								if (!appliedFilterInclude.includes(filter.id)) {
+									dispatchRowsAction({ type: FILTER_INCLUDE_ROWS, filter, rows, columns });
+								} else {
+									dispatchRowsAction({ type: FILTER_UNINCLUDE_ROWS, filter, rows, columns });
+								}
+							}}
+						>
+							Include only these rows
+						</span>
 						<span>{appliedFilterInclude.includes(filter.id) ? '✓' : ''}</span>
 					</Menu.Item>
 					<Menu.Item

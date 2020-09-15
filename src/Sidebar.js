@@ -16,12 +16,103 @@ import {
 } from './constants';
 import {
 	useSelectDispatch,
+	useSelectState,
 	useRowsState,
 	useRowsDispatch,
 	useSpreadsheetDispatch,
 	useSpreadsheetState,
 } from './context/SpreadsheetProvider';
 import { createModelingTypeIcon } from './Modals/ModalShared';
+
+const SelectedRowsCounter = React.memo(function() {
+	const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
+	const [ selectedRowsTotal, setSelectedRowsTotal ] = useState(0);
+
+	const isOverlappingOrContiguous = (range1, range2) => {
+		// console.log('range1:', range1, 'range2:', range2);
+		// contiguous = 1 row away
+		const offset = 1;
+		return range1.bottom + offset >= range2.top;
+	};
+
+	const mergeRange = (range1, range2) => {
+		return { top: Math.min(range1.top, range2.top), bottom: Math.max(range1.bottom, range2.bottom) };
+	};
+
+	const byTop = (a, b) => a.top - b.top;
+
+	// For each cell selection range, merge it any overlapping ranges in our accumulator
+	// ACC: [ R: 3 - 6, R: 8 - 10, ...]
+	// GIVEN RANGE: R: 5 - 9 -> 3 - 9  -> 3 - 10
+
+	useEffect(
+		() => {
+			console.log('number of ranges:', cellSelectionRanges.length);
+			const flattenedCellSelectionRanges = cellSelectionRanges
+				.concat(currentCellSelectionRange)
+				.filter(Boolean)
+				.sort(byTop)
+				.reduce((stack, curr) => {
+					// If the given range overlaps, merge it with overlapping range and replace it on the stack;
+					// otherwise, add the given range to the top of our stack
+					//
+					const overlapped = stack.length && isOverlappingOrContiguous(stack[0], curr);
+					return overlapped ? [ mergeRange(stack[0], curr) ].concat(stack.slice(1)) : [ curr ].concat(stack);
+				}, []);
+			console.log('flattened:', flattenedCellSelectionRanges.length);
+			const rowCount = flattenedCellSelectionRanges.reduce((sum, range) => {
+				return sum + (range.bottom - range.top) + 1;
+			}, 0);
+			setSelectedRowsTotal(rowCount);
+		},
+		[ cellSelectionRanges, currentCellSelectionRange ],
+	);
+	return (
+		<tr>
+			<td style={{ width: '80%' }}>Selected</td>
+			<td style={{ width: '20%' }}>{selectedRowsTotal}</td>
+		</tr>
+	);
+});
+
+const SidebarColumn = React.memo(function({ column, columnIndex, rows }) {
+	const dispatchSelectAction = useSelectDispatch();
+	const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
+	const [ selected, setSelected ] = useState();
+
+	useEffect(
+		() => {
+			const inCurrentCellSelection =
+				currentCellSelectionRange &&
+				columnIndex >= currentCellSelectionRange.left &&
+				columnIndex <= currentCellSelectionRange.right;
+			const inCellSelectionRanges = cellSelectionRanges.some(
+				(range) => columnIndex >= range.left && columnIndex <= range.right,
+			);
+			setSelected(inCurrentCellSelection || inCellSelectionRanges);
+		},
+		[ cellSelectionRanges, currentCellSelectionRange ],
+	);
+
+	return (
+		<tr
+			onClick={(e) => {
+				dispatchSelectAction({
+					type: SELECT_COLUMN,
+					rows: rows,
+					columnID: column.id,
+					columnIndex,
+					metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
+				});
+			}}
+		>
+			<td className={selected ? 'sidebar-column-selected' : ''}>
+				{createModelingTypeIcon(column.modelingType)}
+				<span>{column.label}</span>
+			</td>
+		</tr>
+	);
+});
 
 export default React.memo(function Sidebar() {
 	const {
@@ -81,25 +172,7 @@ export default React.memo(function Sidebar() {
 					</tr>
 					{columns &&
 						columns.map((column, columnIndex) => (
-							<tr
-								onClick={(e) => {
-									dispatchSelectAction({
-										type: SELECT_COLUMN,
-										rows: rows,
-										columnID: column.id,
-										columnIndex,
-										selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
-									});
-								}}
-								key={columnIndex}
-							>
-								<td
-								// className={uniqueColumnIDs.includes(column.id) ? 'sidebar-column-selected' : ''}
-								>
-									{createModelingTypeIcon(column.modelingType)}
-									<span>{column.label}</span>
-								</td>
-							</tr>
+							<SidebarColumn key={columnIndex} column={column} columnIndex={columnIndex} rows={rows} />
 						))}
 				</tbody>
 			</table>
@@ -114,10 +187,7 @@ export default React.memo(function Sidebar() {
 						<td style={{ width: '80%' }}>All Rows</td>
 						<td style={{ width: '20%' }}>{rows.length}</td>
 					</tr>
-					{/* <tr>
-						<td style={{ width: '80%' }}>Selected</td>
-						<td style={{ width: '20%' }}>{uniqueRowIDs.length}</td>
-					</tr> */}
+					<SelectedRowsCounter />
 					<tr>
 						<td style={{ width: '80%' }}>Excluded</td>
 						<td style={{ width: '20%' }}>{excludedRows.length}</td>
@@ -191,10 +261,10 @@ export default React.memo(function Sidebar() {
 										>
 											<td>{filterName || script || 'Filter'}</td>
 											<td>
-												{appliedFilterExclude.includes(filter.id) ? (
+												{appliedFilterInclude.includes(filter.id) ? (
 													<CheckCircleOutlined style={{ color: 'green', marginRight: 20 }} />
 												) : null}
-												{appliedFilterInclude.includes(filter.id) ? (
+												{appliedFilterExclude.includes(filter.id) ? (
 													<StopOutlined style={{ color: 'red', marginRight: 20 }} />
 												) : null}
 											</td>

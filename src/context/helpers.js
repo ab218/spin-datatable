@@ -50,7 +50,7 @@ export const updateFiltersOnPaste = (rows, filters) => {
 
 export const updateFiltersOnCellUpdate = (filters, cellValue, column, rowID) => {
 	const newFilters = filters.map((filter) => {
-		if (column.type === STRING) {
+		if (column.type === STRING && filter.stringFilters[column.id]) {
 			return filter.stringFilters[column.id].includes(cellValue)
 				? { ...filter, filteredRowIDs: [ ...filter.filteredRowIDs, rowID ] }
 				: { ...filter, filteredRowIDs: filter.filteredRowIDs.filter((id) => id !== rowID) };

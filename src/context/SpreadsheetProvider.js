@@ -113,6 +113,7 @@ export function SpreadsheetProvider({ children }) {
 			_abc2_: [ '_abc3_' ],
 		},
 		excludedRows: [],
+		includedRows: [],
 		modalError: null,
 		history: [],
 		redoHistory: [],

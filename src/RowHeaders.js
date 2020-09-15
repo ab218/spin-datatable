@@ -19,7 +19,7 @@ import {
 export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 	const { contextMenuOpen } = useSpreadsheetState();
 	const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
-	const { columns, rows, excludedRows } = useRowsState();
+	const { columns, rows, excludedRows, includedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
@@ -31,7 +31,7 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 				currentCellSelectionRange &&
 				currentCellSelectionRange.top <= rowIndex &&
 				currentCellSelectionRange.bottom >= rowIndex;
-			const inRanges = cellSelectionRanges.find(
+			const inRanges = cellSelectionRanges.some(
 				(cellRange) => cellRange.top <= rowIndex && cellRange.bottom >= rowIndex,
 			);
 			setSelected(inCurrent || inRanges);
@@ -40,18 +40,6 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 		[ currentCellSelectionRange, cellSelectionRanges ],
 	);
 
-	// useEffect(
-	// 	() => {
-	// 		if (cellSelectionObject[rowData.id]) {
-	// 			setSelected(true);
-	// 			return;
-	// 		}
-	// 		setSelected(false);
-	// 	},
-	// 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	// 	[ cellSelectionObject ],
-	// );
-
 	function createNewRows(rowCount) {
 		dispatchRowsAction({ type: CREATE_ROWS, rowCount });
 	}
@@ -59,6 +47,17 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 		e.preventDefault();
 		if (rowIndex + 1 > rows.length) {
 			createNewRows(rowIndex + 1 - rows.length);
+		}
+	}
+
+	// prioritize included rows
+	function isRowExcluded(rowID) {
+		if (includedRows.length) {
+			return rowID && !includedRows.includes(rowID);
+		} else if (excludedRows.length) {
+			return excludedRows.includes(rowID);
+		} else {
+			return false;
 		}
 	}
 	// only show row numbers of existing rows
@@ -86,12 +85,12 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 						columns: columns,
 						rowID: rowData.id,
 						rowIndex,
-						selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
+						metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
 					});
 				}
 			}}
 			onMouseEnter={(e) => {
-				if (typeof e.buttons === 'number' && e.buttons > 0) {
+				if (typeof e.buttons === 'number' && e.buttons > 0 && rowData.id) {
 					dispatchSelectAction({
 						type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
 						rows,
@@ -109,7 +108,7 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 				lineHeight: 2,
 			}}
 		>
-			<span>{excludedRows.includes(rowData.id) && <StopOutlined style={{ color: 'red', marginRight: 20 }} />}</span>
+			<span>{isRowExcluded(rowData.id) && <StopOutlined style={{ color: 'red', marginRight: 20 }} />}</span>
 			<span style={{ position: 'absolute', right: 0, marginRight: 10 }}>{rows.length > rowIndex && rowIndex + 1}</span>
 		</div>
 	);
