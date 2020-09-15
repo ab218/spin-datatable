@@ -29,7 +29,6 @@ const SelectedRowsCounter = React.memo(function() {
 	const [ selectedRowsTotal, setSelectedRowsTotal ] = useState(0);
 
 	const isOverlappingOrContiguous = (range1, range2) => {
-		// console.log('range1:', range1, 'range2:', range2);
 		// contiguous = 1 row away
 		const offset = 1;
 		return range1.bottom + offset >= range2.top;
@@ -47,7 +46,6 @@ const SelectedRowsCounter = React.memo(function() {
 
 	useEffect(
 		() => {
-			console.log('number of ranges:', cellSelectionRanges.length);
 			const flattenedCellSelectionRanges = cellSelectionRanges
 				.concat(currentCellSelectionRange)
 				.filter(Boolean)
@@ -59,7 +57,6 @@ const SelectedRowsCounter = React.memo(function() {
 					const overlapped = stack.length && isOverlappingOrContiguous(stack[0], curr);
 					return overlapped ? [ mergeRange(stack[0], curr) ].concat(stack.slice(1)) : [ curr ].concat(stack);
 				}, []);
-			console.log('flattened:', flattenedCellSelectionRanges.length);
 			const rowCount = flattenedCellSelectionRanges.reduce((sum, range) => {
 				return sum + (range.bottom - range.top) + 1;
 			}, 0);

@@ -5,6 +5,7 @@ import ErrorMessage from './ErrorMessage';
 import IntegerStep from './IntegerStep';
 import AddColumnButton from './AddColumnButton';
 import RemoveColumnButton from './RemoveColumnButton';
+import DraggableModal from './DraggableModal';
 import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
@@ -163,19 +164,23 @@ const FilterModal = React.memo(function AntModal() {
 		</div>
 	);
 
+	const ModalTitle = () => {
+		return (
+			<div>
+				<span style={{ marginRight: '10px', cursor: 'pointer' }}>
+					<FormOutlined onClick={() => setRenameModalOpen(true)} />
+				</span>
+				<span>{filterName || defaultFilterName}</span>
+			</div>
+		);
+	};
+
 	return (
 		<Modal
 			className="ant-modal"
 			width={800}
 			onCancel={handleClose}
-			title={
-				<div>
-					<span style={{ marginRight: '10px', cursor: 'pointer' }}>
-						<FormOutlined onClick={() => setRenameModalOpen(true)} />
-					</span>
-					<span>{filterName || defaultFilterName}</span>
-				</div>
-			}
+			title={<DraggableModal children={<ModalTitle />} />}
 			visible={filterModalOpen}
 			bodyStyle={{ maxHeight: 300 }}
 			footer={<ModalFooter />}
