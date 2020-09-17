@@ -125,12 +125,12 @@ export default React.memo(function Sidebar() {
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchRowsAction = useRowsDispatch();
-	const [ filterClicked, setFilterClicked ] = useState([]);
+	const [ filterClicked, setFilterClicked ] = useState(null);
 
 	useEffect(
 		() => {
-			if (filterClicked.length > 0) {
-				dispatchSelectAction({ type: FILTER_SELECT_ROWS, filters: filterClicked, rows, columns });
+			if (filterClicked) {
+				dispatchSelectAction({ type: FILTER_SELECT_ROWS, filters: [ filterClicked ], rows, columns });
 			} else {
 				dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 			}
@@ -210,15 +210,13 @@ export default React.memo(function Sidebar() {
 									script,
 									stringFilters,
 								} = filter;
-								const checked = filterClicked.findIndex((f) => f.id === filter.id) !== -1;
+								const checked = filterClicked && filterClicked.id === id;
 								return (
 									<React.Fragment key={id}>
 										<tr
 											className={checked ? 'sidebar-column-selected' : ''}
-											onClick={(e) => {
-												setFilterClicked(
-													(prev) => (checked ? prev.filter((f) => f.id !== filter.id) : prev.concat(filter)),
-												);
+											onClick={() => {
+												setFilterClicked(() => (checked ? null : filter));
 											}}
 											onContextMenu={(e) => {
 												e.preventDefault();
@@ -258,10 +256,10 @@ export default React.memo(function Sidebar() {
 										>
 											<td>{filterName || script || 'Filter'}</td>
 											<td>
-												{appliedFilterInclude.includes(filter.id) ? (
+												{appliedFilterInclude === filter.id ? (
 													<CheckCircleOutlined style={{ color: 'green', marginRight: 20 }} />
 												) : null}
-												{appliedFilterExclude.includes(filter.id) ? (
+												{appliedFilterExclude === filter.id ? (
 													<StopOutlined style={{ color: 'red', marginRight: 20 }} />
 												) : null}
 											</td>

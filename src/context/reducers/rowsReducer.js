@@ -326,15 +326,18 @@ export function rowsReducer(state, action) {
 			return {
 				...state,
 				excludedRows: [ ...new Set(state.excludedRows.concat(filteredRowIDs)) ],
-				appliedFilterExclude: state.appliedFilterExclude.concat([ id ]),
+				includedRows: [],
+				appliedFilterExclude: id,
+				appliedFilterInclude: [],
 			};
 		}
 		case FILTER_UNEXCLUDE_ROWS: {
 			const { filter: { filteredRowIDs, id } } = action;
 			return {
 				...state,
-				excludedRows: state.excludedRows.filter((row) => !filteredRowIDs.includes(row)),
-				appliedFilterExclude: state.appliedFilterExclude.filter((appliedFilterID) => appliedFilterID !== id),
+				excludedRows: state.excludedRows.filter((rowID) => !filteredRowIDs.includes(rowID)),
+				filterExcludedRows: [],
+				appliedFilterExclude: [],
 			};
 		}
 		case FILTER_INCLUDE_ROWS: {
@@ -342,15 +345,18 @@ export function rowsReducer(state, action) {
 			return {
 				...state,
 				includedRows: [ ...new Set(state.includedRows.concat(filteredRowIDs)) ],
-				appliedFilterInclude: state.appliedFilterInclude.concat([ id ]),
+				excludedRows: [],
+				appliedFilterInclude: id,
+				appliedFilterExclude: [],
 			};
 		}
 		case FILTER_UNINCLUDE_ROWS: {
 			const { filter: { filteredRowIDs, id } } = action;
 			return {
 				...state,
-				includedRows: state.includedRows.filter((row) => !filteredRowIDs.includes(row)),
-				appliedFilterInclude: state.appliedFilterInclude.filter((appliedFilterID) => appliedFilterID !== id),
+				includedRows: state.excludedRows.filter((rowID) => !filteredRowIDs.includes(rowID)),
+				filterIncludedRows: [],
+				appliedFilterInclude: [],
 			};
 		}
 		case FILTER_COLUMN: {

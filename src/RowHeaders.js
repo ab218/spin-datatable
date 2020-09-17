@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StopOutlined } from '@ant-design/icons';
+import { StopOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import {
 	useSpreadsheetState,
 	useRowsState,
@@ -51,11 +51,11 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 	}
 
 	// prioritize included rows
-	function isRowExcluded(rowID) {
-		if (includedRows.length) {
-			return rowID && !includedRows.includes(rowID);
-		} else if (excludedRows.length) {
-			return excludedRows.includes(rowID);
+	function isRowExcludedOrIncluded(rowID) {
+		if (rowID && includedRows.length && includedRows.includes(rowID)) {
+			return <CheckCircleOutlined style={{ color: 'green', marginRight: 20 }} />;
+		} else if (rowID && excludedRows.length && excludedRows.includes(rowID)) {
+			return <StopOutlined style={{ color: 'red', marginRight: 20 }} />;
 		} else {
 			return false;
 		}
@@ -108,7 +108,7 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 				lineHeight: 2,
 			}}
 		>
-			<span>{isRowExcluded(rowData.id) && <StopOutlined style={{ color: 'red', marginRight: 20 }} />}</span>
+			<span>{isRowExcludedOrIncluded(rowData.id)}</span>
 			<span style={{ position: 'absolute', right: 0, marginRight: 10 }}>{rows.length > rowIndex && rowIndex + 1}</span>
 		</div>
 	);
