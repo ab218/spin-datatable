@@ -393,7 +393,6 @@ export function rowsReducer(state, action) {
 		case SAVE_FILTER: {
 			const { filters, filterName, script, selectedColumns } = action;
 			const { id } = filters;
-			console.log(filters);
 			const updatedFilter = {
 				...filters,
 				id,
