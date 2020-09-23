@@ -24,8 +24,7 @@ import {
 	SAVE_FILTER,
 	SAVE_NEW_FILTER,
 	SET_SELECTED_COLUMN,
-	STRING,
-  TEXT
+	TEXT,
 } from '../constants';
 
 const FilterModal = React.memo(function AntModal() {

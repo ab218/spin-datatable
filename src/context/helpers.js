@@ -1,5 +1,5 @@
 import nerdamer from 'nerdamer';
-import { STRING } from '../constants';
+import { TEXT } from '../constants';
 
 export function createRandomID() {
 	let result = '';
@@ -50,7 +50,7 @@ export const updateFiltersOnPaste = (rows, filters) => {
 
 export const updateFiltersOnCellUpdate = (filters, cellValue, column, rowID) => {
 	const newFilters = filters.map((filter) => {
-		if (column.type === STRING && filter.stringFilters[column.id]) {
+		if (column.type === TEXT && filter.stringFilters[column.id]) {
 			return filter.stringFilters[column.id].includes(cellValue)
 				? { ...filter, filteredRowIDs: [ ...filter.filteredRowIDs, rowID ] }
 				: { ...filter, filteredRowIDs: filter.filteredRowIDs.filter((id) => id !== rowID) };
