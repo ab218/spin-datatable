@@ -123,7 +123,7 @@ const ExcludedRowsCounter = React.memo(function() {
 	);
 });
 
-const SavedFilters = React.memo(function() {
+const SidebarFilters = React.memo(function() {
 	const { columns, rows, savedFilters } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
 	const [ filterClicked, setFilterClicked ] = useState(null);
@@ -149,7 +149,12 @@ const SavedFilters = React.memo(function() {
 							<td style={{ width: '20%', fontWeight: 'bold' }} />
 						</tr>
 						{savedFilters.map((filter) => (
-							<SidebarFilter filterClicked={filterClicked} filter={filter} setFilterClicked={setFilterClicked} />
+							<SidebarFilter
+								key={filter.id}
+								filterClicked={filterClicked}
+								filter={filter}
+								setFilterClicked={setFilterClicked}
+							/>
 						))}
 					</tbody>
 				</table>
@@ -298,7 +303,7 @@ export default function Sidebar() {
 			<Divider />
 			<SidebarRows />
 			<Divider />
-			<SavedFilters />
+			<SidebarFilters />
 		</div>
 	);
 }

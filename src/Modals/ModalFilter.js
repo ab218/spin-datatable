@@ -40,31 +40,50 @@ const FilterModal = React.memo(function AntModal() {
 	const [ error, setError ] = useState('');
 	const [ rename, setRename ] = useState('');
 	const [ renameModalOpen, setRenameModalOpen ] = useState(false);
+	const columnsAreSelected = selectedColumns.length > 0;
+	const [ chooseCondition, setChooseCondition ] = useState(columnsAreSelected);
+
+	useEffect(
+		// show column list if no columns are selected, not AND/OR condition buttons
+		() => {
+			if (!selectedColumns.length) {
+				setChooseCondition(false);
+			}
+		},
+		[ selectedColumns.length ],
+	);
 
 	useEffect(
 		// set filter name on update
 		() => {
 			let template = '';
-			if (filters.numberFilters.length) {
-				filters.numberFilters.forEach((numberFilter, i) => {
+			const { numberFilters, stringFilters } = filters;
+			if (numberFilters.length) {
+				numberFilters.forEach((numberFilter, i) => {
 					if (numberFilter.min && numberFilter.max) {
 						template += `${numberFilter.min} ≤ ${numberFilter.label} ≤ ${numberFilter.max}`;
 					}
-					if (i !== filters.numberFilters.length - 1) {
+					if (i !== numberFilters.length - 1) {
 						template += ` & `;
 					}
 				});
 			}
-			if (Object.keys(filters.stringFilters).length) {
-				if (filters.numberFilters.length) {
+			if (Object.keys(stringFilters).length) {
+				const nonEmptyArrayInStringFilters = Object.keys(stringFilters).some((key) => {
+					return stringFilters[key].length;
+				});
+				if (numberFilters.length && nonEmptyArrayInStringFilters) {
 					template += ' & ';
 				}
-				Object.entries(filters.stringFilters).forEach((filter, i) => {
-					const foundColumn = columns.find((col) => col.id === filter[0]);
-					const columnLabel = foundColumn.label;
-					template += `${columnLabel} includes: ${filter[1]}`;
-					if (i !== Object.keys(filters.stringFilters).length - 1) {
-						template += ` & `;
+				Object.entries(stringFilters).forEach((filter, i) => {
+					const includedStrings = filter[1];
+					if (includedStrings.length) {
+						const foundColumn = columns.find((col) => col.id === filter[0]);
+						const columnLabel = foundColumn.label;
+						template += `${columnLabel} includes: ${includedStrings}`;
+						if (i !== Object.keys(stringFilters).length - 1) {
+							template += ` & `;
+						}
 					}
 				});
 			}
@@ -94,7 +113,7 @@ const FilterModal = React.memo(function AntModal() {
 		if (filterName === '' && script === '') {
 			return setError('Filter name cannot be blank.');
 		}
-		dispatchRowsAction({ type: SAVE_FILTER, filters, script, filterName });
+		dispatchRowsAction({ type: SAVE_FILTER, selectedColumns, filters, script, filterName });
 		dispatchRowsAction({
 			type: DELETE_FILTER,
 			filters: { numberFilters: [], stringFilters: {} },
@@ -120,7 +139,7 @@ const FilterModal = React.memo(function AntModal() {
 		if (filterName !== '' && savedFilters.findIndex((filter) => filterName === filter.filterName) !== -1) {
 			return setError('Filter name is already in use. Please choose a unique name.');
 		}
-		dispatchRowsAction({ type: SAVE_NEW_FILTER, filters, script, filterName });
+		dispatchRowsAction({ type: SAVE_NEW_FILTER, filters, selectedColumns, script, filterName });
 		dispatchRowsAction({
 			type: DELETE_FILTER,
 			filters: { numberFilters: [], stringFilters: {} },
@@ -133,8 +152,10 @@ const FilterModal = React.memo(function AntModal() {
 	function removeColumn(columnID) {
 		function deleteFilter() {
 			const filtersCopy = { ...filters };
+			console.log(filtersCopy);
 			const newNumberFilters = filtersCopy.numberFilters.filter((numFilter) => columnID !== numFilter.id);
 			filtersCopy.numberFilters = newNumberFilters;
+			filtersCopy.selectedColumns = filteredColumns;
 			delete filtersCopy.stringFilters[columnID];
 			return filtersCopy;
 		}
@@ -175,6 +196,10 @@ const FilterModal = React.memo(function AntModal() {
 		);
 	};
 
+	const addAndCondition = () => {
+		setChooseCondition(false);
+	};
+
 	return (
 		<Modal
 			className="ant-modal"
@@ -209,7 +234,20 @@ const FilterModal = React.memo(function AntModal() {
 			</Modal>
 			<div style={{ width: '100%', display: 'flex', justifyContent: 'space-around' }}>
 				<div style={{ width: '20%', height: 250, overflowY: 'scroll' }}>
-					{columns.map((column) => <AddColumnButton key={column.id} column={column} />)}
+					{!chooseCondition ? (
+						columns.map((column) => (
+							<AddColumnButton setChooseCondition={setChooseCondition} key={column.id} column={column} />
+						))
+					) : (
+						<React.Fragment>
+							<Button style={{ width: 150 }} onClick={addAndCondition}>
+								AND
+							</Button>
+							<Button disabled={true} style={{ width: 150 }}>
+								OR
+							</Button>
+						</React.Fragment>
+					)}
 				</div>
 				<div style={{ width: '60%', height: 250, overflowY: 'scroll' }}>
 					{selectedColumns &&

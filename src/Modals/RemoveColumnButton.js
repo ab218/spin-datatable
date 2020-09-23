@@ -11,10 +11,6 @@ export default function RemoveColumnButton({ removeColumn }) {
 					color: 'red',
 					alignSelf: 'center',
 					border: 'none',
-					// borderTop: 'none',
-					// borderRight: 'none',
-					// borderBottom: 'none',
-					// borderRadius: 0,
 				}}
 			/>
 		</Tooltip>

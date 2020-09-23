@@ -391,7 +391,7 @@ export function rowsReducer(state, action) {
 			return { ...state, filteredRowIDs: [] };
 		}
 		case SAVE_FILTER: {
-			const { filters, filterName, script } = action;
+			const { filters, filterName, script, selectedColumns } = action;
 			const { id } = filters;
 			console.log(filters);
 			const updatedFilter = {
@@ -400,6 +400,7 @@ export function rowsReducer(state, action) {
 				filterName,
 				filteredRowIDs: state.filteredRowIDs,
 				script,
+				selectedColumns,
 			};
 
 			const updatedFilters = state.savedFilters.filter((filter) => filter.id !== id).concat(updatedFilter);
@@ -407,13 +408,14 @@ export function rowsReducer(state, action) {
 			return { ...state, savedFilters: updatedFilters };
 		}
 		case SAVE_NEW_FILTER: {
-			const { filters, filterName, script } = action;
+			const { filters, filterName, script, selectedColumns } = action;
 			const newFilter = {
 				...filters,
 				id: createRandomID(),
 				filterName,
 				filteredRowIDs: state.filteredRowIDs,
 				script,
+				selectedColumns,
 			};
 			return { ...state, savedFilters: state.savedFilters.concat(newFilter) };
 		}
