@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Popup from './PopupWindow';
-import { Dropdown, Icon, Menu } from 'antd';
+import { FunnelPlotOutlined } from '@ant-design/icons';
+import { Dropdown, Menu } from 'antd';
 import ContingencyD3Chart from './ContingencyD3Chart';
 import './MosaicPlot.js';
 
@@ -16,23 +17,17 @@ export default function ContingencyAnalysis({ data, setPopup }) {
 	const parsedContingency = JSON.parse(contingency);
 	const contingencyKeys = Object.keys(parsedContingency);
 	const groupKeys = Object.keys(parsedContingency[contingencyKeys[0]]);
-	const columnTotals = groupKeys.map((key) => {
-		return contingencyKeys
-			.map((row, i) => {
-				return parsedContingency[row][key];
-			})
-			.reduce((acc, curr) => {
-				return acc + curr;
-			});
-	});
+	const columnTotals = groupKeys.map((key) =>
+		contingencyKeys.map((row, i) => parsedContingency[row][key]).reduce((acc, curr) => acc + curr),
+	);
 	const totals = groupKeys.map((key, i) => {
 		return { [key]: columnTotals[i] };
 	});
-	const mosaicData = contingencyKeys.flatMap((key) => {
-		return groupKeys.map((group) => {
+	const mosaicData = contingencyKeys.flatMap((key) =>
+		groupKeys.map((group) => {
 			return { x: key, y: group, value: parsedContingency[key][group] };
-		});
-	});
+		}),
+	);
 	const title = `Contingency Analysis of ${colY.label} ${colY.units ? '(' + colY.units + ')' : ''} By ${colX.label}
   ${colX.units ? '(' + colX.units + ')' : ''}`;
 	return (
@@ -145,7 +140,7 @@ const ContingencyTableOptions = ({ setContingencyOptions, contingencyOptions }) 
 			placement="topCenter"
 			overlay={menu}
 		>
-			<Icon className="hamburger" type="funnel-plot" />
+			<FunnelPlotOutlined className="hamburger" />
 		</Dropdown>
 	);
 };

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Button, Card, Icon, Radio, Tooltip, Typography } from 'antd';
+import { RightOutlined } from '@ant-design/icons';
+import { Button, Card, Radio, Tooltip, Typography } from 'antd';
 import RemoveColumnButton from './RemoveColumnButton';
 import { ORDINAL, CONTINUOUS, NOMINAL } from '../constants';
 
@@ -53,22 +54,31 @@ function addColumnToList(col, setCol, selectedColumn) {
 	setCol((prevState) => prevState.concat(selectedColumn));
 }
 
-export function CaratButtons({ data, setData, label, selectedColumn }) {
+export function CaratButtons({ notAllowed, data, setData, label, selectedColumn }) {
+	const notAllowedType = selectedColumn && notAllowed && notAllowed.includes(selectedColumn.modelingType);
 	return (
 		<div style={styles.flexColumn}>
 			<Button
-				disabled={!selectedColumn || data.length !== 0}
-				style={{
-					marginBottom: 5,
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-					paddingRight: '5px',
-				}}
+				disabled={!selectedColumn || notAllowedType || data.length !== 0}
+				style={{ marginBottom: 5 }}
 				onClick={() => addColumnToList(data, setData, selectedColumn)}
 			>
-				<span>{label}</span>
-				<Icon type="right" />
+				{label}
+				<RightOutlined style={{ marginLeft: 40 }} />
+// =======
+// 				disabled={!selectedColumn || data.length !== 0}
+// 				style={{
+// 					marginBottom: 5,
+// 					display: 'flex',
+// 					justifyContent: 'space-between',
+// 					alignItems: 'center',
+// 					paddingRight: '5px',
+// 				}}
+// 				onClick={() => addColumnToList(data, setData, selectedColumn)}
+// 			>
+// 				<span>{label}</span>
+// 				<Icon type="right" />
+// >>>>>>> master
 			</Button>
 		</div>
 	);
@@ -140,10 +150,16 @@ export function SelectColumn({ columns, groupingColData, setSelectedColumn, styl
 	);
 }
 
-export function VariableSelector({ styleProps, data, setData, selectedColumn, label, performingAnalysis }) {
+export function VariableSelector({ notAllowed, styleProps, data, setData, selectedColumn, label, performingAnalysis }) {
 	return (
 		<div style={{ ...styles.flexSpaced, ...styleProps }}>
-			<CaratButtons data={data} setData={setData} selectedColumn={selectedColumn} label={label} />
+			<CaratButtons
+				notAllowed={notAllowed}
+				data={data}
+				setData={setData}
+				selectedColumn={selectedColumn}
+				label={label}
+			/>
 			<SelectedColumn data={data} removeData={setData} performingAnalysis={performingAnalysis} />
 		</div>
 	);

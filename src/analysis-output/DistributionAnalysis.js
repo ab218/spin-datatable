@@ -18,7 +18,7 @@ export default function DistributionAnalysis({ data, setPopup }) {
 
 	const [ bins, setBins ] = useState(numberOfBins);
 
-	const title = `Distribution of ${colObj.label} ${colObj.units ? '(' + colObj.units + ')' : ''}`;
+	const title = `Descriptive Analysis of ${colObj.label} ${colObj.units ? '(' + colObj.units + ')' : ''}`;
 
 	return (
 		<Popup key={data.id} id={data.id} title={title} windowWidth={500} setPopup={setPopup}>

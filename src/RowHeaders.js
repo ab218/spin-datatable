@@ -1,5 +1,5 @@
-import React from 'react';
-import { Icon } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { StopOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import {
 	useSpreadsheetState,
 	useRowsState,
@@ -16,13 +16,30 @@ import {
 	SELECT_ROW,
 } from './constants';
 
-export default function RowHeaders({ rowIndex, rowData }) {
+export default React.memo(function RowHeaders({ rowIndex, rowData }) {
 	const { contextMenuOpen } = useSpreadsheetState();
-	const { uniqueRowIDs } = useSelectState();
-	const { columns, rows, excludedRows } = useRowsState();
+	const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
+	const { columns, rows, excludedRows, includedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
+	const [ selected, setSelected ] = useState();
+
+	useEffect(
+		() => {
+			const inCurrent =
+				currentCellSelectionRange &&
+				currentCellSelectionRange.top <= rowIndex &&
+				currentCellSelectionRange.bottom >= rowIndex;
+			const inRanges = cellSelectionRanges.some(
+				(cellRange) => cellRange.top <= rowIndex && cellRange.bottom >= rowIndex,
+			);
+			setSelected(inCurrent || inRanges);
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[ currentCellSelectionRange, cellSelectionRanges ],
+	);
+
 	function createNewRows(rowCount) {
 		dispatchRowsAction({ type: CREATE_ROWS, rowCount });
 	}
@@ -30,6 +47,17 @@ export default function RowHeaders({ rowIndex, rowData }) {
 		e.preventDefault();
 		if (rowIndex + 1 > rows.length) {
 			createNewRows(rowIndex + 1 - rows.length);
+		}
+	}
+
+	// prioritize included rows
+	function isRowExcludedOrIncluded(rowID) {
+		if (rowID && includedRows.length && includedRows.includes(rowID)) {
+			return <CheckCircleOutlined style={{ color: 'green', marginRight: 20 }} />;
+		} else if (rowID && excludedRows.length && excludedRows.includes(rowID)) {
+			return <StopOutlined style={{ color: 'red', marginRight: 20 }} />;
+		} else {
+			return false;
 		}
 	}
 	// only show row numbers of existing rows
@@ -57,12 +85,12 @@ export default function RowHeaders({ rowIndex, rowData }) {
 						columns: columns,
 						rowID: rowData.id,
 						rowIndex,
-						selectionActive: e.ctrlKey || e.shiftKey || e.metaKey,
+						metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
 					});
 				}
 			}}
 			onMouseEnter={(e) => {
-				if (typeof e.buttons === 'number' && e.buttons > 0) {
+				if (typeof e.buttons === 'number' && e.buttons > 0 && rowData.id) {
 					dispatchSelectAction({
 						type: MODIFY_CURRENT_SELECTION_CELL_RANGE,
 						rows,
@@ -73,15 +101,15 @@ export default function RowHeaders({ rowIndex, rowData }) {
 				}
 			}}
 			onDoubleClick={(e) => rowHeadersOnDoubleClick(e, rowIndex)}
-			className={rowData.id && uniqueRowIDs.includes(rowData.id) ? 'selected-row-number-cell' : 'row-number-cell'}
+			className={selected ? 'selected-row-number-cell' : 'row-number-cell'}
 			style={{
 				borderBottom: '1px solid rgb(221, 221, 221)',
 				userSelect: 'none',
 				lineHeight: 2,
 			}}
 		>
-			<span>{excludedRows.includes(rowData.id) && <Icon type="stop" style={{ color: 'red', marginRight: 20 }} />}</span>
+			<span>{isRowExcludedOrIncluded(rowData.id)}</span>
 			<span style={{ position: 'absolute', right: 0, marginRight: 10 }}>{rows.length > rowIndex && rowIndex + 1}</span>
 		</div>
 	);
-}
+});

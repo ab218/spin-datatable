@@ -33,6 +33,7 @@ export function spreadsheetReducer(state, action) {
 	switch (type) {
 		// EVENT: Context menu opened
 		case OPEN_CONTEXT_MENU: {
+			const { filter } = action;
 			return {
 				...state,
 				colName,
@@ -40,6 +41,7 @@ export function spreadsheetReducer(state, action) {
 				contextMenuPosition,
 				contextMenuType,
 				contextMenuRowIndex: rowIndex,
+				contextMenuData: { filter },
 			};
 		}
 		// EVENT: Context menu closed
@@ -81,7 +83,7 @@ export function spreadsheetReducer(state, action) {
 			return {
 				...state,
 				filterModalOpen,
-				filters: { numberFilters: [], stringFilters: [] },
+				filters: { numberFilters: [], stringFilters: {} },
 			};
 		}
 		default: {

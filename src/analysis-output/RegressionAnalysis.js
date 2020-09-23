@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Popup from './PopupWindow';
 import './analysis-window.css';
-import { Checkbox, Select, Icon } from 'antd';
+import { MinusOutlined } from '@ant-design/icons';
+import { Checkbox, Select } from 'antd';
 import GenerateRegressionTemplate from './RegressionTemplate';
 import RegressionD3Chart from './RegressionD3Chart';
 const { Option } = Select;
@@ -434,7 +435,7 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
 		return (
 			<tr>
 				<td>
-					<Icon type="minus" style={{ cursor: 'pointer', fontSize: '20px', color }} />
+					<MinusOutlined style={{ cursor: 'pointer', fontSize: '20px', color }} />
 					{title}
 				</td>
 				{showCIOptions && (

@@ -12,6 +12,7 @@ import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import { createRandomID } from '../context/helpers';
 import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from '../constants';
 import VariableLegend from './FitYXLegend';
+import DraggableModal from './DraggableModal';
 
 export default function AnalysisModal({ setPopup }) {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -171,7 +172,7 @@ export default function AnalysisModal({ setPopup }) {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				title="Fit Y by X"
+				title={<DraggableModal children={'Fit Y By X'} />}
 				visible={analysisModalOpen}
 				width={750}
 				bodyStyle={{ background: '#ECECEC', opacity: performingAnalysis ? 0.2 : 1 }}
@@ -198,7 +199,7 @@ export default function AnalysisModal({ setPopup }) {
 			>
 				<div style={styles.flexSpaced}>
 					<div>
-						<SelectColumn title="Select Column" columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
+						<SelectColumn title="Select Columns" columns={filteredColumns} setSelectedColumn={setSelectedColumn} />
 						<VariableLegend yColData={yColData} xColData={xColData} />
 					</div>
 					<div style={{ width: 400 }}>

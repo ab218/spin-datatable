@@ -14,9 +14,18 @@ import {
 	DELETE_ROWS,
 	DELETE_VALUES,
 	EXCLUDE_ROWS,
+	FILTER_INCLUDE_ROWS,
+	FILTER_UNINCLUDE_ROWS,
+	FILTER_EXCLUDE_ROWS,
+	FILTER_UNEXCLUDE_ROWS,
+	REMOVE_HIGHLIGHTED_FILTERED_ROWS,
 	REMOVE_SELECTED_CELLS,
+	REMOVE_SIDEBAR_FILTER,
+	SET_FILTERS,
+	SET_SELECTED_COLUMN,
 	SORT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
+	TOGGLE_FILTER_MODAL,
 	UNEXCLUDE_ROWS,
 } from './constants';
 import { Menu } from 'antd';
@@ -30,10 +39,11 @@ export default function ContextMenu({ paste }) {
 		contextMenuOpen,
 		contextMenuPosition,
 		contextMenuRowIndex,
+		contextMenuData,
 		// layout,
 	} = useSpreadsheetState();
-	const { cellSelectionRanges, uniqueRowIDs } = useSelectState();
-	const { columns } = useRowsState();
+	const { cellSelectionRanges } = useSelectState();
+	const { appliedFilterExclude, appliedFilterInclude, rows, columns } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const dispatchSelectAction = useSelectDispatch();
 	const dispatchRowsAction = useRowsDispatch();
@@ -121,7 +131,7 @@ export default function ContextMenu({ paste }) {
 				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
 					<Menu.Item
 						onClick={() => {
-							dispatchRowsAction({ type: DELETE_ROWS, rowIndex: contextMenuRowIndex, uniqueRowIDs });
+							dispatchRowsAction({ type: DELETE_ROWS, rowIndex: contextMenuRowIndex, cellSelectionRanges });
 							dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
 						}}
 						key="19"
@@ -147,6 +157,86 @@ export default function ContextMenu({ paste }) {
 				</Menu>
 			</div>
 		);
+	} else if (contextMenuType === 'cellSelectionRule') {
+		const { filter } = contextMenuData;
+		return (
+			<div onClick={onClick} className="menu">
+				<Menu selectable={false} style={{ width: 256 }} mode="vertical">
+					<Menu.Item
+						key="editSelectionRule"
+						onClick={() => {
+							const { selectedColumns, id, filterName, stringFilters, numberFilters, script } = filter;
+							dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns });
+							dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true });
+							dispatchRowsAction({
+								type: SET_FILTERS,
+								selectedColumns,
+								id,
+								filterName,
+								stringFilters,
+								numberFilters,
+								script,
+							});
+						}}
+					>
+						Edit Selection Rule
+					</Menu.Item>
+					<Menu.Item
+						key="cloneSelectionRule"
+						onClick={() => {
+							const { selectedColumns, filterName, stringFilters, numberFilters, script } = filter;
+							dispatchSelectAction({ type: SET_SELECTED_COLUMN, selectedColumns });
+							dispatchSpreadsheetAction({ type: TOGGLE_FILTER_MODAL, filterModalOpen: true });
+							dispatchRowsAction({
+								type: SET_FILTERS,
+								selectedColumns,
+								filterName,
+								stringFilters,
+								numberFilters,
+								script,
+							});
+						}}
+					>
+						Clone Selection Rule
+					</Menu.Item>
+					<Menu.Item
+						style={{ display: 'flex', justifyContent: 'space-between' }}
+						onClick={(e) => {
+							if (!appliedFilterExclude.includes(filter.id)) {
+								dispatchRowsAction({ type: FILTER_EXCLUDE_ROWS, filter, rows, columns });
+							} else {
+								dispatchRowsAction({ type: FILTER_UNEXCLUDE_ROWS, filter, rows, columns });
+							}
+						}}
+					>
+						<span>Exclude these rows</span>
+						<span>{appliedFilterExclude.includes(filter.id) ? '✓' : ''}</span>
+					</Menu.Item>
+					<Menu.Item
+						style={{ display: 'flex', justifyContent: 'space-between' }}
+						onClick={(e) => {
+							if (!appliedFilterInclude.includes(filter.id)) {
+								dispatchRowsAction({ type: FILTER_INCLUDE_ROWS, filter, rows, columns });
+							} else {
+								dispatchRowsAction({ type: FILTER_UNINCLUDE_ROWS, filter, rows, columns });
+							}
+						}}
+					>
+						<span>Include only these rows</span>
+						<span>{appliedFilterInclude.includes(filter.id) ? '✓' : ''}</span>
+					</Menu.Item>
+					<Menu.Item
+						onClick={(e) => {
+							dispatchRowsAction({ type: REMOVE_SIDEBAR_FILTER, filter });
+							dispatchRowsAction({ type: REMOVE_HIGHLIGHTED_FILTERED_ROWS });
+							dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+						}}
+					>
+						Delete Filter
+					</Menu.Item>
+				</Menu>
+			</div>
+		);
 	}
 
 	return (
@@ -166,6 +256,14 @@ export default function ContextMenu({ paste }) {
 				</Menu.Item>
 				<Menu.Item onClick={paste} key="19">
 					Paste
+				</Menu.Item>
+				<Menu.Item
+					key="analyzeSelection"
+					onClick={() => {
+						dispatchRowsAction({ type: UNEXCLUDE_ROWS, cellSelectionRanges });
+					}}
+				>
+					Analyze Selection
 				</Menu.Item>
 			</Menu>
 		</div>

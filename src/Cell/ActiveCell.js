@@ -11,8 +11,8 @@ export default React.memo(function ActiveCell(props) {
 	const { columns, rows } = useRowsState();
 	const inputRef = useRef(null);
 
-	function changeActiveCell(row, column, selectionActive, columnID) {
-		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, selectionActive, columnID });
+	function changeActiveCell(row, column, columnID) {
+		dispatchSelectAction({ type: ACTIVATE_CELL, row, column, columnID });
 	}
 
 	const updateCellCallback = useCallback(

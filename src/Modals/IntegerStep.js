@@ -1,30 +1,36 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState } from 'react';
 import { InputNumber, Slider, Row, Col } from 'antd';
-import { useSelectDispatch, useRowsState } from '../context/SpreadsheetProvider';
+import { useRowsDispatch, useRowsState, useSelectState } from '../context/SpreadsheetProvider';
 import { FILTER_COLUMN, SET_FILTERS, NUMBER, FORMULA } from '../constants';
 
-export default function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label, selectedColumns }) {
-	const dispatchSelectAction = useSelectDispatch();
-	const { rows, columns } = useRowsState();
+export default React.memo(function IntegerStep({ columnID, colMin, colMax, currentMin, currentMax, label }) {
+	const dispatchRowsAction = useRowsDispatch();
 	const [ min, setMin ] = useState(currentMin || colMin);
 	const [ max, setMax ] = useState(currentMax || colMax);
-
+	const { selectedColumns } = useSelectState();
+	const { filters } = useRowsState();
 	const onChange = (value) => {
 		setMin(value[0].toFixed(2) / 1);
 		setMax(value[1].toFixed(2) / 1);
 	};
 
-	function updateSelectedRows() {
-		const newCopy = selectedColumns.slice();
-		const index = newCopy.findIndex((col) => col.id === columnID);
-		newCopy[index] = { ...selectedColumns[index], min, max };
-		dispatchSelectAction({
-			type: SET_FILTERS,
-			selectedColumns: newCopy,
-			numberFilters: newCopy.filter((col) => col.type === NUMBER || col.type === FORMULA),
-		});
-		dispatchSelectAction({ type: FILTER_COLUMN, rows, columns });
-	}
+	const updateSelectedRows = React.useCallback(
+		function updateSelectedRows() {
+			const { id, filterName } = filters;
+			const index = selectedColumns.findIndex((col) => col.id === columnID);
+			selectedColumns[index] = { ...selectedColumns[index], min, max };
+			dispatchRowsAction({
+				type: SET_FILTERS,
+				selectedColumns: selectedColumns,
+				numberFilters: selectedColumns.filter((col) => col.type === NUMBER || col.type === FORMULA),
+				id,
+				filterName,
+			});
+			dispatchRowsAction({ type: FILTER_COLUMN });
+		},
+		[ columnID, max, min, selectedColumns ],
+	);
 
 	function findGCD(x, y) {
 		if (typeof x !== 'number' || typeof y !== 'number') return false;
@@ -40,20 +46,26 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 
 	function handleInputChange(value, setState) {
 		if (isNaN(value)) return;
-		setState(value);
+		setState((prev) => {
+			// update filters when dials are used
+			if (prev === value + 1 || prev === value - 1) {
+				updateSelectedRows();
+			}
+			return value;
+		});
 	}
 
 	return (
-		<Row style={{ maxWidth: 400, display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-			<Col style={{ textAlign: 'center', width: 400 }} span={12}>
+		<Row style={{ display: 'flex', width: '100%', justifyContent: 'center', marginTop: 10 }}>
+			<Col style={{ textAlign: 'center', width: '100%' }}>
 				<span
 					style={{
 						display: 'flex',
 						alignSelf: 'center',
 						fontSize: '1.1em',
 						width: '100%',
-						textAlign: 'center',
 						justifyContent: 'space-evenly',
+						textAlign: 'center',
 						alignItems: 'center',
 					}}
 				>
@@ -92,4 +104,4 @@ export default function IntegerStep({ columnID, colMin, colMax, currentMin, curr
 			</Col>
 		</Row>
 	);
-}
+});

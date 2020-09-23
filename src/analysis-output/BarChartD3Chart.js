@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import * as d3 from 'd3';
 
-export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId, colYId, colZId, colXScale }) {
+export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXScale }) {
 	const mainChartContainer = useRef(null);
 	const subChartContainer = useRef(null);
 	const uniqueGroups = [ ...new Set(coordinates.map((row) => row.group)) ];
@@ -15,10 +15,11 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId,
 	function onMouseOverBars(d, thisBar) {
 		d3.select(thisBar).transition().duration(50).style('opacity', 0.6);
 		barTooltip.transition().duration(200).style('opacity', 0.9);
-		barTooltip
-			.html(`Group: ${d.group}<br>Rate (ml/sec): ${d.y}<br>Time (sec): ${d.x}<br>row: ${d.row.rowNumber}`)
-			.style('left', `${d3.event.pageX}px`)
-			.style('top', `${d3.event.pageY - 28}px`);
+		colZ
+			? barTooltip.html(`Group: ${d.group}<br>Rate (ml/sec): ${d.y}<br>Time (sec): ${d.x}<br>row: ${d.row.rowNumber}`)
+			: barTooltip.html(`Rate (ml/sec): ${d.y}<br>Time (sec): ${d.x}<br>row: ${d.row.rowNumber}`);
+
+		barTooltip.style('left', `${d3.event.pageX}px`).style('top', `${d3.event.pageY - 28}px`);
 	}
 
 	function onMouseOutBars(_, thisBar) {
@@ -180,26 +181,27 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId,
 			.text(colX.label);
 
 		// text label for subgraph title
-		if (subGraph) {
-			svg
-				.append('text')
-				.attr('text-decoration', 'underline')
-				.attr('font-size', 16)
-				.attr('transform', `translate(${width / 2},${20})`)
-				.style('text-anchor', 'middle')
-				.text(`${colZ.label}: ${title}`);
-		} else {
-			// legend for main graph
-			svg
-				.append('text')
-				.attr('text-anchor', 'middle')
-				.attr('text-decoration', 'underline')
-				.attr('transform', `translate(${width + 90},50)`)
-				.attr('font-size', 16)
-				.text(colZ.label);
-			svg.append('g').call(legend);
+		if (colZ) {
+			if (subGraph) {
+				svg
+					.append('text')
+					.attr('text-decoration', 'underline')
+					.attr('font-size', 16)
+					.attr('transform', `translate(${width / 2},${20})`)
+					.style('text-anchor', 'middle')
+					.text(`${colZ.label}: ${title}`);
+			} else {
+				// legend for main graph
+				svg
+					.append('text')
+					.attr('text-anchor', 'middle')
+					.attr('text-decoration', 'underline')
+					.attr('transform', `translate(${width + 90},50)`)
+					.attr('font-size', 16)
+					.text(colZ ? colZ.label : colY.label);
+				svg.append('g').call(legend);
+			}
 		}
-
 		return svg.node();
 	};
 
@@ -208,13 +210,13 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXId,
 		.range([ '#56B4E9', '#E69F00', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7', '#999999' ]);
 	// data, height, width, subGraph, title
 	chart(coordinates, 650, 650, false, false);
-	const separateGroups = (data, group) => data.filter((data) => data.group.includes(group));
+	const separateGroups = (data, group) => data.filter((data) => (data.group ? data.group.includes(group) : null));
 	uniqueGroups.forEach((group) => chart(separateGroups(coordinates, group), 400, 400, true, group));
 
 	return (
 		<div>
 			<div ref={mainChartContainer} />
-			<div ref={subChartContainer} />
+			{colZ && <div ref={subChartContainer} />}
 		</div>
 	);
 }

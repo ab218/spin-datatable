@@ -1,7 +1,7 @@
 import {
 	ACTIVATE_CELL,
 	ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS,
-	FILTER_COLUMN,
+	FILTER_SELECT_ROWS,
 	MODIFY_CURRENT_SELECTION_CELL_RANGE,
 	REMOVE_SELECTED_CELLS,
 	SELECT_CELL,
@@ -10,20 +10,11 @@ import {
 	SELECT_ROW,
 	SELECT_BLOCK_OF_CELLS,
 	SELECT_COLUMN,
-	SET_FILTERS,
 	SET_SELECTED_COLUMN,
-	DELETE_FILTER,
 	TRANSLATE_SELECTED_CELL,
 } from '../../constants';
 
-import {
-	getRangeBoundaries,
-	generateUniqueRowIDs,
-	generateUniqueColumnIDs,
-	filterRowsByColumnRange,
-	filterRowsByString,
-	returnIntersectionOrNonEmptyArray,
-} from '../helpers';
+import { getRangeBoundaries, getUniqueListBy, selectRowsFromRowIDs } from '../helpers';
 
 export function selectReducer(state, action) {
 	const {
@@ -34,19 +25,11 @@ export function selectReducer(state, action) {
 		cellSelectionRanges,
 		endRangeRow,
 		endRangeColumn,
-		filters,
 		selectedColumns,
-		stringFilter,
-		numberFilters,
 		newInputCellValue,
 		row,
-		rowID,
 		rowIndex,
-		rowIndexes,
-		rows,
-		selectionActive,
-		selectedRowIDs,
-		uniqueColumnIDs,
+		metaKeyPressed,
 	} = action;
 
 	// const { type, ...event } = action;
@@ -61,46 +44,32 @@ export function selectReducer(state, action) {
 				activeCell,
 				cellSelectionRanges: [],
 				newInputCellValue,
-				uniqueRowIDs: [],
-				uniqueColumnIDs: [],
-				// selectedText,
 			};
 		}
 		// On text input of a selected cell, value is cleared, cell gets new value and cell is activated
 		case ADD_CURRENT_SELECTION_TO_CELL_SELECTIONS: {
 			const { currentCellSelectionRange, cellSelectionRanges } = state;
+
 			return {
 				...state,
 				cellSelectionRanges: cellSelectionRanges.concat(currentCellSelectionRange || []),
 				currentCellSelectionRange: null,
 			};
 		}
-		case DELETE_FILTER: {
-			return { ...state, filters, selectedColumns };
-		}
-		case FILTER_COLUMN: {
-			const filteredRowsByRange = filterRowsByColumnRange(state.filters.numberFilters, rows);
-			const filteredRowsByString = filterRowsByString(rows, state.filters);
-			const filteredRows = returnIntersectionOrNonEmptyArray(filteredRowsByRange, filteredRowsByString);
-			const filteredRowIDs = filteredRows.map((row) => row.id);
-			const selectedRowIndexes = filteredRows.map((row) => rows.findIndex((stateRow) => stateRow.id === row.id));
-			const selectedRowObjects = selectedRowIndexes.map((rowIndex) => {
-				return {
-					top: rowIndex,
-					left: 0,
-					bottom: rowIndex,
-					right: columns.length - 1,
-				};
-			});
+
+		case FILTER_SELECT_ROWS: {
+			const { filters, rows, columns } = action;
+			const mergedRowIDs = filters.flatMap((filter) => filter.filteredRowIDs);
+			const mappedRows = selectRowsFromRowIDs(mergedRowIDs, rows, columns);
+			const uniques = getUniqueListBy(mappedRows, 'top');
+
 			return {
 				...state,
-				activeCell: null,
-				currentCellSelectionRange: selectedRowObjects,
-				cellSelectionRanges: selectedRowObjects,
-				uniqueRowIDs: filteredRowIDs,
-				uniqueColumnIDs: columns.map((col) => col.id),
+				cellSelectionRanges: uniques,
+				currentCellSelectionRange: uniques,
 			};
 		}
+
 		case MODIFY_CURRENT_SELECTION_CELL_RANGE: {
 			const { lastSelection } = state;
 			const currentCellSelectionRange = getRangeBoundaries({
@@ -109,15 +78,10 @@ export function selectReducer(state, action) {
 				endRangeRow,
 				endRangeColumn: endRangeColumn,
 			});
-			const totalCellSelectionRanges = state.cellSelectionRanges.concat(currentCellSelectionRange);
-			const uniqueRowIDs = generateUniqueRowIDs(totalCellSelectionRanges, rows);
-			const uniqueColumnIDs = generateUniqueColumnIDs(totalCellSelectionRanges, columns);
 			return state.currentCellSelectionRange
 				? {
 						...state,
 						currentCellSelectionRange,
-						uniqueRowIDs,
-						uniqueColumnIDs,
 					}
 				: state;
 		}
@@ -126,9 +90,6 @@ export function selectReducer(state, action) {
 				...state,
 				currentCellSelectionRange: null,
 				cellSelectionRanges: [],
-				uniqueRowIDs: [],
-				uniqueColumnIDs: [],
-				selectedRowIDs: [],
 				activeCell: null,
 			};
 		}
@@ -138,20 +99,13 @@ export function selectReducer(state, action) {
 			// track lastSelection to know where to begin range selection on drag
 			const lastSelection = { row: rowIndex, column: columnIndex };
 			const selectedCell = { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex };
-			const addSelectedCellToSelectionArray = cellSelectionRanges.concat(selectedCell);
-			const currentRowIDs = selectionActive
-				? !state.uniqueRowIDs.includes(rowID) ? state.uniqueRowIDs.concat(rowID) : state.uniqueRowIDs
-				: [ rowID ];
-			const currentColumnIDs = selectionActive ? state.uniqueColumnIDs.concat(columnID) : [ columnID ];
+			const addSelectedCellToSelectionArray = metaKeyPressed ? cellSelectionRanges : [];
 			return {
 				...state,
 				activeCell: null,
 				lastSelection,
-				currentRowIDs,
-				cellSelectionRanges: selectionActive ? addSelectedCellToSelectionArray : [],
+				cellSelectionRanges: addSelectedCellToSelectionArray,
 				currentCellSelectionRange: selectedCell,
-				uniqueRowIDs: currentRowIDs,
-				uniqueColumnIDs: currentColumnIDs,
 			};
 		}
 		case SELECT_ROW: {
@@ -166,10 +120,8 @@ export function selectReducer(state, action) {
 				...state,
 				activeCell: null,
 				currentCellSelectionRange: allCellsInRow,
-				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
+				cellSelectionRanges: metaKeyPressed ? cellSelectionRanges.concat(allCellsInRow) : [ allCellsInRow ],
 				lastSelection: { column: columns.length - 1, row: rowIndex },
-				uniqueRowIDs: [ rowID ],
-				uniqueColumnIDs: columns.map((col) => col.id),
 			};
 		}
 		// This is used when a rows array is supplied. Histogram bar clicks.
@@ -189,11 +141,16 @@ export function selectReducer(state, action) {
 				...state,
 				activeCell: null,
 				cellSelectionRanges: newCellSelectionRanges,
-				uniqueRowIDs: rowIDs,
-				uniqueColumnIDs: [ columnID ],
 			};
 		}
 		case SELECT_ALL_CELLS: {
+			const { rows, columns } = action;
+			const allColumns = columns.map((column) => column.id);
+			let rowsObject = {};
+			for (let i = 0; i < rows.length; i++) {
+				const row = rows[i];
+				rowsObject[row.id] = allColumns;
+			}
 			const allCells = {
 				top: 0,
 				left: 0,
@@ -205,8 +162,7 @@ export function selectReducer(state, action) {
 				activeCell: null,
 				currentCellSelectionRange: null,
 				cellSelectionRanges: [ allCells ],
-				uniqueColumnIDs: columns.map((column) => column.id),
-				uniqueRowIDs: rows.map((row) => row.id),
+				// cellSelectionObject: rowsObject,
 			};
 		}
 		case SELECT_COLUMN: {
@@ -222,24 +178,11 @@ export function selectReducer(state, action) {
 				...state,
 				activeCell: null,
 				currentCellSelectionRange: allCellsInColumn,
-				cellSelectionRanges: selectionActive ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
-				uniqueColumnIDs: [ columnID ],
-				uniqueRowIDs: rows.map((row) => row.id),
+				cellSelectionRanges: metaKeyPressed ? cellSelectionRanges.concat(allCellsInColumn) : [ allCellsInColumn ],
 			};
 		}
 		case SELECT_BLOCK_OF_CELLS: {
-			return { ...state, cellSelectionRanges, uniqueColumnIDs, selectedRowIDs };
-		}
-		case SET_FILTERS: {
-			const stringFilterCopy = { ...state.filters.stringFilters, ...stringFilter };
-			return {
-				...state,
-				selectedColumns: selectedColumns || state.selectedColumns,
-				filters: {
-					stringFilters: stringFilterCopy,
-					numberFilters: numberFilters || state.filters.numberFilters,
-				},
-			};
+			return { ...state, cellSelectionRanges };
 		}
 		case SET_SELECTED_COLUMN: {
 			return { ...state, selectedColumns };
@@ -247,14 +190,10 @@ export function selectReducer(state, action) {
 		// EVENT: Selected Cell translated
 		case TRANSLATE_SELECTED_CELL: {
 			const newCellSelectionRanges = [ { top: rowIndex, bottom: rowIndex, left: columnIndex, right: columnIndex } ];
-			const rowID = rows[rowIndex].id;
-			const columnID = columns[columnIndex].id;
 			return {
 				...state,
 				cellSelectionRanges: newCellSelectionRanges,
 				currentCellSelectionRange: null,
-				uniqueColumnIDs: [ columnID ],
-				uniqueRowIDs: [ rowID ],
 			};
 		}
 		default: {

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Alert } from 'antd';
 import { useRowsDispatch } from '../context/SpreadsheetProvider';
 
-export default function ErrorMessage({ error, setError }) {
+const ErrorMessage = React.memo(function ErrorMessage({ error, setError }) {
 	const dispatchRowsAction = useRowsDispatch();
 	useEffect(
 		() => {
@@ -17,4 +17,6 @@ export default function ErrorMessage({ error, setError }) {
 		[ dispatchRowsAction, error, setError ],
 	);
 	return error ? <Alert className="error" message={error} type="error" showIcon /> : <div />;
-}
+});
+
+export default ErrorMessage;

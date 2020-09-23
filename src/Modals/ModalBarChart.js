@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Button, Modal } from 'antd';
 import { useSpreadsheetState, useSpreadsheetDispatch, useRowsState } from '../context/SpreadsheetProvider';
 import { createBarChart } from '../analysis-output/Analysis';
-import { TOGGLE_BAR_CHART_MODAL } from '../constants';
+import { TOGGLE_BAR_CHART_MODAL, NOMINAL, ORDINAL, CONTINUOUS } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
 import { createRandomID } from '../context/helpers';
+import DraggableModal from './DraggableModal';
 
 export default function AnalysisModal({ setPopup }) {
 	const [ selectedColumn, setSelectedColumn ] = useState(null);
@@ -23,7 +24,7 @@ export default function AnalysisModal({ setPopup }) {
 	}
 
 	async function performAnalysis() {
-		if (!yColData[0] || !xColData[0] || !groupingColData[0]) {
+		if (!yColData[0] || !xColData[0]) {
 			// user should never see this
 			setError('Please add all required columns and try again');
 			return;
@@ -31,13 +32,13 @@ export default function AnalysisModal({ setPopup }) {
 		setPerformingAnalysis(true);
 		const colX = xColData[0];
 		const colY = yColData[0];
-		const colZ = groupingColData[0];
+		const colZ = groupingColData ? groupingColData[0] : null;
 		// TODO: combine this with makeXYCols
 		const mapNumberColumnValues = (colID) => rows.map((row) => !excludedRows.includes(row.id) && Number(row[colID]));
 		const mapCharacterColumnValues = (colID) => rows.map((row) => !excludedRows.includes(row.id) && row[colID]);
 		const colA = mapNumberColumnValues(colX.id);
 		const colB = mapNumberColumnValues(colY.id);
-		const colC = mapCharacterColumnValues(colZ.id);
+		const colC = colZ ? mapCharacterColumnValues(colZ.id) : [];
 		const maxColLength = Math.max(colA.length, colB.length, colC.length);
 		function makeXYZCols(colA, colB, colC) {
 			const arr = [];
@@ -48,7 +49,7 @@ export default function AnalysisModal({ setPopup }) {
 					arr.push({
 						x: colA[i],
 						y: colB[i],
-						group: colC[i],
+						group: colC ? colC[i] : null,
 						row: {
 							rowID: rows[i]['id'],
 							rowNumber,
@@ -61,9 +62,9 @@ export default function AnalysisModal({ setPopup }) {
 		const XYZCols = makeXYZCols(colA, colB, colC);
 		const colXArr = XYZCols.map((a) => a.x);
 		const colYArr = XYZCols.map((a) => a.y);
-		const colZArr = XYZCols.map((a) => a.group);
+		const colZArr = colC ? XYZCols.map((a) => a.group) : [];
 
-		if (colXArr.length >= 1 && colYArr.length >= 1 && colZArr.length >= 1) {
+		if (colXArr.length >= 1 && colYArr.length >= 1) {
 			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colX.modelingType);
 			setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
 			// const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=1000,height=800');
@@ -85,25 +86,7 @@ export default function AnalysisModal({ setPopup }) {
 			// 		window.removeEventListener('message', removeTargetClickEvent);
 			// 	}
 			// }
-
-			// function targetClickEvent(event) {
-			// 	if (event.data.message === 'clicked') {
-			// 		if (!event.data.metaKeyPressed) {
-			// 			dispatchSpreadsheetAction({ type: REMOVE_SELECTED_CELLS });
-			// 		}
-			// 		if (event.data.label && event.data.colZ) {
-			// 			dispatchSpreadsheetAction({ type: SET_FILTERS, stringFilter: { [colZ.id]: event.data.colZ.text } });
-			// 			dispatchSpreadsheetAction({ type: FILTER_COLUMN });
-			// 			return;
-			// 		}
-			// 		const selectedRow = event.data.rowID;
-			// 		dispatchSpreadsheetAction({
-			// 			type: SELECT_ROW,
-			// 			rowID: selectedRow,
-			// 			rowIndex: rows.findIndex((row) => row.id === selectedRow),
-			// 		});
-			// 	}
-			// }
+			//}
 			setPerformingAnalysis(false);
 			dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
 
@@ -128,7 +111,7 @@ export default function AnalysisModal({ setPopup }) {
 				className="ant-modal"
 				onCancel={handleModalClose}
 				onOk={performAnalysis}
-				title="Bar Chart"
+				title={<DraggableModal children="Bar Chart" />}
 				visible={barChartModalOpen}
 				width={750}
 				bodyStyle={{ background: '#ECECEC' }}
@@ -140,9 +123,7 @@ export default function AnalysisModal({ setPopup }) {
 								Cancel
 							</Button>
 							<Button
-								disabled={
-									xColData.length === 0 || yColData.length === 0 || groupingColData.length === 0 || performingAnalysis
-								}
+								disabled={xColData.length === 0 || yColData.length === 0 || performingAnalysis}
 								key="submit"
 								type="primary"
 								onClick={performAnalysis}
@@ -155,7 +136,7 @@ export default function AnalysisModal({ setPopup }) {
 			>
 				<div style={styles.flexSpaced}>
 					<SelectColumn
-						title={'Select Column'}
+						title={'Select Columns'}
 						groupingColData={groupingColData[0]}
 						columns={filteredColumns}
 						setSelectedColumn={setSelectedColumn}
@@ -163,6 +144,7 @@ export default function AnalysisModal({ setPopup }) {
 					<div style={{ width: 410 }}>
 						Cast Selected Columns into Roles
 						<VariableSelector
+							notAllowed={[ NOMINAL, ORDINAL ]}
 							data={yColData}
 							label="Y"
 							setData={setYColData}
@@ -170,6 +152,7 @@ export default function AnalysisModal({ setPopup }) {
 							styleProps={{ marginBottom: 20, marginTop: 20 }}
 						/>
 						<VariableSelector
+							notAllowed={[ NOMINAL, ORDINAL ]}
 							data={xColData}
 							label="X"
 							setData={setXColData}
@@ -177,8 +160,9 @@ export default function AnalysisModal({ setPopup }) {
 							styleProps={{ marginBottom: 20 }}
 						/>
 						<VariableSelector
+							notAllowed={[ CONTINUOUS ]}
 							data={groupingColData}
-							label="Group"
+							label="Group (optional)"
 							setData={setGroupingColData}
 							selectedColumn={selectedColumn}
 						/>

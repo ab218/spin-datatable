@@ -7,6 +7,7 @@ import { performDistributionAnalysis } from '../analysis-output/Analysis';
 import { SelectColumn, styles } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
 import { createRandomID } from '../context/helpers';
+import DraggableModal from './DraggableModal';
 
 export default function DistributionModal({ setPopup }) {
 	const { distributionModalOpen } = useSpreadsheetState();
@@ -57,7 +58,7 @@ export default function DistributionModal({ setPopup }) {
 			<Modal
 				className="ant-modal"
 				onCancel={handleModalClose}
-				title="Descriptive Analysis"
+				title={<DraggableModal children="Descriptive Analysis" />}
 				visible={distributionModalOpen}
 				width={550}
 				bodyStyle={{ background: '#ECECEC' }}
@@ -81,13 +82,13 @@ export default function DistributionModal({ setPopup }) {
 				]}
 			>
 				<div style={{ ...styles.flexSpaced }}>
-					<SelectColumn title={'Select Column'} columns={filteredColumns} setSelectedColumn={setYColData} />
+					<SelectColumn title={'Select Columns'} columns={filteredColumns} setSelectedColumn={setYColData} />
 					<div style={{ display: 'flex' }}>
 						<div style={{ width: 100 }}>Number of Bins</div>
 						<Input
 							onChange={(e) => onChangeBinInput(e)}
 							value={numberOfBins}
-							style={{ marginLeft: 10, width: '40%' }}
+							style={{ marginLeft: 10, width: '40%', height: '30px' }}
 						/>
 					</div>
 				</div>

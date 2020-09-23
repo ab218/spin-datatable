@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import katex from 'katex';
 import nerdamer from 'nerdamer';
-import { Button, Icon, Input, Modal } from 'antd';
+import { RightOutlined } from '@ant-design/icons';
+import { Button, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
 import Radio from './Radio';
 import ErrorMessage from './ErrorMessage';
+import DraggableModal from './DraggableModal';
 import {
 	useSpreadsheetState,
 	useSpreadsheetDispatch,
@@ -202,7 +204,11 @@ export default function AntModal({ selectedColumn }) {
 				destroyOnClose
 				onCancel={() =>
 					dispatchSpreadsheetAction({ type: TOGGLE_COLUMN_TYPE_MODAL, modalOpen: false, selectedColumn: null })}
-				title={columnName || <span style={{ fontStyle: 'italic', opacity: 0.4 }}>{`<Blank>`}</span>}
+				title={
+					<DraggableModal
+						children={columnName || <span style={{ fontStyle: 'italic', opacity: 0.4 }}>{`<Blank>`}</span>}
+					/>
+				}
 				visible={columnTypeModalOpen}
 				footer={[
 					<div key="footer-div" style={{ height: 40, display: 'flex', justifyContent: 'space-between' }}>
@@ -301,7 +307,7 @@ export default function AntModal({ selectedColumn }) {
 														}
 													}}
 												>
-													<Icon type="right" />
+													<RightOutlined />
 												</Button>
 											</div>
 										</div>
