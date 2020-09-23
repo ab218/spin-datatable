@@ -332,7 +332,7 @@ export function rowsReducer(state, action) {
 			};
 		}
 		case FILTER_UNEXCLUDE_ROWS: {
-			const { filter: { filteredRowIDs, id } } = action;
+			const { filter: { filteredRowIDs } } = action;
 			return {
 				...state,
 				excludedRows: state.excludedRows.filter((rowID) => !filteredRowIDs.includes(rowID)),
@@ -351,7 +351,7 @@ export function rowsReducer(state, action) {
 			};
 		}
 		case FILTER_UNINCLUDE_ROWS: {
-			const { filter: { filteredRowIDs, id } } = action;
+			const { filter: { filteredRowIDs } } = action;
 			return {
 				...state,
 				includedRows: state.excludedRows.filter((rowID) => !filteredRowIDs.includes(rowID)),
