@@ -65,6 +65,20 @@ export function CaratButtons({ notAllowed, data, setData, label, selectedColumn 
 			>
 				{label}
 				<RightOutlined style={{ marginLeft: 40 }} />
+// =======
+// 				disabled={!selectedColumn || data.length !== 0}
+// 				style={{
+// 					marginBottom: 5,
+// 					display: 'flex',
+// 					justifyContent: 'space-between',
+// 					alignItems: 'center',
+// 					paddingRight: '5px',
+// 				}}
+// 				onClick={() => addColumnToList(data, setData, selectedColumn)}
+// 			>
+// 				<span>{label}</span>
+// 				<Icon type="right" />
+// >>>>>>> master
 			</Button>
 		</div>
 	);

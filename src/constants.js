@@ -63,7 +63,7 @@ const ORDINAL = 'Ordinal';
 const CONTINUOUS = 'Continuous';
 const NOMINAL = 'Nominal';
 const NUMBER = 'Number';
-const STRING = 'String';
+const TEXT = 'Text';
 const FORMULA = 'Formula';
 const BIVARIATE = 'Bivariate';
 const LOGISTIC = 'Logistic';
@@ -139,6 +139,6 @@ export {
 	ONEWAY,
 	CONTINGENCY,
 	NUMBER,
-	STRING,
+	TEXT,
 	FORMULA,
 };

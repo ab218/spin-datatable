@@ -4,7 +4,7 @@ import nerdamer from 'nerdamer';
 import { RightOutlined } from '@ant-design/icons';
 import { Button, Input, Modal } from 'antd';
 import { SelectColumn } from './ModalShared';
-import Dropdown from './Dropdown';
+import Radio from './Radio';
 import ErrorMessage from './ErrorMessage';
 import DraggableModal from './DraggableModal';
 import {
@@ -18,7 +18,7 @@ import {
 	TOGGLE_COLUMN_TYPE_MODAL,
 	UPDATE_COLUMN,
 	NUMBER,
-	STRING,
+	TEXT,
 	FORMULA,
 	CONTINUOUS,
 	ORDINAL,
@@ -145,7 +145,7 @@ export default function AntModal({ selectedColumn }) {
 
 	useEffect(
 		() => {
-			if (columnType === STRING && columnModelingType === CONTINUOUS) {
+			if (columnType === TEXT && columnModelingType === CONTINUOUS) {
 				setColumnModelingType(NOMINAL);
 			}
 		},
@@ -250,18 +250,18 @@ export default function AntModal({ selectedColumn }) {
 				</span>
 				<span className="modal-span">
 					<h4>Type</h4>
-					<Dropdown
+					<Radio
 						modelingTypeIcons={false}
-						menuItems={[ NUMBER, STRING, FORMULA ]}
+						menuItems={[ NUMBER, TEXT, FORMULA ]}
 						setColumnType={setColumnType}
 						columnType={columnType}
 					/>
 				</span>
 				<span className="modal-span">
 					<h4>Scale</h4>
-					<Dropdown
+					<Radio
 						modelingTypeIcons={true}
-						disabledType={columnType === STRING ? CONTINUOUS : ''}
+						disabledType={columnType === TEXT ? CONTINUOUS : ''}
 						menuItems={[ CONTINUOUS, ORDINAL, NOMINAL ]}
 						setColumnType={setColumnModelingType}
 						columnType={columnModelingType}

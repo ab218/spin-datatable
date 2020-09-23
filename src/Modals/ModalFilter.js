@@ -25,6 +25,7 @@ import {
 	SAVE_NEW_FILTER,
 	SET_SELECTED_COLUMN,
 	STRING,
+  TEXT
 } from '../constants';
 
 const FilterModal = React.memo(function AntModal() {
@@ -254,7 +255,7 @@ const FilterModal = React.memo(function AntModal() {
 						selectedColumns.length > 0 &&
 						selectedColumns.map(
 							(col, i) =>
-								col.type === STRING ? (
+								col.type === TEXT ? (
 									<FilterColumnPicker removeColumn={removeColumn} key={i} column={col} />
 								) : (
 									<FilterColumnSlider removeColumn={removeColumn} key={i} column={col} />
