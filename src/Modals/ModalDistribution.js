@@ -6,12 +6,12 @@ import { TOGGLE_DISTRIBUTION_MODAL } from '../constants';
 import { performDistributionAnalysis } from '../analysis-output/Analysis';
 import { SelectColumn, styles } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
-import { createRandomID } from '../context/helpers';
+import { createRandomID, filterExcludedRows } from '../context/helpers';
 import DraggableModal from './DraggableModal';
 
 export default function DistributionModal({ setPopup }) {
 	const { distributionModalOpen } = useSpreadsheetState();
-	const { columns, rows, excludedRows } = useRowsState();
+	const { columns, rows, excludedRows, includedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 	const [ error, setError ] = useState('');
 	const [ numberOfBins, setNumberOfBins ] = useState(10);
@@ -27,9 +27,7 @@ export default function DistributionModal({ setPopup }) {
 			return;
 		}
 		// TODO: Better error handling here
-		const colVals = rows
-			.map((row) => !excludedRows.includes(row.id) && Number(row[yColData.id]))
-			.filter((x) => Number(x));
+		const colVals = filterExcludedRows(rows, includedRows, excludedRows, yColData);
 		if (colVals.length < 3) {
 			setError('Column must have at least 3 valid values');
 			return;

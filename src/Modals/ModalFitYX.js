@@ -9,7 +9,7 @@ import {
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { createRandomID } from '../context/helpers';
+import { createRandomID, filterExcludedRows } from '../context/helpers';
 import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from '../constants';
 import VariableLegend from './FitYXLegend';
 import DraggableModal from './DraggableModal';
@@ -22,7 +22,7 @@ export default function AnalysisModal({ setPopup }) {
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
 	const [ analysisType, setAnalysisType ] = useState(null);
 	const { analysisModalOpen } = useSpreadsheetState();
-	const { columns, rows, excludedRows } = useRowsState();
+	const { columns, rows, excludedRows, includedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {
@@ -34,23 +34,11 @@ export default function AnalysisModal({ setPopup }) {
 			setError('Please add all required columns and try again');
 			return;
 		}
-		const colX = xColData[0] || columns[0];
-		const colY = yColData[0] || columns[2];
+		const colX = xColData[0];
+		const colY = yColData[0];
 		// TODO: combine this with makeRows
-		function mapColumnValues(column) {
-			return rows.map((row) => {
-				if (!excludedRows.includes(row.id)) {
-					if (column.type === 'Number' || column.type === 'Formula') {
-						return Number(row[column.id]);
-					} else {
-						return row[column.id];
-					}
-				}
-				return null;
-			});
-		}
-		const colA = mapColumnValues(colX);
-		const colB = mapColumnValues(colY);
+		const colA = filterExcludedRows(rows, includedRows, excludedRows, colX);
+		const colB = filterExcludedRows(rows, includedRows, excludedRows, colY);
 		const maxColLength = Math.max(colA.length, colB.length);
 		function makeRows(colA, colB) {
 			const arr = [];
