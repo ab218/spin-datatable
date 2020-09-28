@@ -38,7 +38,6 @@ import {
 	SET_FILTERS,
 	SET_TABLE_NAME,
 	SORT_COLUMN,
-	UNEXCLUDE_ROWS,
 	UNDO,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
@@ -308,19 +307,25 @@ export function rowsReducer(state, action) {
 		case EXCLUDE_ROWS: {
 			const { excludedRows, rows } = state;
 			const { cellSelectionRanges } = action;
+			const selectedRowIDs = generateUniqueRowIDs(cellSelectionRanges, rows);
+			const allSelected = selectedRowIDs.every((rowID) => excludedRows.includes(rowID));
+			const excludeRows = [ ...new Set(excludedRows.concat(selectedRowIDs)) ];
+			const unexcludeRows = excludedRows.filter(
+				(row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row),
+			);
 			return {
 				...state,
-				excludedRows: [ ...new Set(excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows))) ],
+				excludedRows: allSelected ? unexcludeRows : excludeRows,
 			};
 		}
-		case UNEXCLUDE_ROWS: {
-			const { excludedRows, rows } = state;
-			const { cellSelectionRanges } = action;
-			return {
-				...state,
-				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
-			};
-		}
+		// case UNEXCLUDE_ROWS: {
+		// 	const { excludedRows, rows } = state;
+		// 	const { cellSelectionRanges } = action;
+		// 	return {
+		// 		...state,
+		// 		excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
+		// 	};
+		// }
 		case FILTER_EXCLUDE_ROWS: {
 			const { filter: { filteredRowIDs, id } } = action;
 			return {

@@ -26,7 +26,7 @@ import {
 	SORT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	TOGGLE_FILTER_MODAL,
-	UNEXCLUDE_ROWS,
+	// UNEXCLUDE_ROWS,
 } from './constants';
 import { Menu } from 'antd';
 
@@ -144,16 +144,9 @@ export default function ContextMenu({ paste }) {
 						}}
 						key="20"
 					>
-						Exclude Selected Row(s)
+						Exclude/Unexclude Selected Row(s)
 					</Menu.Item>
-					<Menu.Item
-						onClick={() => {
-							dispatchRowsAction({ type: UNEXCLUDE_ROWS, cellSelectionRanges });
-						}}
-						key="21"
-					>
-						Unexclude Selected Row(s)
-					</Menu.Item>
+					<Menu.Item key="21">Invert Selection</Menu.Item>
 				</Menu>
 			</div>
 		);
@@ -257,14 +250,7 @@ export default function ContextMenu({ paste }) {
 				<Menu.Item onClick={paste} key="19">
 					Paste
 				</Menu.Item>
-				<Menu.Item
-					key="analyzeSelection"
-					onClick={() => {
-						dispatchRowsAction({ type: UNEXCLUDE_ROWS, cellSelectionRanges });
-					}}
-				>
-					Analyze Selection
-				</Menu.Item>
+				<Menu.Item key="analyzeSelection">Analyze Selection</Menu.Item>
 			</Menu>
 		</div>
 	);
