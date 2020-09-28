@@ -458,7 +458,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree3Poly) {
-					drawBasicPath(degree3Points, 'degree3PolyLine', 'Quadratic Regression Line', svg, pathTooltip, true);
+					drawBasicPath(degree3Points, 'degree3PolyLine', 'Cubic Regression Line', svg, pathTooltip, true);
 				} else {
 					removeChartElement(`.degree3PolyLine`);
 					removeChartElement(`.degree3PolyLine-hitbox`);
@@ -473,7 +473,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree4Poly) {
-					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quadratic Regression Line', svg, pathTooltip, true);
+					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quartic Regression Line', svg, pathTooltip, true);
 				} else {
 					removeChartElement(`.degree4PolyLine`);
 					removeChartElement(`.degree4PolyLine-hitbox`);
