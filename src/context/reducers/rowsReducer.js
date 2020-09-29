@@ -567,6 +567,31 @@ export function rowsReducer(state, action) {
 				.concat(columnCopy)
 				.concat(columns.slice(originalPosition + 1));
 
+			const oldColumn = columns.find((column) => column.id === updatedColumn.id);
+
+			// update label for savedFilters
+			const updatedSavedFilters = state.savedFilters.map((savedFilter) => {
+				const updatedNumberFilters = savedFilter.numberFilters.map((numberFilter) => {
+					if (updatedColumn.id === numberFilter.id) {
+						return { ...numberFilter, ...updatedColumn };
+					}
+					return numberFilter;
+				});
+				const updatedSelectedColumns = savedFilter.selectedColumns.map((selectedColumn) => {
+					if (updatedColumn.id === selectedColumn.id) {
+						return { ...selectedColumn, ...updatedColumn };
+					}
+					return selectedColumn;
+				});
+				const updatedScript = savedFilter.script.split(oldColumn.label).join(updatedColumn.label);
+				return {
+					...savedFilter,
+					numberFilters: updatedNumberFilters,
+					selectedColumns: updatedSelectedColumns,
+					script: updatedScript,
+				};
+			});
+
 			const prevColumn = columns.find((col) => col.id === columnCopy.id);
 
 			function removeDependenciesFromMap() {
@@ -621,6 +646,7 @@ export function rowsReducer(state, action) {
 						updatedRows.length > 0 ? [ ...state.history, { rows: state.rows, columns: state.columns } ] : state.history,
 					rows: updatedRows.length > 0 ? updatedRows : rows,
 					inverseDependencyMap,
+					savedFilters: updatedSavedFilters,
 				};
 			}
 
@@ -628,6 +654,7 @@ export function rowsReducer(state, action) {
 				...state,
 				columns: updatedColumns,
 				modalError: null,
+				savedFilters: updatedSavedFilters,
 				inverseDependencyMap:
 					prevColumn.type === 'Formula' && columnCopy.type !== 'Formula'
 						? removeDependenciesFromMap()

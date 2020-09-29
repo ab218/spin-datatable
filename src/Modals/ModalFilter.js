@@ -252,14 +252,32 @@ const FilterModal = React.memo(function AntModal() {
 				<div style={{ width: '60%', height: 250, overflowY: 'scroll' }}>
 					{selectedColumns &&
 						selectedColumns.length > 0 &&
-						selectedColumns.map(
-							(col, i) =>
-								col.type === TEXT ? (
-									<FilterColumnPicker removeColumn={removeColumn} key={i} column={col} />
-								) : (
-									<FilterColumnSlider removeColumn={removeColumn} key={i} column={col} />
-								),
-						)}
+						selectedColumns.map((col, i) => {
+							if (col.type === TEXT) {
+								return <FilterColumnPicker removeColumn={removeColumn} key={i} column={col} />;
+							} else {
+								// Infinity can happen when a text column becomes a number column after the filter has been created
+								if (col.colMin === Infinity || col.colMax === -Infinity) {
+									return (
+										<div
+											key={col.id}
+											style={{
+												paddingLeft: 10,
+												paddingBottom: 10,
+												marginBottom: 20,
+												display: 'flex',
+												textAlign: 'center',
+												justifyContent: 'space-between',
+											}}
+										>
+											<h3>Invalid Filter</h3>
+											<RemoveColumnButton removeColumn={() => removeColumn(col.id)} />
+										</div>
+									);
+								}
+								return <FilterColumnSlider removeColumn={removeColumn} key={i} column={col} />;
+							}
+						})}
 				</div>
 			</div>
 		</Modal>
