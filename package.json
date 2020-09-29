@@ -1,6 +1,10 @@
 {
   "name": "new-react-spreadsheet",
   "version": "0.1.0",
+  "engines": {
+    "node": "12.x",
+    "yarn": "1.x"
+  },
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.2.2",
