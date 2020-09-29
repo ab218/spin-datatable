@@ -136,7 +136,7 @@ export default function ContextMenu({ paste }) {
 						}}
 						key="19"
 					>
-						Delete Selected Rows
+						Delete Selected Cases
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
@@ -144,7 +144,7 @@ export default function ContextMenu({ paste }) {
 						}}
 						key="20"
 					>
-						Exclude/Unexclude Selected Row(s)
+						Exclude/Unexclude Selected Cases(s)
 					</Menu.Item>
 					<Menu.Item key="21">Invert Selection</Menu.Item>
 				</Menu>
