@@ -119,8 +119,8 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 					.attr('y2', (d) => y(d))
 					.attr('stroke', 'black');
 
-				const jitterWidth = 10;
-				const jitter = jitterWidth / 2 + Math.random() * jitterWidth;
+				// const jitterWidth = 10;
+				// const jitter = jitterWidth / 2 + Math.random() * jitterWidth;
 
 				boxSvg
 					.selectAll('indPoints')
@@ -128,7 +128,7 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 					.enter()
 					.append('circle')
 					.attr('cx', () => center - boxWidth / 10)
-					.attr('cy', (d) => y(d) - jitter)
+					.attr('cy', (d) => y(d))
 					.attr('r', 4)
 					.style('fill', 'white')
 					.attr('stroke', 'black');

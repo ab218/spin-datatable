@@ -43,15 +43,13 @@ function ChartOptionsSelect({ handleChartOptions }) {
 		<Select
 			getPopupContainer={(triggerNode) => triggerNode.parentNode}
 			mode="multiple"
-			style={{ width: '100%' }}
+			style={{ width: '100%', textAlign: 'left' }}
 			size={'small'}
-			placeholder="Please select"
+			placeholder=""
 			defaultValue={[ 'Show Histogram Borders' ]}
 			onChange={handleChartOptions}
-			maxTagCount={0}
-			maxTagPlaceholder={(e) => {
-				return 'Display Options';
-			}}
+			tagRender={() => null}
+			showArrow={true}
 		>
 			<Option key={'Show Histogram Borders'}>Show Histogram Borders</Option>
 			<Option key={'Center Polynomials'}>Center Polynomials</Option>
@@ -281,7 +279,8 @@ export default function RegressionAnalysis({ data, setPopup }) {
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<ChartTitle title={title} />
 				<div style={{ display: 'flex' }}>
-					<div style={{ textAlign: 'left' }}>
+					<div style={{ textAlign: 'center', paddingTop: '30px', paddingLeft: '10px' }}>
+						<div>Select Chart Options</div>
 						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
 						<RegressionD3Chart CI={CI} data={data} chartOptions={chartOptions} alpha={alpha} />
 						{(linearRegressionLine || degree2Poly || degree3Poly || degree4Poly || degree5Poly || degree6Poly) && (

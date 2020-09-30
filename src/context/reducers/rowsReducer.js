@@ -42,6 +42,7 @@ import {
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 	CONTINUOUS,
+	TEXT,
 	FORMULA,
 	NUMBER,
 } from '../../constants';
@@ -473,14 +474,14 @@ export function rowsReducer(state, action) {
 			const targetColumn = getCol(state.columns, colName);
 			// TODO: Any better way to do this without the deep copy?
 			const deepCopyRows = JSON.parse(JSON.stringify(state.rows));
-			if (targetColumn.type === 'Number' || targetColumn.type === 'Formula') {
+			if (targetColumn.type === NUMBER || targetColumn.type === FORMULA) {
 				deepCopyRows.sort(
 					(a, b) =>
 						descending
 							? [ b[targetColumn.id] ] - [ a[targetColumn.id] ]
 							: [ a[targetColumn.id] ] - [ b[targetColumn.id] ],
 				);
-			} else if (targetColumn.type === 'String') {
+			} else if (targetColumn.type === TEXT) {
 				deepCopyRows.sort(
 					(a, b) =>
 						descending
