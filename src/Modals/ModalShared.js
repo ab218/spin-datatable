@@ -76,12 +76,12 @@ export function CaratButtons({ notAllowed, data, setData, label, selectedColumn 
 	);
 }
 
-function SelectedColumn({ data, styleProps, removeData, performingAnalysis }) {
+function SelectedColumn({ data, styleProps, removeData, performingAnalysis, cardText }) {
 	const { cardWithBorder, radioGroup, radioButton, columnTypography } = styles;
 	return (
 		<Card bordered style={{ ...cardWithBorder, ...styleProps }}>
 			<div style={radioGroup}>
-				{data.length === 0 ? <em>Required</em> : null}
+				{data.length === 0 ? <em>{cardText}</em> : null}
 				{data.map((column) => (
 					<div style={{ display: 'flex', ...radioButton }} key={column.id}>
 						<Typography.Text ellipsis={true} style={columnTypography}>
@@ -142,7 +142,16 @@ export function SelectColumn({ columns, groupingColData, setSelectedColumn, styl
 	);
 }
 
-export function VariableSelector({ notAllowed, styleProps, data, setData, selectedColumn, label, performingAnalysis }) {
+export function VariableSelector({
+	notAllowed,
+	styleProps,
+	data,
+	setData,
+	selectedColumn,
+	label,
+	performingAnalysis,
+	cardText,
+}) {
 	return (
 		<div style={{ ...styles.flexSpaced, ...styleProps }}>
 			<CaratButtons
@@ -152,7 +161,7 @@ export function VariableSelector({ notAllowed, styleProps, data, setData, select
 				selectedColumn={selectedColumn}
 				label={label}
 			/>
-			<SelectedColumn data={data} removeData={setData} performingAnalysis={performingAnalysis} />
+			<SelectedColumn cardText={cardText} data={data} removeData={setData} performingAnalysis={performingAnalysis} />
 		</div>
 	);
 }

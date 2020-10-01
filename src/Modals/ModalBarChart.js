@@ -117,6 +117,7 @@ export default function AnalysisModal({ setPopup }) {
 						Cast Selected Columns into Roles
 						<VariableSelector
 							notAllowed={[ NOMINAL, ORDINAL ]}
+							cardText={'Required'}
 							data={yColData}
 							label="Y"
 							setData={setYColData}
@@ -125,6 +126,7 @@ export default function AnalysisModal({ setPopup }) {
 						/>
 						<VariableSelector
 							notAllowed={[ NOMINAL, ORDINAL ]}
+							cardText={'Required'}
 							data={xColData}
 							label="X"
 							setData={setXColData}
@@ -133,8 +135,9 @@ export default function AnalysisModal({ setPopup }) {
 						/>
 						<VariableSelector
 							notAllowed={[ CONTINUOUS ]}
+							cardText={'Optional'}
 							data={groupingColData}
-							label="Group (optional)"
+							label="Group"
 							setData={setGroupingColData}
 							selectedColumn={selectedColumn}
 						/>
