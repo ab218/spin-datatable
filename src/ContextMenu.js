@@ -146,7 +146,9 @@ export default function ContextMenu({ paste }) {
 					>
 						Exclude/Unexclude Selected Cases(s)
 					</Menu.Item>
-					<Menu.Item key="21">Invert Selection</Menu.Item>
+					<Menu.Item disabled={true} key="21">
+						Invert Selection
+					</Menu.Item>
 				</Menu>
 			</div>
 		);
@@ -250,7 +252,9 @@ export default function ContextMenu({ paste }) {
 				<Menu.Item onClick={paste} key="19">
 					Paste
 				</Menu.Item>
-				<Menu.Item key="analyzeSelection">Analyze Selection</Menu.Item>
+				<Menu.Item disabled={true} key="analyzeSelection">
+					Analyze Selection
+				</Menu.Item>
 			</Menu>
 		</div>
 	);
