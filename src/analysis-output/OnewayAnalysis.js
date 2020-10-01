@@ -40,7 +40,17 @@ export default function OnewayAnalysis({ data, setPopup }) {
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<TitleText title={title} />
 				<div style={{ display: 'flex' }}>
-					<div>
+					<div
+						style={{
+							textAlign: 'center',
+							paddingTop: '30px',
+							height: '800px',
+							paddingLeft: '10px',
+							borderBottom: '1px solid #ddd',
+						}}
+					>
+						<div>Select Chart Options</div>
+						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
 						<OnewayD3Chart
 							chartOptions={chartOptions}
 							summary_table={summary_table}
@@ -49,9 +59,8 @@ export default function OnewayAnalysis({ data, setPopup }) {
 							x_groups_lists={x_groups_lists}
 							coordinates={coordinates}
 						/>
-						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
 					</div>
-					<div style={{ overflowY: 'scroll', height: '800px' }}>
+					<div style={{ overflowY: 'scroll', height: '800px', borderBottom: '1px solid #ddd' }}>
 						<SummaryOfFit summary_table={summary_table} colX={colX} anova={anova} means_std={means_std} />
 						<MeansAndStd means_std={means_std} />
 						<Quantiles x_groups_lists={x_groups_lists} />
@@ -72,14 +81,12 @@ function ChartOptionsSelect({ handleChartOptions }) {
 		<Select
 			getPopupContainer={(triggerNode) => triggerNode.parentNode}
 			mode="multiple"
-			style={{ width: '100%' }}
+			style={{ width: '100%', textAlign: 'left' }}
 			size={'small'}
-			placeholder="Please select"
+			placeholder=""
 			onChange={handleChartOptions}
-			maxTagCount={0}
-			maxTagPlaceholder={(e) => {
-				return 'Select Chart Options';
-			}}
+			tagRender={() => null}
+			showArrow={true}
 		>
 			<Option key={'pooledMean'}>Show Pooled Mean</Option>
 			<Option key={'boxPlots'}>Show Boxplots</Option>
@@ -101,23 +108,23 @@ const SummaryOfFit = ({ summary_table, colX, anova, means_std }) => {
 						</td>
 					</tr>
 					<tr>
-						<td className="table-header large">R-squared</td>
+						<td className="header-background large">R-squared</td>
 						<td className="right small">{summary_table.rsquared.toFixed(4) / 1}</td>
 					</tr>
 					<tr>
-						<td className="table-header large">Adj R-squared</td>
+						<td className="header-background large">Adj R-squared</td>
 						<td className="right small">{summary_table.rsquared_adj.toFixed(4) / 1}</td>
 					</tr>
 					<tr>
-						<td className="table-header large">Root Mean Square Error</td>
+						<td className="header-background large">Root Mean Square Error</td>
 						<td className="right small">{summary_table.root_mean_squared_error.toFixed(4) / 1 / 1}</td>
 					</tr>
 					<tr>
-						<td className="table-header large">Mean of Response</td>
+						<td className="header-background large">Mean of Response</td>
 						<td className="right small">{summary_table.y_mean.toFixed(4) / 1}</td>
 					</tr>
 					<tr>
-						<td className="table-header large">Observations</td>
+						<td className="header-background large">Observations</td>
 						<td className="right small">{summary_table.nobs}</td>
 					</tr>
 				</tbody>

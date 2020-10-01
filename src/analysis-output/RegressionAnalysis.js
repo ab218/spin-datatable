@@ -279,7 +279,15 @@ export default function RegressionAnalysis({ data, setPopup }) {
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<ChartTitle title={title} />
 				<div style={{ display: 'flex' }}>
-					<div style={{ textAlign: 'center', paddingTop: '30px', paddingLeft: '10px' }}>
+					<div
+						style={{
+							textAlign: 'center',
+							height: '800px',
+							borderBottom: '1px solid #ddd',
+							paddingTop: '30px',
+							paddingLeft: '10px',
+						}}
+					>
 						<div>Select Chart Options</div>
 						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
 						<RegressionD3Chart CI={CI} data={data} chartOptions={chartOptions} alpha={alpha} />
@@ -287,7 +295,7 @@ export default function RegressionAnalysis({ data, setPopup }) {
 							<ChartOptionsLegend chartOptions={chartOptions} setCI={setCI} CI={CI} setAlpha={setAlpha} alpha={alpha} />
 						)}
 					</div>
-					<div style={{ overflowY: 'scroll', height: '800px' }}>
+					<div style={{ overflowY: 'scroll', height: '800px', borderBottom: '1px solid #ddd' }}>
 						<SummaryStatsTable data={data} />
 						{linearRegressionLine && (
 							<GenerateRegressionTemplate
@@ -397,37 +405,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		</Popup>
 	);
 }
-
-// const menu = (title, id, conf, setCI, CI) => (
-// 	<Menu multiple>
-// 		{conf && (
-// 			<Menu.ItemGroup title={title}>
-// 				<Menu.Item
-// 					onClick={() =>
-// 						setCI((prev) => {
-// 							return { ...prev, [id]: { ...prev[id], fit: !prev[id].fit } };
-// 						})}
-// 				>
-// 					<div style={{ display: 'flex' }}>
-// 						<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].fit ? '✓' : ' '}</span>
-// 						<span>Show Confidence Curves (fit)</span>
-// 					</div>
-// 				</Menu.Item>
-// 				<Menu.Item
-// 					onClick={() =>
-// 						setCI((prev) => {
-// 							return { ...prev, [id]: { ...prev[id], obs: !prev[id].obs } };
-// 						})}
-// 				>
-// 					<div style={{ display: 'flex' }}>
-// 						<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].obs ? '✓' : ' '}</span>
-// 						<span>Show Confidence Curves (obs)</span>
-// 					</div>
-// 				</Menu.Item>
-// 			</Menu.ItemGroup>
-// 		)}
-// 	</Menu>
-// );
 
 function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
 	function ChartOption({ title, color, id, showCIOptions }) {

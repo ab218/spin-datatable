@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 
 // magic globals
-const margin = { top: 100, right: 50, bottom: 20, left: 50 };
+const margin = { top: 50, right: 50, bottom: 20, left: 50 };
 const width = 300;
 const height = 300;
 const svgWidth = width + margin.left + margin.right;

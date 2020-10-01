@@ -88,7 +88,7 @@ export default function ContextMenu({ paste }) {
 							});
 						}}
 					>
-						Column Info...
+						Variable Note...
 					</Menu.Item>
 					<Menu.Item key="4" onClick={() => dispatchRowsAction({ type: DELETE_COLUMN, colName })}>
 						Delete Column

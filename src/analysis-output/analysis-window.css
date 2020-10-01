@@ -35,6 +35,10 @@ body {
 	z-index: 1;
 }
 
+.linearRegressionLine {
+	background-color: #56b4e9;
+}
+
 .linearRegressionLineCIFit {
 	stroke-width: 1px;
 	stroke: #56b4e9;
@@ -71,6 +75,10 @@ body {
 	stroke-width: 2px;
 	stroke: #e69f00;
 	z-index: 1;
+}
+
+.degree2PolyLine-tooltip {
+	background-color: #e69f00;
 }
 
 .degree2PolyLineCIFit {
@@ -111,6 +119,10 @@ body {
 	z-index: 1;
 }
 
+.degree3PolyLine-tooltip {
+	background-color: #009e73;
+}
+
 .degree3PolyLine-hitbox {
 	stroke-width: 10px;
 	stroke: transparent;
@@ -146,7 +158,12 @@ body {
 .degree4PolyLine {
 	stroke-width: 2px;
 	stroke: #f0e442;
+	background-color: #f0e442;
 	z-index: 1;
+}
+
+.degree4PolyLine-tooltip {
+	background-color: #f0e442;
 }
 
 .degree4PolyLine-hitbox {
@@ -161,6 +178,10 @@ body {
 	z-index: 1;
 }
 
+.degree5PolyLine-tooltip {
+	background-color: #0072b2;
+}
+
 .degree5PolyLine-hitbox {
 	stroke-width: 10px;
 	stroke: transparent;
@@ -171,6 +192,10 @@ body {
 	stroke-width: 2px;
 	stroke: #d55e00;
 	z-index: 1;
+}
+
+.degree6PolyLine-tooltip {
+	background-color: #d55e00;
 }
 
 .degree6PolyLine-hitbox {

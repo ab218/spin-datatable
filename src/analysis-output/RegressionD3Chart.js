@@ -29,7 +29,7 @@ function createPoints(rangeX, step, equation) {
 	});
 }
 
-const drawBasicPath = (points, name, title, svg, pathTooltip, animate) => {
+const drawBasicPath = (points, name, title, svg, pathTooltip, animate, backgroundColor) => {
 	const path = svg
 		.append('path')
 		.data([ points ])
@@ -61,7 +61,7 @@ const drawBasicPath = (points, name, title, svg, pathTooltip, animate) => {
 		.attr('d', reversedLine)
 		.on(`mouseenter`, function() {
 			if (!pathTooltip) return;
-			pathTooltip.transition().duration(200).style('opacity', 0.9);
+			pathTooltip.transition().duration(200).style('opacity', 0.9).style('background-color', backgroundColor);
 			pathTooltip.html(title).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
 		})
 		.on(`mouseleave`, function() {
@@ -429,7 +429,15 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 	useEffect(
 		() => {
 			if (linearRegressionLine) {
-				drawBasicPath(linearRegressionPoints, 'linearRegressionLine', 'Linear Regression Line', svg, pathTooltip, true);
+				drawBasicPath(
+					linearRegressionPoints,
+					'linearRegressionLine',
+					'Linear Regression Line',
+					svg,
+					pathTooltip,
+					true,
+					'#56b4e9',
+				);
 			} else {
 				removeChartElement('.linearRegressionLine');
 				removeChartElement(`.linearRegressionLine-hitbox`);
@@ -443,7 +451,15 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree2Poly) {
-					drawBasicPath(degree2Points, 'degree2PolyLine', 'Quadratic Regression Line', svg, pathTooltip, true);
+					drawBasicPath(
+						degree2Points,
+						'degree2PolyLine',
+						'Quadratic Regression Line',
+						svg,
+						pathTooltip,
+						true,
+						'#e69f00',
+					);
 				} else {
 					removeChartElement(`.degree2PolyLine`);
 					removeChartElement(`.degree2PolyLine-hitbox`);
@@ -458,7 +474,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree3Poly) {
-					drawBasicPath(degree3Points, 'degree3PolyLine', 'Cubic Regression Line', svg, pathTooltip, true);
+					drawBasicPath(degree3Points, 'degree3PolyLine', 'Cubic Regression Line', svg, pathTooltip, true, '#009e73');
 				} else {
 					removeChartElement(`.degree3PolyLine`);
 					removeChartElement(`.degree3PolyLine-hitbox`);
@@ -473,7 +489,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree4Poly) {
-					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quartic Regression Line', svg, pathTooltip, true);
+					drawBasicPath(degree4Points, 'degree4PolyLine', 'Quartic Regression Line', svg, pathTooltip, true, '#f0e442');
 				} else {
 					removeChartElement(`.degree4PolyLine`);
 					removeChartElement(`.degree4PolyLine-hitbox`);
@@ -488,7 +504,15 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree5Poly) {
-					drawBasicPath(degree5Points, 'degree5PolyLine', '5th Degree Regression Line', svg, pathTooltip, true);
+					drawBasicPath(
+						degree5Points,
+						'degree5PolyLine',
+						'5th Degree Regression Line',
+						svg,
+						pathTooltip,
+						true,
+						'#0072b2',
+					);
 				} else {
 					removeChartElement(`.degree5PolyLine`);
 					removeChartElement(`.degree5PolyLine-hitbox`);
@@ -503,7 +527,15 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		() => {
 			if (d3Container.current && data && chartOptions) {
 				if (degree6Poly) {
-					drawBasicPath(degree6Points, 'degree6PolyLine', '6th Degree Regression Line', svg, pathTooltip, true);
+					drawBasicPath(
+						degree6Points,
+						'degree6PolyLine',
+						'6th Degree Regression Line',
+						svg,
+						pathTooltip,
+						true,
+						'#d55e00',
+					);
 				} else {
 					removeChartElement(`.degree6PolyLine`);
 					removeChartElement(`.degree6PolyLine-hitbox`);
