@@ -75,8 +75,8 @@ export default React.memo(function IntegerStep({ columnID, colMin, colMax, curre
 						min={colMin}
 						max={colMax}
 						value={min}
-						onPressEnter={updateSelectedRows}
 						onBlur={updateSelectedRows}
+						onPressEnter={updateSelectedRows}
 					/>
 					<span style={{ fontSize: '1.2em' }}>≤</span>
 					<span style={{ width: 150 }}>{label}</span>

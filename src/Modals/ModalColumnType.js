@@ -106,16 +106,16 @@ export default function AntModal({ selectedColumn }) {
 	function handleClose() {
 		const lettersAndSpacesOnlyReg = /^[0-9a-zA-Z\s]*$/;
 		if (!columnName) {
-			return setError('Column Name cannot be blank');
+			return setError('Variable Name cannot be blank');
 		}
 		if (!lettersAndSpacesOnlyReg.test(columnName)) {
-			return setError('Column Name must contain only letters, spaces and numbers');
+			return setError('Variable Name must contain only letters, spaces and numbers');
 		}
 		if (!columnName[0].match(/[a-z]/i)) {
-			return setError('Column Name must begin with a letter');
+			return setError('Variable Name must begin with a letter');
 		}
 		if (validateColumnName(columnName)) {
-			return setError('Column Name must be unique');
+			return setError('Variable Name must be unique');
 		}
 		if (columnFormula && formulaError) {
 			return setError('Invalid formula entered');
@@ -229,7 +229,7 @@ export default function AntModal({ selectedColumn }) {
 				]}
 			>
 				<span className="modal-span">
-					<h4>Column Name</h4>
+					<h4>Name</h4>
 					<Input
 						style={{ width: 200 }}
 						maxLength={20}

@@ -234,7 +234,7 @@ const SidebarColumns = React.memo(function() {
 		<table style={{ userSelect: 'none', marginTop: '100px', marginLeft: '10px', width: '100%' }}>
 			<tbody>
 				<tr>
-					<td style={{ fontWeight: 'bold' }}>Columns</td>
+					<td style={{ fontWeight: 'bold' }}>Variables</td>
 				</tr>
 				{columns &&
 					columns.map((column, columnIndex) => (

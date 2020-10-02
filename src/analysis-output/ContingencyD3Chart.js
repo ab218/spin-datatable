@@ -170,8 +170,8 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 						const groupHtml = `
               <div>
                 <div><span class="tooltip-margin-left-bold">${d.key}</span><span></span></div>
-                <div><span class="tooltip-margin-left-bold">Frequency: </span>
-                <span>${((d[1] - d[0]) / n * 100).toFixed()}</span></div>
+                <div><span class="tooltip-margin-left-bold">Proportion: </span>
+                <span>${((d[1] - d[0]) / n * 100).toFixed()}%</span></div>
               </div>
               `;
 						onMouseMoveTile(tileTooltip, groupHtml);
