@@ -55,7 +55,7 @@ export default React.memo(function TableView() {
 
 	// I adjust the window scrolling in response to the given mousemove event.
 	const handleMousemove = useCallback(({ buttons, clientX, clientY }) => {
-		if (buttons !== 1) return;
+		// TODO: Reexplore more performant ways of handling this
 		// CAUTION: The viewport and document dimensions can all be CACHED and then
 		// recalculated on window-resize events (for the most part).
 
@@ -72,7 +72,7 @@ export default React.memo(function TableView() {
 		// viewport, which may require scrolling the window. To do this, we need to
 		// calculate the boundaries of the edge in the viewport (these coordinates
 		// are relative to the viewport grid system).
-		const edgeTop = edgeSize;
+		const edgeTop = 50;
 		const edgeLeft = edgeSize;
 		const edgeBottom = viewportHeight - edgeSize;
 		const edgeRight = viewportWidth - edgeSize;
@@ -123,6 +123,7 @@ export default React.memo(function TableView() {
 		// still be scrolled in a particular direction.
 		// --
 		(function checkForWindowScroll() {
+			// console.log('fire', buttons);
 			clearTimeout(timer);
 
 			if (adjustWindowScroll()) {
@@ -133,6 +134,7 @@ export default React.memo(function TableView() {
 		// Adjust the window scroll based on the user's mouse position. Returns True
 		// or False depending on whether or not the window scroll was changed.
 		function adjustWindowScroll() {
+			if (buttons !== 1) return;
 			// Get the current scroll position of the document.
 			const currentScrollX = window.pageXOffset;
 			const currentScrollY = window.pageYOffset;
@@ -165,13 +167,13 @@ export default React.memo(function TableView() {
 				// Should we scroll right?
 			} else if (isInRightEdge && canScrollRight) {
 				intensity = (viewportX - edgeRight) / edgeSize;
-
 				nextScrollX = nextScrollX + maxStep * intensity;
 			}
 
 			// Should we scroll up?
 			if (isInTopEdge && canScrollUp) {
-				intensity = (edgeTop - viewportY) / edgeSize;
+				// prevent page from scrolling down at the top (-intensity)
+				intensity = (Math.max(edgeTop - viewportY), 10) / edgeSize;
 				nextScrollY = nextScrollY - maxStep * intensity;
 
 				// Should we scroll down?
