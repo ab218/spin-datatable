@@ -16,8 +16,10 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXSca
 		d3.select(thisBar).transition().duration(50).style('opacity', 0.6);
 		barTooltip.transition().duration(200).style('opacity', 0.9);
 		colZ
-			? barTooltip.html(`Group: ${d.group}<br>Rate (ml/sec): ${d.y}<br>Time (sec): ${d.x}<br>row: ${d.row.rowNumber}`)
-			: barTooltip.html(`Rate (ml/sec): ${d.y}<br>Time (sec): ${d.x}<br>row: ${d.row.rowNumber}`);
+			? barTooltip.html(
+					`Group: ${d.group}<br>${colY.label}: ${d.y}<br>${colX.label}: ${d.x}<br>row: ${d.row.rowNumber}`,
+				)
+			: barTooltip.html(`${colY.label}: ${d.y}<br>${colX.label}: ${d.x}<br>row: ${d.row.rowNumber}`);
 
 		barTooltip.style('left', `${d3.event.pageX}px`).style('top', `${d3.event.pageY - 28}px`);
 	}
@@ -83,13 +85,12 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXSca
 
 		function renameDuplicates(arr) {
 			const count = {};
-			const xArr = arr.map((d) => d.x).sort((a, b) => a - b);
+			const xArr = arr.map((d) => d.x);
 			xArr.forEach(function(x, i) {
 				if (xArr.indexOf(x) !== i) {
 					const duplicateCounter = x in count ? (count[x] = count[x] + 1) : (count[x] = 1);
 					const nextCount = duplicateCounter + 1;
 					let newXValue = x + '(' + nextCount + ')';
-
 					while (xArr.indexOf(newXValue) !== -1) newXValue = x + '(' + (nextCount + 1) + ')';
 					xArr[i] = newXValue;
 				}
@@ -98,10 +99,12 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates, colXSca
 		}
 
 		const renamedDuplicatesArr = renameDuplicates(data);
-
 		const duplicatesChanged = data.reduce((acc, curr, i) => {
 			return [ ...acc, { ...curr, x: renamedDuplicatesArr[i] } ];
 		}, []);
+
+		// for numerical & ordinal data
+		// const duplicatesChangedCopySorted = duplicatesChanged.slice().sort((a, b) => Number(b.x) - Number(a.x));
 
 		const x =
 			colXScale === 'Continuous'

@@ -172,7 +172,7 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 				total: (val / n * 100).toFixed(2),
 				col: (val / columnTotals[j] * 100).toFixed(2),
 				row: (val / rowTotals[i] * 100).toFixed(2),
-				expected: expected,
+				expected: expected[j][i].toFixed(4) / 1,
 			};
 			return cellContents;
 		});
@@ -227,9 +227,8 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 			<tbody>
 				{mappedContingency.map((row, i) => {
 					return (
-						<tr>
+						<tr key={i}>
 							<td
-								key={i}
 								style={{
 									width: '70px',
 									maxWidth: '70px',
@@ -262,7 +261,7 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 										{includeTotal && `${cell.total}\n`}
 										{includeCol && `${cell.col}\n`}
 										{includeRow && `${cell.row}\n`}
-										{includeExpected && `${expected[j][i]}\n`}
+										{includeExpected && `${cell.expected}\n`}
 									</td>
 								);
 							})}
@@ -276,15 +275,15 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 						</tr>
 					);
 				})}
-				<tr>
+				<tr key={'totals'}>
 					<td
 						className="bordered left"
 						style={{ textAlign: 'left', width: '70px', paddingLeft: '5px', backgroundColor: 'rgb(238, 238, 238)' }}
 					>
 						Total
 					</td>
-					{columnTotals.map((total) => (
-						<td style={{ whiteSpace: 'pre', textAlign: 'right', paddingRight: '5px' }} key={total} className="bordered">
+					{columnTotals.map((total, i) => (
+						<td style={{ whiteSpace: 'pre', textAlign: 'right', paddingRight: '5px' }} key={i} className="bordered">
 							{includeCount && `${total}\n`}
 							{includeTotal && `${(total / n * 100).toFixed(2)}\n`}
 						</td>

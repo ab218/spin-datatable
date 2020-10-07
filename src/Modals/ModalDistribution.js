@@ -27,7 +27,7 @@ export default function DistributionModal({ setPopup }) {
 			return;
 		}
 		// TODO: Better error handling here
-		const colVals = filterExcludedRows(rows, includedRows, excludedRows, yColData);
+		const colVals = filterExcludedRows(rows, includedRows, excludedRows, yColData).map((x) => x.value);
 		if (colVals.length < 3) {
 			setError('Column must have at least 3 valid values');
 			return;

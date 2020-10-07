@@ -56,11 +56,9 @@ export function rowsReducer(state, action) {
 		copiedValues2dArray,
 		dataTableName,
 		descending,
-		values,
 		rowCount,
 		rowIndex,
 		updatedColumn,
-		includedRows,
 		xLabel,
 		yLabel,
 	} = action;
@@ -437,6 +435,7 @@ export function rowsReducer(state, action) {
 			return { ...state, filteredRowIDs: [] };
 		}
 		case SAVE_VALUES_TO_COLUMN: {
+			const { values } = action;
 			let valuesColumnsCounter = state.valuesColumnsCounter + 1;
 			const newColumn = {
 				id: createRandomLetterString(),
@@ -445,14 +444,9 @@ export function rowsReducer(state, action) {
 				label: `Values ${valuesColumnsCounter}`,
 				description: `Generated from [${yLabel} by ${xLabel}] Bivariate Analysis output window.`,
 			};
-			let counter = 0;
-			const newRows = state.rows.map((row, rowIndex) => {
-				if (includedRows.includes(rowIndex + 1)) {
-					const newRow = { ...row, [newColumn.id]: values[counter] };
-					counter++;
-					return newRow;
-				}
-				return { ...row };
+			const newRows = state.rows.map((row) => {
+				const includedRow = values.find(({ rowID }) => rowID === row.id);
+				return { ...row, [newColumn.id]: includedRow ? includedRow.value : '' };
 			});
 			const columns = state.columns.concat(newColumn);
 			return {

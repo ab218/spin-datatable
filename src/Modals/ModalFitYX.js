@@ -36,20 +36,20 @@ export default function AnalysisModal({ setPopup }) {
 		}
 		const colX = xColData[0];
 		const colY = yColData[0];
-		// TODO: combine this with makeRows
+		// TODO: refactor all this
 		const colA = filterExcludedRows(rows, includedRows, excludedRows, colX);
 		const colB = filterExcludedRows(rows, includedRows, excludedRows, colY);
-		const maxColLength = Math.max(colA.length, colB.length);
 		function makeRows(colA, colB) {
-			const arr = [];
-			for (let i = 0; i < maxColLength; i++) {
-				const row = i + 1;
-				// Filter out NaN, undefined, null values
-				if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
-					arr.push([ colA[i], colB[i], row ]);
-				}
-			}
-			return arr;
+			return rows
+				.map((row) => {
+					const foundRowA = colA.find((r) => r.rowID === row.id);
+					const foundRowB = colB.find((r) => r.rowID === row.id);
+					if (foundRowA && foundRowB) {
+						return [ foundRowA.value, foundRowB.value, row.id ];
+					}
+					return null;
+				})
+				.filter(Boolean);
 		}
 		const XYCols = makeRows(colA, colB);
 		const colXArr = XYCols.map((a) => a[0]);
@@ -193,6 +193,7 @@ export default function AnalysisModal({ setPopup }) {
 					<div style={{ width: 400 }}>
 						Cast Selected Columns into Roles
 						<VariableSelector
+							cardText={'Required'}
 							data={yColData}
 							label="Y, Outcome"
 							performingAnalysis={performingAnalysis}
@@ -201,6 +202,7 @@ export default function AnalysisModal({ setPopup }) {
 							styleProps={{ marginBottom: 20, marginTop: 20 }}
 						/>
 						<VariableSelector
+							cardText={'Required'}
 							data={xColData}
 							label="X, Factor"
 							performingAnalysis={performingAnalysis}

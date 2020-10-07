@@ -105,15 +105,11 @@ export async function performContingencyAnalysis(colXArr, colYArr, colX, colY, X
 	);
 
 	console.log(result.data);
-
-	// const mean = (numbers) => numbers.reduce((acc, val) => acc + Number(val), 0) / numbers.length;
 	return {
 		analysisType: 'contingency',
 		...result.data,
 		colX,
 		colY,
-		// colXMean: mean([ ...colXArr ]),
-		// colYMean: mean([ ...colYArr ]),
 		coordinates: XYCols,
 	};
 }
@@ -147,12 +143,9 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
 	};
 }
 
-export async function createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colXScale) {
+export async function createBarChart(colX, colY, colZ, XYZCols, colXScale) {
 	return {
 		analysisType: 'barChart',
-		colXArr,
-		colYArr,
-		colZArr,
 		colX,
 		colY,
 		colZ,

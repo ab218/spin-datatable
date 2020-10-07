@@ -457,7 +457,7 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
 						<td>Line of Fit</td>
 						<td>Fit</td>
 						<td>Indiv</td>
-						<td>Alpha</td>
+						<td>p</td>
 					</tr>
 					{chartOptions.linearRegressionLine && (
 						<ChartOption showCIOptions={true} conf id="linearRegressionLine" title={'Linear'} color={'steelblue'} />

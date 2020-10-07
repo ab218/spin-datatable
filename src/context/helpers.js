@@ -224,10 +224,10 @@ export function filterExcludedRows(rows, includedRows, excludedRows, column) {
 				cellValue = row[column.id];
 			}
 			return includedRows.length
-				? includedRows.includes(row.id) && cellValue
-				: !excludedRows.includes(row.id) && cellValue;
+				? includedRows.includes(row.id) && { colID: column.id, rowID: row.id, value: cellValue }
+				: !excludedRows.includes(row.id) && { colID: column.id, rowID: row.id, value: cellValue };
 		})
-		.filter(Boolean);
+		.filter((row) => row.value || row.value === 0);
 }
 
 export function updateRow(row, columnID, columns, dependencyMap) {

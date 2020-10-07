@@ -186,7 +186,24 @@ function SaveDropdown({
 	id,
 }) {
 	const dispatchRowsAction = useRowsDispatch();
-	const includedRows = coordinates.map((coord) => coord[2]);
+	const predictedValues = coordinates.map((coord, i) => {
+		return { value: predicted[i], rowID: coord[2] };
+	});
+	const residualValues = coordinates.map((coord, i) => {
+		return { value: residuals[i], rowID: coord[2] };
+	});
+	const lowerCIMeanValues = coordinates.map((coord, i) => {
+		return { value: ci[alpha[id]].mean_ci_lower[i], rowID: coord[2] };
+	});
+	const upperCIMeanValues = coordinates.map((coord, i) => {
+		return { value: ci[alpha[id]].mean_ci_upper[i], rowID: coord[2] };
+	});
+	const lowerCIObsValues = coordinates.map((coord, i) => {
+		return { value: ci[alpha[id]].obs_ci_lower[i], rowID: coord[2] };
+	});
+	const upperCIObsValues = coordinates.map((coord, i) => {
+		return { value: ci[alpha[id]].obs_ci_upper[i], rowID: coord[2] };
+	});
 	const menu = () => (
 		<Menu>
 			<Menu.ItemGroup title={title}>
@@ -194,8 +211,7 @@ function SaveDropdown({
 					onClick={() =>
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: predicted,
-							includedRows,
+							values: predictedValues,
 							xLabel,
 							yLabel,
 						})}
@@ -206,8 +222,7 @@ function SaveDropdown({
 					onClick={() =>
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: residuals,
-							includedRows,
+							values: residualValues,
 							xLabel,
 							yLabel,
 						})}
@@ -218,15 +233,13 @@ function SaveDropdown({
 					onClick={() => {
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: ci[alpha[id]].mean_ci_lower,
-							includedRows,
+							values: lowerCIMeanValues,
 							xLabel,
 							yLabel,
 						});
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: ci[alpha[id]].mean_ci_upper,
-							includedRows,
+							values: upperCIMeanValues,
 							xLabel,
 							yLabel,
 						});
@@ -239,15 +252,13 @@ function SaveDropdown({
 					onClick={() => {
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: ci[alpha[id]].obs_ci_lower,
-							includedRows,
+							values: lowerCIObsValues,
 							xLabel,
 							yLabel,
 						});
 						dispatchRowsAction({
 							type: SAVE_VALUES_TO_COLUMN,
-							values: ci[alpha[id]].obs_ci_upper,
-							includedRows,
+							values: upperCIObsValues,
 							xLabel,
 							yLabel,
 						});

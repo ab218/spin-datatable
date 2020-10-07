@@ -36,33 +36,41 @@ export default function AnalysisModal({ setPopup }) {
 		const colA = filterExcludedRows(rows, includedRows, excludedRows, colX);
 		const colB = filterExcludedRows(rows, includedRows, excludedRows, colY);
 		const colC = colZ ? filterExcludedRows(rows, includedRows, excludedRows, colZ) : [];
-		const maxColLength = Math.max(colA.length, colB.length, colC.length);
+		// const maxColLength = Math.max(colA.length, colB.length, colC.length);
 		function makeXYZCols(colA, colB, colC) {
-			const arr = [];
-			for (let i = 0; i < maxColLength; i++) {
-				const rowNumber = i + 1;
-				// Filter out NaN, undefined, null values
-				if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
-					arr.push({
-						x: colA[i],
-						y: colB[i],
-						group: colC ? colC[i] : null,
-						row: {
-							rowID: rows[i]['id'],
-							rowNumber,
-						},
-					});
-				}
-			}
-			return arr.sort();
+			return rows
+				.map((row, i) => {
+					const rowID = row.id;
+					const foundRowA = colA.find((r) => r.rowID === rowID);
+					const foundRowB = colB.find((r) => r.rowID === rowID);
+					const foundRowC = colC.length && colC.find((r) => r.rowID === rowID);
+					if (colC.length > 0) {
+						if (foundRowA && foundRowB && foundRowC) {
+							return {
+								x: foundRowA.value,
+								y: foundRowB.value,
+								group: foundRowC.value,
+								row: { rowID, rowNumber: i + 1 },
+							};
+						}
+					} else {
+						if (foundRowA && foundRowB) {
+							return {
+								x: foundRowA.value,
+								y: foundRowB.value,
+								group: null,
+								row: { rowID, rowNumber: i + 1 },
+							};
+						}
+					}
+					return null;
+				})
+				.filter(Boolean);
+			// .sort();
 		}
 		const XYZCols = makeXYZCols(colA, colB, colC);
-		const colXArr = XYZCols.map((a) => a.x);
-		const colYArr = XYZCols.map((a) => a.y);
-		const colZArr = colC ? XYZCols.map((a) => a.group) : [];
-
-		if (colXArr.length >= 1 && colYArr.length >= 1) {
-			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colX.modelingType);
+		if (XYZCols.length > 1) {
+			const results = await createBarChart(colX, colY, colZ, XYZCols, colX.modelingType);
 			setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
 			setPerformingAnalysis(false);
 			dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
@@ -125,7 +133,7 @@ export default function AnalysisModal({ setPopup }) {
 							styleProps={{ marginBottom: 20, marginTop: 20 }}
 						/>
 						<VariableSelector
-							notAllowed={[ NOMINAL, ORDINAL ]}
+							notAllowed={[]}
 							cardText={'Required'}
 							data={xColData}
 							label="X"

@@ -222,7 +222,7 @@ export default function AntModal({ selectedColumn }) {
 								Cancel
 							</Button>
 							<Button key="submit" type="primary" onClick={handleClose}>
-								Submit
+								Save
 							</Button>
 						</span>
 					</div>,
