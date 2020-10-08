@@ -9,7 +9,7 @@ const clickedBarPointSize = normalPointSize * 2;
 const normalBarFill = '#69b3a2';
 const clickedBarFill = 'red';
 const normalPointFill = 'black';
-const margin = { top: 100, right: 70, bottom: 70, left: 50 };
+const margin = { top: 100, right: 70, bottom: 70, left: 70 };
 const width = 300;
 const height = 300;
 const svgWidth = width + margin.left + margin.right;
@@ -104,10 +104,13 @@ function drawHistogramBorders(
 	const yPointsBins = histogramY(yPoints);
 	const xPointsBins = histogramX(xPoints);
 
-	function onMouseOverHistogramBar(d, thisBar) {
+	function onMouseOverHistogramBar(d, thisBar, col) {
 		d3.select(thisBar).transition().duration(50).attr('opacity', 0.6);
 		histogramBinTooltip.transition().duration(200).style('opacity', 0.9);
-		histogramBinTooltip.html(d.length).style('left', d3.event.pageX + 'px').style('top', d3.event.pageY - 28 + 'px');
+		histogramBinTooltip
+			.html(`<div><div>${col.label}: [${d.x0}, ${d.x1}]</div><div>N: ${d.length}</div></div>`)
+			.style('left', d3.event.pageX + 'px')
+			.style('top', d3.event.pageY - 28 + 'px');
 	}
 
 	function onMouseOutHistogramBar(d, thisBar) {
@@ -117,6 +120,7 @@ function drawHistogramBorders(
 
 	function onClickSelectCells(thisBar, bar, col) {
 		const metaKeyPressed = d3.event.metaKey;
+		d3.event.stopPropagation();
 		if (!metaKeyPressed) {
 			svg.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
 			svg.selectAll('rect').style('fill', normalBarFill);
@@ -157,7 +161,7 @@ function drawHistogramBorders(
 			onClickSelectCells(d3.select(this), d, 'x');
 		})
 		.on(`mouseover`, function(d) {
-			onMouseOverHistogramBar(d, this);
+			onMouseOverHistogramBar(d, this, colX);
 		})
 		.on(`mouseout`, function(d) {
 			onMouseOutHistogramBar(d, this);
@@ -181,7 +185,7 @@ function drawHistogramBorders(
 		.enter()
 		.append('rect')
 		.on(`mouseover`, function(d) {
-			onMouseOverHistogramBar(d, this);
+			onMouseOverHistogramBar(d, this, colY);
 		})
 		.on(`mouseout`, function(d) {
 			onMouseOutHistogramBar(d, this);
@@ -211,11 +215,13 @@ function mapPoints(arr1, arr2) {
 	return sortedOutput;
 }
 
-function onMouseEnterPoint(d, thisPoint, colXLabel, colYLabel, pointTooltip) {
+function onMouseEnterPoint(d, thisPoint, colXLabel, colYLabel, pointTooltip, rows) {
+	const selectedRowNumber = rows.findIndex((row) => row.id === d[2]) + 1;
+	console.log(selectedRowNumber);
 	d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);
 	pointTooltip.transition().duration(200).style('opacity', 0.9);
 	pointTooltip
-		.html(`row: ${d[2]}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
+		.html(`row: ${selectedRowNumber}<br>${colXLabel}: ${d[0]}<br>${colYLabel}: ${d[1]}`)
 		.style('left', d3.event.pageX + 'px')
 		.style('top', d3.event.pageY - 28 + 'px');
 }
@@ -336,6 +342,12 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 	const pathTooltip = chartContainer.select('#regression-line-tooltip');
 	const removeChartElement = (className) => chartContainer.selectAll(className).remove();
 
+	const removeClickedHistogramBars = (e) => {
+		if (e.metaKey) return;
+		svg.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
+		svg.selectAll('rect').style('fill', normalBarFill);
+	};
+
 	// initialize chart with static features (axes and points)
 	useEffect(
 		() => {
@@ -365,7 +377,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 					.append('text')
 					.attr('transform', 'translate(' + width / 2 + ' ,' + (height + 50) + ')')
 					.style('text-anchor', 'middle')
-					.text(colX.label);
+					.text(`${colX.label}${colX.units ? ` (${colX.units})` : ''}`);
 
 				// text label for the y axis
 				svg
@@ -375,7 +387,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 					.attr('x', 0 - height / 2)
 					.attr('dy', '1em')
 					.style('text-anchor', 'middle')
-					.text(colY.label);
+					.text(`${colY.label}${colY.units ? ` (${colY.units})` : ''}`);
 
 				// TODO remove "magic numbers"
 				svg
@@ -388,7 +400,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 					.attr('cy', (d) => y(d[1]))
 					.attr('cx', (d) => x(d[0]))
 					.on(`mouseenter`, function(d) {
-						onMouseEnterPoint(d, this, colX.label, colY.label, pointTooltip);
+						onMouseEnterPoint(d, this, colX.label, colY.label, pointTooltip, rows);
 					})
 					.on(`mouseleave`, function(d) {
 						onMouseLeavePoint(d, this, pointTooltip);
@@ -602,5 +614,5 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		[ CI['degree3Poly'], alpha['degree3Poly'] ],
 	);
 
-	return <div ref={d3Container} />;
+	return <div onClick={removeClickedHistogramBars} ref={d3Container} />;
 }
