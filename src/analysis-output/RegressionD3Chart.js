@@ -217,7 +217,6 @@ function mapPoints(arr1, arr2) {
 
 function onMouseEnterPoint(d, thisPoint, colXLabel, colYLabel, pointTooltip, rows) {
 	const selectedRowNumber = rows.findIndex((row) => row.id === d[2]) + 1;
-	console.log(selectedRowNumber);
 	d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);
 	pointTooltip.transition().duration(200).style('opacity', 0.9);
 	pointTooltip

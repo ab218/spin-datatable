@@ -11,9 +11,6 @@ const center = 1;
 const boxWidth = 40;
 const normalBarFill = '#69b3a2';
 const clickedBarFill = 'red';
-const normalPointFill = 'black';
-const normalPointSize = 2;
-const clickedBarPointSize = normalPointSize * 2;
 
 function makeSvg(container, customWidth) {
 	return d3
@@ -41,27 +38,22 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 	const { columns, rows, excludedRows } = useRowsState();
 	const dispatchSelectAction = useSelectDispatch();
 
-	function targetClickEvent(thisBar, values, col) {
-		d3.selectAll('.point').style('fill', normalPointFill).attr('r', normalPointSize);
-		d3.select(d3Container.current).selectAll('.histBars').style('fill', normalBarFill);
+	const removeClickedHistogramBars = (e) => {
+		if (e.metaKey) return;
+		const histSvg = d3.select(d3Container.current).select('g');
+		histSvg.selectAll('rect').style('fill', normalBarFill);
+	};
 
+	function targetClickEvent(thisBar, values, col) {
+		const metaKeyPressed = d3.event.metaKey;
+		d3.event.stopPropagation();
+		if (!metaKeyPressed) {
+			d3.select(d3Container.current).selectAll('.histBars').style('fill', normalBarFill);
+		}
 		thisBar.style('fill', clickedBarFill);
-		d3
-			.selectAll('.point')
-			.filter((d) => {
-				const binMin = values.x0;
-				const binMax = values.x1;
-				if (!d) {
-					return null;
-				}
-				if (col === 'x') {
-					return d[0] >= binMin && d[0] < binMax;
-				}
-				return d[1] >= binMin && d[1] < binMax;
-			})
-			.attr('r', clickedBarPointSize)
-			.style('fill', clickedBarFill);
-		dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+		if (!metaKeyPressed) {
+			dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
+		}
 
 		const rowIDs = rows.reduce((acc, row) => {
 			// TODO:Don't use Number. Won't work for strings.
@@ -140,13 +132,12 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 
 	useEffect(
 		() => {
-			// set the parameters for the histogram
+			const histSvg = d3.select(d3Container.current).select('g');
+			// set the parameters for the histogra
 			const histogram = d3
 				.histogram()
 				.domain(y.domain()) // then the domain of the graphic
 				.thresholds(y.ticks(numberOfBins)); // then the numbers of bins
-
-			const histSvg = d3.select(d3Container.current).select('g');
 
 			// And apply this function to data to get the bins
 			const bins = histogram(boxDataSorted);
@@ -193,5 +184,5 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 		[ numberOfBins ],
 	);
 
-	return <div ref={d3Container} />;
+	return <div onClick={removeClickedHistogramBars} ref={d3Container} />;
 }
