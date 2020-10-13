@@ -44,17 +44,6 @@ export default React.memo(function HeaderRenderer({ dataKey, label, units, colum
 		[ currentCellSelectionRange, cellSelectionRanges ],
 	);
 
-	// useEffect(
-	// 	() => {
-	// 		if (Object.values(cellSelectionObject).find((row) => row.includes(dataKey))) {
-	// 			setSelected(true);
-	// 			return;
-	// 		}
-	// 		setSelected(false);
-	// 	},
-	// 	[ cellSelectionObject ],
-	// );
-
 	function createNewColumns(columnCount) {
 		dispatchRowsAction({ type: CREATE_COLUMNS, columnCount });
 	}

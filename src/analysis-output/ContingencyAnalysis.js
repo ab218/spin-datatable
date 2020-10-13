@@ -42,22 +42,20 @@ export default function ContingencyAnalysis({ data, setPopup }) {
 					colY={colY}
 					n={coordinates.length}
 				/>
-				<div style={{ overflowY: 'scroll', height: '800px' }}>
-					<Tests
-						contingencyOptions={contingencyOptions}
-						setContingencyOptions={setContingencyOptions}
-						contingency={parsedContingency}
-						n={coordinates.length}
-						expected={expected}
-						colX={colX}
-						colY={colY}
-						chi2={chi2}
-						p={p}
-						dof={dof}
-						log_chi2={log_chi2}
-						log_p={log_p}
-					/>
-				</div>
+				<Tests
+					contingencyOptions={contingencyOptions}
+					setContingencyOptions={setContingencyOptions}
+					contingency={parsedContingency}
+					n={coordinates.length}
+					expected={expected}
+					colX={colX}
+					colY={colY}
+					chi2={chi2}
+					p={p}
+					dof={dof}
+					log_chi2={log_chi2}
+					log_p={log_p}
+				/>
 			</div>
 		</Popup>
 	);
@@ -310,7 +308,7 @@ const Tests = ({
 	dof,
 }) => {
 	return (
-		<details open style={{ padding: '10px 30px', textAlign: 'center' }}>
+		<details open style={{ padding: '10px 30px 30px', textAlign: 'center' }}>
 			<summary className="analysis-summary-title">Contingency Table</summary>
 			<ContingencyTable
 				setContingencyOptions={setContingencyOptions}

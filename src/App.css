@@ -150,6 +150,8 @@
 	line-height: 2;
 	flex: auto;
 	cursor: pointer;
+	text-transform: none;
+	text-align: center;
 }
 
 .DragHandle {

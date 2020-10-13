@@ -17,7 +17,7 @@ export default function OnewayAnalysis({ data, setPopup }) {
 		x_groups_lists,
 		ordered_differences_report,
 		levene,
-		bartlett,
+		// bartlett,
 	} = data;
 
 	const [ chartOptions, setChartOptions ] = useState({ pooledMean: false, boxPlots: false });
@@ -64,7 +64,7 @@ export default function OnewayAnalysis({ data, setPopup }) {
 						<SummaryOfFit summary_table={summary_table} colX={colX} anova={anova} means_std={means_std} />
 						<MeansAndStd means_std={means_std} />
 						<Quantiles x_groups_lists={x_groups_lists} />
-						<EqualVarianceReport levene={levene} bartlett={bartlett} means_std={means_std} />
+						<EqualVarianceReport levene={levene} means_std={means_std} />
 						<OrderedDifferencesReport ordered_differences_report={ordered_differences_report} />
 					</div>
 				</div>
@@ -219,8 +219,8 @@ function renderMeansStdTable(means_std) {
 				<td className="header-background">{x[i]}</td>
 				<td className="right">{count[i]}</td>
 				<td className="right">{mean[i].toFixed(4) / 1}</td>
-				<td className="right">{std[i].toFixed(4) / 1}</td>
-				<td className="right">{sem[i].toFixed(4) / 1}</td>
+				<td className="right">{std[i] ? std[i].toFixed(4) / 1 : '-'}</td>
+				<td className="right">{sem[i] ? sem[i].toFixed(4) / 1 : '-'}</td>
 			</tr>,
 		);
 	}
@@ -337,7 +337,7 @@ const OrderedDifferencesReport = ({ ordered_differences_report }) => (
 	</details>
 );
 
-const EqualVarianceReport = ({ levene, bartlett, means_std }) => (
+const EqualVarianceReport = ({ levene, means_std }) => (
 	<details open style={{ padding: '10px 30px 30px', textAlign: 'center' }}>
 		<summary className="analysis-summary-title">Tests that the Variances are Equal</summary>
 		<table>
@@ -363,8 +363,8 @@ const EqualVarianceReport = ({ levene, bartlett, means_std }) => (
 				</tr>
 				<tr>
 					<td className="header-background">Bartlett</td>
-					<td className="right small">{bartlett[0].toFixed(4) / 1}</td>
-					<td className="right small">{evaluatePValue(bartlett[1])}</td>
+					{/* <td className="right small">{bartlett[0].toFixed(4) / 1}</td> */}
+					{/* <td className="right small">{evaluatePValue(bartlett[1])}</td> */}
 				</tr>
 			</tbody>
 		</table>
@@ -380,7 +380,7 @@ function renderEqualVariancesReportTable(means_std) {
 			<tr key={i}>
 				<td className="header-background">{x[i]}</td>
 				<td className="right small">{count[i].toFixed(4) / 1}</td>
-				<td className="right small">{std[i].toFixed(4) / 1}</td>
+				<td className="right small">{std[i] ? std[i].toFixed(4) / 1 : '-'}</td>
 				<td className="right small">{madmean[i].toFixed(4) / 1}</td>
 				<td className="right small">{madmed[i].toFixed(4) / 1}</td>
 			</tr>,
