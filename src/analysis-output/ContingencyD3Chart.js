@@ -199,7 +199,9 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					.append('rect')
 					.attr('fill', (d) => color(d.data.key))
 					.attr('width', (d) => d.x1 - d.x0 - tilePadding)
-					.attr('height', (d) => d.y1 - d.y0 - tilePadding)
+					.attr('height', (d) => {
+           return Math.max(d.y1 - d.y0 - tilePadding, 0)
+          })
 					.on(`mouseover`, function(d) {
 						onMouseEnterTile(tileTooltip);
 					})
