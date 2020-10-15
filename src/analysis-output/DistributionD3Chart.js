@@ -184,5 +184,5 @@ export default function D3Container({ colObj, vals, numberOfBins, boxDataSorted,
 		[ numberOfBins ],
 	);
 
-	return <div onClick={removeClickedHistogramBars} ref={d3Container} />;
+	return <div style={{border: "1px solid rgb(192, 192, 192)"}} onClick={removeClickedHistogramBars} ref={d3Container} />;
 }

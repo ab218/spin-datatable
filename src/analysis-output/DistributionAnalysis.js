@@ -21,7 +21,7 @@ export default function DistributionAnalysis({ data, setPopup }) {
 	const title = `Descriptive Analysis of ${colObj.label} ${colObj.units ? '(' + colObj.units + ')' : ''}`;
 
 	return (
-		<Popup key={data.id} id={data.id} title={title} windowWidth={500} setPopup={setPopup}>
+		<Popup key={data.id} id={data.id} title={title} windowWidth={550} setPopup={setPopup}>
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<TitleText title={title} />
 				<DistributionD3Chart

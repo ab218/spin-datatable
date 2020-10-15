@@ -62,7 +62,6 @@ export default function GenerateRegressionTemplate({
 	coordinates,
 	title,
 	id,
-	className,
 	equation,
 	polyDegree,
 	coeffs,
@@ -87,7 +86,7 @@ export default function GenerateRegressionTemplate({
 		f_pvalue,
 	} = polyDegree.stats;
 	return (
-		<details className={`analysis-details ${className}`} open id={id}>
+		<details className={`analysis-details`} open id={id}>
 			<summary className="analysis-summary-title">
 				{title} {centered && '(centered)'}
 			</summary>

@@ -246,7 +246,7 @@ export default function D3Container({ chartOptions, summary_table, colX, colY, x
 		[ pooledMean ],
 	);
 
-	return <div ref={d3Container} />;
+	return <div style={{border: "1px solid rgb(192, 192, 192)"}} ref={d3Container} />;
 
 	function onMouseEnterPoint(d, thisPoint, pointTooltip) {
 		d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);

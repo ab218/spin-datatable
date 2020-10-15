@@ -43,7 +43,7 @@ function ChartOptionsSelect({ handleChartOptions }) {
 		<Select
 			getPopupContainer={(triggerNode) => triggerNode.parentNode}
 			mode="multiple"
-			style={{ width: '100%', textAlign: 'left' }}
+			style={{ width: '100%', textAlign: 'left', marginBottom: '10px' }}
 			size={'small'}
 			placeholder=""
 			defaultValue={[ 'Show Histogram Borders' ]}
@@ -81,7 +81,7 @@ function SummaryStatsTable({ data }) {
 		std_y,
 	} = data;
 	return (
-		<details open style={{ padding: '10px 30px 30px', textAlign: 'center' }}>
+		<details open className={'analysis-details'}>
 			<summary className="analysis-summary-title">Summary Statistics</summary>
 			<div>
 				<table style={{ width: '300px', marginRight: '20px' }}>
@@ -303,7 +303,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Linear Fit'}
 								id={'linearRegressionLine'}
 								coordinates={coordinates}
-								className={null}
 								equation={linearEquationTemplate}
 								polyDegree={reg1}
 								coeffs={linearRegressionCoefficients}
@@ -321,7 +320,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Quadratic Fit'}
 								id={'degree2Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredQuadraticEquationTemplate : quadraticEquationTemplate}
 								polyDegree={centeredPoly ? cent_reg2 : reg2}
 								coeffs={centeredPoly ? centered2PolyCoefficients : degree2PolyCoefficients}
@@ -339,7 +337,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Cubic Fit'}
 								id={'degree3Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredCubicEquationTemplate : cubicEquationTemplate}
 								polyDegree={centeredPoly ? cent_reg3 : reg3}
 								coeffs={centeredPoly ? centered3PolyCoefficients : degree3PolyCoefficients}
@@ -357,7 +354,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Quartic Fit'}
 								id={'degree4Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredQuarticEquationTemplate : quarticEquationTemplate}
 								polyDegree={cent_reg4}
 								coeffs={centeredPoly ? centered4PolyCoefficients : degree4PolyCoefficients}
@@ -373,7 +369,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'5th Degree Fit'}
 								id={'degree5Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredDegree5EquationTemplate : degree5EquationTemplate}
 								polyDegree={centeredPoly ? cent_reg5 : reg5}
 								coeffs={centeredPoly ? centered5PolyCoefficients : degree5PolyCoefficients}
@@ -389,7 +384,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'6th Degree Fit'}
 								id={'degree6Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredDegree6EquationTemplate : degree6EquationTemplate}
 								polyDegree={centeredPoly ? cent_reg6 : reg6}
 								coeffs={centeredPoly ? centered6PolyCoefficients : degree6PolyCoefficients}

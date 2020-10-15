@@ -613,5 +613,5 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
 		[ CI['degree3Poly'], alpha['degree3Poly'] ],
 	);
 
-	return <div onClick={removeClickedHistogramBars} ref={d3Container} />;
+	return <div style={{border: "1px solid rgb(192, 192, 192)"}} onClick={removeClickedHistogramBars} ref={d3Container} />;
 }

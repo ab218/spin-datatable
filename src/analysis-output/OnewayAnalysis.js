@@ -81,7 +81,7 @@ function ChartOptionsSelect({ handleChartOptions }) {
 		<Select
 			getPopupContainer={(triggerNode) => triggerNode.parentNode}
 			mode="multiple"
-			style={{ width: '100%', textAlign: 'left' }}
+			style={{marginBottom: '10px', width: '100%', textAlign: 'left' }}
 			size={'small'}
 			placeholder=""
 			onChange={handleChartOptions}
