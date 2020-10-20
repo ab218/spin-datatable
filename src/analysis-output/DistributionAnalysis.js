@@ -7,7 +7,7 @@ import { InputNumber } from "antd";
 import { CONTINUOUS } from "../constants";
 
 export default function DistributionAnalysis({ data, setPopup }) {
-  const { colObj, vals, numberOfBins } = data;
+  const { colObj, vals, numberOfBins, missingValues } = data;
   const [bins, setBins] = useState(numberOfBins);
   const title = `Descriptive Analysis of ${colObj.label} ${
     colObj.units ? "(" + colObj.units + ")" : ""
@@ -31,6 +31,7 @@ export default function DistributionAnalysis({ data, setPopup }) {
             bins={bins}
             colObj={colObj}
             setBins={setBins}
+            missingValues={missingValues}
           />
         )}
       </div>
@@ -91,7 +92,7 @@ const SummaryStatistics = ({
   </div>
 );
 
-const Frequencies = ({ frequencies, n }) => {
+const Frequencies = ({ frequencies, n, missingValues = 0 }) => {
   const freqKeys = Object.keys(frequencies);
   return (
     <div style={{ width: "50%", margin: "0 auto" }}>
@@ -120,7 +121,7 @@ const Frequencies = ({ frequencies, n }) => {
           <tr>
             <td className="small">N Missing</td>
             <td className="small"></td>
-            <td className="small right">0</td>
+            <td className="small right">{missingValues}</td>
           </tr>
           <tr>
             <td></td>
@@ -245,7 +246,7 @@ function ContinuousSummaryStatistics({
   );
 }
 
-function NominalDescriptives({ vals, colObj }) {
+function NominalDescriptives({ vals, colObj, missingValues }) {
   function getFrequencies(vals) {
     let counts = {};
     for (var i = 0; i < vals.length; i++) {
@@ -264,7 +265,11 @@ function NominalDescriptives({ vals, colObj }) {
         colObj={colObj}
         vals={vals}
       />
-      <Frequencies frequencies={frequencies} n={vals.length} />
+      <Frequencies
+        missingValues={missingValues}
+        frequencies={frequencies}
+        n={vals.length}
+      />
     </React.Fragment>
   );
 }

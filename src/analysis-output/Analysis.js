@@ -147,7 +147,12 @@ export async function performContingencyAnalysis(
   };
 }
 
-export async function performDistributionAnalysis(colY, vals, numberOfBins) {
+export async function performDistributionAnalysis(
+  colY,
+  vals,
+  numberOfBins,
+  missingValues,
+) {
   // TODO: Add some error here
   if (colY.modelingType === NOMINAL || colY.modelingType === ORDINAL) {
     return {
@@ -155,6 +160,7 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
       colObj: colY,
       vals,
       numberOfBins,
+      missingValues,
     };
   }
   if (vals.length === 0) return;
@@ -181,6 +187,7 @@ export async function performDistributionAnalysis(colY, vals, numberOfBins) {
     vals,
     boxPlotData: quantiles,
     numberOfBins,
+    missingValues,
     ...result.data,
   };
 }
