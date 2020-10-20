@@ -4,7 +4,11 @@ import {
   useSelectDispatch,
   useRowsState,
 } from "../context/SpreadsheetProvider";
-import { REMOVE_SELECTED_CELLS, SELECT_CELLS_BY_IDS } from "../constants";
+import {
+  CONTINUOUS,
+  REMOVE_SELECTED_CELLS,
+  SELECT_CELLS_BY_IDS,
+} from "../constants";
 
 // set the dimensions and margins of the graph
 const margin = { top: 20, right: 30, bottom: 40, left: 70 };
@@ -15,13 +19,13 @@ const boxWidth = 40;
 const normalBarFill = "#69b3a2";
 const clickedBarFill = "red";
 
-function makeSvg(container, className, customWidth) {
+function makeSvg(container, className, customWidth, manyGroups = 0) {
   return d3
     .select(container)
     .append("svg")
     .attr("class", className)
     .attr("width", (customWidth || width) + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("height", height + margin.top + margin.bottom + manyGroups)
     .append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
 }
@@ -59,7 +63,7 @@ export default function D3Container({
     histSvg.selectAll("rect").style("fill", normalBarFill);
   };
 
-  function targetClickEvent(thisBar, values, col) {
+  function targetClickEvent(thisBar, values) {
     const metaKeyPressed = d3.event.metaKey;
     d3.event.stopPropagation();
     if (!metaKeyPressed) {
@@ -72,13 +76,19 @@ export default function D3Container({
       dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
     }
 
-    const rowIDs = rows.reduce((acc, row) => {
-      // TODO:Don't use Number. Won't work for strings.
-      return !excludedRows.includes(row.id) &&
-        values.includes(Number(row[colObj.id]))
-        ? acc.concat(row.id)
-        : acc;
-    }, []);
+    const rowIDs =
+      colObj.modelingType === CONTINUOUS
+        ? rows.reduce((acc, row) => {
+            return !excludedRows.includes(row.id) &&
+              values.includes(Number(row[colObj.id]))
+              ? acc.concat(row.id)
+              : acc;
+          }, [])
+        : rows.reduce((acc, row) => {
+            return !excludedRows.includes(row.id) && values === row[colObj.id]
+              ? acc.concat(row.id)
+              : acc;
+          }, []);
     dispatchSelectAction({
       type: SELECT_CELLS_BY_IDS,
       rowIDs,
@@ -88,27 +98,35 @@ export default function D3Container({
     });
   }
 
+  const manyGroups =
+    freqKeys && freqKeys.length > 10 ? freqKeys.length * 14 : 0;
+
+  const heightWithGroups = height + manyGroups;
   // Add axes
   const x = d3.scaleLinear().range([0, width]);
   const y = d3
     .scaleLinear()
     .domain([min || 0, max || freqKeys.length])
-    .range([height, 0])
+    .range([heightWithGroups, 0])
     .nice();
 
   useEffect(
     () => {
       // useEffect for frequencies (Categorical Data)
       if (!frequencies) return;
-      makeSvg(histogramContainer.current, "histogramSVG", 400);
+      const bandY = d3
+        .scaleBand()
+        .domain(vals)
+        .range([heightWithGroups, 0])
+        .paddingInner(0.05);
+
+      makeSvg(histogramContainer.current, "histogramSVG", 400, manyGroups);
       const histSvg = d3.select(histogramContainer.current).select("g");
       histSvg
         .append("g")
         .attr("class", "yAxis")
         .attr("transform", "translate(100,0)")
-        .call(
-          d3.axisLeft().scale(y).ticks(freqKeys.length, "s").tickValues([]),
-        );
+        .call(d3.axisLeft().scale(bandY).tickValues([]));
 
       function getLargestBin() {
         let counter = 0;
@@ -126,7 +144,7 @@ export default function D3Container({
       histSvg
         .append("g")
         .attr("class", "xAxis")
-        .attr("transform", "translate(100," + height + ")")
+        .attr("transform", "translate(100," + heightWithGroups + ")")
         .call(d3.axisBottom().scale(x).ticks(5, "s"));
 
       // Histogram Bars
@@ -147,14 +165,13 @@ export default function D3Container({
           targetClickEvent(d3.select(this), d, "y");
         })
         .attr("x", 100)
-        .attr("y", (_, i) => {
-          return y(i + 1);
+        .attr("y", (d, i) => {
+          return bandY(d);
         })
-        // The -1 adds a little bit of padding between bars
-        .attr("height", () => Math.max(height / freqKeys.length - 1), 0)
+        .attr("height", (d) => Math.max(heightWithGroups / freqKeys.length, 0))
         .transition()
-        .duration(500)
-        .delay((_, i) => i * 100)
+        .duration(100)
+        .delay((_, i) => i * 50)
         .attr("width", (d) => x(frequencies[d]));
 
       histSvg
@@ -164,12 +181,12 @@ export default function D3Container({
         .append("text")
         .text((d) => d)
         .attr("y", (d, i) => {
-          return y(i + 1);
+          return bandY(d) + heightWithGroups / freqKeys.length / 2;
         })
-        .attr("x", 90)
+        .attr("dy", ".4em")
         .attr("text-anchor", "end")
         .style("fill", "black")
-        .attr("transform", `translate(0,${margin.top})`);
+        .attr("transform", `translate(90,0)`);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
