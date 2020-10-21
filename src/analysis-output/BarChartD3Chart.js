@@ -124,8 +124,6 @@ export default function BarChartD3Chart({
 
     // for numerical & ordinal data
     // const duplicatesChangedCopySorted = duplicatesChanged.slice().sort((a, b) => Number(b.x) - Number(a.x));
-
-    console.log(colXScale);
     const x =
       colXScale === "Continuous"
         ? d3
