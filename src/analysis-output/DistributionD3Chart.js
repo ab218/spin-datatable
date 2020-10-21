@@ -208,6 +208,7 @@ export default function D3Container({
         .attr("y", (d) => {
           return bandY(d);
         })
+        .attr("cursor", "pointer")
         .attr("height", (d) => Math.max(heightWithGroups / freqKeys.length, 0))
         .transition()
         .duration(100)
@@ -222,6 +223,20 @@ export default function D3Container({
         .attr("class", "histBarsText")
         .attr("id", (d) => "text_" + d)
         .text((d) => d)
+        .on(`mouseenter`, function (d) {
+          histSvg
+            .select("#bar_" + d)
+            .transition()
+            .duration(50)
+            .attr("opacity", 0.6);
+        })
+        .on(`mouseleave`, function (d) {
+          histSvg
+            .select("#bar_" + d)
+            .transition()
+            .duration(50)
+            .attr("opacity", 1);
+        })
         .on("click", function (d) {
           targetClickEvent(histSvg.select("#bar_" + d), d, d3.select(this));
         })
@@ -288,6 +303,7 @@ export default function D3Container({
         })
         .attr("x", 1)
         .attr("y", (d) => y(d.x1))
+        .attr("cursor", "pointer")
         // The -1 adds a little bit of padding between bars
         .attr("height", (d) => Math.max(y(d.x0) - y(d.x1) - 1, 0))
         .transition()

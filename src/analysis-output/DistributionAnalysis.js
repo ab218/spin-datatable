@@ -127,8 +127,8 @@ const Frequencies = ({ frequencies, n, missingValues = 0 }) => {
           </tr>
           <tr>
             <td className="small">N Missing</td>
-            <td className="small"></td>
-            <td className="small right">{missingValues}</td>
+            <td className="small">{missingValues}</td>
+            <td className="small right"></td>
           </tr>
           <tr>
             <td></td>
