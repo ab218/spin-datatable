@@ -152,6 +152,7 @@ export async function performDistributionAnalysis(
   vals,
   numberOfBins,
   missingValues,
+  colValsWithRowData,
 ) {
   // TODO: Add some error here
   if (colY.modelingType === NOMINAL || colY.modelingType === ORDINAL) {
@@ -161,6 +162,7 @@ export async function performDistributionAnalysis(
       vals,
       numberOfBins,
       missingValues,
+      colValsWithRowData,
     };
   }
   if (vals.length === 0) return;
@@ -188,6 +190,7 @@ export async function performDistributionAnalysis(
     boxPlotData: quantiles,
     numberOfBins,
     missingValues,
+    colValsWithRowData,
     ...result.data,
   };
 }

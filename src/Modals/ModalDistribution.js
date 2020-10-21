@@ -56,14 +56,15 @@ export default function DistributionModal({ setPopup }) {
       });
     }
 
-    const colVals = filterExcludedRows(
+    const colValsWithRowData = filterExcludedRows(
       rows,
       includedRows,
       excludedRows,
       yColData,
-    ).map((x) => x.value);
+    );
 
-    const emptyValues = colVals.length - colVals.filter(Boolean).length;
+    const colVals = colValsWithRowData.map((x) => x.value).filter(Boolean);
+    const emptyValues = colValsWithRowData.length - colVals.length;
 
     // TODO: Better error handling here
     if (colVals.length < 3) {
@@ -73,9 +74,10 @@ export default function DistributionModal({ setPopup }) {
     setPerformingAnalysis(true);
     const results = await performDistributionAnalysis(
       yColData,
-      colVals.filter(Boolean),
+      colVals,
       numberOfBins,
       emptyValues,
+      colValsWithRowData.filter((x) => x.value),
     );
     setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
     setPerformingAnalysis(false);

@@ -18,6 +18,10 @@ const center = 1;
 const boxWidth = 40;
 const normalBarFill = "#69b3a2";
 const clickedBarFill = "red";
+const normalPointSize = 4;
+const highlightedPointColor = "red";
+const highlightedPointSize = normalPointSize * 1.5;
+const clickedBarPointSize = normalPointSize * 1.5;
 
 function makeSvg(container, className, customWidth, manyGroups = 0) {
   return d3
@@ -50,6 +54,7 @@ export default function D3Container({
   q1,
   q3,
   median,
+  colValsWithRowData,
 }) {
   const histogramContainer = useRef(null);
   const boxContainer = useRef(null);
@@ -61,15 +66,49 @@ export default function D3Container({
     if (e.metaKey) return;
     const histSvg = d3.select(histogramContainer.current).select("g");
     histSvg.selectAll("rect").style("fill", normalBarFill);
+    histSvg.selectAll(".histBarsText").style("fill", "black");
   };
 
-  function targetClickEvent(thisBar, values) {
+  function onMouseEnterPoint(d, thisPoint, colLabel, pointTooltip, rows) {
+    const selectedRowNumber = rows.findIndex((row) => row.id === d.rowID) + 1;
+    d3.select(thisPoint)
+      .transition()
+      .duration(50)
+      .attr("r", highlightedPointSize);
+    pointTooltip.transition().duration(200).style("opacity", 0.9);
+    pointTooltip
+      .html(`Row: ${selectedRowNumber}<br>${colLabel}: ${d.value}`)
+      .style("left", d3.event.pageX + "px")
+      .style("top", d3.event.pageY - 28 + "px");
+  }
+
+  function onMouseLeavePoint(d, thisPoint, pointTooltip) {
+    if (d3.select(thisPoint).style("fill") === highlightedPointColor) {
+      d3.select(thisPoint)
+        .transition()
+        .duration(50)
+        .attr("r", clickedBarPointSize);
+    } else {
+      d3.select(thisPoint).transition().duration(50).attr("r", normalPointSize);
+    }
+    pointTooltip.transition().duration(500).style("opacity", 0);
+  }
+
+  function targetClickEvent(thisBar, values, text) {
     const metaKeyPressed = d3.event.metaKey;
     d3.event.stopPropagation();
     if (!metaKeyPressed) {
       d3.select(histogramContainer.current)
         .selectAll(".histBars")
         .style("fill", normalBarFill);
+    }
+    if (text && !metaKeyPressed) {
+      d3.select(histogramContainer.current)
+        .selectAll(".histBarsText")
+        .style("fill", "black");
+    }
+    if (text) {
+      text.style("fill", clickedBarFill);
     }
     thisBar.style("fill", clickedBarFill);
     if (!metaKeyPressed) {
@@ -155,6 +194,7 @@ export default function D3Container({
         .append("rect")
         .attr("fill", "#69b3a2")
         .attr("class", "histBars")
+        .attr("id", (d) => "bar_" + d)
         .on(`mouseenter`, function () {
           d3.select(this).transition().duration(50).attr("opacity", 0.6);
         })
@@ -162,10 +202,10 @@ export default function D3Container({
           d3.select(this).transition().duration(50).attr("opacity", 1);
         })
         .on("click", function (d) {
-          targetClickEvent(d3.select(this), d, "y");
+          targetClickEvent(d3.select(this), d, histSvg.select("#text_" + d));
         })
         .attr("x", 100)
-        .attr("y", (d, i) => {
+        .attr("y", (d) => {
           return bandY(d);
         })
         .attr("height", (d) => Math.max(heightWithGroups / freqKeys.length, 0))
@@ -175,16 +215,22 @@ export default function D3Container({
         .attr("width", (d) => x(frequencies[d]));
 
       histSvg
-        .selectAll("histBars")
+        .selectAll("histBarsText")
         .data(freqKeys)
         .enter()
         .append("text")
+        .attr("class", "histBarsText")
+        .attr("id", (d) => "text_" + d)
         .text((d) => d)
+        .on("click", function (d) {
+          targetClickEvent(histSvg.select("#bar_" + d), d, d3.select(this));
+        })
         .attr("y", (d, i) => {
           return bandY(d) + heightWithGroups / freqKeys.length / 2;
         })
         .attr("dy", ".4em")
         .attr("text-anchor", "end")
+        .attr("cursor", "pointer")
         .style("fill", "black")
         .attr("transform", `translate(90,0)`);
     },
@@ -238,7 +284,7 @@ export default function D3Container({
           d3.select(this).transition().duration(50).attr("opacity", 1);
         })
         .on("click", function (d) {
-          targetClickEvent(d3.select(this), d, "y");
+          targetClickEvent(d3.select(this), d);
         })
         .attr("x", 1)
         .attr("y", (d) => y(d.x1))
@@ -263,6 +309,11 @@ export default function D3Container({
         // append the histogram svg object to the body of the page
         makeSvg(boxContainer.current, "boxplotSVG", 100);
         const boxSvg = d3.select(boxContainer.current).select("g");
+        const pointTooltip = d3
+          .select(boxContainer.current)
+          .append("div")
+          .attr("class", "point tooltip")
+          .style("opacity", 0);
 
         // Boxplot
         // Show the main vertical line
@@ -302,12 +353,18 @@ export default function D3Container({
 
         boxSvg
           .selectAll("indPoints")
-          .data(vals)
+          .data(colValsWithRowData)
           .enter()
           .append("circle")
+          .on(`mouseenter`, function (d) {
+            onMouseEnterPoint(d, this, colObj.label, pointTooltip, rows);
+          })
+          .on(`mouseleave`, function (d) {
+            onMouseLeavePoint(d, this, pointTooltip);
+          })
           .attr("cx", () => center - boxWidth / 10)
-          .attr("cy", (d) => y(d))
-          .attr("r", 4)
+          .attr("cy", (d) => y(d.value))
+          .attr("r", normalPointSize)
           .style("fill", "white")
           .attr("stroke", "black");
       }

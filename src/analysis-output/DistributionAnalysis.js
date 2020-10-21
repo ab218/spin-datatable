@@ -7,7 +7,13 @@ import { InputNumber } from "antd";
 import { CONTINUOUS } from "../constants";
 
 export default function DistributionAnalysis({ data, setPopup }) {
-  const { colObj, vals, numberOfBins, missingValues } = data;
+  const {
+    colObj,
+    vals,
+    numberOfBins,
+    missingValues,
+    colValsWithRowData,
+  } = data;
   const [bins, setBins] = useState(numberOfBins);
   const title = `Descriptive Analysis of ${colObj.label} ${
     colObj.units ? "(" + colObj.units + ")" : ""
@@ -32,6 +38,7 @@ export default function DistributionAnalysis({ data, setPopup }) {
             colObj={colObj}
             setBins={setBins}
             missingValues={missingValues}
+            colValsWithRowData={colValsWithRowData}
           />
         )}
       </div>
@@ -246,7 +253,12 @@ function ContinuousSummaryStatistics({
   );
 }
 
-function NominalDescriptives({ vals, colObj, missingValues }) {
+function NominalDescriptives({
+  vals,
+  colObj,
+  missingValues,
+  colValsWithRowData,
+}) {
   function getFrequencies(vals) {
     let counts = {};
     for (var i = 0; i < vals.length; i++) {
@@ -264,6 +276,7 @@ function NominalDescriptives({ vals, colObj, missingValues }) {
         frequencies={frequencies}
         colObj={colObj}
         vals={vals}
+        colValsWithRowData={colValsWithRowData}
       />
       <Frequencies
         missingValues={missingValues}
@@ -275,7 +288,7 @@ function NominalDescriptives({ vals, colObj, missingValues }) {
 }
 
 function ContinuousDescriptives({ data, bins, setBins }) {
-  const { colObj, vals, skew, kurtosis, sem, ci } = data;
+  const { colObj, vals, skew, kurtosis, sem, ci, colValsWithRowData } = data;
   const boxDataSorted = vals.sort(d3.ascending);
   // Compute summary statistics used for the box:
   const q1 = d3.quantile(boxDataSorted, 0.25);
@@ -288,6 +301,7 @@ function ContinuousDescriptives({ data, bins, setBins }) {
     <React.Fragment>
       <DistributionD3Chart
         colObj={colObj}
+        colValsWithRowData={colValsWithRowData}
         min={min}
         max={max}
         q1={q1}
