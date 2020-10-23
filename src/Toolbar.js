@@ -4,6 +4,7 @@ import {
   BoxPlotTwoTone,
   BarChartOutlined,
   LineChartOutlined,
+  SaveTwoTone,
 } from "@ant-design/icons";
 import {
   useSpreadsheetDispatch,
@@ -19,10 +20,21 @@ import {
 export default function Toolbar() {
   return (
     <div className={"toolbar"}>
+      <SaveButton />
       <FilterButton />
       <DescriptiveAnalysisButton />
       <GraphBuilderButton />
       <FitYByXButton />
+    </div>
+  );
+}
+
+function SaveButton() {
+  // TODO: Insert onClick function for saving table
+  return (
+    <div className={"toolbar-button"}>
+      <SaveTwoTone className={"toolbar-icon"} twoToneColor={"grey"} />
+      <div>Save</div>
     </div>
   );
 }
