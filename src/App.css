@@ -2,17 +2,29 @@
   text-align: center;
 }
 
-.toolbar-icon {
+.toolbar {
+  border-bottom: 1px solid #b3b3b3;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  position: fixed;
+  height: 60px;
+  width: 100%;
+  top: 0;
+  z-index: 9;
+  text-align: left;
+}
+
+.toolbar-button {
   cursor: pointer;
+  text-align: center;
   user-select: none;
   position: relative;
   display: inline-block;
   transition: all 0.1s ease-in-out;
 }
 
-/* Create the hidden pseudo-element */
-/* include the shadow for the end state */
-.toolbar-icon::after {
+.toolbar-button::after {
   content: "";
   position: absolute;
   z-index: -1;
@@ -20,17 +32,19 @@
   transition: opacity 0.1s ease-in-out;
 }
 
-/* Scale up the box */
-.toolbar-icon:hover {
+.toolbar-button:hover {
   transform: scale(1.1, 1.1);
 }
 
-/* Fade in the pseudo-element with the bigger shadow */
-.toolbar-icon:hover::after {
+.toolbar-button:hover::after {
   opacity: 1;
 }
 
-/* Create a simple white box, and add the shadow for the initial state */
+.toolbar-icon {
+  font-size: 2em;
+  margin: 0 40px;
+}
+
 .hamburger {
   position: relative;
   display: inline-block;
@@ -38,8 +52,6 @@
   transition: all 0.1s ease-in-out;
 }
 
-/* Create the hidden pseudo-element */
-/* include the shadow for the end state */
 .hamburger::after {
   content: "";
   position: absolute;
@@ -49,12 +61,10 @@
   transition: opacity 0.1s ease-in-out;
 }
 
-/* Scale up the box */
 .hamburger:hover {
   transform: scale(1.4, 1.4);
 }
 
-/* Fade in the pseudo-element with the bigger shadow */
 .hamburger:hover::after {
   opacity: 1;
 }

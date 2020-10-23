@@ -20,20 +20,7 @@ export default function Toolbar() {
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const dispatchSelectAction = useSelectDispatch();
   return (
-    <div
-      style={{
-        borderBottom: "1px solid #b3b3b3",
-        backgroundColor: "#eee",
-        display: "flex",
-        alignItems: "center",
-        position: "fixed",
-        height: "60px",
-        width: "100%",
-        top: 0,
-        zIndex: 9,
-        textAlign: "left",
-      }}
-    >
+    <div className={"toolbar"}>
       <div
         onClick={() => {
           dispatchSelectAction({ type: REMOVE_SELECTED_CELLS });
@@ -42,11 +29,10 @@ export default function Toolbar() {
             filterModalOpen: true,
           });
         }}
-        className={"toolbar-icon"}
-        style={{ textAlign: "center" }}
+        className={"toolbar-button"}
       >
         <FilterTwoTone
-          style={{ fontSize: "2em", margin: "0 40px" }}
+          className={"toolbar-icon"}
           twoToneColor={"yellowgreen"}
         />
         <div>Filter</div>
@@ -59,13 +45,12 @@ export default function Toolbar() {
             distributionModalOpen: true,
           });
         }}
-        className={"toolbar-icon"}
-        style={{ textAlign: "center" }}
+        className={"toolbar-button"}
       >
         <BoxPlotTwoTone
-          style={{ fontSize: "2em", margin: "0 40px" }}
-          rotate={90}
+          className={"toolbar-icon"}
           twoToneColor={"green"}
+          rotate={90}
         />
         <div>Descriptive</div>
       </div>
@@ -78,12 +63,9 @@ export default function Toolbar() {
             selectedColumns: [],
           });
         }}
-        style={{ textAlign: "center" }}
-        className={"toolbar-icon"}
+        className={"toolbar-button"}
       >
-        <BarChartOutlined
-          style={{ color: "red", fontSize: "2em", margin: "0 40px" }}
-        />
+        <BarChartOutlined className={"toolbar-icon"} style={{ color: "red" }} />
         <div>Graph Builder</div>
       </div>
       <div
@@ -94,11 +76,11 @@ export default function Toolbar() {
             analysisModalOpen: true,
           });
         }}
-        style={{ textAlign: "center" }}
-        className={"toolbar-icon"}
+        className={"toolbar-button"}
       >
         <LineChartOutlined
-          style={{ color: "blue", fontSize: "2em", margin: "0 40px" }}
+          className={"toolbar-icon"}
+          style={{ color: "blue" }}
         />
         <div>Fit Y By X</div>
       </div>
