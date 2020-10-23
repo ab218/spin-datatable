@@ -6,7 +6,6 @@ import {
   useColumnWidthState,
 } from "./context/SpreadsheetProvider";
 import CellRenderer from "./CellRenderer";
-// import AnalysisMenu from "./AnalysisMenu";
 import RowHeaders from "./RowHeaders";
 import HeaderRenderer from "./HeaderRenderer";
 import useEventListener from "./useEventListener";
@@ -252,6 +251,9 @@ export default React.memo(function TableView() {
                   width={100}
                   label={""}
                   dataKey={"rowHeaderColumn"}
+                  headerRenderer={() => (
+                    <div style={{ cursor: "default" }}></div>
+                  )}
                   cellRenderer={(props) => <RowHeaders {...props} />}
                   style={{ margin: 0 }}
                 />
