@@ -26,7 +26,7 @@ import {
 	SORT_COLUMN,
 	TOGGLE_COLUMN_TYPE_MODAL,
 	TOGGLE_FILTER_MODAL,
-	UNEXCLUDE_ROWS,
+	// UNEXCLUDE_ROWS,
 } from './constants';
 import { Menu } from 'antd';
 
@@ -88,7 +88,7 @@ export default function ContextMenu({ paste }) {
 							});
 						}}
 					>
-						Column Info...
+						Variable Note...
 					</Menu.Item>
 					<Menu.Item key="4" onClick={() => dispatchRowsAction({ type: DELETE_COLUMN, colName })}>
 						Delete Column
@@ -136,7 +136,7 @@ export default function ContextMenu({ paste }) {
 						}}
 						key="19"
 					>
-						Delete Selected Rows
+						Delete Selected Cases
 					</Menu.Item>
 					<Menu.Item
 						onClick={() => {
@@ -144,15 +144,10 @@ export default function ContextMenu({ paste }) {
 						}}
 						key="20"
 					>
-						Exclude Selected Row(s)
+						Exclude/Unexclude Selected Cases(s)
 					</Menu.Item>
-					<Menu.Item
-						onClick={() => {
-							dispatchRowsAction({ type: UNEXCLUDE_ROWS, cellSelectionRanges });
-						}}
-						key="21"
-					>
-						Unexclude Selected Row(s)
+					<Menu.Item disabled={true} key="21">
+						Invert Selection
 					</Menu.Item>
 				</Menu>
 			</div>
@@ -257,12 +252,7 @@ export default function ContextMenu({ paste }) {
 				<Menu.Item onClick={paste} key="19">
 					Paste
 				</Menu.Item>
-				<Menu.Item
-					key="analyzeSelection"
-					onClick={() => {
-						dispatchRowsAction({ type: UNEXCLUDE_ROWS, cellSelectionRanges });
-					}}
-				>
+				<Menu.Item disabled={true} key="analyzeSelection">
 					Analyze Selection
 				</Menu.Item>
 			</Menu>

@@ -234,7 +234,7 @@ const SidebarColumns = React.memo(function() {
 		<table style={{ userSelect: 'none', marginTop: '100px', marginLeft: '10px', width: '100%' }}>
 			<tbody>
 				<tr>
-					<td style={{ fontWeight: 'bold' }}>Columns</td>
+					<td style={{ fontWeight: 'bold' }}>Variables</td>
 				</tr>
 				{columns &&
 					columns.map((column, columnIndex) => (
@@ -251,11 +251,11 @@ const SidebarRows = React.memo(function() {
 		<table style={{ userSelect: 'none', marginLeft: '10px', width: '100%' }}>
 			<tbody>
 				<tr>
-					<td style={{ width: '80%', fontWeight: 'bold' }}>Rows</td>
+					<td style={{ width: '80%', fontWeight: 'bold' }}>Cases</td>
 					<td style={{ width: '20%', fontWeight: 'bold' }} />
 				</tr>
 				<tr>
-					<td style={{ width: '80%' }}>All Rows</td>
+					<td style={{ width: '80%' }}>All Cases</td>
 					<td style={{ width: '20%' }}>{rows.length}</td>
 				</tr>
 				<SelectedRowsCounter />

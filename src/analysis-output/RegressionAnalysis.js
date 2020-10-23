@@ -43,15 +43,13 @@ function ChartOptionsSelect({ handleChartOptions }) {
 		<Select
 			getPopupContainer={(triggerNode) => triggerNode.parentNode}
 			mode="multiple"
-			style={{ width: '100%' }}
+			style={{ width: '100%', textAlign: 'left', marginBottom: '10px' }}
 			size={'small'}
-			placeholder="Please select"
+			placeholder=""
 			defaultValue={[ 'Show Histogram Borders' ]}
 			onChange={handleChartOptions}
-			maxTagCount={0}
-			maxTagPlaceholder={(e) => {
-				return 'Display Options';
-			}}
+			tagRender={() => null}
+			showArrow={true}
 		>
 			<Option key={'Show Histogram Borders'}>Show Histogram Borders</Option>
 			<Option key={'Center Polynomials'}>Center Polynomials</Option>
@@ -83,7 +81,7 @@ function SummaryStatsTable({ data }) {
 		std_y,
 	} = data;
 	return (
-		<details open style={{ padding: '10px 30px 30px', textAlign: 'center' }}>
+		<details open className={'analysis-details'}>
 			<summary className="analysis-summary-title">Summary Statistics</summary>
 			<div>
 				<table style={{ width: '300px', marginRight: '20px' }}>
@@ -281,14 +279,23 @@ export default function RegressionAnalysis({ data, setPopup }) {
 			<div id="popupcontainer" style={{ textAlign: 'center' }}>
 				<ChartTitle title={title} />
 				<div style={{ display: 'flex' }}>
-					<div style={{ textAlign: 'left' }}>
+					<div
+						style={{
+							textAlign: 'center',
+							height: '800px',
+							borderBottom: '1px solid #ddd',
+							paddingTop: '30px',
+							paddingLeft: '10px',
+						}}
+					>
+						<div>Select Chart Options</div>
 						<ChartOptionsSelect handleChartOptions={handleChartOptions} />
 						<RegressionD3Chart CI={CI} data={data} chartOptions={chartOptions} alpha={alpha} />
 						{(linearRegressionLine || degree2Poly || degree3Poly || degree4Poly || degree5Poly || degree6Poly) && (
 							<ChartOptionsLegend chartOptions={chartOptions} setCI={setCI} CI={CI} setAlpha={setAlpha} alpha={alpha} />
 						)}
 					</div>
-					<div style={{ overflowY: 'scroll', height: '800px' }}>
+					<div style={{ overflowY: 'scroll', height: '800px', borderBottom: '1px solid #ddd' }}>
 						<SummaryStatsTable data={data} />
 						{linearRegressionLine && (
 							<GenerateRegressionTemplate
@@ -296,7 +303,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Linear Fit'}
 								id={'linearRegressionLine'}
 								coordinates={coordinates}
-								className={null}
 								equation={linearEquationTemplate}
 								polyDegree={reg1}
 								coeffs={linearRegressionCoefficients}
@@ -314,7 +320,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Quadratic Fit'}
 								id={'degree2Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredQuadraticEquationTemplate : quadraticEquationTemplate}
 								polyDegree={centeredPoly ? cent_reg2 : reg2}
 								coeffs={centeredPoly ? centered2PolyCoefficients : degree2PolyCoefficients}
@@ -332,7 +337,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Cubic Fit'}
 								id={'degree3Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredCubicEquationTemplate : cubicEquationTemplate}
 								polyDegree={centeredPoly ? cent_reg3 : reg3}
 								coeffs={centeredPoly ? centered3PolyCoefficients : degree3PolyCoefficients}
@@ -350,7 +354,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'Quartic Fit'}
 								id={'degree4Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredQuarticEquationTemplate : quarticEquationTemplate}
 								polyDegree={cent_reg4}
 								coeffs={centeredPoly ? centered4PolyCoefficients : degree4PolyCoefficients}
@@ -366,7 +369,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'5th Degree Fit'}
 								id={'degree5Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredDegree5EquationTemplate : degree5EquationTemplate}
 								polyDegree={centeredPoly ? cent_reg5 : reg5}
 								coeffs={centeredPoly ? centered5PolyCoefficients : degree5PolyCoefficients}
@@ -382,7 +384,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 								title={'6th Degree Fit'}
 								id={'degree6Poly'}
 								coordinates={coordinates}
-								className={null}
 								equation={centeredPoly ? centeredDegree6EquationTemplate : degree6EquationTemplate}
 								polyDegree={centeredPoly ? cent_reg6 : reg6}
 								coeffs={centeredPoly ? centered6PolyCoefficients : degree6PolyCoefficients}
@@ -398,37 +399,6 @@ export default function RegressionAnalysis({ data, setPopup }) {
 		</Popup>
 	);
 }
-
-// const menu = (title, id, conf, setCI, CI) => (
-// 	<Menu multiple>
-// 		{conf && (
-// 			<Menu.ItemGroup title={title}>
-// 				<Menu.Item
-// 					onClick={() =>
-// 						setCI((prev) => {
-// 							return { ...prev, [id]: { ...prev[id], fit: !prev[id].fit } };
-// 						})}
-// 				>
-// 					<div style={{ display: 'flex' }}>
-// 						<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].fit ? '✓' : ' '}</span>
-// 						<span>Show Confidence Curves (fit)</span>
-// 					</div>
-// 				</Menu.Item>
-// 				<Menu.Item
-// 					onClick={() =>
-// 						setCI((prev) => {
-// 							return { ...prev, [id]: { ...prev[id], obs: !prev[id].obs } };
-// 						})}
-// 				>
-// 					<div style={{ display: 'flex' }}>
-// 						<span style={{ width: '20px', fontWeight: 'bold' }}>{CI[id].obs ? '✓' : ' '}</span>
-// 						<span>Show Confidence Curves (obs)</span>
-// 					</div>
-// 				</Menu.Item>
-// 			</Menu.ItemGroup>
-// 		)}
-// 	</Menu>
-// );
 
 function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
 	function ChartOption({ title, color, id, showCIOptions }) {
@@ -481,7 +451,7 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
 						<td>Line of Fit</td>
 						<td>Fit</td>
 						<td>Indiv</td>
-						<td>Alpha</td>
+						<td>p</td>
 					</tr>
 					{chartOptions.linearRegressionLine && (
 						<ChartOption showCIOptions={true} conf id="linearRegressionLine" title={'Linear'} color={'steelblue'} />

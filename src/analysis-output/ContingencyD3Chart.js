@@ -24,7 +24,7 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 	const groupKeys = totals.flatMap((key) => Object.keys(key));
 	const x = d3.scaleBand().domain(groups).rangeRound([ 0, width - margin.right ]).paddingInner(1).paddingOuter(0.5);
 	const y = d3.scaleLinear().domain([ 0, 1 ]).range([ height - margin.top - margin.bottom, 0 ]);
-	const newY = d3.scaleLinear().domain([ 0, 100 ]).range([ 0, 500 ]);
+	const newY = d3.scaleLinear().domain([ 0, 100 ]).range([ 0, 100 ]);
 	const yAxis = d3.axisLeft().scale(y).ticks(4, 's');
 	const xAxis = d3.axisBottom().scale(x).ticks(10, 's').tickSizeOuter(0);
 	const color = d3
@@ -157,10 +157,10 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					.append('rect')
 					.attr('x', width + 20)
 					.attr('y', (d) => {
-						return (height - margin.top - margin.bottom) * newY(d[0]) / 100;
+						return (height - margin.top - margin.bottom) * newY(d[0]) / n;
 					})
 					.attr('height', (d) => {
-						return (height - margin.top - margin.bottom) * (newY(d[1]) - newY(d[0])) / 100 - groupPadding;
+						return (height - margin.top - margin.bottom) * newY(d[1] - d[0]) / n - groupPadding;
 					})
 					.attr('width', 10)
 					.on(`mouseover`, function(d) {
@@ -170,8 +170,8 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 						const groupHtml = `
               <div>
                 <div><span class="tooltip-margin-left-bold">${d.key}</span><span></span></div>
-                <div><span class="tooltip-margin-left-bold">Frequency: </span>
-                <span>${((d[1] - d[0]) / n * 100).toFixed()}</span></div>
+                <div><span class="tooltip-margin-left-bold">Proportion: </span>
+                <span>${((d[1] - d[0]) / n * 100).toFixed()}%</span></div>
               </div>
               `;
 						onMouseMoveTile(tileTooltip, groupHtml);
@@ -185,7 +185,7 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					.append('text')
 					.text((d) => d.key)
 					.attr('y', (d) => {
-						return (height - margin.bottom - margin.top) * ((newY(d[0][1]) + newY(d[0][0])) / 2) / 100;
+						return (height - margin.bottom - margin.top) * ((newY(d[0][1]) + newY(d[0][0])) / 2) / n;
 					})
 					.attr('x', width + 15)
 					.attr('text-anchor', 'end')
@@ -199,7 +199,9 @@ export default function D3Container({ colX, colY, groups, data, totals, n }) {
 					.append('rect')
 					.attr('fill', (d) => color(d.data.key))
 					.attr('width', (d) => d.x1 - d.x0 - tilePadding)
-					.attr('height', (d) => d.y1 - d.y0 - tilePadding)
+					.attr('height', (d) => {
+           return Math.max(d.y1 - d.y0 - tilePadding, 0)
+          })
 					.on(`mouseover`, function(d) {
 						onMouseEnterTile(tileTooltip);
 					})

@@ -9,7 +9,7 @@ import {
 import ErrorMessage from './ErrorMessage';
 import { TOGGLE_ANALYSIS_MODAL } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
-import { createRandomID } from '../context/helpers';
+import { createRandomID, filterExcludedRows } from '../context/helpers';
 import { ORDINAL, CONTINUOUS, NOMINAL, BIVARIATE, LOGISTIC, ONEWAY, CONTINGENCY } from '../constants';
 import VariableLegend from './FitYXLegend';
 import DraggableModal from './DraggableModal';
@@ -22,7 +22,7 @@ export default function AnalysisModal({ setPopup }) {
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
 	const [ analysisType, setAnalysisType ] = useState(null);
 	const { analysisModalOpen } = useSpreadsheetState();
-	const { columns, rows, excludedRows } = useRowsState();
+	const { columns, rows, excludedRows, includedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {
@@ -34,34 +34,22 @@ export default function AnalysisModal({ setPopup }) {
 			setError('Please add all required columns and try again');
 			return;
 		}
-		const colX = xColData[0] || columns[0];
-		const colY = yColData[0] || columns[2];
-		// TODO: combine this with makeRows
-		function mapColumnValues(column) {
-			return rows.map((row) => {
-				if (!excludedRows.includes(row.id)) {
-					if (column.type === 'Number' || column.type === 'Formula') {
-						return Number(row[column.id]);
-					} else {
-						return row[column.id];
-					}
-				}
-				return null;
-			});
-		}
-		const colA = mapColumnValues(colX);
-		const colB = mapColumnValues(colY);
-		const maxColLength = Math.max(colA.length, colB.length);
+		const colX = xColData[0];
+		const colY = yColData[0];
+		// TODO: refactor all this
+		const colA = filterExcludedRows(rows, includedRows, excludedRows, colX);
+		const colB = filterExcludedRows(rows, includedRows, excludedRows, colY);
 		function makeRows(colA, colB) {
-			const arr = [];
-			for (let i = 0; i < maxColLength; i++) {
-				const row = i + 1;
-				// Filter out NaN, undefined, null values
-				if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
-					arr.push([ colA[i], colB[i], row ]);
-				}
-			}
-			return arr;
+			return rows
+				.map((row) => {
+					const foundRowA = colA.find((r) => r.rowID === row.id);
+					const foundRowB = colB.find((r) => r.rowID === row.id);
+					if (foundRowA && foundRowB) {
+						return [ foundRowA.value, foundRowB.value, row.id ];
+					}
+					return null;
+				})
+				.filter(Boolean);
 		}
 		const XYCols = makeRows(colA, colB);
 		const colXArr = XYCols.map((a) => a[0]);
@@ -205,6 +193,7 @@ export default function AnalysisModal({ setPopup }) {
 					<div style={{ width: 400 }}>
 						Cast Selected Columns into Roles
 						<VariableSelector
+							cardText={'Required'}
 							data={yColData}
 							label="Y, Outcome"
 							performingAnalysis={performingAnalysis}
@@ -213,6 +202,7 @@ export default function AnalysisModal({ setPopup }) {
 							styleProps={{ marginBottom: 20, marginTop: 20 }}
 						/>
 						<VariableSelector
+							cardText={'Required'}
 							data={xColData}
 							label="X, Factor"
 							performingAnalysis={performingAnalysis}

@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import * as d3 from 'd3';
 
 // magic globals
-const margin = { top: 100, right: 50, bottom: 20, left: 50 };
+const margin = { top: 50, right: 50, bottom: 20, left: 50 };
 const width = 300;
 const height = 300;
 const svgWidth = width + margin.left + margin.right;
@@ -246,7 +246,7 @@ export default function D3Container({ chartOptions, summary_table, colX, colY, x
 		[ pooledMean ],
 	);
 
-	return <div ref={d3Container} />;
+	return <div style={{border: "1px solid rgb(192, 192, 192)"}} ref={d3Container} />;
 
 	function onMouseEnterPoint(d, thisPoint, pointTooltip) {
 		d3.select(thisPoint).transition().duration(50).attr('r', highlightedPointSize);

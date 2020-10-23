@@ -5,7 +5,7 @@ import { createBarChart } from '../analysis-output/Analysis';
 import { TOGGLE_BAR_CHART_MODAL, NOMINAL, ORDINAL, CONTINUOUS } from '../constants';
 import { SelectColumn, styles, VariableSelector } from './ModalShared';
 import ErrorMessage from './ErrorMessage';
-import { createRandomID } from '../context/helpers';
+import { createRandomID, filterExcludedRows } from '../context/helpers';
 import DraggableModal from './DraggableModal';
 
 export default function AnalysisModal({ setPopup }) {
@@ -16,7 +16,7 @@ export default function AnalysisModal({ setPopup }) {
 	const [ error, setError ] = useState(null);
 	const [ performingAnalysis, setPerformingAnalysis ] = useState(false);
 	const { barChartModalOpen } = useSpreadsheetState();
-	const { columns, rows, excludedRows } = useRowsState();
+	const { columns, rows, excludedRows, includedRows } = useRowsState();
 	const dispatchSpreadsheetAction = useSpreadsheetDispatch();
 
 	function handleModalClose() {
@@ -33,67 +33,47 @@ export default function AnalysisModal({ setPopup }) {
 		const colX = xColData[0];
 		const colY = yColData[0];
 		const colZ = groupingColData ? groupingColData[0] : null;
-		// TODO: combine this with makeXYCols
-		const mapNumberColumnValues = (colID) => rows.map((row) => !excludedRows.includes(row.id) && Number(row[colID]));
-		const mapCharacterColumnValues = (colID) => rows.map((row) => !excludedRows.includes(row.id) && row[colID]);
-		const colA = mapNumberColumnValues(colX.id);
-		const colB = mapNumberColumnValues(colY.id);
-		const colC = colZ ? mapCharacterColumnValues(colZ.id) : [];
-		const maxColLength = Math.max(colA.length, colB.length, colC.length);
+		const colA = filterExcludedRows(rows, includedRows, excludedRows, colX);
+		const colB = filterExcludedRows(rows, includedRows, excludedRows, colY);
+		const colC = colZ ? filterExcludedRows(rows, includedRows, excludedRows, colZ) : [];
+		// const maxColLength = Math.max(colA.length, colB.length, colC.length);
 		function makeXYZCols(colA, colB, colC) {
-			const arr = [];
-			for (let i = 0; i < maxColLength; i++) {
-				const rowNumber = i + 1;
-				// Filter out NaN, undefined, null values
-				if ((colA[i] || colA[i] === 0) && (colB[i] || colB[i] === 0)) {
-					arr.push({
-						x: colA[i],
-						y: colB[i],
-						group: colC ? colC[i] : null,
-						row: {
-							rowID: rows[i]['id'],
-							rowNumber,
-						},
-					});
-				}
-			}
-			return arr.sort();
+			return rows
+				.map((row, i) => {
+					const rowID = row.id;
+					const foundRowA = colA.find((r) => r.rowID === rowID);
+					const foundRowB = colB.find((r) => r.rowID === rowID);
+					const foundRowC = colC.length && colC.find((r) => r.rowID === rowID);
+					if (colC.length > 0) {
+						if (foundRowA && foundRowB && foundRowC) {
+							return {
+								x: foundRowA.value,
+								y: foundRowB.value,
+								group: foundRowC.value,
+								row: { rowID, rowNumber: i + 1 },
+							};
+						}
+					} else {
+						if (foundRowA && foundRowB) {
+							return {
+								x: foundRowA.value,
+								y: foundRowB.value,
+								group: null,
+								row: { rowID, rowNumber: i + 1 },
+							};
+						}
+					}
+					return null;
+				})
+				.filter(Boolean);
+			// .sort();
 		}
 		const XYZCols = makeXYZCols(colA, colB, colC);
-		const colXArr = XYZCols.map((a) => a.x);
-		const colYArr = XYZCols.map((a) => a.y);
-		const colZArr = colC ? XYZCols.map((a) => a.group) : [];
-
-		if (colXArr.length >= 1 && colYArr.length >= 1) {
-			const results = await createBarChart(colXArr, colYArr, colZArr, colX, colY, colZ, XYZCols, colX.modelingType);
+		if (XYZCols.length > 1) {
+			const results = await createBarChart(colX, colY, colZ, XYZCols, colX.modelingType);
 			setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
-			// const popup = window.open(window.location.href + 'bar_chart.html', '', 'left=9999,top=100,width=1000,height=800');
-			// function receiveMessage(event) {
-			// 	// target window is ready, time to send data.
-			// 	if (event.data === 'ready') {
-			// 		// (I think) if the cloud function tries to serialize an incompatible type (NaN), it sends a string instead of an object.
-			// 		if (typeof results === 'string') {
-			// 			return alert('Something went wrong. Check your data and try again.');
-			// 		}
-			// 		popup.postMessage(results, '*');
-			// 		window.removeEventListener('message', receiveMessage);
-			// 	}
-			// }
-
-			// function removeTargetClickEvent(event) {
-			// 	if (event.data === 'closed') {
-			// 		window.removeEventListener('message', targetClickEvent);
-			// 		window.removeEventListener('message', removeTargetClickEvent);
-			// 	}
-			// }
-			//}
 			setPerformingAnalysis(false);
 			dispatchSpreadsheetAction({ type: TOGGLE_BAR_CHART_MODAL, barChartModalOpen: false });
-
-			// set event listener and wait for target to be ready
-			// window.addEventListener('message', receiveMessage, false);
-			// window.addEventListener('message', targetClickEvent);
-			// window.addEventListener('message', removeTargetClickEvent);
 		} else {
 			// user should never see this, as columns with under 1 value are filtered out
 			setError('Columns must each contain at least 1 value to perform this analysis');
@@ -145,6 +125,7 @@ export default function AnalysisModal({ setPopup }) {
 						Cast Selected Columns into Roles
 						<VariableSelector
 							notAllowed={[ NOMINAL, ORDINAL ]}
+							cardText={'Required'}
 							data={yColData}
 							label="Y"
 							setData={setYColData}
@@ -152,7 +133,8 @@ export default function AnalysisModal({ setPopup }) {
 							styleProps={{ marginBottom: 20, marginTop: 20 }}
 						/>
 						<VariableSelector
-							notAllowed={[ NOMINAL, ORDINAL ]}
+							notAllowed={[]}
+							cardText={'Required'}
 							data={xColData}
 							label="X"
 							setData={setXColData}
@@ -161,8 +143,9 @@ export default function AnalysisModal({ setPopup }) {
 						/>
 						<VariableSelector
 							notAllowed={[ CONTINUOUS ]}
+							cardText={'Optional'}
 							data={groupingColData}
-							label="Group (optional)"
+							label="Group"
 							setData={setGroupingColData}
 							selectedColumn={selectedColumn}
 						/>

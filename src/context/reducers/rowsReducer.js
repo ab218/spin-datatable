@@ -38,11 +38,11 @@ import {
 	SET_FILTERS,
 	SET_TABLE_NAME,
 	SORT_COLUMN,
-	UNEXCLUDE_ROWS,
 	UNDO,
 	UPDATE_CELL,
 	UPDATE_COLUMN,
 	CONTINUOUS,
+	TEXT,
 	FORMULA,
 	NUMBER,
 } from '../../constants';
@@ -56,11 +56,9 @@ export function rowsReducer(state, action) {
 		copiedValues2dArray,
 		dataTableName,
 		descending,
-		values,
 		rowCount,
 		rowIndex,
 		updatedColumn,
-		includedRows,
 		xLabel,
 		yLabel,
 	} = action;
@@ -308,19 +306,25 @@ export function rowsReducer(state, action) {
 		case EXCLUDE_ROWS: {
 			const { excludedRows, rows } = state;
 			const { cellSelectionRanges } = action;
+			const selectedRowIDs = generateUniqueRowIDs(cellSelectionRanges, rows);
+			const allSelected = selectedRowIDs.every((rowID) => excludedRows.includes(rowID));
+			const excludeRows = [ ...new Set(excludedRows.concat(selectedRowIDs)) ];
+			const unexcludeRows = excludedRows.filter(
+				(row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row),
+			);
 			return {
 				...state,
-				excludedRows: [ ...new Set(excludedRows.concat(generateUniqueRowIDs(cellSelectionRanges, rows))) ],
+				excludedRows: allSelected ? unexcludeRows : excludeRows,
 			};
 		}
-		case UNEXCLUDE_ROWS: {
-			const { excludedRows, rows } = state;
-			const { cellSelectionRanges } = action;
-			return {
-				...state,
-				excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
-			};
-		}
+		// case UNEXCLUDE_ROWS: {
+		// 	const { excludedRows, rows } = state;
+		// 	const { cellSelectionRanges } = action;
+		// 	return {
+		// 		...state,
+		// 		excludedRows: excludedRows.filter((row) => !generateUniqueRowIDs(cellSelectionRanges, rows).includes(row)),
+		// 	};
+		// }
 		case FILTER_EXCLUDE_ROWS: {
 			const { filter: { filteredRowIDs, id } } = action;
 			return {
@@ -431,6 +435,7 @@ export function rowsReducer(state, action) {
 			return { ...state, filteredRowIDs: [] };
 		}
 		case SAVE_VALUES_TO_COLUMN: {
+			const { values } = action;
 			let valuesColumnsCounter = state.valuesColumnsCounter + 1;
 			const newColumn = {
 				id: createRandomLetterString(),
@@ -439,14 +444,9 @@ export function rowsReducer(state, action) {
 				label: `Values ${valuesColumnsCounter}`,
 				description: `Generated from [${yLabel} by ${xLabel}] Bivariate Analysis output window.`,
 			};
-			let counter = 0;
-			const newRows = state.rows.map((row, rowIndex) => {
-				if (includedRows.includes(rowIndex + 1)) {
-					const newRow = { ...row, [newColumn.id]: values[counter] };
-					counter++;
-					return newRow;
-				}
-				return { ...row };
+			const newRows = state.rows.map((row) => {
+				const includedRow = values.find(({ rowID }) => rowID === row.id);
+				return { ...row, [newColumn.id]: includedRow ? includedRow.value : '' };
 			});
 			const columns = state.columns.concat(newColumn);
 			return {
@@ -468,14 +468,14 @@ export function rowsReducer(state, action) {
 			const targetColumn = getCol(state.columns, colName);
 			// TODO: Any better way to do this without the deep copy?
 			const deepCopyRows = JSON.parse(JSON.stringify(state.rows));
-			if (targetColumn.type === 'Number' || targetColumn.type === 'Formula') {
+			if (targetColumn.type === NUMBER || targetColumn.type === FORMULA) {
 				deepCopyRows.sort(
 					(a, b) =>
 						descending
 							? [ b[targetColumn.id] ] - [ a[targetColumn.id] ]
 							: [ a[targetColumn.id] ] - [ b[targetColumn.id] ],
 				);
-			} else if (targetColumn.type === 'String') {
+			} else if (targetColumn.type === TEXT) {
 				deepCopyRows.sort(
 					(a, b) =>
 						descending
@@ -562,6 +562,31 @@ export function rowsReducer(state, action) {
 				.concat(columnCopy)
 				.concat(columns.slice(originalPosition + 1));
 
+			const oldColumn = columns.find((column) => column.id === updatedColumn.id);
+
+			// update label for savedFilters
+			const updatedSavedFilters = state.savedFilters.map((savedFilter) => {
+				const updatedNumberFilters = savedFilter.numberFilters.map((numberFilter) => {
+					if (updatedColumn.id === numberFilter.id) {
+						return { ...numberFilter, ...updatedColumn };
+					}
+					return numberFilter;
+				});
+				const updatedSelectedColumns = savedFilter.selectedColumns.map((selectedColumn) => {
+					if (updatedColumn.id === selectedColumn.id) {
+						return { ...selectedColumn, ...updatedColumn };
+					}
+					return selectedColumn;
+				});
+				const updatedScript = savedFilter.script.split(oldColumn.label).join(updatedColumn.label);
+				return {
+					...savedFilter,
+					numberFilters: updatedNumberFilters,
+					selectedColumns: updatedSelectedColumns,
+					script: updatedScript,
+				};
+			});
+
 			const prevColumn = columns.find((col) => col.id === columnCopy.id);
 
 			function removeDependenciesFromMap() {
@@ -616,6 +641,7 @@ export function rowsReducer(state, action) {
 						updatedRows.length > 0 ? [ ...state.history, { rows: state.rows, columns: state.columns } ] : state.history,
 					rows: updatedRows.length > 0 ? updatedRows : rows,
 					inverseDependencyMap,
+					savedFilters: updatedSavedFilters,
 				};
 			}
 
@@ -623,6 +649,7 @@ export function rowsReducer(state, action) {
 				...state,
 				columns: updatedColumns,
 				modalError: null,
+				savedFilters: updatedSavedFilters,
 				inverseDependencyMap:
 					prevColumn.type === 'Formula' && columnCopy.type !== 'Formula'
 						? removeDependenciesFromMap()

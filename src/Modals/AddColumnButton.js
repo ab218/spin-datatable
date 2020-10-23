@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from 'antd';
 import { useSelectState, useRowsState, useSelectDispatch } from '../context/SpreadsheetProvider';
-import { SET_SELECTED_COLUMN } from '../constants';
+import { SET_SELECTED_COLUMN, TEXT } from '../constants';
 
 export default React.memo(function AddColumnButton({ column, setChooseCondition }) {
 	const dispatchSelectAction = useSelectDispatch();
@@ -24,7 +24,7 @@ export default React.memo(function AddColumnButton({ column, setChooseCondition 
 	}
 
 	if (
-		column.type !== 'String' &&
+		column.type !== TEXT &&
 		(colMin === Infinity || colMax === Infinity || colMin === -Infinity || colMax === -Infinity)
 	) {
 		return <React.Fragment />;

@@ -214,6 +214,22 @@ function swapIDsForValuesInRow(oldExpression, row, columns) {
 	return newExpression || oldExpression;
 }
 
+export function filterExcludedRows(rows, includedRows, excludedRows, column) {
+	return rows
+		.map((row) => {
+			let cellValue;
+			if (column.type === 'Number' || column.type === 'Formula') {
+				cellValue = Number(row[column.id]);
+			} else {
+				cellValue = row[column.id];
+			}
+			return includedRows.length
+				? includedRows.includes(row.id) && { colID: column.id, rowID: row.id, value: cellValue }
+				: !excludedRows.includes(row.id) && { colID: column.id, rowID: row.id, value: cellValue };
+		})
+		.filter((row) => row.value || row.value === 0);
+}
+
 export function updateRow(row, columnID, columns, dependencyMap) {
 	const emptyArray = [];
 	const columnIDtoIndexMap = columns.reduce((acc, { id }, index) => {

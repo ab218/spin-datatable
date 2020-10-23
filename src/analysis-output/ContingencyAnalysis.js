@@ -42,22 +42,20 @@ export default function ContingencyAnalysis({ data, setPopup }) {
 					colY={colY}
 					n={coordinates.length}
 				/>
-				<div style={{ overflowY: 'scroll', height: '800px' }}>
-					<Tests
-						contingencyOptions={contingencyOptions}
-						setContingencyOptions={setContingencyOptions}
-						contingency={parsedContingency}
-						n={coordinates.length}
-						expected={expected}
-						colX={colX}
-						colY={colY}
-						chi2={chi2}
-						p={p}
-						dof={dof}
-						log_chi2={log_chi2}
-						log_p={log_p}
-					/>
-				</div>
+				<Tests
+					contingencyOptions={contingencyOptions}
+					setContingencyOptions={setContingencyOptions}
+					contingency={parsedContingency}
+					n={coordinates.length}
+					expected={expected}
+					colX={colX}
+					colY={colY}
+					chi2={chi2}
+					p={p}
+					dof={dof}
+					log_chi2={log_chi2}
+					log_p={log_p}
+				/>
 			</div>
 		</Popup>
 	);
@@ -172,7 +170,7 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 				total: (val / n * 100).toFixed(2),
 				col: (val / columnTotals[j] * 100).toFixed(2),
 				row: (val / rowTotals[i] * 100).toFixed(2),
-				expected: expected,
+				expected: expected[j][i].toFixed(4) / 1,
 			};
 			return cellContents;
 		});
@@ -227,9 +225,8 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 			<tbody>
 				{mappedContingency.map((row, i) => {
 					return (
-						<tr>
+						<tr key={i}>
 							<td
-								key={i}
 								style={{
 									width: '70px',
 									maxWidth: '70px',
@@ -262,7 +259,7 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 										{includeTotal && `${cell.total}\n`}
 										{includeCol && `${cell.col}\n`}
 										{includeRow && `${cell.row}\n`}
-										{includeExpected && `${expected[j][i]}\n`}
+										{includeExpected && `${cell.expected}\n`}
 									</td>
 								);
 							})}
@@ -276,15 +273,15 @@ const ContingencyTable = ({ setContingencyOptions, contingencyOptions, contingen
 						</tr>
 					);
 				})}
-				<tr>
+				<tr key={'totals'}>
 					<td
 						className="bordered left"
 						style={{ textAlign: 'left', width: '70px', paddingLeft: '5px', backgroundColor: 'rgb(238, 238, 238)' }}
 					>
 						Total
 					</td>
-					{columnTotals.map((total) => (
-						<td style={{ whiteSpace: 'pre', textAlign: 'right', paddingRight: '5px' }} key={total} className="bordered">
+					{columnTotals.map((total, i) => (
+						<td style={{ whiteSpace: 'pre', textAlign: 'right', paddingRight: '5px' }} key={i} className="bordered">
 							{includeCount && `${total}\n`}
 							{includeTotal && `${(total / n * 100).toFixed(2)}\n`}
 						</td>
@@ -311,7 +308,7 @@ const Tests = ({
 	dof,
 }) => {
 	return (
-		<details open style={{ padding: '10px 30px', textAlign: 'center' }}>
+		<details open style={{ padding: '10px 30px 30px', textAlign: 'center' }}>
 			<summary className="analysis-summary-title">Contingency Table</summary>
 			<ContingencyTable
 				setContingencyOptions={setContingencyOptions}
@@ -332,7 +329,7 @@ const Tests = ({
 						<td className="right small">{n}</td>
 					</tr>
 					<tr>
-						<td className="table-header small">dof</td>
+						<td className="table-header small">df</td>
 						<td className="right small">{dof}</td>
 					</tr>
 				</tbody>
@@ -343,7 +340,7 @@ const Tests = ({
 					<tr>
 						<td className="table-header medium">Test</td>
 						<td className="table-header small right">ChiSquare</td>
-						<td className="table-header small right">Prob>ChiSq</td>
+						<td className="table-header small right">p</td>
 					</tr>
 					<tr>
 						<td className="header-background medium">Likelihood Ratio</td>
