@@ -1,122 +1,151 @@
 .App {
-	text-align: center;
+  text-align: center;
+}
+
+.toolbar-icon {
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: all 0.1s ease-in-out;
+}
+
+/* Create the hidden pseudo-element */
+/* include the shadow for the end state */
+.toolbar-icon::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.1s ease-in-out;
+}
+
+/* Scale up the box */
+.toolbar-icon:hover {
+  transform: scale(1.1, 1.1);
+}
+
+/* Fade in the pseudo-element with the bigger shadow */
+.toolbar-icon:hover::after {
+  opacity: 1;
 }
 
 /* Create a simple white box, and add the shadow for the initial state */
 .hamburger {
-	position: relative;
-	display: inline-block;
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-	transition: all 0.1s ease-in-out;
+  position: relative;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: all 0.1s ease-in-out;
 }
 
 /* Create the hidden pseudo-element */
 /* include the shadow for the end state */
 .hamburger::after {
-	content: '';
-	position: absolute;
-	z-index: -1;
-	opacity: 0;
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-	transition: opacity 0.1s ease-in-out;
+  content: "";
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.1s ease-in-out;
 }
 
 /* Scale up the box */
 .hamburger:hover {
-	transform: scale(1.4, 1.4);
+  transform: scale(1.4, 1.4);
 }
 
 /* Fade in the pseudo-element with the bigger shadow */
 .hamburger:hover::after {
-	opacity: 1;
+  opacity: 1;
 }
 
 .non-interactive-cell:hover {
-	cursor: not-allowed;
+  cursor: not-allowed;
 }
 
 .selected-row-number-cell {
-	background-color: rgb(160, 185, 225) !important;
-	height: 100%;
-	width: 100%;
-	padding-right: 10px;
-	position: sticky;
-	left: -1px;
-	z-index: 1;
+  background-color: rgb(160, 185, 225) !important;
+  height: 100%;
+  width: 100%;
+  padding-right: 10px;
+  position: sticky;
+  left: -1px;
+  z-index: 1;
 }
 
 .row-number-cell {
-	background-color: #eee;
-	height: 100%;
-	width: 100%;
-	padding-right: 10px;
-	position: sticky;
-	left: -1px;
-	z-index: 1;
+  background-color: #eee;
+  height: 100%;
+  width: 100%;
+  padding-right: 10px;
+  position: sticky;
+  left: -1px;
+  z-index: 1;
 }
 
 .menu {
-	z-index: 100;
-	text-align: left;
-	width: 220px;
-	box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
-	position: absolute;
-	display: none;
-	background: rgb(255, 250, 250);
+  z-index: 100;
+  text-align: left;
+  width: 220px;
+  box-shadow: 0 4px 5px 3px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  display: none;
+  background: rgb(255, 250, 250);
 }
 
 .menu-options {
-	list-style: none;
-	padding: 10px 0;
+  list-style: none;
+  padding: 10px 0;
 }
 
 .menu-option {
-	font-weight: 500;
-	font-size: 14px;
-	padding: 10px 40px 10px 20px;
-	cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 40px 10px 20px;
+  cursor: pointer;
 }
 
 .menu-option:hover {
-	background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .modal-span {
-	margin-top: 10px;
-	display: flex;
-	justify-content: space-between;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .display-block {
-	display: block;
+  display: block;
 }
 
 .display-none {
-	display: none;
+  display: none;
 }
 
 .display-flex {
-	display: flex;
+  display: flex;
 }
 
 .border-right {
-	border-right: 1px solid black;
+  border-right: 1px solid black;
 }
 
 .NaN-value {
-	background-color: #ffe6e6;
+  background-color: #ffe6e6;
 }
 
 .header-handle {
-	width: 10px;
-	position: absolute;
-	right: 0;
-	cursor: e-resize;
-	user-select: none;
+  width: 10px;
+  position: absolute;
+  right: 0;
+  cursor: e-resize;
+  user-select: none;
 }
 
 .pointer {
-	cursor: pointer;
+  cursor: pointer;
 }
 
 /* .header-handle:hover {
@@ -124,10 +153,10 @@
 } */
 
 .ReactVirtualized__Table {
-	display: inline-block;
-	border-right: 1px solid #b3b3b3;
-	border-bottom: 1px solid #b3b3b3;
-	/* border: 2px solid rgba(0, 0, 0, 0.1); */
+  display: inline-block;
+  border-right: 1px solid #b3b3b3;
+  border-bottom: 1px solid #b3b3b3;
+  /* border: 2px solid rgba(0, 0, 0, 0.1); */
 }
 
 /* .ReactVirtualized__Table__rowColumn {
@@ -135,116 +164,116 @@
 } */
 
 .ReactVirtualized__Table__headerColumn {
-	display: flex;
-	flex-direction: row;
-	justify-content: left;
-	padding: 0;
-	margin-right: 0 !important;
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  padding: 0;
+  margin-right: 0 !important;
 }
 
 .ReactVirtualized__Table__headerColumn:first-of-type {
-	margin-left: 0 !important;
+  margin-left: 0 !important;
 }
 
 .ReactVirtualized__Table__headerTruncatedText {
-	line-height: 2;
-	flex: auto;
-	cursor: pointer;
-	text-transform: none;
-	text-align: center;
+  line-height: 2;
+  flex: auto;
+  cursor: pointer;
+  text-transform: none;
+  text-align: center;
 }
 
 .DragHandle {
-	flex: 0 0 16px;
-	z-index: 2;
-	cursor: col-resize;
-	color: #0085ff;
+  flex: 0 0 16px;
+  z-index: 2;
+  cursor: col-resize;
+  color: #0085ff;
 }
 .DragHandle:hover {
-	background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .DragHandleActive,
 .DragHandleActive:hover {
-	color: #0b6fcc;
-	z-index: 3;
+  color: #0b6fcc;
+  z-index: 3;
 }
 
 .DragHandleIcon {
-	user-select: none;
-	flex: 0 0 0;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
+  user-select: none;
+  flex: 0 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .DragHandleIcon-selected {
-	user-select: none;
-	flex: 0 0 0;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	background-color: rgb(160, 185, 225) !important;
+  user-select: none;
+  flex: 0 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(160, 185, 225) !important;
 }
 
 .column-header-selected {
-	line-height: 2;
-	flex: auto;
-	cursor: pointer;
-	background-color: rgb(160, 185, 225) !important;
+  line-height: 2;
+  flex: auto;
+  cursor: pointer;
+  background-color: rgb(160, 185, 225) !important;
 }
 
 .ReactVirtualized__Grid:focus {
-	outline: 0;
-	box-shadow: none !important;
+  outline: 0;
+  box-shadow: none !important;
 }
 
 .sidebar-column-selected {
-	background-color: rgb(160, 185, 225) !important;
+  background-color: rgb(160, 185, 225) !important;
 }
 
 /* For Row headers column to be the same height as main table */
 .ReactVirtualized__Table__Grid {
-	height: auto !important;
+  height: auto !important;
 }
 
 .ReactVirtualized__Table__headerRow {
-	z-index: 2;
-	position: sticky;
-	top: 0;
-	background-color: white;
-	border-bottom: 1px solid #b3b3b3;
+  z-index: 2;
+  position: sticky;
+  top: 60px;
+  background-color: white;
+  border-bottom: 1px solid #b3b3b3;
 }
 
 .error {
-	-webkit-animation: fadeOut 4s forwards;
-	animation: fadeOut 4s forwards;
-	/* -webkit-animation-delay: 4s; */
-	/* animation-delay: 4s; */
+  -webkit-animation: fadeOut 4s forwards;
+  animation: fadeOut 4s forwards;
+  /* -webkit-animation-delay: 4s; */
+  /* animation-delay: 4s; */
 }
 
 @-webkit-keyframes fadeOut {
-	0% {
-		opacity: 0;
-	}
-	20% {
-		opacity: 1;
-	}
-	100% {
-		opacity: 0;
-	}
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes fadeOut {
-	0% {
-		opacity: 0;
-	}
-	20% {
-		opacity: 1;
-	}
-	100% {
-		opacity: 0;
-	}
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
