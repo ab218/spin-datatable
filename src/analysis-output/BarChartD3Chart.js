@@ -43,9 +43,6 @@ export default function BarChartD3Chart({
     const margin = { top: 40, right: 30, bottom: 70, left: 30 };
     const svgWidth = width + margin.left + margin.right;
     const svgHeight = height + margin.top + margin.bottom;
-
-    console.log(data);
-
     const svg = d3
       .select(subGraph ? subChartContainer.current : mainChartContainer.current)
       .append("svg")

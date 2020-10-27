@@ -15,7 +15,7 @@ import DraggableModal from "./DraggableModal";
 
 export default function DistributionModal({ setPopup }) {
   const { distributionModalOpen } = useSpreadsheetState();
-  const { columns, rows, excludedRows, includedRows } = useRowsState();
+  const { columns, rows, excludedRows } = useRowsState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
   const [error, setError] = useState("");
   const [numberOfBins, setNumberOfBins] = useState(10);
@@ -34,7 +34,7 @@ export default function DistributionModal({ setPopup }) {
       return;
     }
 
-    function filterExcludedRows(rows, includedRows, excludedRows, column) {
+    function filterExcludedRows(rows, excludedRows, column) {
       return rows.map((row) => {
         let cellValue;
         if (column.type === "Number" || column.type === "Formula") {
@@ -42,26 +42,17 @@ export default function DistributionModal({ setPopup }) {
         } else {
           cellValue = row[column.id];
         }
-        return includedRows.length
-          ? includedRows.includes(row.id) && {
-              colID: column.id,
-              rowID: row.id,
-              value: cellValue,
-            }
-          : !excludedRows.includes(row.id) && {
-              colID: column.id,
-              rowID: row.id,
-              value: cellValue,
-            };
+        return (
+          !excludedRows.includes(row.id) && {
+            colID: column.id,
+            rowID: row.id,
+            value: cellValue,
+          }
+        );
       });
     }
 
-    const colValsWithRowData = filterExcludedRows(
-      rows,
-      includedRows,
-      excludedRows,
-      yColData,
-    );
+    const colValsWithRowData = filterExcludedRows(rows, excludedRows, yColData);
 
     const colVals = colValsWithRowData.map((x) => x.value).filter(Boolean);
     const emptyValues = colValsWithRowData.length - colVals.length;
