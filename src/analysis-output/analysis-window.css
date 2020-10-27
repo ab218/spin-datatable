@@ -197,13 +197,8 @@ body {
 }
 
 .histogram-border {
-<<<<<<< HEAD
   text-align: center;
   background: lightyellow;
-=======
-	text-align: center;
-	background: lightyellow;
->>>>>>> c57823d5d3267dedbedcaf2e23bd9ce239f82f3d
 }
 
 .regression-line {
