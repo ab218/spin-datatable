@@ -1,361 +1,367 @@
 /* [ '#56B4E9', '#E69F00', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7', '#999999' ] */
 .analysis-title {
-	text-align: center;
-	font-size: 20;
+  text-align: center;
+  font-size: 20;
 }
 
 body {
-	margin: 0 auto;
-	display: table;
-	font-family: "Helvetica Neue", sans-serif;
+  margin: 0 auto;
+  display: table;
+  font-family: "Helvetica Neue", sans-serif;
 }
 
 .analysis-details {
-	border-bottom: 1px solid rgb(192, 192, 192);
-	padding: 10px 30px;
-	text-align: center;
+  border-bottom: 1px solid rgb(192, 192, 192);
+  padding: 10px 30px;
+  text-align: center;
 }
 
 .analysis-title {
-	text-align: center;
-	font-size: 26px;
+  text-align: center;
+  font-size: 26px;
 }
 
 .analysis-summary-title {
-	font-size: 20px;
-	margin-top: 15px;
-	margin-bottom: 30px;
-	text-align: center;
+  font-size: 20px;
+  margin-top: 15px;
+  margin-bottom: 30px;
+  text-align: center;
 }
 
 .linearRegressionLine {
-	stroke-width: 2px;
-	color: #56b4e9;
-	stroke: #56b4e9;
-	z-index: 1;
+  stroke-width: 2px;
+  color: #56b4e9;
+  stroke: #56b4e9;
+  z-index: 1;
 }
 
 .linearRegressionLineCIFit {
-	stroke-width: 1px;
-	stroke: #56b4e9;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
+  stroke-width: 1px;
+  stroke: #56b4e9;
+  fill: #56b4e9;
+  stroke-dasharray: 10, 5;
+  z-index: 1;
 }
 
 .linearRegressionLineCIFit-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .linearRegressionLineCIObs {
-	stroke-width: 1px;
-	stroke: #56b4e9;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
+  stroke-width: 1px;
+  stroke: #56b4e9;
+  fill: #56b4e9;
+  stroke-dasharray: 10, 5;
+  z-index: 1;
 }
 
 .linearRegressionLineCIObs-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .linearRegressionLine-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree2PolyLine {
-	stroke-width: 2px;
-	stroke: #e69f00;
-	z-index: 1;
+  stroke-width: 2px;
+  stroke: #e69f00;
+  fill: #e69f00;
+  z-index: 1;
 }
 
 .degree2PolyLineCIFit {
-	stroke-width: 1px;
-	stroke: #e69f00;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
+  stroke-width: 1px;
+  stroke: #e69f00;
+  fill: #e69f00;
+  stroke-dasharray: 10, 5;
+  z-index: 1;
 }
 
 .degree2PolyLineCIFit-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree2PolyLineCIObs {
-	stroke-width: 1px;
-	stroke: #e69f00;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
+  stroke-width: 1px;
+  stroke: #e69f00;
+  stroke-dasharray: 10, 5;
+  z-index: 1;
 }
 
 .degree2PolyLineCIObs-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree2PolyLine-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree3PolyLine {
-	stroke-width: 2px;
-	stroke: #009e73;
-	z-index: 1;
+  stroke-width: 2px;
+  stroke: #009e73;
+  fill: #009e73;
+  z-index: 1;
 }
 
 .degree3PolyLine-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree3PolyLineCIFit {
-	stroke-width: 1px;
-	stroke: #009e73;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
+  stroke-width: 1px;
+  stroke: #009e73;
+  fill: #009e73;
+  stroke-dasharray: 10, 5;
+  z-index: 1;
 }
 
 .degree3PolyLineCIFit-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree3PolyLineCIObs {
-	stroke-width: 1px;
-	stroke: #009e73;
-	stroke-dasharray: 10, 5;
-	z-index: 1;
+  stroke-width: 1px;
+  stroke: #009e73;
+  stroke-dasharray: 10, 5;
+  z-index: 1;
 }
 
 .degree3PolyLineCIObs-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree4PolyLine {
-	stroke-width: 2px;
-	stroke: #f0e442;
-	z-index: 1;
+  stroke-width: 2px;
+  stroke: #f0e442;
+  z-index: 1;
 }
 
 .degree4PolyLine-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree5PolyLine {
-	stroke-width: 2px;
-	stroke: #0072b2;
-	z-index: 1;
+  stroke-width: 2px;
+  stroke: #0072b2;
+  z-index: 1;
 }
 
 .degree5PolyLine-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .degree6PolyLine {
-	stroke-width: 2px;
-	stroke: #d55e00;
-	z-index: 1;
+  stroke-width: 2px;
+  stroke: #d55e00;
+  z-index: 1;
 }
 
 .degree6PolyLine-hitbox {
-	stroke-width: 10px;
-	stroke: transparent;
-	z-index: 1;
+  stroke-width: 10px;
+  stroke: transparent;
+  z-index: 1;
 }
 
 .tooltip {
-	position: absolute;
-	min-width: 60px;
-	height: 28px;
-	padding: 2px;
-	font: 12px sans-serif;
-	border: 0px;
-	border-radius: 8px;
-	pointer-events: none;
+  position: absolute;
+  min-width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
 }
 
 .histogram-border {
-	text-align: center;
-	background: lightyellow;
+  text-align: center;
+  background: lightyellow;
 }
 
 .regression-line {
-	text-align: center;
-	background: rgb(201, 233, 245);
+  text-align: center;
+  background: rgb(201, 233, 245);
 }
 
 .point {
-	text-align: left;
-	height: 45px;
-	background: lightyellow;
+  text-align: left;
+  height: 45px;
+  background: lightyellow;
 }
 
 .contingency-tooltip {
-	position: absolute;
-	min-width: 60px;
-	height: 28px;
-	padding: 2px;
-	font: 12px sans-serif;
-	border: 0px;
-	border-radius: 8px;
-	pointer-events: none;
-	text-align: left;
-	height: 60px;
-	background: white;
+  position: absolute;
+  min-width: 60px;
+  height: 28px;
+  padding: 2px;
+  font: 12px sans-serif;
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+  text-align: left;
+  height: 60px;
+  background: white;
 }
 
 .tooltip-margin-left-bold {
-	margin-left: 3px;
-	font-weight: bold;
+  margin-left: 3px;
+  font-weight: bold;
 }
 
 .mean {
-	text-align: left;
-	height: 20px;
-	background: lightgreen;
+  text-align: left;
+  height: 20px;
+  background: lightgreen;
 }
 
 .bar {
-	text-align: left;
-	height: 60px;
-	background: lightyellow;
+  text-align: left;
+  height: 60px;
+  background: lightyellow;
 }
 
 .bordered {
-	border: 1px solid black;
+  border: 1px solid black;
 }
 
 .equation {
-	font-size: 12px;
-	margin-top: 10px;
-	text-align: center;
+  font-size: 12px;
+  margin-top: 10px;
+  text-align: center;
 }
 
 .table-header {
-	border: 1px solid white;
-	background-color: #e2d7d7;
-	width: 100px;
-	font-weight: bold;
+  border: 1px solid white;
+  background-color: #e2d7d7;
+  width: 100px;
+  font-weight: bold;
 }
 
 .header-background {
-	border: 1px solid white;
-	background-color: #e2d7d7;
+  border: 1px solid white;
+  background-color: #e2d7d7;
 }
 
 .xxlarge {
-	width: 400px;
+  width: 400px;
 }
 
 .large {
-	width: 200px;
+  width: 200px;
 }
 
 .medium {
-	width: 150px;
+  width: 150px;
 }
 
 .small {
-	width: 100px;
+  width: 100px;
 }
 
 .xsmall {
-	width: 50px;
+  width: 50px;
 }
 
 .table-subtitle {
-	border: 1px solid white;
-	font-weight: bold;
-	text-align: left;
-	font-size: 1.2em;
-	background-color: rgb(238, 238, 238);
+  border: 1px solid white;
+  font-weight: bold;
+  text-align: left;
+  font-size: 1.2em;
+  background-color: rgb(238, 238, 238);
 }
 
 .left {
-	text-align: left;
+  text-align: left;
 }
 
 .right {
-	text-align: right;
+  text-align: right;
 }
 
 .centered {
-	display: none;
+  display: none;
 }
 
 .uncentered {
-	display: none;
+  display: none;
 }
 
 /* Dropdown Button */
 .dropbtn {
-	background-color: #4caf50;
-	color: white;
-	padding: 16px;
-	font-size: 16px;
-	border: none;
+  background-color: #4caf50;
+  color: white;
+  padding: 16px;
+  font-size: 16px;
+  border: none;
 }
 
 /* The container <div> - needed to position the dropdown content */
 .dropdown {
-	position: relative;
-	display: inline-block;
+  position: relative;
+  display: inline-block;
 }
 
 /* Dropdown Content (Hidden by Default) */
 .dropdown-content {
-	display: none;
-	position: absolute;
-	background-color: #f1f1f1;
-	min-width: 160px;
-	box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-	z-index: 1;
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
 }
 
 /* Links inside the dropdown */
 .dropdown-content a {
-	color: black;
-	padding: 12px 16px;
-	text-decoration: none;
-	display: block;
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
 }
 
 /* Change color of dropdown links on hover */
 .dropdown-content a:hover {
-	background-color: #ddd;
+  background-color: #ddd;
 }
 
 /* Show the dropdown menu on hover */
 .dropdown:hover .dropdown-content {
-	display: block;
+  display: block;
 }
 
 /* Change the background color of the dropdown button when the dropdown content is shown */
 .dropdown:hover .dropbtn {
-	background-color: #3e8e41;
+  background-color: #3e8e41;
 }
 
 .centered-text {
-	text-align: center;
+  text-align: center;
 }
 
 .select-checkmark {
-	width: 20px;
-	font-weight: bold;
+  width: 20px;
+  font-weight: bold;
 }
