@@ -16,6 +16,7 @@ import {
   EXCLUDE_ROWS,
   FILTER_EXCLUDE_ROWS,
   FILTER_UNEXCLUDE_ROWS,
+  INVERT_ROW_SELECTION,
   REMOVE_HIGHLIGHTED_FILTERED_ROWS,
   REMOVE_SELECTED_CELLS,
   REMOVE_SIDEBAR_FILTER,
@@ -24,7 +25,6 @@ import {
   SORT_COLUMN,
   TOGGLE_COLUMN_TYPE_MODAL,
   TOGGLE_FILTER_MODAL,
-  // UNEXCLUDE_ROWS,
 } from "./constants";
 import { Menu } from "antd";
 
@@ -151,8 +151,17 @@ export default function ContextMenu({ paste }) {
           >
             Exclude/Unexclude Selected Cases(s)
           </Menu.Item>
-          <Menu.Item disabled={true} key="21">
-            Invert Selection
+          <Menu.Item
+            onClick={() => {
+              dispatchSelectAction({
+                type: INVERT_ROW_SELECTION,
+                rows,
+                columns,
+              });
+            }}
+            key="21"
+          >
+            Invert Row Selection
           </Menu.Item>
         </Menu>
       </div>

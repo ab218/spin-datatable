@@ -22,46 +22,18 @@ import {
   useSpreadsheetDispatch,
   useSpreadsheetState,
 } from "./context/SpreadsheetProvider";
+import { flattenCellSelectionRanges } from "./context/helpers.js";
 import { createModelingTypeIcon } from "./Modals/ModalShared";
 
 const SelectedRowsCounter = React.memo(function () {
   const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
   const [selectedRowsTotal, setSelectedRowsTotal] = useState(0);
 
-  const isOverlappingOrContiguous = (range1, range2) => {
-    // contiguous = 1 row away
-    const offset = 1;
-    return range1.bottom + offset >= range2.top;
-  };
-
-  const mergeRange = (range1, range2) => {
-    return {
-      top: Math.min(range1.top, range2.top),
-      bottom: Math.max(range1.bottom, range2.bottom),
-    };
-  };
-
-  const byTop = (a, b) => a.top - b.top;
-
-  // For each cell selection range, merge it any overlapping ranges in our accumulator
-  // ACC: [ R: 3 - 6, R: 8 - 10, ...]
-  // GIVEN RANGE: R: 5 - 9 -> 3 - 9  -> 3 - 10
-
   useEffect(() => {
-    const flattenedCellSelectionRanges = cellSelectionRanges
-      .concat(currentCellSelectionRange)
-      .filter(Boolean)
-      .sort(byTop)
-      .reduce((stack, curr) => {
-        // If the given range overlaps, merge it with overlapping range and replace it on the stack;
-        // otherwise, add the given range to the top of our stack
-        //
-        const overlapped =
-          stack.length && isOverlappingOrContiguous(stack[0], curr);
-        return overlapped
-          ? [mergeRange(stack[0], curr)].concat(stack.slice(1))
-          : [curr].concat(stack);
-      }, []);
+    const flattenedCellSelectionRanges = flattenCellSelectionRanges(
+      cellSelectionRanges,
+      currentCellSelectionRange,
+    );
     const rowCount = flattenedCellSelectionRanges.reduce((sum, range) => {
       return sum + (range.bottom - range.top) + 1;
     }, 0);
