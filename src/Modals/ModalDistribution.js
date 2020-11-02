@@ -8,7 +8,7 @@ import {
 } from "../context/SpreadsheetProvider";
 import { TOGGLE_DISTRIBUTION_MODAL } from "../constants";
 import { performDistributionAnalysis } from "../analysis-output/Analysis";
-import { SelectColumn, styles } from "./ModalShared";
+import { SelectMultipleColumns, styles } from "./ModalShared";
 import ErrorMessage from "./ErrorMessage";
 import { createRandomID } from "../context/helpers";
 import DraggableModal from "./DraggableModal";
@@ -52,23 +52,31 @@ export default function DistributionModal({ setPopup }) {
       });
     }
 
-    const colValsWithRowData = filterExcludedRows(rows, excludedRows, yColData);
+    const selectedColumns = yColData.map((col) => {
+      const colValsWithRowData = filterExcludedRows(rows, excludedRows, col);
+      const colVals = colValsWithRowData.map((x) => x.value).filter(Boolean);
+      const missingValues = colValsWithRowData.length - colVals.length;
+      const colValsFiltered = colValsWithRowData.filter((x) => x.value);
+      return {
+        yColData: col,
+        colVals,
+        colValsWithRowData,
+        missingValues,
+        colValsFiltered,
+      };
+    });
 
-    const colVals = colValsWithRowData.map((x) => x.value).filter(Boolean);
-    const emptyValues = colValsWithRowData.length - colVals.length;
-
+    selectedColumns.forEach((col) => {
+      if (col.colVals.length < 3) {
+        setError("Column must have at least 3 valid values");
+        return;
+      }
+    });
     // TODO: Better error handling here
-    if (colVals.length < 3) {
-      setError("Column must have at least 3 valid values");
-      return;
-    }
     setPerformingAnalysis(true);
     const results = await performDistributionAnalysis(
-      yColData,
-      colVals,
+      selectedColumns,
       numberOfBins,
-      emptyValues,
-      colValsWithRowData.filter((x) => x.value),
     );
     setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
     setPerformingAnalysis(false);
@@ -130,9 +138,10 @@ export default function DistributionModal({ setPopup }) {
         ]}
       >
         <div style={{ ...styles.flexSpaced }}>
-          <SelectColumn
+          <SelectMultipleColumns
             title={"Select Columns"}
             columns={filteredColumns}
+            selectedColumn={yColData}
             setSelectedColumn={setYColData}
           />
           <div style={{ display: "flex" }}>
