@@ -263,7 +263,8 @@ export default function D3Container({
     () => {
       // useEffect for continuous data
       if (numberOfBins === undefined) return;
-      const histSvg = d3.select(histogramContainer.current).select("g");
+      const histRef = d3.select(histogramContainer.current);
+      const histSvg = histRef.select("g");
       histSvg
         .append("g")
         .attr("class", "yAxis")
@@ -312,7 +313,7 @@ export default function D3Container({
         .attr("width", (d) => x(d.length));
 
       return () => {
-        histSvg.selectAll("*").remove();
+        histRef.selectAll("*").remove();
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -391,7 +392,11 @@ export default function D3Container({
 
   return (
     <div
-      style={{ display: "flex", border: "1px solid rgb(192, 192, 192)" }}
+      style={{
+        display: "flex",
+        border: "1px solid rgb(192, 192, 192)",
+        borderLeft: "none",
+      }}
       onClick={removeClickedHistogramBars}
     >
       <span ref={histogramContainer} />

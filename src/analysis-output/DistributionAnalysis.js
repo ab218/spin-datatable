@@ -7,40 +7,35 @@ import { InputNumber } from "antd";
 import { CONTINUOUS } from "../constants";
 
 export default function DistributionAnalysis({ data, setPopup }) {
-  const {
-    colObj,
-    vals,
-    numberOfBins,
-    missingValues,
-    colValsWithRowData,
-  } = data;
-  const [bins, setBins] = useState(numberOfBins);
-  const title = `Descriptive Analysis of ${colObj.label} ${
-    colObj.units ? "(" + colObj.units + ")" : ""
-  }`;
-
+  const { numberOfBins, colData } = data;
   return (
     <Popup
       key={data.id}
       id={data.id}
-      title={title}
-      windowWidth={550}
+      title={`Descriptive Analysis`}
+      windowWidth={Math.min(500 * data.colData.length, 1500)}
       setPopup={setPopup}
     >
-      <div id="popupcontainer" style={{ textAlign: "center" }}>
-        <TitleText title={title} />
-        {colObj.modelingType === CONTINUOUS ? (
-          <ContinuousDescriptives data={data} bins={bins} setBins={setBins} />
-        ) : (
-          <NominalDescriptives
-            vals={vals}
-            bins={bins}
-            colObj={colObj}
-            setBins={setBins}
-            missingValues={missingValues}
-            colValsWithRowData={colValsWithRowData}
-          />
-        )}
+      <div id="popupcontainer" style={{ textAlign: "center", display: "flex" }}>
+        {colData.map((col, i) => (
+          <div key={i}>
+            <TitleText
+              title={`Descriptive Analysis of ${col.yColData.label} ${
+                col.yColData.units ? "(" + col.yColData.units + ")" : ""
+              }`}
+            />
+            {col.yColData.modelingType === CONTINUOUS ? (
+              <ContinuousDescriptives numberOfBins={numberOfBins} data={col} />
+            ) : (
+              <NominalDescriptives
+                vals={col.colVals}
+                colObj={col.yColData}
+                missingValues={col.missingValues}
+                colValsWithRowData={col.colValsWithRowData}
+              />
+            )}
+          </div>
+        ))}
       </div>
     </Popup>
   );
@@ -102,7 +97,7 @@ const SummaryStatistics = ({
 const Frequencies = ({ frequencies, n, missingValues = 0 }) => {
   const freqKeys = Object.keys(frequencies);
   return (
-    <div style={{ width: "50%", margin: "0 auto" }}>
+    <div style={{ width: "50%", margin: "10px auto" }}>
       <h4 className="table-subtitle">Frequencies</h4>
       <table>
         <tbody>
@@ -278,18 +273,36 @@ function NominalDescriptives({
         vals={vals}
         colValsWithRowData={colValsWithRowData}
       />
-      <Frequencies
-        missingValues={missingValues}
-        frequencies={frequencies}
-        n={vals.length}
-      />
+      <div
+        style={{
+          border: "1px solid rgb(192, 192, 192)",
+          borderLeft: "none",
+          borderTop: "none",
+        }}
+      >
+        <div style={{ height: "60px" }}></div>
+        <Frequencies
+          missingValues={missingValues}
+          frequencies={frequencies}
+          n={vals.length}
+        />
+      </div>
     </React.Fragment>
   );
 }
 
-function ContinuousDescriptives({ data, bins, setBins }) {
-  const { colObj, vals, skew, kurtosis, sem, ci, colValsWithRowData } = data;
-  const boxDataSorted = vals.sort(d3.ascending);
+function ContinuousDescriptives({ data, numberOfBins }) {
+  const [bins, setBins] = useState(numberOfBins);
+  const {
+    yColData,
+    colVals,
+    skew,
+    kurtosis,
+    sem,
+    ci,
+    colValsWithRowData,
+  } = data;
+  const boxDataSorted = colVals.sort(d3.ascending);
   // Compute summary statistics used for the box:
   const q1 = d3.quantile(boxDataSorted, 0.25);
   const median = d3.quantile(boxDataSorted, 0.5);
@@ -300,36 +313,46 @@ function ContinuousDescriptives({ data, bins, setBins }) {
   return (
     <React.Fragment>
       <DistributionD3Chart
-        colObj={colObj}
+        colObj={yColData}
         colValsWithRowData={colValsWithRowData}
         min={min}
         max={max}
         q1={q1}
         q3={q3}
         median={median}
-        vals={vals}
+        vals={colVals}
         numberOfBins={bins}
       />
-      <div>Bins</div>
-      <InputNumber
-        min={1}
-        max={50}
-        defaultValue={bins}
-        onChange={(val) => setBins(val)}
-      />
-      <ContinuousSummaryStatistics
-        boxDataSorted={boxDataSorted}
-        max={max}
-        q1={q1}
-        q3={q3}
-        median={median}
-        min={min}
-        sem={sem}
-        ci={ci}
-        vals={vals}
-        skew={skew}
-        kurtosis={kurtosis}
-      />
+      <div
+        style={{
+          border: "1px solid rgb(192, 192, 192)",
+          borderLeft: "none",
+          borderTop: "none",
+        }}
+      >
+        <div style={{ height: "60px" }}>
+          <div>Bins</div>
+          <InputNumber
+            min={1}
+            max={50}
+            defaultValue={bins}
+            onChange={(val) => setBins(val)}
+          />
+        </div>
+        <ContinuousSummaryStatistics
+          boxDataSorted={boxDataSorted}
+          max={max}
+          q1={q1}
+          q3={q3}
+          median={median}
+          min={min}
+          sem={sem}
+          ci={ci}
+          vals={colVals}
+          skew={skew}
+          kurtosis={kurtosis}
+        />
+      </div>
     </React.Fragment>
   );
 }

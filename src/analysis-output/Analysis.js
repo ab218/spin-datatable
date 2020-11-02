@@ -5,7 +5,6 @@ import DistributionAnalysis from "./DistributionAnalysis";
 import OnewayAnalysis from "./OnewayAnalysis";
 import BarChartAnalysis from "./BarChartAnalysis";
 import ContingencyAnalysis from "./ContingencyAnalysis";
-import { NOMINAL, ORDINAL } from "../constants";
 
 export default function AnalysisContainer({ popup, setPopup }) {
   if (!popup.length === 0) {
@@ -148,31 +147,16 @@ export async function performContingencyAnalysis(
 }
 
 export async function performDistributionAnalysis(
-  colY,
-  vals,
+  selectedColumns,
   numberOfBins,
-  missingValues,
-  colValsWithRowData,
 ) {
-  // TODO: Add some error here
-  if (colY.modelingType === NOMINAL || colY.modelingType === ORDINAL) {
-    return {
-      analysisType: "distribution",
-      colObj: colY,
-      vals,
-      numberOfBins,
-      missingValues,
-      colValsWithRowData,
-    };
-  }
-  if (vals.length === 0) return;
   // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
   const gcloud =
-    "https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution";
+    "https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution-1";
   const result = await axios.post(
     gcloud,
     {
-      y: vals,
+      y: selectedColumns,
     },
     {
       crossDomain: true,
@@ -180,18 +164,10 @@ export async function performDistributionAnalysis(
   );
   console.log(result.data); // gcloud
   // console.log(result.data.body); // Lambda
-  const { mean_y, std_y, quantiles } = result.data;
   return {
     analysisType: "distribution",
-    colObj: colY,
-    mean: mean_y,
-    stdev: std_y,
-    vals,
-    boxPlotData: quantiles,
     numberOfBins,
-    missingValues,
-    colValsWithRowData,
-    ...result.data,
+    colData: [...result.data],
   };
 }
 

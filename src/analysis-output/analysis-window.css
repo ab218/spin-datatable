@@ -1,9 +1,4 @@
 /* [ '#56B4E9', '#E69F00', '#009E73', '#F0E442', '#0072B2', '#D55E00', '#CC79A7', '#999999' ] */
-.analysis-title {
-  text-align: center;
-  font-size: 20;
-}
-
 body {
   margin: 0 auto;
   display: table;
@@ -18,7 +13,7 @@ body {
 
 .analysis-title {
   text-align: center;
-  font-size: 26px;
+  font-size: 20px;
 }
 
 .analysis-summary-title {
