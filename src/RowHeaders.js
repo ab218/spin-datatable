@@ -83,7 +83,8 @@ export default React.memo(function RowHeaders({ rowIndex, rowData }) {
             columns: columns,
             rowID: rowData.id,
             rowIndex,
-            metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
+            metaKeyPressed: e.ctrlKey || e.metaKey,
+            shiftKeyPressed: e.shiftKey,
           });
         }
       }}

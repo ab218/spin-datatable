@@ -20,6 +20,7 @@ import {
   getUniqueListBy,
   selectRowsFromRowIDs,
   flattenCellSelectionRanges,
+  shiftSelect,
 } from "../helpers";
 
 export function selectReducer(state, action) {
@@ -36,6 +37,7 @@ export function selectReducer(state, action) {
     row,
     rowIndex,
     metaKeyPressed,
+    shiftKeyPressed,
   } = action;
 
   // const { type, ...event } = action;
@@ -161,33 +163,82 @@ export function selectReducer(state, action) {
         left: columnIndex,
         right: columnIndex,
       };
-      const addSelectedCellToSelectionArray = metaKeyPressed
-        ? cellSelectionRanges
-        : [];
+      const metaCellSelection =
+        metaKeyPressed && !shiftKeyPressed ? cellSelectionRanges : [];
+      const shiftCellSelection = shiftKeyPressed
+        ? shiftSelect(state.lastSelection, lastSelection)
+        : selectedCell;
+
       return {
         ...state,
         activeCell: null,
-        lastSelection,
-        cellSelectionRanges: addSelectedCellToSelectionArray,
-        currentCellSelectionRange: selectedCell,
+        lastSelection: shiftKeyPressed ? state.lastSelection : lastSelection,
+        cellSelectionRanges: metaCellSelection,
+        currentCellSelectionRange: shiftCellSelection,
+      };
+    }
+    case SELECT_COLUMN: {
+      const { cellSelectionRanges } = state;
+      const { rows } = action;
+      const lastSelection = { column: columnIndex, row: 0 };
+      const allCellsInColumn = {
+        top: 0,
+        left: columnIndex,
+        bottom: rows.length - 1,
+        right: columnIndex,
+      };
+      const shiftCellSelection = shiftKeyPressed
+        ? shiftSelect(
+            // last selection chooses first row, new selection chooses last row
+            { column: state.lastSelection.column, row: 0 },
+            {
+              column: columnIndex,
+              row: rows.length - 1,
+            },
+          )
+        : allCellsInColumn;
+
+      const metaKeySelection = metaKeyPressed
+        ? cellSelectionRanges.concat(allCellsInColumn)
+        : [allCellsInColumn];
+
+      return {
+        ...state,
+        activeCell: null,
+        currentCellSelectionRange: shiftCellSelection,
+        cellSelectionRanges: metaKeySelection,
+        lastSelection: shiftKeyPressed ? state.lastSelection : lastSelection,
       };
     }
     case SELECT_ROW: {
       const { cellSelectionRanges } = state;
+      const lastSelection = { column: columns.length - 1, row: rowIndex };
       const allCellsInRow = {
         top: rowIndex,
         left: 0,
         bottom: rowIndex,
         right: columns.length - 1,
       };
+      const metaCellSelection = metaKeyPressed
+        ? cellSelectionRanges.concat(allCellsInRow)
+        : [allCellsInRow];
+      const shiftCellSelection = shiftKeyPressed
+        ? shiftSelect(
+            // last selection chooses first column, new selection chooses last column
+            { column: 0, row: state.lastSelection.row },
+            {
+              column: columns.length - 1,
+              row: rowIndex,
+            },
+          )
+        : allCellsInRow;
+
       return {
         ...state,
         activeCell: null,
-        currentCellSelectionRange: allCellsInRow,
-        cellSelectionRanges: metaKeyPressed
-          ? cellSelectionRanges.concat(allCellsInRow)
-          : [allCellsInRow],
-        lastSelection: { column: columns.length - 1, row: rowIndex },
+        currentCellSelectionRange: shiftCellSelection,
+        cellSelectionRanges: metaCellSelection,
+        lastSelection: shiftKeyPressed ? state.lastSelection : lastSelection,
       };
     }
     // This is used when a rows array is supplied. Histogram bar clicks.
@@ -235,24 +286,7 @@ export function selectReducer(state, action) {
         // cellSelectionObject: rowsObject,
       };
     }
-    case SELECT_COLUMN: {
-      const { cellSelectionRanges } = state;
-      const { rows } = action;
-      const allCellsInColumn = {
-        top: 0,
-        left: columnIndex,
-        bottom: rows.length - 1,
-        right: columnIndex,
-      };
-      return {
-        ...state,
-        activeCell: null,
-        currentCellSelectionRange: allCellsInColumn,
-        cellSelectionRanges: metaKeyPressed
-          ? cellSelectionRanges.concat(allCellsInColumn)
-          : [allCellsInColumn],
-      };
-    }
+
     case SELECT_BLOCK_OF_CELLS: {
       return { ...state, cellSelectionRanges };
     }

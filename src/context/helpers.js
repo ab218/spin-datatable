@@ -20,6 +20,14 @@ const byTop = (a, b) => a.top - b.top;
 // ACC: [ R: 3 - 6, R: 8 - 10, ...]
 // GIVEN RANGE: R: 5 - 9 -> 3 - 9  -> 3 - 10
 
+export function shiftSelect(prev, curr) {
+  const top = Math.min(prev.row, curr.row);
+  const bottom = Math.max(prev.row, curr.row);
+  const left = Math.min(prev.column, curr.column);
+  const right = Math.max(prev.column, curr.column);
+  return { top, bottom, left, right };
+}
+
 export const flattenCellSelectionRanges = (
   cellSelectionRanges,
   currentCellSelectionRange,

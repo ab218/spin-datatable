@@ -71,7 +71,8 @@ const SidebarColumn = React.memo(function ({ column, columnIndex, rows }) {
           rows: rows,
           columnID: column.id,
           columnIndex,
-          metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
+          metaKeyPressed: e.ctrlKey || e.metaKey,
+          shiftKeyPressed: e.shiftKey,
         });
       }}
     >

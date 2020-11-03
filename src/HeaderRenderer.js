@@ -88,7 +88,8 @@ export default React.memo(function HeaderRenderer({
               rows,
               columnID: dataKey,
               columnIndex,
-              metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
+              metaKeyPressed: e.ctrlKey || e.metaKey,
+              shiftKeyPressed: e.shiftKey,
             });
           }
         }}
@@ -101,7 +102,8 @@ export default React.memo(function HeaderRenderer({
               rows,
               columnID: dataKey,
               columnIndex,
-              metaKeyPressed: e.ctrlKey || e.shiftKey || e.metaKey,
+              metaKeyPressed: e.ctrlKey || e.metaKey,
+              shiftKeyPressed: e.shiftKey,
             });
             dispatchSpreadsheetAction({
               type: OPEN_CONTEXT_MENU,
