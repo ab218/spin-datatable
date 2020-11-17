@@ -207,6 +207,12 @@ body {
   background: lightyellow;
 }
 
+.pieslice {
+  text-align: left;
+  height: 60px;
+  background: lightyellow;
+}
+
 .contingency-tooltip {
   position: absolute;
   min-width: 60px;

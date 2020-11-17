@@ -46,6 +46,12 @@
   margin: 0 40px;
 }
 
+.graph-builder-icon {
+  font-size: 1.3em;
+  margin: 0 5px;
+  opacity: 0.3;
+}
+
 .hamburger {
   position: relative;
   display: inline-block;

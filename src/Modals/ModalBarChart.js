@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Button, Modal } from "antd";
 import {
+  BoxPlotTwoTone,
+  BarChartOutlined,
+  LineChartOutlined,
+  PieChartTwoTone,
+  DotChartOutlined,
+} from "@ant-design/icons";
+import {
   useSpreadsheetState,
   useSpreadsheetDispatch,
   useRowsState,
@@ -24,6 +31,8 @@ export default function AnalysisModal({ setPopup }) {
   const [groupingColData, setGroupingColData] = useState([]);
   const [error, setError] = useState(null);
   const [performingAnalysis, setPerformingAnalysis] = useState(false);
+  const [chartSelected, setChartSelected] = useState("bar");
+  const [dotsEnabled, setDotsEnabled] = useState(true);
   const { barChartModalOpen } = useSpreadsheetState();
   const { columns, rows, excludedRows } = useRowsState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -36,44 +45,47 @@ export default function AnalysisModal({ setPopup }) {
   }
 
   async function performAnalysis() {
-    if (!yColData[0] || !xColData[0]) {
-      // user should never see this
-      setError("Please add all required columns and try again");
-      return;
-    }
     setPerformingAnalysis(true);
     const colX = xColData[0];
     const colY = yColData[0];
     const colZ = groupingColData ? groupingColData[0] : null;
-    const colA = filterExcludedRows(rows, excludedRows, colX);
-    const colB = filterExcludedRows(rows, excludedRows, colY);
+    const colA = colX && filterExcludedRows(rows, excludedRows, colX);
+    const colB = colY && filterExcludedRows(rows, excludedRows, colY);
     const colC = colZ ? filterExcludedRows(rows, excludedRows, colZ) : [];
     // const maxColLength = Math.max(colA.length, colB.length, colC.length);
     function makeXYZCols(colA, colB, colC) {
       return rows
         .map((row, i) => {
           const rowID = row.id;
-          const foundRowA = colA.find((r) => r.rowID === rowID);
-          const foundRowB = colB.find((r) => r.rowID === rowID);
+          const foundRowA = colA && colA.find((r) => r.rowID === rowID);
+          const foundRowB = colB && colB.find((r) => r.rowID === rowID);
           const foundRowC = colC.length && colC.find((r) => r.rowID === rowID);
-          if (colC.length > 0) {
-            if (foundRowA && foundRowB && foundRowC) {
-              return {
-                x: foundRowA.value,
-                y: foundRowB.value,
-                group: foundRowC.value,
-                row: { rowID, rowNumber: i + 1 },
-              };
-            }
-          } else {
-            if (foundRowA && foundRowB) {
-              return {
-                x: foundRowA.value,
-                y: foundRowB.value,
-                group: null,
-                row: { rowID, rowNumber: i + 1 },
-              };
-            }
+          if (foundRowA && foundRowB && foundRowC) {
+            return {
+              x: foundRowA.value,
+              y: foundRowB.value,
+              group: foundRowC.value,
+              row: { rowID, rowNumber: i + 1 },
+            };
+          } else if (foundRowA && foundRowB) {
+            return {
+              x: foundRowA.value,
+              y: foundRowB.value,
+              group: null,
+              row: { rowID, rowNumber: i + 1 },
+            };
+          } else if (foundRowA && foundRowC) {
+            return {
+              x: foundRowA.value,
+              group: foundRowC.value,
+              row: { rowID, rowNumber: i + 1 },
+            };
+          } else if (foundRowA) {
+            return {
+              x: foundRowA.value,
+              group: null,
+              row: { rowID, rowNumber: i + 1 },
+            };
           }
           return null;
         })
@@ -88,6 +100,7 @@ export default function AnalysisModal({ setPopup }) {
         colZ,
         XYZCols,
         colX.modelingType,
+        chartSelected,
       );
       setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
       setPerformingAnalysis(false);
@@ -100,6 +113,7 @@ export default function AnalysisModal({ setPopup }) {
       setError(
         "Columns must each contain at least 1 value to perform this analysis",
       );
+      setPerformingAnalysis(false);
       return;
     }
   }
@@ -108,13 +122,118 @@ export default function AnalysisModal({ setPopup }) {
     rows.some((row) => row[column.id] || typeof row[column.id] === "number"),
   );
 
+  function DotsButton() {
+    return (
+      <div
+        onClick={(e) => {
+          setDotsEnabled((prev) => !prev);
+        }}
+        className={"toolbar-button"}
+        style={{ marginRight: "20px" }}
+      >
+        <DotChartOutlined
+          style={{
+            opacity: dotsEnabled ? 1 : 0.3,
+          }}
+          className={"graph-builder-icon"}
+        />
+      </div>
+    );
+  }
+
+  function BoxPlotButton() {
+    return (
+      <div
+        onClick={(e) => setChartSelected("box")}
+        className={"toolbar-button"}
+      >
+        <BoxPlotTwoTone
+          style={{
+            opacity: chartSelected === "box" ? 1 : 0.3,
+          }}
+          className={"graph-builder-icon"}
+        />
+      </div>
+    );
+  }
+
+  function BarChartButton() {
+    return (
+      <div
+        onClick={(e) => setChartSelected("bar")}
+        className={"toolbar-button"}
+      >
+        <BarChartOutlined
+          style={{
+            opacity: chartSelected === "bar" ? 1 : 0.3,
+          }}
+          className={"graph-builder-icon"}
+        />
+      </div>
+    );
+  }
+
+  function PieChartButton() {
+    return (
+      <div
+        onClick={(e) => setChartSelected("pie")}
+        className={"toolbar-button"}
+      >
+        <PieChartTwoTone
+          style={{
+            opacity: chartSelected === "pie" ? 1 : 0.3,
+          }}
+          className={"graph-builder-icon"}
+        />
+      </div>
+    );
+  }
+
+  function LineChartButton() {
+    return (
+      <div
+        onClick={(e) => setChartSelected("line")}
+        className={"toolbar-button"}
+      >
+        <LineChartOutlined
+          style={{
+            opacity: chartSelected === "line" ? 1 : 0.3,
+          }}
+          className={"graph-builder-icon"}
+        />
+      </div>
+    );
+  }
+
+  function SelectChartType() {
+    return (
+      <div style={{ display: "flex", paddingBottom: "20px" }}>
+        <DotsButton />
+        <BarChartButton />
+        <PieChartButton />
+        <BoxPlotButton />
+        <LineChartButton />
+      </div>
+    );
+  }
+
+  function isDisabled() {
+    if (chartSelected === "bar" || chartSelected === "line") {
+      return xColData.length === 0 || yColData.length === 0;
+    } else if (chartSelected === "pie") {
+      return xColData.length === 0;
+    } else if (chartSelected === "box") {
+      return xColData.length === 0;
+    }
+    return true;
+  }
   return (
     <div>
       <Modal
         className="ant-modal"
         onCancel={handleModalClose}
         onOk={performAnalysis}
-        title={<DraggableModal children="Bar Chart" />}
+        title={<DraggableModal children="Graph Builder" />}
         visible={barChartModalOpen}
         width={750}
         bodyStyle={{ background: "#ECECEC" }}
@@ -137,11 +256,7 @@ export default function AnalysisModal({ setPopup }) {
                 Cancel
               </Button>
               <Button
-                disabled={
-                  xColData.length === 0 ||
-                  yColData.length === 0 ||
-                  performingAnalysis
-                }
+                disabled={isDisabled() || performingAnalysis}
                 key="submit"
                 type="primary"
                 onClick={performAnalysis}
@@ -153,40 +268,91 @@ export default function AnalysisModal({ setPopup }) {
         ]}
       >
         <div style={styles.flexSpaced}>
-          <SelectColumn
-            title={"Select Columns"}
-            groupingColData={groupingColData[0]}
-            columns={filteredColumns}
-            setSelectedColumn={setSelectedColumn}
-          />
+          <div>
+            <SelectChartType />
+            <SelectColumn
+              title={"Select Columns"}
+              groupingColData={groupingColData[0]}
+              columns={filteredColumns}
+              setSelectedColumn={setSelectedColumn}
+            />
+          </div>
           <div style={{ width: 410 }}>
-            Cast Selected Columns into Roles
-            <VariableSelector
-              notAllowed={[NOMINAL, ORDINAL]}
-              cardText={"Required"}
-              data={yColData}
-              label="Y"
-              setData={setYColData}
-              selectedColumn={selectedColumn}
-              styleProps={{ marginBottom: 20, marginTop: 20 }}
-            />
-            <VariableSelector
-              notAllowed={[]}
-              cardText={"Required"}
-              data={xColData}
-              label="X"
-              setData={setXColData}
-              selectedColumn={selectedColumn}
-              styleProps={{ marginBottom: 20 }}
-            />
-            <VariableSelector
-              notAllowed={[CONTINUOUS]}
-              cardText={"Optional"}
-              data={groupingColData}
-              label="Group"
-              setData={setGroupingColData}
-              selectedColumn={selectedColumn}
-            />
+            <div style={{ marginBottom: 20 }}>
+              Cast Selected Columns into Roles
+            </div>
+            {(chartSelected === "bar" || chartSelected === "line") && (
+              <React.Fragment>
+                <VariableSelector
+                  notAllowed={[NOMINAL, ORDINAL]}
+                  cardText={"Required"}
+                  data={yColData}
+                  label="Y"
+                  setData={setYColData}
+                  selectedColumn={selectedColumn}
+                  styleProps={{ marginBottom: 20 }}
+                />
+                <VariableSelector
+                  notAllowed={[]}
+                  cardText={"Required"}
+                  data={xColData}
+                  label="X"
+                  setData={setXColData}
+                  selectedColumn={selectedColumn}
+                  styleProps={{ marginBottom: 20 }}
+                />
+                <VariableSelector
+                  notAllowed={[CONTINUOUS]}
+                  cardText={"Optional"}
+                  data={groupingColData}
+                  label="Group"
+                  setData={setGroupingColData}
+                  selectedColumn={selectedColumn}
+                />
+              </React.Fragment>
+            )}
+            {chartSelected === "pie" && (
+              <React.Fragment>
+                <VariableSelector
+                  notAllowed={[]}
+                  cardText={"Required"}
+                  data={xColData}
+                  label="X"
+                  setData={setXColData}
+                  selectedColumn={selectedColumn}
+                  styleProps={{ marginBottom: 20 }}
+                />
+                <VariableSelector
+                  notAllowed={[CONTINUOUS]}
+                  cardText={"Optional"}
+                  data={groupingColData}
+                  label="Group"
+                  setData={setGroupingColData}
+                  selectedColumn={selectedColumn}
+                />
+              </React.Fragment>
+            )}
+            {chartSelected === "box" && (
+              <React.Fragment>
+                <VariableSelector
+                  notAllowed={[]}
+                  cardText={"Required"}
+                  data={xColData}
+                  label="X"
+                  setData={setXColData}
+                  selectedColumn={selectedColumn}
+                  styleProps={{ marginBottom: 20 }}
+                />
+                <VariableSelector
+                  notAllowed={[CONTINUOUS]}
+                  cardText={"Optional"}
+                  data={groupingColData}
+                  label="Overlay"
+                  setData={setGroupingColData}
+                  selectedColumn={selectedColumn}
+                />
+              </React.Fragment>
+            )}
           </div>
         </div>
       </Modal>

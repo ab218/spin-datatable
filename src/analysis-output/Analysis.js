@@ -11,15 +11,21 @@ export default function AnalysisContainer({ popup, setPopup }) {
     return null;
   }
   return popup.map((data, i) => {
-    if (data.analysisType === "regression") {
+    const { analysisType } = data;
+    if (analysisType === "regression") {
       return <RegressionAnalysis key={i} data={data} setPopup={setPopup} />;
-    } else if (data.analysisType === "distribution") {
+    } else if (analysisType === "distribution") {
       return <DistributionAnalysis key={i} data={data} setPopup={setPopup} />;
-    } else if (data.analysisType === "oneway") {
+    } else if (analysisType === "oneway") {
       return <OnewayAnalysis key={i} data={data} setPopup={setPopup} />;
-    } else if (data.analysisType === "barChart") {
+    } else if (
+      analysisType === "bar" ||
+      analysisType === "line" ||
+      analysisType === "box" ||
+      analysisType === "pie"
+    ) {
       return <BarChartAnalysis key={i} data={data} setPopup={setPopup} />;
-    } else if (data.analysisType === "contingency") {
+    } else if (analysisType === "contingency") {
       return <ContingencyAnalysis key={i} data={data} setPopup={setPopup} />;
     }
     return null;
@@ -171,9 +177,16 @@ export async function performDistributionAnalysis(
   };
 }
 
-export async function createBarChart(colX, colY, colZ, XYZCols, colXScale) {
+export async function createBarChart(
+  colX,
+  colY,
+  colZ,
+  XYZCols,
+  colXScale,
+  analysisType,
+) {
   return {
-    analysisType: "barChart",
+    analysisType,
     colX,
     colY,
     colZ,
