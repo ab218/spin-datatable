@@ -4,6 +4,7 @@ import BarChartD3Chart from "./BarChartD3Chart";
 import PieChartD3Chart from "./PieChartAnalysis";
 import BoxPlotAnalysis from "./BoxPlotAnalysis";
 import LineChartAnalysis from "./LineChartAnalysis";
+
 import "./analysis-window.css";
 
 export default function BarChartAnalysis({ data, setPopup }) {
@@ -16,7 +17,6 @@ export default function BarChartAnalysis({ data, setPopup }) {
     colXId,
     colYId,
     colZId,
-    colXScale,
   } = data;
   return (
     <Popup
@@ -36,7 +36,6 @@ export default function BarChartAnalysis({ data, setPopup }) {
           colXId={colXId}
           colYId={colYId}
           colZId={colZId}
-          colXScale={colXScale}
         />
       )}
       {analysisType === "pie" && (
@@ -46,18 +45,10 @@ export default function BarChartAnalysis({ data, setPopup }) {
           coordinates={coordinates}
           colXId={colXId}
           colZId={colZId}
-          colXScale={colXScale}
         />
       )}
       {analysisType === "box" && (
-        <BoxPlotAnalysis
-          colX={colX}
-          colZ={colZ}
-          coordinates={coordinates}
-          colXId={colXId}
-          colZId={colZId}
-          colXScale={colXScale}
-        />
+        <BoxPlotAnalysis colX={colX} colY={colY} coordinates={coordinates} />
       )}
       {analysisType === "line" && (
         <LineChartAnalysis
@@ -68,7 +59,6 @@ export default function BarChartAnalysis({ data, setPopup }) {
           colXId={colXId}
           colYId={colYId}
           colZId={colZId}
-          colXScale={colXScale}
         />
       )}
     </Popup>

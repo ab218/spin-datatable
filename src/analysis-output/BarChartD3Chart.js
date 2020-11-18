@@ -1,13 +1,8 @@
 import React, { useRef } from "react";
 import * as d3 from "d3";
 
-export default function BarChartD3Chart({
-  colX,
-  colY,
-  colZ,
-  coordinates,
-  colXScale,
-}) {
+export default function BarChartD3Chart({ colX, colY, colZ, coordinates }) {
+  const colXScale = colX.modelingType;
   const mainChartContainer = useRef(null);
   const subChartContainer = useRef(null);
   const uniqueGroups = [...new Set(coordinates.map((row) => row.group))];

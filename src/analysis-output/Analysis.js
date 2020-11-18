@@ -177,20 +177,12 @@ export async function performDistributionAnalysis(
   };
 }
 
-export async function createBarChart(
-  colX,
-  colY,
-  colZ,
-  XYZCols,
-  colXScale,
-  analysisType,
-) {
+export async function createBarChart(colX, colY, colZ, XYZCols, analysisType) {
   return {
     analysisType,
     colX,
     colY,
     colZ,
     coordinates: XYZCols,
-    colXScale,
   };
 }

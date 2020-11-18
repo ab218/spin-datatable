@@ -5,7 +5,6 @@ import {
   BarChartOutlined,
   LineChartOutlined,
   PieChartTwoTone,
-  DotChartOutlined,
 } from "@ant-design/icons";
 import {
   useSpreadsheetState,
@@ -32,7 +31,7 @@ export default function AnalysisModal({ setPopup }) {
   const [error, setError] = useState(null);
   const [performingAnalysis, setPerformingAnalysis] = useState(false);
   const [chartSelected, setChartSelected] = useState("bar");
-  const [dotsEnabled, setDotsEnabled] = useState(true);
+
   const { barChartModalOpen } = useSpreadsheetState();
   const { columns, rows, excludedRows } = useRowsState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
@@ -86,6 +85,12 @@ export default function AnalysisModal({ setPopup }) {
               group: null,
               row: { rowID, rowNumber: i + 1 },
             };
+          } else if (foundRowB) {
+            return {
+              y: foundRowB.value,
+              group: null,
+              row: { rowID, rowNumber: i + 1 },
+            };
           }
           return null;
         })
@@ -99,7 +104,6 @@ export default function AnalysisModal({ setPopup }) {
         colY,
         colZ,
         XYZCols,
-        colX.modelingType,
         chartSelected,
       );
       setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
@@ -121,25 +125,6 @@ export default function AnalysisModal({ setPopup }) {
   const filteredColumns = columns.filter((column) =>
     rows.some((row) => row[column.id] || typeof row[column.id] === "number"),
   );
-
-  function DotsButton() {
-    return (
-      <div
-        onClick={(e) => {
-          setDotsEnabled((prev) => !prev);
-        }}
-        className={"toolbar-button"}
-        style={{ marginRight: "20px" }}
-      >
-        <DotChartOutlined
-          style={{
-            opacity: dotsEnabled ? 1 : 0.3,
-          }}
-          className={"graph-builder-icon"}
-        />
-      </div>
-    );
-  }
 
   function BoxPlotButton() {
     return (
@@ -208,7 +193,6 @@ export default function AnalysisModal({ setPopup }) {
   function SelectChartType() {
     return (
       <div style={{ display: "flex", paddingBottom: "20px" }}>
-        <DotsButton />
         <BarChartButton />
         <PieChartButton />
         <BoxPlotButton />
@@ -223,7 +207,7 @@ export default function AnalysisModal({ setPopup }) {
     } else if (chartSelected === "pie") {
       return xColData.length === 0;
     } else if (chartSelected === "box") {
-      return xColData.length === 0;
+      return yColData.length === 0;
     }
     return true;
   }
@@ -335,21 +319,22 @@ export default function AnalysisModal({ setPopup }) {
             {chartSelected === "box" && (
               <React.Fragment>
                 <VariableSelector
-                  notAllowed={[]}
+                  notAllowed={[NOMINAL, ORDINAL]}
+                  cardText={"Required"}
+                  data={yColData}
+                  label="Y"
+                  setData={setYColData}
+                  selectedColumn={selectedColumn}
+                  styleProps={{ marginBottom: 20 }}
+                />
+                <VariableSelector
+                  notAllowed={[CONTINUOUS]}
                   cardText={"Required"}
                   data={xColData}
                   label="X"
                   setData={setXColData}
                   selectedColumn={selectedColumn}
                   styleProps={{ marginBottom: 20 }}
-                />
-                <VariableSelector
-                  notAllowed={[CONTINUOUS]}
-                  cardText={"Optional"}
-                  data={groupingColData}
-                  label="Overlay"
-                  setData={setGroupingColData}
-                  selectedColumn={selectedColumn}
                 />
               </React.Fragment>
             )}
