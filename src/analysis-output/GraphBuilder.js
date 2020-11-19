@@ -1,23 +1,14 @@
 import React from "react";
 import Popup from "./PopupWindow";
 import BarChartD3Chart from "./BarChartD3Chart";
-import PieChartD3Chart from "./PieChartAnalysis";
-import BoxPlotAnalysis from "./BoxPlotAnalysis";
-import LineChartAnalysis from "./LineChartAnalysis";
+import PieChartD3Chart from "./PieChartD3Chart";
+import BoxPlotD3Chart from "./BoxPlotD3Chart";
+import LineChartD3Chart from "./LineChartD3Chart";
 
 import "./analysis-window.css";
 
-export default function BarChartAnalysis({ data, setPopup }) {
-  const {
-    analysisType,
-    colX,
-    colY,
-    colZ,
-    coordinates,
-    colXId,
-    colYId,
-    colZId,
-  } = data;
+export default function GraphBuilder({ data, setPopup }) {
+  const { analysisType, colX, colY, colZ, coordinates } = data;
   return (
     <Popup
       key={data.id}
@@ -33,32 +24,20 @@ export default function BarChartAnalysis({ data, setPopup }) {
           colY={colY}
           colZ={colZ}
           coordinates={coordinates}
-          colXId={colXId}
-          colYId={colYId}
-          colZId={colZId}
         />
       )}
       {analysisType === "pie" && (
-        <PieChartD3Chart
-          colX={colX}
-          colZ={colZ}
-          coordinates={coordinates}
-          colXId={colXId}
-          colZId={colZId}
-        />
+        <PieChartD3Chart colX={colX} colZ={colZ} coordinates={coordinates} />
       )}
       {analysisType === "box" && (
-        <BoxPlotAnalysis colX={colX} colY={colY} coordinates={coordinates} />
+        <BoxPlotD3Chart colX={colX} colY={colY} coordinates={coordinates} />
       )}
       {analysisType === "line" && (
-        <LineChartAnalysis
+        <LineChartD3Chart
           colX={colX}
           colY={colY}
           colZ={colZ}
           coordinates={coordinates}
-          colXId={colXId}
-          colYId={colYId}
-          colZId={colZId}
         />
       )}
     </Popup>

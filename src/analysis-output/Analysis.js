@@ -3,7 +3,7 @@ import axios from "axios";
 import RegressionAnalysis from "./RegressionAnalysis";
 import DistributionAnalysis from "./DistributionAnalysis";
 import OnewayAnalysis from "./OnewayAnalysis";
-import BarChartAnalysis from "./BarChartAnalysis";
+import GraphBuilder from "./GraphBuilder";
 import ContingencyAnalysis from "./ContingencyAnalysis";
 
 export default function AnalysisContainer({ popup, setPopup }) {
@@ -24,7 +24,7 @@ export default function AnalysisContainer({ popup, setPopup }) {
       analysisType === "box" ||
       analysisType === "pie"
     ) {
-      return <BarChartAnalysis key={i} data={data} setPopup={setPopup} />;
+      return <GraphBuilder key={i} data={data} setPopup={setPopup} />;
     } else if (analysisType === "contingency") {
       return <ContingencyAnalysis key={i} data={data} setPopup={setPopup} />;
     }
