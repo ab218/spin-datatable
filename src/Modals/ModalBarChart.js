@@ -329,7 +329,7 @@ export default function AnalysisModal({ setPopup }) {
                 />
                 <VariableSelector
                   notAllowed={[CONTINUOUS]}
-                  cardText={"Required"}
+                  cardText={"Optional"}
                   data={xColData}
                   label="X"
                   setData={setXColData}

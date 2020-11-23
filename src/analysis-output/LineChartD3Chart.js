@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 import { DotChartOutlined } from "@ant-design/icons";
 import { drawBasicPath } from "./sharedAnalysisComponents";
+import { CONTINUOUS } from "../constants";
 
 // magic globals
 const margin = { top: 50, right: 50, bottom: 100, left: 50 };
@@ -36,8 +37,32 @@ function DotsButton({ dotsEnabled, setDotsEnabled }) {
 export default function D3Container({ colX, colY, colZ, coordinates }) {
   const [dotsEnabled, setDotsEnabled] = useState(false);
   const d3Container = useRef(null);
-  const x = d3.scaleLinear().range([0, width]);
-  const y = d3.scaleLinear().range([height, 0]);
+
+  const yExtent = d3.extent(coordinates, function (d) {
+    return d.y;
+  });
+  const xExtent = d3.extent(coordinates, function (d) {
+    return d.x;
+  });
+
+  const y = d3
+    .scaleLinear()
+    .range([height, 0])
+    .domain([yExtent[0], yExtent[1]])
+    .nice();
+  const x =
+    colX.modelingType === CONTINUOUS
+      ? d3
+          .scaleLinear()
+          .range([0, width])
+          .domain([xExtent[0], xExtent[1]])
+          .nice()
+      : d3
+          .scaleBand()
+          .domain(coordinates.map((coord) => coord.x))
+          .rangeRound([0, width - margin.right])
+          .paddingInner(1)
+          .paddingOuter(0.5);
 
   // define the line
   const xAxis = d3.axisBottom().scale(x).ticks(10, "s");
@@ -48,20 +73,23 @@ export default function D3Container({ colX, colY, colZ, coordinates }) {
     .x((d) => x(d[0]))
     .y((d) => y(d[1]));
 
-  const points = coordinates
-    .sort((a, b) => a.x - b.x)
-    .map((coord) => [coord.x, coord.y]);
+  const points =
+    colX.modelingType === CONTINUOUS
+      ? coordinates.sort((a, b) => a.x - b.x).map((coord) => [coord.x, coord.y])
+      : coordinates
+          .sort((a, b) => a.x - b.x)
+          .map((coord) => [coord.x, coord.y]);
 
-  const yExtent = d3.extent(coordinates, function (d) {
-    return d.y;
-  });
-  const yRange = yExtent[1] - yExtent[0];
-  const xExtent = d3.extent(coordinates, function (d) {
-    return d.y;
-  });
-  const xRange = xExtent[1] - xExtent[0];
-  y.domain([yExtent[0] - yRange * 0.05, yExtent[1] + yRange * 0.05]).nice();
-  x.domain([xExtent[0] - xRange * 0.05, xExtent[1] + xRange * 0.05]).nice();
+  const groupedVals = coordinates.reduce((acc, curr) => {
+    acc[curr.x] = acc[curr.x] || [];
+    acc[curr.x].push(curr.y);
+    return acc;
+  }, Object.create(null));
+
+  const groupedMeans = Object.entries(groupedVals).map((group) => [
+    group[0],
+    d3.mean(group[1]),
+  ]);
 
   useEffect(() => {
     if (d3Container.current) {
@@ -109,7 +137,7 @@ export default function D3Container({ colX, colY, colZ, coordinates }) {
         .text(colY.label);
 
       drawBasicPath(
-        points,
+        colX.modelingType === CONTINUOUS ? points : groupedMeans,
         "linearRegressionLine",
         "Line",
         svg,
