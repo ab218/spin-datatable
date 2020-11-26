@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Modal } from "antd";
+import { Button, Modal, Tooltip } from "antd";
 import {
   BoxPlotTwoTone,
   BarChartOutlined,
@@ -132,12 +132,14 @@ export default function AnalysisModal({ setPopup }) {
         onClick={(e) => setChartSelected("box")}
         className={"toolbar-button"}
       >
-        <BoxPlotTwoTone
-          style={{
-            opacity: chartSelected === "box" ? 1 : 0.3,
-          }}
-          className={"graph-builder-icon"}
-        />
+        <Tooltip title="Box and Whisker">
+          <BoxPlotTwoTone
+            style={{
+              opacity: chartSelected === "box" ? 1 : 0.3,
+            }}
+            className={"graph-builder-icon"}
+          />
+        </Tooltip>
       </div>
     );
   }
@@ -148,12 +150,14 @@ export default function AnalysisModal({ setPopup }) {
         onClick={(e) => setChartSelected("bar")}
         className={"toolbar-button"}
       >
-        <BarChartOutlined
-          style={{
-            opacity: chartSelected === "bar" ? 1 : 0.3,
-          }}
-          className={"graph-builder-icon"}
-        />
+        <Tooltip title="Bar">
+          <BarChartOutlined
+            style={{
+              opacity: chartSelected === "bar" ? 1 : 0.3,
+            }}
+            className={"graph-builder-icon"}
+          />
+        </Tooltip>
       </div>
     );
   }
@@ -164,12 +168,14 @@ export default function AnalysisModal({ setPopup }) {
         onClick={(e) => setChartSelected("pie")}
         className={"toolbar-button"}
       >
-        <PieChartTwoTone
-          style={{
-            opacity: chartSelected === "pie" ? 1 : 0.3,
-          }}
-          className={"graph-builder-icon"}
-        />
+        <Tooltip title="Pie">
+          <PieChartTwoTone
+            style={{
+              opacity: chartSelected === "pie" ? 1 : 0.3,
+            }}
+            className={"graph-builder-icon"}
+          />
+        </Tooltip>
       </div>
     );
   }
@@ -180,12 +186,34 @@ export default function AnalysisModal({ setPopup }) {
         onClick={(e) => setChartSelected("line")}
         className={"toolbar-button"}
       >
-        <LineChartOutlined
-          style={{
-            opacity: chartSelected === "line" ? 1 : 0.3,
-          }}
-          className={"graph-builder-icon"}
-        />
+        <Tooltip title="Line">
+          <LineChartOutlined
+            style={{
+              color: "blue",
+              opacity: chartSelected === "line" ? 1 : 0.3,
+            }}
+            className={"graph-builder-icon"}
+          />
+        </Tooltip>
+      </div>
+    );
+  }
+
+  function LineOfFitChartButton() {
+    return (
+      <div
+        onClick={(e) => setChartSelected("fit")}
+        className={"toolbar-button"}
+      >
+        <Tooltip title="Line of Fit">
+          <LineChartOutlined
+            style={{
+              color: "red",
+              opacity: chartSelected === "fit" ? 1 : 0.3,
+            }}
+            className={"graph-builder-icon"}
+          />
+        </Tooltip>
       </div>
     );
   }
@@ -197,12 +225,17 @@ export default function AnalysisModal({ setPopup }) {
         <PieChartButton />
         <BoxPlotButton />
         <LineChartButton />
+        <LineOfFitChartButton />
       </div>
     );
   }
 
   function isDisabled() {
-    if (chartSelected === "bar" || chartSelected === "line") {
+    if (
+      chartSelected === "bar" ||
+      chartSelected === "line" ||
+      chartSelected === "fit"
+    ) {
       return xColData.length === 0 || yColData.length === 0;
     } else if (chartSelected === "pie") {
       return xColData.length === 0;
@@ -211,13 +244,36 @@ export default function AnalysisModal({ setPopup }) {
     }
     return true;
   }
+
+  function makeGraphBuilderTitle(chartSelected) {
+    switch (chartSelected) {
+      case "pie":
+        return "Pie Chart";
+      case "line":
+        return "Line Chart";
+      case "fit":
+        return "Line of Fit Chart";
+      case "bar":
+        return "Bar Chart";
+      case "box":
+        return "Box and Whisker Chart";
+      default:
+        return "";
+    }
+  }
   return (
     <div>
       <Modal
         className="ant-modal"
         onCancel={handleModalClose}
         onOk={performAnalysis}
-        title={<DraggableModal children="Graph Builder" />}
+        title={
+          <DraggableModal
+            children={`Graph Builder${
+              chartSelected && ` - ${makeGraphBuilderTitle(chartSelected)}`
+            }`}
+          />
+        }
         visible={barChartModalOpen}
         width={750}
         bodyStyle={{ background: "#ECECEC" }}
@@ -306,14 +362,6 @@ export default function AnalysisModal({ setPopup }) {
                   selectedColumn={selectedColumn}
                   styleProps={{ marginBottom: 20 }}
                 />
-                <VariableSelector
-                  notAllowed={[CONTINUOUS]}
-                  cardText={"Optional"}
-                  data={groupingColData}
-                  label="Group"
-                  setData={setGroupingColData}
-                  selectedColumn={selectedColumn}
-                />
               </React.Fragment>
             )}
             {chartSelected === "box" && (
@@ -330,6 +378,28 @@ export default function AnalysisModal({ setPopup }) {
                 <VariableSelector
                   notAllowed={[CONTINUOUS]}
                   cardText={"Optional"}
+                  data={xColData}
+                  label="X"
+                  setData={setXColData}
+                  selectedColumn={selectedColumn}
+                  styleProps={{ marginBottom: 20 }}
+                />
+              </React.Fragment>
+            )}
+            {chartSelected === "fit" && (
+              <React.Fragment>
+                <VariableSelector
+                  notAllowed={[NOMINAL, ORDINAL]}
+                  cardText={"Required"}
+                  data={yColData}
+                  label="Y"
+                  setData={setYColData}
+                  selectedColumn={selectedColumn}
+                  styleProps={{ marginBottom: 20 }}
+                />
+                <VariableSelector
+                  notAllowed={[NOMINAL, ORDINAL]}
+                  cardText={"Required"}
                   data={xColData}
                   label="X"
                   setData={setXColData}

@@ -22,7 +22,8 @@ export default function AnalysisContainer({ popup, setPopup }) {
       analysisType === "bar" ||
       analysisType === "line" ||
       analysisType === "box" ||
-      analysisType === "pie"
+      analysisType === "pie" ||
+      analysisType === "fit"
     ) {
       return <GraphBuilder key={i} data={data} setPopup={setPopup} />;
     } else if (analysisType === "contingency") {
@@ -178,11 +179,22 @@ export async function performDistributionAnalysis(
 }
 
 export async function createBarChart(colX, colY, colZ, XYZCols, analysisType) {
+  let cloudData;
+  if (analysisType === "fit") {
+    cloudData = await axios.post(
+      "https://us-central1-optimum-essence-210921.cloudfunctions.net/regression",
+      { x: XYZCols.map((row) => row.x), y: XYZCols.map((row) => row.y) },
+      {
+        crossDomain: true,
+      },
+    );
+  }
   return {
     analysisType,
     colX,
     colY,
     colZ,
     coordinates: XYZCols,
+    cloudData: cloudData && cloudData.data,
   };
 }

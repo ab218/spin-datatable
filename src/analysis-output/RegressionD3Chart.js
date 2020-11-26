@@ -6,9 +6,10 @@ import {
 } from "../context/SpreadsheetProvider";
 import { REMOVE_SELECTED_CELLS, SELECT_CELLS_BY_IDS } from "../constants";
 import {
-  drawAreaBetweenCurves,
   drawBasicPath,
   createPoints,
+  updateConfCurves,
+  removeChartElement,
 } from "./sharedAnalysisComponents";
 
 const normalPointSize = 2;
@@ -186,15 +187,6 @@ function drawHistogramBorders(
     .attr("fill", normalBarFill);
 }
 
-function mapPoints(arr1, arr2) {
-  const output = [];
-  for (let i = 0; i < arr1.length; i++) {
-    output.push([arr1[i], arr2[i]]);
-  }
-  const sortedOutput = output.sort((a, b) => b[0] - a[0]);
-  return sortedOutput;
-}
-
 function onMouseEnterPoint(
   d,
   thisPoint,
@@ -337,8 +329,6 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
   const chartContainer = d3.select(d3Container.current);
   const svg = chartContainer.select("g");
   const pathTooltip = chartContainer.select("#regression-line-tooltip");
-  const removeChartElement = (className) =>
-    chartContainer.selectAll(className).remove();
 
   const removeClickedHistogramBars = (e) => {
     if (e.metaKey) return;
@@ -441,8 +431,6 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
       const histogramBinTooltip = chartContainer.select(
         "#histogram-border-tooltip",
       );
-      const removeChartElement = (className) =>
-        chartContainer.selectAll(className).remove();
       if (histogramBorders) {
         drawHistogramBorders(
           svg,
@@ -457,7 +445,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
           colX,
         );
       } else {
-        removeChartElement(`.histogramBorders`);
+        removeChartElement(`.histogramBorders`, chartContainer);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -478,8 +466,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
           reversedLine,
         );
       } else {
-        removeChartElement(".linearRegressionLine");
-        removeChartElement(`.linearRegressionLine-hitbox`);
+        removeChartElement(".linearRegressionLine", chartContainer);
+        removeChartElement(`.linearRegressionLine-hitbox`, chartContainer);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -501,8 +489,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             reversedLine,
           );
         } else {
-          removeChartElement(`.degree2PolyLine`);
-          removeChartElement(`.degree2PolyLine-hitbox`);
+          removeChartElement(`.degree2PolyLine`, chartContainer);
+          removeChartElement(`.degree2PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -525,8 +513,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             reversedLine,
           );
         } else {
-          removeChartElement(`.degree3PolyLine`);
-          removeChartElement(`.degree3PolyLine-hitbox`);
+          removeChartElement(`.degree3PolyLine`, chartContainer);
+          removeChartElement(`.degree3PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -549,8 +537,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             reversedLine,
           );
         } else {
-          removeChartElement(`.degree4PolyLine`);
-          removeChartElement(`.degree4PolyLine-hitbox`);
+          removeChartElement(`.degree4PolyLine`, chartContainer);
+          removeChartElement(`.degree4PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -573,8 +561,8 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             reversedLine,
           );
         } else {
-          removeChartElement(`.degree5PolyLine`);
-          removeChartElement(`.degree5PolyLine-hitbox`);
+          removeChartElement(`.degree5PolyLine`, chartContainer);
+          removeChartElement(`.degree5PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -597,108 +585,14 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             reversedLine,
           );
         } else {
-          removeChartElement(`.degree6PolyLine`);
-          removeChartElement(`.degree6PolyLine-hitbox`);
+          removeChartElement(`.degree6PolyLine`, chartContainer);
+          removeChartElement(`.degree6PolyLine-hitbox`, chartContainer);
         }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [degree6Poly],
   );
-
-  function updateConfCurves(degree, data, curveClass, title) {
-    const chartContainer = d3.select(d3Container.current);
-    const svg = chartContainer.select("g");
-    const curveClassFit = `${curveClass}Fit`;
-    const curveClassObs = `${curveClass}Obs`;
-    const dotCurveClassFit = `.${curveClass}Fit`;
-    const dotCurveClassObs = `.${curveClass}Obs`;
-    const hitboxClassFit = `.${curveClass}Fit-hitbox`;
-    const hitboxClassObs = `.${curveClass}Obs-hitbox`;
-    const removeChartElement = (className) =>
-      chartContainer.selectAll(className).remove();
-    const coordinatesX = coordinates.map((coord) => coord[0]);
-    if (CI && CI[degree].fit) {
-      removeChartElement(dotCurveClassFit);
-      removeChartElement(hitboxClassFit);
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_upper),
-        curveClassFit,
-        title,
-        svg,
-        null,
-        null,
-        null,
-        reversedLine,
-      );
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_lower),
-        curveClassFit,
-        title,
-        svg,
-        null,
-        null,
-        null,
-        reversedLine,
-      );
-      drawAreaBetweenCurves(
-        x,
-        y,
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_lower),
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_upper),
-        curveClassFit,
-        title,
-        svg,
-        null,
-        null,
-        null,
-        reversedLine,
-      );
-    } else {
-      removeChartElement(dotCurveClassFit);
-      removeChartElement(hitboxClassFit);
-    }
-    if (CI && CI[degree].obs) {
-      removeChartElement(dotCurveClassObs);
-      removeChartElement(hitboxClassObs);
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_upper),
-        curveClassObs,
-        title,
-        svg,
-        null,
-        null,
-        null,
-        reversedLine,
-      );
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_lower),
-        curveClassObs,
-        title,
-        svg,
-        null,
-        null,
-        null,
-        reversedLine,
-      );
-      drawAreaBetweenCurves(
-        x,
-        y,
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_lower),
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_upper),
-        curveClassFit,
-        title,
-        svg,
-        null,
-        null,
-        null,
-        reversedLine,
-      );
-    } else {
-      removeChartElement(dotCurveClassObs);
-      removeChartElement(hitboxClassObs);
-    }
-  }
 
   useEffect(
     () => {
@@ -707,6 +601,13 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
         reg1,
         "linearRegressionLineCI",
         "Linear Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord[0]),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -720,6 +621,13 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
         reg2,
         "degree2PolyLineCI",
         "Quadratic Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord[0]),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -733,6 +641,13 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
         reg3,
         "degree3PolyLineCI",
         "Cubic Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord[0]),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

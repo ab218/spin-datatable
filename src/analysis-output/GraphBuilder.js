@@ -4,11 +4,12 @@ import BarChartD3Chart from "./BarChartD3Chart";
 import PieChartD3Chart from "./PieChartD3Chart";
 import BoxPlotD3Chart from "./BoxPlotD3Chart";
 import LineChartD3Chart from "./LineChartD3Chart";
+import LineOfFitD3Chart from "./LineOfFitD3Chart";
 
 import "./analysis-window.css";
 
 export default function GraphBuilder({ data, setPopup }) {
-  const { analysisType, colX, colY, colZ, coordinates } = data;
+  const { analysisType, colX, colY, colZ, coordinates, cloudData } = data;
   return (
     <Popup
       key={data.id}
@@ -38,6 +39,15 @@ export default function GraphBuilder({ data, setPopup }) {
           colY={colY}
           colZ={colZ}
           coordinates={coordinates}
+        />
+      )}
+      {analysisType === "fit" && (
+        <LineOfFitD3Chart
+          colX={colX}
+          colY={colY}
+          colZ={colZ}
+          coordinates={coordinates}
+          cloudData={cloudData}
         />
       )}
     </Popup>
