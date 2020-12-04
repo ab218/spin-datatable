@@ -5,20 +5,48 @@ import PieChartD3Chart from "./PieChartD3Chart";
 import BoxPlotD3Chart from "./BoxPlotD3Chart";
 import LineChartD3Chart from "./LineChartD3Chart";
 import LineOfFitD3Chart from "./LineOfFitD3Chart";
-
 import "./analysis-window.css";
+
+const graphBuilderTitle = (analysisType, colX, colY) => {
+  const yVsx = (colX, colY) => {
+    if (colY && colX) {
+      return ` of ${colY.label} vs ${colX.label}`;
+    } else if (colY) {
+      return ` of ${colY.label}`;
+    } else if (colX) {
+      return ` of ${colX.label}`;
+    }
+    return "";
+  };
+  const titleVars = yVsx(colX, colY);
+  switch (analysisType) {
+    case `bar`:
+      return `Bar Chart${titleVars}`;
+    case `pie`:
+      return `Pie Chart${titleVars}`;
+    case `box`:
+      return `Box and Whisker Chart${titleVars}`;
+    case `line`:
+      return `Line Chart${titleVars}`;
+    case `fit`:
+      return `Line of Fit Chart${titleVars}`;
+    default:
+      return ``;
+  }
+};
 
 export default function GraphBuilder({ data, setPopup }) {
   const { analysisType, colX, colY, colZ, coordinates, cloudData } = data;
+  const title = graphBuilderTitle(analysisType, colX, colY);
   return (
     <Popup
       key={data.id}
       id={data.id}
-      title={`Graph Builder`}
-      windowWidth={1000}
+      title={title}
+      windowWidth={1100}
       setPopup={setPopup}
     >
-      <TitleText colY={colY} colX={colX} />
+      {title && <TitleText title={title} />}
       {analysisType === "bar" && (
         <BarChartD3Chart
           colX={colX}
@@ -28,7 +56,7 @@ export default function GraphBuilder({ data, setPopup }) {
         />
       )}
       {analysisType === "pie" && (
-        <PieChartD3Chart colX={colX} colZ={colZ} coordinates={coordinates} />
+        <PieChartD3Chart colX={colX} coordinates={coordinates} />
       )}
       {analysisType === "box" && (
         <BoxPlotD3Chart colX={colX} colY={colY} coordinates={coordinates} />
@@ -54,6 +82,6 @@ export default function GraphBuilder({ data, setPopup }) {
   );
 }
 
-const TitleText = ({ colY, colX }) => (
-  <h1 style={{ textAlign: "center" }}>Graph Builder</h1>
+const TitleText = ({ title }) => (
+  <h1 style={{ textAlign: "center" }}>{title}</h1>
 );

@@ -53,7 +53,7 @@ function onMouseLeaveSlice(d, thisSlice, legend, sliceTooltip) {
   sliceTooltip.transition().duration(500).style("opacity", 0);
 }
 
-export default function BarChartD3Chart({ colX, colZ, coordinates }) {
+export default function PieChartD3Chart({ colX, coordinates }) {
   const mainChartContainer = useRef(null);
   const { rows, columns, excludedRows } = useRowsState();
   const dispatchSelectAction = useSelectDispatch();
@@ -231,7 +231,7 @@ export default function BarChartD3Chart({ colX, colZ, coordinates }) {
       .attr("text-decoration", "underline")
       .attr("transform", `translate(${width + 90},50)`)
       .attr("font-size", 16)
-      .text(colZ ? colZ.label : colX.label);
+      .text(colX.label);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

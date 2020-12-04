@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 import { Select, Checkbox } from "antd";
-import { DotChartOutlined } from "@ant-design/icons";
+import { MinusOutlined } from "@ant-design/icons";
 import {
   createPoints,
   drawBasicPath,
@@ -20,24 +20,24 @@ const clickedBarPointSize = normalPointSize * 2;
 const highlightedPointColor = "red";
 const highlightedPointSize = normalPointSize * 2.5;
 
-function DotsButton({ dotsEnabled, setDotsEnabled }) {
-  return (
-    <div
-      onClick={(e) => {
-        setDotsEnabled((prev) => !prev);
-      }}
-      className={"toolbar-button"}
-    >
-      <DotChartOutlined
-        style={{
-          opacity: dotsEnabled ? 1 : 0.3,
-          fontSize: "3em",
-        }}
-        className={"graph-builder-icon"}
-      />
-    </div>
-  );
-}
+// function DotsButton({ dotsEnabled, setDotsEnabled }) {
+//   return (
+//     <div
+//       onClick={(e) => {
+//         setDotsEnabled((prev) => !prev);
+//       }}
+//       className={"toolbar-button"}
+//     >
+//       <DotChartOutlined
+//         style={{
+//           opacity: dotsEnabled ? 1 : 0.3,
+//           fontSize: "3em",
+//         }}
+//         className={"graph-builder-icon"}
+//       />
+//     </div>
+//   );
+// }
 
 export default function D3Container({ colX, colY, coordinates, cloudData }) {
   const { reg1, reg2, reg3 } = cloudData;
@@ -47,18 +47,15 @@ export default function D3Container({ colX, colY, coordinates, cloudData }) {
     degree2Poly: false,
     degree3Poly: false,
   });
-  const [selectShowConfidenceFit, setSelectShowConfidenceFit] = useState({
-    linearRegressionLine: false,
-    degree2Poly: false,
-    degree3Poly: false,
+  const [alpha, setAlpha] = useState({
+    linearRegressionLine: "conf95",
+    degree2Poly: "conf95",
+    degree3Poly: "conf95",
   });
-  const [
-    selectShowConfidencePrediction,
-    setSelectShowConfidencePrediction,
-  ] = useState({
-    linearRegressionLine: false,
-    degree2Poly: false,
-    degree3Poly: false,
+  const [CI, setCI] = useState({
+    linearRegressionLine: { fit: false, obs: false },
+    degree2Poly: { fit: false, obs: false },
+    degree3Poly: { fit: false, obs: false },
   });
   // const [checkboxOptions, setCheckboxOptions] = useState({
   //   linearRegressionLine: true,
@@ -244,16 +241,56 @@ export default function D3Container({ colX, colY, coordinates, cloudData }) {
         "linearRegressionLineCI",
         "Linear Regression CI",
         d3Container.current,
-        coordinates.map((coord) => coord[0]),
-        "95",
-        selectShowConfidenceFit,
+        coordinates.map((coord) => coord.x),
+        alpha,
+        CI,
         reversedLine,
         x,
         y,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectShowConfidenceFit],
+    [CI["linearRegressionLine"], alpha["linearRegressionLine"]],
+  );
+
+  useEffect(
+    () => {
+      updateConfCurves(
+        "degree2Poly",
+        reg2,
+        "degree2PolyLineCI",
+        "Quadratic Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord.x),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [CI["degree2Poly"], alpha["degree2Poly"]],
+  );
+
+  useEffect(
+    () => {
+      updateConfCurves(
+        "degree3Poly",
+        reg3,
+        "degree3PolyLineCI",
+        "Cubic Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord.x),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [CI["degree3Poly"], alpha["degree3Poly"]],
   );
 
   useEffect(() => {
@@ -328,10 +365,31 @@ export default function D3Container({ colX, colY, coordinates, cloudData }) {
     setSelectOptions(options);
   }
 
+  const {
+    linearRegressionLine,
+    degree2Poly,
+    degree3Poly,
+  } = selectDegreeOptions;
+
   return (
     <div style={{ display: "flex", margin: "1em" }}>
       <div style={{ width: "250px" }}>
-        <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} />
+        {/* <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} /> */}
+        <div
+          style={{
+            display: "flex",
+            width: "230px",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>Show Points</span>
+          <span style={{ alignSelf: "left" }}>
+            <Checkbox
+              onChange={(e) => setDotsEnabled((prev) => !prev)}
+              checked={dotsEnabled}
+            />
+          </span>
+        </div>
         <div
           style={{
             display: "flex",
@@ -341,34 +399,60 @@ export default function D3Container({ colX, colY, coordinates, cloudData }) {
         >
           <span style={{ width: "60px" }}>Degree</span>
           <ChartOptionsSelect
+            defaultValue={["Linear"]}
             handleChartOptions={(value) =>
               handleChartOptions(value, setSelectDegreeOptions)
             }
           />
         </div>
-        <div>
-          <span>Show Confidence Region (Fit)</span>
-          <ChartOptionsSelect
-            handleChartOptions={(value) =>
-              handleChartOptions(value, setSelectShowConfidenceFit)
-            }
+        {(linearRegressionLine || degree2Poly || degree3Poly) && (
+          <ChartOptionsLegend
+            chartOptions={selectDegreeOptions}
+            setCI={setCI}
+            CI={CI}
+            setAlpha={setAlpha}
+            alpha={alpha}
           />
-        </div>
-        <div>
-          <span>Show Confidence Region (Prediction)</span>
-          <ChartOptionsSelect
-            handleChartOptions={(value) =>
-              handleChartOptions(value, setSelectShowConfidencePrediction)
-            }
-          />
-        </div>
+        )}
       </div>
       <div ref={d3Container} />
     </div>
   );
 }
 
-function ChartOptionsSelect({ handleChartOptions }) {
+function SetAlphaLevel({ alpha, setAlpha, id }) {
+  const { Option } = Select;
+  function translateConf(conf) {
+    switch (conf) {
+      case "conf90":
+        return 0.1;
+      case "conf95":
+        return 0.05;
+      case "conf99":
+        return 0.01;
+      default:
+        return 0.05;
+    }
+  }
+  return (
+    <Select
+      getPopupContainer={(triggerNode) => triggerNode.parentNode}
+      value={translateConf(alpha[id])}
+      style={{ width: 80 }}
+      onChange={(val) => {
+        return setAlpha((prev) => {
+          return { ...prev, [id]: val };
+        });
+      }}
+    >
+      <Option value="conf90">0.1</Option>
+      <Option value="conf95">0.05</Option>
+      <Option value="conf99">0.01</Option>
+    </Select>
+  );
+}
+
+function ChartOptionsSelect({ defaultValue, handleChartOptions }) {
   const { Option } = Select;
   return (
     <Select
@@ -377,7 +461,7 @@ function ChartOptionsSelect({ handleChartOptions }) {
       style={{ width: "100px", textAlign: "left", marginBottom: "10px" }}
       size={"small"}
       placeholder=""
-      defaultValue={["Linear"]}
+      defaultValue={defaultValue}
       onChange={handleChartOptions}
       tagRender={() => null}
       showArrow={true}
@@ -389,25 +473,103 @@ function ChartOptionsSelect({ handleChartOptions }) {
   );
 }
 
-// function ChartOptionCheckbox({
-//   title,
-//   id,
-//   checkboxOptions,
-//   setCheckboxOptions,
-// }) {
-//   return (
-//     <div style={{ display: "flex", justifyContent: "left" }}>
-//       <div style={{ marginRight: "10px" }}>
-//         <Checkbox
-//           onChange={(e) =>
-//             setCheckboxOptions((prev) => {
-//               return { ...prev, [id]: e.target.checked };
-//             })
-//           }
-//           checked={checkboxOptions[id]}
-//         />
-//       </div>
-//       <div style={{ width: "20%" }}>{title}</div>
-//     </div>
-//   );
-// }
+function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
+  function ChartOption({ title, color, id, showCIOptions }) {
+    return (
+      <tr>
+        <td>
+          <MinusOutlined
+            style={{ cursor: "pointer", fontSize: "20px", color }}
+          />
+          {title}
+        </td>
+        {showCIOptions && (
+          <React.Fragment>
+            <td>
+              <Checkbox
+                onChange={(e) =>
+                  setCI((prev) => {
+                    return {
+                      ...prev,
+                      [id]: { ...prev[id], fit: e.target.checked },
+                    };
+                  })
+                }
+                checked={CI[id]["fit"]}
+              />
+            </td>
+            <td>
+              <Checkbox
+                onChange={(e) =>
+                  setCI((prev) => {
+                    return {
+                      ...prev,
+                      [id]: { ...prev[id], obs: e.target.checked },
+                    };
+                  })
+                }
+                checked={CI[id]["obs"]}
+              />
+            </td>
+            <td>
+              <SetAlphaLevel id={id} alpha={alpha} setAlpha={setAlpha} />
+            </td>
+          </React.Fragment>
+        )}
+      </tr>
+    );
+  }
+  return (
+    <div style={{ paddingLeft: "5px" }}>
+      <table style={{ width: "100%" }}>
+        <tbody>
+          <tr>
+            <td style={{ width: "175px" }} />
+            <td
+              colSpan={2}
+              style={{ width: "100px", textDecoration: "underline" }}
+            >
+              Confid Regions
+            </td>
+            <td style={{ width: "100px" }} />
+          </tr>
+          <tr style={{ height: "10px" }}></tr>
+          <tr style={{ textAlign: "center" }}>
+            <td>Line of Fit</td>
+            <td>Fit</td>
+            <td>Indiv</td>
+            <td>p</td>
+          </tr>
+          <tr style={{ height: "10px" }}></tr>
+          {chartOptions.linearRegressionLine && (
+            <ChartOption
+              showCIOptions={true}
+              conf
+              id="linearRegressionLine"
+              title={"Linear"}
+              color={"steelblue"}
+            />
+          )}
+          {chartOptions.degree2Poly && (
+            <ChartOption
+              showCIOptions={true}
+              conf
+              id="degree2Poly"
+              title={"Quadratic"}
+              color={"green"}
+            />
+          )}
+          {chartOptions.degree3Poly && (
+            <ChartOption
+              showCIOptions={true}
+              conf
+              id="degree3Poly"
+              title={"Cubic"}
+              color={"darkmagenta"}
+            />
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}

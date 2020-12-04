@@ -178,7 +178,7 @@ export async function performDistributionAnalysis(
   };
 }
 
-export async function createBarChart(colX, colY, colZ, XYZCols, analysisType) {
+export async function createGraph(colX, colY, colZ, XYZCols, analysisType) {
   let cloudData;
   if (analysisType === "fit") {
     cloudData = await axios.post(

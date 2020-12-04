@@ -11,7 +11,7 @@ import {
   useSpreadsheetDispatch,
   useRowsState,
 } from "../context/SpreadsheetProvider";
-import { createBarChart } from "../analysis-output/Analysis";
+import { createGraph } from "../analysis-output/Analysis";
 import {
   TOGGLE_BAR_CHART_MODAL,
   NOMINAL,
@@ -46,7 +46,7 @@ export default function AnalysisModal({ setPopup }) {
   async function performAnalysis() {
     setPerformingAnalysis(true);
     const colX = xColData[0];
-    const colY = yColData[0];
+    const colY = chartSelected !== "pie" && yColData[0];
     const colZ = groupingColData ? groupingColData[0] : null;
     const colA = colX && filterExcludedRows(rows, excludedRows, colX);
     const colB = colY && filterExcludedRows(rows, excludedRows, colY);
@@ -99,7 +99,7 @@ export default function AnalysisModal({ setPopup }) {
     }
     const XYZCols = makeXYZCols(colA, colB, colC);
     if (XYZCols.length > 1) {
-      const results = await createBarChart(
+      const results = await createGraph(
         colX,
         colY,
         colZ,
