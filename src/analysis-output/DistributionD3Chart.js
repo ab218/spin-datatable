@@ -9,6 +9,7 @@ import {
   REMOVE_SELECTED_CELLS,
   SELECT_CELLS_BY_IDS,
 } from "../constants";
+import { chartStyles } from "./sharedAnalysisComponents";
 
 // set the dimensions and margins of the graph
 const margin = { top: 20, right: 30, bottom: 40, left: 70 };
@@ -16,12 +17,6 @@ const width = 300 - margin.left - margin.right;
 const height = 300 - margin.top - margin.bottom;
 const center = 1;
 const boxWidth = 40;
-const normalBarFill = "#69b3a2";
-const clickedBarFill = "red";
-const normalPointSize = 4;
-const highlightedPointColor = "red";
-const highlightedPointSize = normalPointSize * 1.5;
-const clickedBarPointSize = normalPointSize * 1.5;
 
 function makeSvg(container, className, customWidth, manyGroups = 0) {
   return d3
@@ -44,7 +39,7 @@ function maxBinLength(arr) {
   return highest;
 }
 
-export default function D3Container({
+export default function DistributionD3Chart({
   frequencies,
   colObj,
   vals,
@@ -56,6 +51,15 @@ export default function D3Container({
   median,
   colValsWithRowData,
 }) {
+  const {
+    normalBarFill,
+    highlightedPointSize,
+    highlightedPointColor,
+    clickedBarPointSize,
+    normalPointSize,
+    clickedBarFill,
+  } = chartStyles;
+
   const histogramContainer = useRef(null);
   const boxContainer = useRef(null);
   const { columns, rows, excludedRows } = useRowsState();

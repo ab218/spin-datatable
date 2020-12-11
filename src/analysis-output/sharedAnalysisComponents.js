@@ -1,5 +1,24 @@
 import * as d3 from "d3";
 
+export const chartStyles = {
+  normalPointSize: 2,
+  highlightedPointColor: "red",
+  normalPointFill: "black",
+  clickedBarFill: "red",
+  normalBarFill: "#69b3a2",
+  margin: { top: 50, right: 50, bottom: 100, left: 50 },
+  height: 600,
+  width: 600,
+};
+
+// chartStyle properties that need to refer to another property within the object
+chartStyles["svgWidth"] =
+  chartStyles.width + chartStyles.margin.left + chartStyles.margin.right;
+chartStyles["svgHeight"] =
+  chartStyles.height + chartStyles.margin.top + chartStyles.margin.bottom;
+chartStyles["clickedBarPointSize"] = chartStyles.normalPointSize * 2;
+chartStyles["highlightedPointSize"] = chartStyles.normalPointSize * 2.5;
+
 export function mapPoints(arr1, arr2) {
   const output = [];
   for (let i = 0; i < arr1.length; i++) {

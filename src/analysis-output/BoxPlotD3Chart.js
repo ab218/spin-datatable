@@ -1,17 +1,7 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 import { DotChartOutlined } from "@ant-design/icons";
-
-// magic globals
-const margin = { top: 50, right: 50, bottom: 100, left: 50 };
-const height = 600;
-const width = 800;
-const svgWidth = width + margin.left + margin.right;
-const svgHeight = height + margin.top + margin.bottom;
-const normalPointSize = 3;
-const clickedBarPointSize = normalPointSize * 2;
-const highlightedPointColor = "red";
-const highlightedPointSize = normalPointSize * 2.5;
+import { chartStyles } from "./sharedAnalysisComponents";
 
 function DotsButton({ dotsEnabled, setDotsEnabled }) {
   return (
@@ -32,11 +22,23 @@ function DotsButton({ dotsEnabled, setDotsEnabled }) {
   );
 }
 
-export default function D3Container({ colX, colY, coordinates }) {
-  const [dotsEnabled, setDotsEnabled] = useState(true);
-  const d3Container = useRef(null);
+export default function BoxPlotD3Chart({
+  mainChartContainer,
+  colX,
+  colY,
+  coordinates,
+  x,
+  y,
+  dotsEnabled = false,
+}) {
+  const {
+    normalPointSize,
+    clickedBarPointSize,
+    highlightedPointSize,
+    highlightedPointColor,
+  } = chartStyles;
   const yArr = coordinates.map((coord) => coord.y);
-  const xArr = colX ? coordinates.map((coord) => coord.x) : ["X"];
+  // const xArr = colX ? coordinates.map((coord) => coord.x) : ["X"];
   const lists = colX
     ? coordinates.reduce((acc, curr) => {
         acc[curr.x] = acc[curr.x] || [];
@@ -49,75 +51,12 @@ export default function D3Container({ colX, colY, coordinates }) {
   const groupValsSorted = Object.values(lists);
 
   groupValsSorted.forEach((gV) => gV.sort(d3.ascending));
-  const x = d3
-    .scaleBand()
-    .domain(xArr)
-    .rangeRound([0, width - margin.right])
-    .paddingInner(1)
-    .paddingOuter(0.5);
-  const y = d3.scaleLinear().range([height, 0]);
-  const xAxis = d3.axisBottom().scale(x).ticks(10, "s").tickSizeOuter(0);
-  const yAxis = d3.axisLeft().scale(y).ticks(10, "s");
-
-  const yExtent = d3.extent(coordinates, function (d) {
-    return d.y;
-  });
-  const yRange = yExtent[1] - yExtent[0];
-  y.domain([yExtent[0] - yRange * 0.05, yExtent[1] + yRange * 0.05]).nice();
-
-  useEffect(() => {
-    if (d3Container.current) {
-      const svg = d3
-        .select(d3Container.current)
-        .append("svg")
-        .attr("width", svgWidth)
-        .attr("height", svgHeight)
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-      // So that lines stay within the bounds of the graph
-      svg
-        .append("clipPath")
-        .attr("id", "clip")
-        .append("rect")
-        .attr("width", width)
-        .attr("height", height);
-      // draw axes
-      svg
-        .append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
-      svg.append("g").attr("class", "y axis").call(yAxis);
-
-      // text label for the x axis
-      svg
-        .append("text")
-        .attr(
-          "transform",
-          "translate(" + width / 2 + " ," + (height + 50) + ")",
-        )
-        .style("text-anchor", "middle")
-        .text(colX ? colX.label : null);
-
-      // text label for the y axis
-      svg
-        .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin.left)
-        .attr("x", 0 - height / 2)
-        .attr("dy", "1em")
-        .style("text-anchor", "middle")
-        .text(colY.label);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     // Boxplot
     const boxPlotStrokeColor = "black";
     const boxWidth = 50;
-    const svg = d3.select(d3Container.current).select("g");
+    const svg = d3.select(mainChartContainer.current).select("g");
     // Show the main vertical line
     svg
       .selectAll("bottomline")
@@ -249,6 +188,9 @@ export default function D3Container({ colX, colY, coordinates }) {
       .attr("stroke", boxPlotStrokeColor)
       .style("width", 80)
       .attr("class", "boxPlots");
+    return () => {
+      svg.selectAll(".boxPlots").remove();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -283,9 +225,9 @@ export default function D3Container({ colX, colY, coordinates }) {
       }
       pointTooltip.transition().duration(500).style("opacity", 0);
     }
-    const svg = d3.select(d3Container.current).select("g");
+    const svg = d3.select(mainChartContainer.current).select("g");
     const pointTooltip = d3
-      .select(d3Container.current)
+      .select(mainChartContainer.current)
       .append("div")
       .attr("class", "point tooltip")
       .style("opacity", 0);
@@ -312,10 +254,8 @@ export default function D3Container({ colX, colY, coordinates }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dotsEnabled]);
 
-  return (
-    <div>
-      <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} />
-      <div ref={d3Container} />;
-    </div>
-  );
+  return null;
+  // <div>
+  //   {/* <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} /> */}
+  // </div>
 }

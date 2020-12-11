@@ -6,24 +6,27 @@ import {
 } from "../context/SpreadsheetProvider";
 import { REMOVE_SELECTED_CELLS, SELECT_CELLS_BY_IDS } from "../constants";
 import {
+  chartStyles,
   drawBasicPath,
   createPoints,
   updateConfCurves,
   removeChartElement,
 } from "./sharedAnalysisComponents";
 
-const normalPointSize = 2;
-const highlightedPointColor = "red";
-const highlightedPointSize = normalPointSize * 2.5;
-const clickedBarPointSize = normalPointSize * 2;
-const normalBarFill = "#69b3a2";
-const clickedBarFill = "red";
-const normalPointFill = "black";
 const margin = { top: 100, right: 70, bottom: 70, left: 70 };
 const width = 300;
 const height = 300;
 const svgWidth = width + margin.left + margin.right;
 const svgHeight = height + margin.top + margin.bottom;
+const {
+  normalPointSize,
+  normalPointFill,
+  normalBarFill,
+  clickedBarFill,
+  clickedBarPointSize,
+  highlightedPointSize,
+  highlightedPointColor,
+} = chartStyles;
 
 const x = d3.scaleLinear().range([0, width]);
 const y = d3.scaleLinear().range([height, 0]);

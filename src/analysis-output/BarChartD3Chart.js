@@ -1,10 +1,14 @@
-import React, { useRef } from "react";
 import * as d3 from "d3";
 
-export default function BarChartD3Chart({ colX, colY, colZ, coordinates }) {
+export default function BarChartD3Chart({
+  mainChartContainer,
+  subChartContainer,
+  colX,
+  colY,
+  colZ,
+  coordinates,
+}) {
   const colXScale = colX.modelingType;
-  const mainChartContainer = useRef(null);
-  const subChartContainer = useRef(null);
   const uniqueGroups = [...new Set(coordinates.map((row) => row.group))];
 
   const barTooltip = d3
@@ -231,14 +235,10 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates }) {
   chart(coordinates, 650, 650, false, false);
   const separateGroups = (data, group) =>
     data.filter((data) => (data.group ? data.group.includes(group) : null));
-  uniqueGroups.forEach((group) =>
-    chart(separateGroups(coordinates, group), 400, 400, true, group),
-  );
+  colZ &&
+    uniqueGroups.forEach((group) =>
+      chart(separateGroups(coordinates, group), 350, 350, true, group),
+    );
 
-  return (
-    <div>
-      <div ref={mainChartContainer} />
-      {colZ && <div ref={subChartContainer} />}
-    </div>
-  );
+  return null;
 }

@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { chartStyles } from "./sharedAnalysisComponents";
 import * as d3 from "d3";
 
 // magic globals
@@ -7,10 +8,6 @@ const height = 300;
 const width = 300;
 const svgWidth = width + margin.left + margin.right;
 const svgHeight = height + margin.top + margin.bottom;
-const normalPointSize = 2;
-const clickedBarPointSize = normalPointSize * 2;
-const highlightedPointColor = "red";
-const highlightedPointSize = normalPointSize * 2.5;
 
 export default function D3Container({
   chartOptions,
@@ -20,6 +17,12 @@ export default function D3Container({
   x_groups_lists,
   coordinates,
 }) {
+  const {
+    normalPointSize,
+    clickedBarPointSize,
+    highlightedPointSize,
+    highlightedPointColor,
+  } = chartStyles;
   const { boxPlots, pooledMean } = chartOptions;
   const d3Container = useRef(null);
   const groups = coordinates.map((coord) => coord[0]);

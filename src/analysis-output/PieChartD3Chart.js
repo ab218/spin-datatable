@@ -1,14 +1,11 @@
-import React, { useRef, useEffect } from "react";
+import { useEffect } from "react";
 import * as d3 from "d3";
 import {
   useSelectDispatch,
   useRowsState,
 } from "../context/SpreadsheetProvider";
+import { chartStyles } from "./sharedAnalysisComponents";
 import { REMOVE_SELECTED_CELLS, SELECT_CELLS_BY_IDS } from "../constants";
-
-const clickedBarFill = "gray";
-const width = 650;
-const height = 650;
 
 function onMouseEnterSlice(
   d,
@@ -53,8 +50,16 @@ function onMouseLeaveSlice(d, thisSlice, legend, sliceTooltip) {
   sliceTooltip.transition().duration(500).style("opacity", 0);
 }
 
-export default function PieChartD3Chart({ colX, coordinates }) {
-  const mainChartContainer = useRef(null);
+export default function PieChartD3Chart({
+  mainChartContainer,
+  colX,
+  coordinates,
+}) {
+  const { width, height, clickedBarFill } = chartStyles;
+  // set the dimensions and margins of the graph
+  const margin = { top: 40, right: 150, bottom: 70, left: 30 };
+  const svgWidth = width + margin.left + margin.right;
+  const svgHeight = height + margin.top + margin.bottom;
   const { rows, columns, excludedRows } = useRowsState();
   const dispatchSelectAction = useSelectDispatch();
 
@@ -98,11 +103,6 @@ export default function PieChartD3Chart({ colX, coordinates }) {
       .attr("class", "pieslice tooltip")
       .style("opacity", 0);
 
-    // set the dimensions and margins of the graph
-    const margin = { top: 40, right: 30, bottom: 70, left: 30 };
-    const svgWidth = width + margin.left + margin.right + 200;
-    const svgHeight = height + margin.top + margin.bottom;
-
     // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
     const radius = Math.min(width, height) / 2 - margin.top;
 
@@ -119,7 +119,6 @@ export default function PieChartD3Chart({ colX, coordinates }) {
         "#999999",
       ]);
 
-    // append the svg object to the div called 'my_dataviz'
     const svg = d3
       .select(mainChartContainer.current)
       .append("svg")
@@ -128,17 +127,12 @@ export default function PieChartD3Chart({ colX, coordinates }) {
       .append("g")
       .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-    // Compute the position of each group on the pie:
     const pie = d3.pie().value(function (d) {
       return d.value;
     });
     const pieData = pie(d3.entries(data));
-    // Now I know that group A goes from 0 degrees to x degrees and so on.
-
-    // shape helper to build arcs:
     const arcGenerator = d3.arc().innerRadius(0).outerRadius(radius);
 
-    // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
     svg
       .selectAll("mySlices")
       .data(pieData)
@@ -175,7 +169,7 @@ export default function PieChartD3Chart({ colX, coordinates }) {
 
     const legend = svg
       .append("g")
-      .attr("transform", `translate(${svgWidth / 2},-${height / 2})`)
+      .attr("transform", `translate(${width / 1.5},-${height / 2})`)
       .attr("text-anchor", "start")
       .attr("font-family", "sans-serif")
       .attr("font-size", 14)
@@ -235,9 +229,5 @@ export default function PieChartD3Chart({ colX, coordinates }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
-    <div>
-      <div ref={mainChartContainer} />
-    </div>
-  );
+  return null;
 }
