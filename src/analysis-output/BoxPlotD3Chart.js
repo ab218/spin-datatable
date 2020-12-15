@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 import { DotChartOutlined } from "@ant-design/icons";
 import { chartStyles } from "./sharedAnalysisComponents";
+import XYAxes from "./XYAxes";
 
 function DotsButton({ dotsEnabled, setDotsEnabled }) {
   return (
@@ -254,7 +255,15 @@ export default function BoxPlotD3Chart({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dotsEnabled]);
 
-  return null;
+  return (
+    <XYAxes
+      mainChartContainer={mainChartContainer}
+      colX={colX}
+      colY={colY}
+      x={x}
+      y={y}
+    />
+  );
   // <div>
   //   {/* <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} /> */}
   // </div>

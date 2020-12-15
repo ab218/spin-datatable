@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import * as d3 from "d3";
 import { chartStyles } from "./sharedAnalysisComponents";
 import "./analysis-window.css";

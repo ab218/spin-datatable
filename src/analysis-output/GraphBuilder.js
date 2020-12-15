@@ -1,15 +1,34 @@
 import React, { useRef, useState } from "react";
 import * as d3 from "d3";
+import { DotChartOutlined } from "@ant-design/icons";
 import Popup from "./PopupWindow";
 import BarChartD3Chart from "./BarChartD3Chart";
 import PieChartD3Chart from "./PieChartD3Chart";
 import BoxPlotD3Chart from "./BoxPlotD3Chart";
 import LineD3Chart from "./LineD3Chart";
 import LineOfFitD3Chart from "./LineOfFitD3Chart";
-import XYAxes from "./XYAxes";
 import { chartStyles } from "./sharedAnalysisComponents";
 import { CONTINUOUS } from "../constants";
 import "./analysis-window.css";
+
+function DotsButton({ dotsEnabled, setDotsEnabled }) {
+  return (
+    <div
+      onClick={(e) => {
+        setDotsEnabled((prev) => !prev);
+      }}
+      className={"toolbar-button"}
+    >
+      <DotChartOutlined
+        style={{
+          opacity: dotsEnabled ? 1 : 0.3,
+          fontSize: "3em",
+        }}
+        className={"graph-builder-icon"}
+      />
+    </div>
+  );
+}
 
 const graphBuilderTitle = (analysisType, colX, colY) => {
   const colYvsColX = (colX, colY) => {
@@ -39,15 +58,18 @@ const graphBuilderTitle = (analysisType, colX, colY) => {
   }
 };
 
-function SideBar() {
-  return <div style={{ width: "20%" }}>Sidebar</div>;
+function SideBar({ dotsEnabled, setDotsEnabled }) {
+  return (
+    <div style={{ width: "20%" }}>
+      <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} />
+    </div>
+  );
 }
 
 export default function GraphBuilder({ data, setPopup }) {
-  const [showBox, setShowBox] = useState(false);
+  const [dotsEnabled, setDotsEnabled] = useState(false);
   const mainChartContainer = useRef(null);
   const subChartContainer = useRef(null);
-  console.log(showBox);
   // const [svgReady, setSvgReady] = useState(false);
   const { analysisType, colX, colY, colZ, coordinates, cloudData } = data;
   const title = graphBuilderTitle(analysisType, colX, colY);
@@ -85,17 +107,6 @@ export default function GraphBuilder({ data, setPopup }) {
       setPopup={setPopup}
     >
       {title && <TitleText title={title} />}
-      {(analysisType === "box" ||
-        analysisType === "line" ||
-        analysisType === "fit") && (
-        <XYAxes
-          mainChartContainer={mainChartContainer}
-          colX={colX}
-          colY={colY}
-          x={x}
-          y={y}
-        />
-      )}
       {analysisType === "bar" && (
         <BarChartD3Chart
           x={x}
@@ -106,6 +117,7 @@ export default function GraphBuilder({ data, setPopup }) {
           coordinates={coordinates}
           mainChartContainer={mainChartContainer}
           subChartContainer={subChartContainer}
+          dotsEnabled={dotsEnabled}
         />
       )}
       {analysisType === "pie" && (
@@ -115,7 +127,7 @@ export default function GraphBuilder({ data, setPopup }) {
           mainChartContainer={mainChartContainer}
         />
       )}
-      {(showBox || analysisType === "box") && (
+      {analysisType === "box" && (
         <BoxPlotD3Chart
           x={x}
           y={y}
@@ -123,6 +135,7 @@ export default function GraphBuilder({ data, setPopup }) {
           colY={colY}
           coordinates={coordinates}
           mainChartContainer={mainChartContainer}
+          dotsEnabled={dotsEnabled}
         />
       )}
       {analysisType === "line" && (
@@ -132,9 +145,9 @@ export default function GraphBuilder({ data, setPopup }) {
           colX={colX}
           colY={colY}
           colZ={colZ}
-          setShowBox={setShowBox}
           coordinates={coordinates}
           mainChartContainer={mainChartContainer}
+          dotsEnabled={dotsEnabled}
         />
       )}
       {analysisType === "fit" && (
@@ -147,10 +160,11 @@ export default function GraphBuilder({ data, setPopup }) {
           coordinates={coordinates}
           cloudData={cloudData}
           mainChartContainer={mainChartContainer}
+          dotsEnabled={dotsEnabled}
         />
       )}
       <div style={{ display: "flex", width: "100%" }}>
-        <SideBar />
+        <SideBar dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} />
         <div style={{ width: "80%" }}>
           <div ref={mainChartContainer} />
           <div ref={subChartContainer} />

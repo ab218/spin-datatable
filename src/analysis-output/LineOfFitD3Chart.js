@@ -9,6 +9,7 @@ import {
   updateConfCurves,
   chartStyles,
 } from "./sharedAnalysisComponents";
+import XYAxes from "./XYAxes";
 
 export default function D3Container({
   mainChartContainer,
@@ -280,6 +281,13 @@ export default function D3Container({
 
   return (
     <div style={{ display: "flex", margin: "1em" }}>
+      <XYAxes
+        mainChartContainer={mainChartContainer}
+        colX={colX}
+        colY={colY}
+        x={x}
+        y={y}
+      />
       <div style={{ width: "250px" }}>
         {/* <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} /> */}
         <div

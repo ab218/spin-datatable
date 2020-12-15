@@ -1,36 +1,18 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
-import { DotChartOutlined } from "@ant-design/icons";
 import { drawBasicPath, chartStyles } from "./sharedAnalysisComponents";
 import { CONTINUOUS } from "../constants";
-
-function DotsButton({ dotsEnabled, setDotsEnabled }) {
-  return (
-    <div
-      onClick={(e) => {
-        setDotsEnabled((prev) => !prev);
-      }}
-      className={"toolbar-button"}
-    >
-      <DotChartOutlined
-        style={{
-          opacity: dotsEnabled ? 1 : 0.3,
-          fontSize: "3em",
-        }}
-        className={"graph-builder-icon"}
-      />
-    </div>
-  );
-}
+import XYAxes from "./XYAxes";
+import BoxPlotD3Chart from "./BoxPlotD3Chart";
 
 export default function LineD3Chart({
   mainChartContainer,
   colX,
   colY,
   coordinates,
-  setShowBox,
   x,
   y,
+  dotsEnabled,
 }) {
   const {
     normalPointSize,
@@ -38,8 +20,7 @@ export default function LineD3Chart({
     highlightedPointSize,
     highlightedPointColor,
   } = chartStyles;
-
-  const [dotsEnabled, setDotsEnabled] = useState(false);
+  const [showBox, setShowBox] = useState(false);
   const sortedCoordinates = [...coordinates].sort((a, b) => a.x - b.x);
 
   useEffect(() => {
@@ -137,8 +118,24 @@ export default function LineD3Chart({
 
   return (
     <div>
+      <XYAxes
+        mainChartContainer={mainChartContainer}
+        colX={colX}
+        colY={colY}
+        x={x}
+        y={y}
+      />
       <button onClick={() => setShowBox((prev) => !prev)}>Show Box</button>
-      {/* <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} /> */}
+      {showBox && (
+        <BoxPlotD3Chart
+          x={x}
+          y={y}
+          colX={colX}
+          colY={colY}
+          coordinates={coordinates}
+          mainChartContainer={mainChartContainer}
+        />
+      )}
     </div>
   );
 }
