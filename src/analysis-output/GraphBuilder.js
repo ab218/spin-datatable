@@ -1,6 +1,5 @@
-import React, { useRef, useState } from "react";
+import React from "react";
 import * as d3 from "d3";
-import { DotChartOutlined } from "@ant-design/icons";
 import Popup from "./PopupWindow";
 import BarChartD3Chart from "./BarChartD3Chart";
 import PieChartD3Chart from "./PieChartD3Chart";
@@ -10,25 +9,6 @@ import LineOfFitD3Chart from "./LineOfFitD3Chart";
 import { chartStyles } from "./sharedAnalysisComponents";
 import { CONTINUOUS } from "../constants";
 import "./analysis-window.css";
-
-function DotsButton({ dotsEnabled, setDotsEnabled }) {
-  return (
-    <div
-      onClick={(e) => {
-        setDotsEnabled((prev) => !prev);
-      }}
-      className={"toolbar-button"}
-    >
-      <DotChartOutlined
-        style={{
-          opacity: dotsEnabled ? 1 : 0.3,
-          fontSize: "3em",
-        }}
-        className={"graph-builder-icon"}
-      />
-    </div>
-  );
-}
 
 const graphBuilderTitle = (analysisType, colX, colY) => {
   const colYvsColX = (colX, colY) => {
@@ -58,19 +38,7 @@ const graphBuilderTitle = (analysisType, colX, colY) => {
   }
 };
 
-function SideBar({ dotsEnabled, setDotsEnabled }) {
-  return (
-    <div style={{ width: "20%" }}>
-      <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} />
-    </div>
-  );
-}
-
 export default function GraphBuilder({ data, setPopup }) {
-  const [dotsEnabled, setDotsEnabled] = useState(false);
-  const mainChartContainer = useRef(null);
-  const subChartContainer = useRef(null);
-  // const [svgReady, setSvgReady] = useState(false);
   const { analysisType, colX, colY, colZ, coordinates, cloudData } = data;
   const title = graphBuilderTitle(analysisType, colX, colY);
   const { margin, height, width } = chartStyles;
@@ -115,17 +83,10 @@ export default function GraphBuilder({ data, setPopup }) {
           colY={colY}
           colZ={colZ}
           coordinates={coordinates}
-          mainChartContainer={mainChartContainer}
-          subChartContainer={subChartContainer}
-          dotsEnabled={dotsEnabled}
         />
       )}
       {analysisType === "pie" && (
-        <PieChartD3Chart
-          colX={colX}
-          coordinates={coordinates}
-          mainChartContainer={mainChartContainer}
-        />
+        <PieChartD3Chart colX={colX} coordinates={coordinates} />
       )}
       {analysisType === "box" && (
         <BoxPlotD3Chart
@@ -134,8 +95,6 @@ export default function GraphBuilder({ data, setPopup }) {
           colX={colX}
           colY={colY}
           coordinates={coordinates}
-          mainChartContainer={mainChartContainer}
-          dotsEnabled={dotsEnabled}
         />
       )}
       {analysisType === "line" && (
@@ -146,8 +105,6 @@ export default function GraphBuilder({ data, setPopup }) {
           colY={colY}
           colZ={colZ}
           coordinates={coordinates}
-          mainChartContainer={mainChartContainer}
-          dotsEnabled={dotsEnabled}
         />
       )}
       {analysisType === "fit" && (
@@ -159,17 +116,8 @@ export default function GraphBuilder({ data, setPopup }) {
           colZ={colZ}
           coordinates={coordinates}
           cloudData={cloudData}
-          mainChartContainer={mainChartContainer}
-          dotsEnabled={dotsEnabled}
         />
       )}
-      <div style={{ display: "flex", width: "100%" }}>
-        <SideBar dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} />
-        <div style={{ width: "80%" }}>
-          <div ref={mainChartContainer} />
-          <div ref={subChartContainer} />
-        </div>
-      </div>
     </Popup>
   );
 }

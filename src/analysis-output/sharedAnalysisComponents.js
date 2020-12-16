@@ -1,4 +1,6 @@
+import React from "react";
 import * as d3 from "d3";
+import { DotChartOutlined, BoxPlotTwoTone } from "@ant-design/icons";
 
 export const chartStyles = {
   normalPointSize: 2,
@@ -232,3 +234,39 @@ export function updateConfCurves(
 
 export const removeChartElement = (className, container) =>
   container.selectAll(className).remove();
+
+export function DotsButton({ dotsEnabled, setDotsEnabled }) {
+  return (
+    <div
+      onClick={(e) => {
+        setDotsEnabled((prev) => !prev);
+      }}
+      className={"toolbar-button"}
+    >
+      <DotChartOutlined
+        style={{
+          opacity: dotsEnabled ? 1 : 0.3,
+          fontSize: "3em",
+        }}
+        className={"graph-builder-icon"}
+      />
+    </div>
+  );
+}
+
+export function BoxPlotButton({ setShowBox, showBox }) {
+  return (
+    <div
+      onClick={() => setShowBox((prev) => !prev)}
+      className={"toolbar-button"}
+    >
+      <BoxPlotTwoTone
+        style={{
+          opacity: showBox ? 1 : 0.3,
+          fontSize: "3em",
+        }}
+        className={"graph-builder-icon"}
+      />
+    </div>
+  );
+}

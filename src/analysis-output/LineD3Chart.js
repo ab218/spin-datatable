@@ -1,27 +1,40 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import { drawBasicPath, chartStyles } from "./sharedAnalysisComponents";
+import {
+  drawBasicPath,
+  chartStyles,
+  BoxPlotButton,
+  DotsButton,
+} from "./sharedAnalysisComponents";
 import { CONTINUOUS } from "../constants";
-import XYAxes from "./XYAxes";
-import BoxPlotD3Chart from "./BoxPlotD3Chart";
+import makeXYAxes from "./makeXYAxes";
+import makeD3BoxPlot from "./makeD3BoxPlot";
 
-export default function LineD3Chart({
-  mainChartContainer,
-  colX,
-  colY,
-  coordinates,
-  x,
-  y,
-  dotsEnabled,
-}) {
+export default function LineD3Chart({ colX, colY, coordinates, x, y }) {
+  const mainChartContainer = useRef(null);
+  const [dotsEnabled, setDotsEnabled] = useState(false);
+  const [showBox, setShowBox] = useState(false);
   const {
     normalPointSize,
     clickedBarPointSize,
     highlightedPointSize,
     highlightedPointColor,
   } = chartStyles;
-  const [showBox, setShowBox] = useState(false);
   const sortedCoordinates = [...coordinates].sort((a, b) => a.x - b.x);
+
+  useEffect(() => {
+    makeXYAxes(mainChartContainer, { x, y, colX, colY });
+  }, []);
+
+  useEffect(() => {
+    if (showBox) {
+      makeD3BoxPlot(mainChartContainer, { colX, coordinates, x, y });
+    } else {
+      const svg = d3.select(mainChartContainer.current).select("g");
+      svg.selectAll(".boxPlots").remove();
+    }
+  }, [showBox]);
 
   useEffect(() => {
     if (mainChartContainer.current) {
@@ -117,24 +130,25 @@ export default function LineD3Chart({
   }, [dotsEnabled]);
 
   return (
-    <div>
-      <XYAxes
-        mainChartContainer={mainChartContainer}
+    <>
+      <SideBar
+        showBox={showBox}
+        setShowBox={setShowBox}
+        dotsEnabled={dotsEnabled}
+        setDotsEnabled={setDotsEnabled}
         colX={colX}
-        colY={colY}
-        x={x}
-        y={y}
       />
-      <button onClick={() => setShowBox((prev) => !prev)}>Show Box</button>
-      {showBox && (
-        <BoxPlotD3Chart
-          x={x}
-          y={y}
-          colX={colX}
-          colY={colY}
-          coordinates={coordinates}
-          mainChartContainer={mainChartContainer}
-        />
+      <div ref={mainChartContainer} />;
+    </>
+  );
+}
+
+function SideBar({ showBox, setShowBox, dotsEnabled, setDotsEnabled, colX }) {
+  return (
+    <div style={{ width: "20%" }}>
+      <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} />
+      {colX.modelingType !== CONTINUOUS && (
+        <BoxPlotButton showBox={showBox} setShowBox={setShowBox} />
       )}
     </div>
   );

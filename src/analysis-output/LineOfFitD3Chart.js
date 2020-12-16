@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Select, Checkbox } from "antd";
 import { MinusOutlined } from "@ant-design/icons";
@@ -9,10 +9,163 @@ import {
   updateConfCurves,
   chartStyles,
 } from "./sharedAnalysisComponents";
-import XYAxes from "./XYAxes";
+import makeXYAxes from "./makeXYAxes";
 
-export default function D3Container({
-  mainChartContainer,
+function SetAlphaLevel({ alpha, setAlpha, id }) {
+  const { Option } = Select;
+  function translateConf(conf) {
+    switch (conf) {
+      case "conf90":
+        return 0.1;
+      case "conf95":
+        return 0.05;
+      case "conf99":
+        return 0.01;
+      default:
+        return 0.05;
+    }
+  }
+  return (
+    <Select
+      getPopupContainer={(triggerNode) => triggerNode.parentNode}
+      value={translateConf(alpha[id])}
+      style={{ width: 80 }}
+      onChange={(val) => {
+        return setAlpha((prev) => {
+          return { ...prev, [id]: val };
+        });
+      }}
+    >
+      <Option value="conf90">0.1</Option>
+      <Option value="conf95">0.05</Option>
+      <Option value="conf99">0.01</Option>
+    </Select>
+  );
+}
+
+function ChartOptionsSelect({ defaultValue, handleChartOptions }) {
+  const { Option } = Select;
+  return (
+    <Select
+      getPopupContainer={(triggerNode) => triggerNode.parentNode}
+      mode="multiple"
+      style={{ width: "100px", textAlign: "left", marginBottom: "10px" }}
+      size={"small"}
+      placeholder=""
+      defaultValue={defaultValue}
+      onChange={handleChartOptions}
+      tagRender={() => null}
+      showArrow={true}
+    >
+      <Option key={"Linear"}>Linear</Option>
+      <Option key={"Quadratic"}>Quadratic</Option>
+      <Option key={"Cubic"}>Cubic</Option>
+    </Select>
+  );
+}
+
+function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
+  function ChartOption({ title, color, id, showCIOptions }) {
+    return (
+      <tr>
+        <td>
+          <MinusOutlined
+            style={{ cursor: "pointer", fontSize: "20px", color }}
+          />
+          {title}
+        </td>
+        {showCIOptions && (
+          <React.Fragment>
+            <td>
+              <Checkbox
+                onChange={(e) =>
+                  setCI((prev) => {
+                    return {
+                      ...prev,
+                      [id]: { ...prev[id], fit: e.target.checked },
+                    };
+                  })
+                }
+                checked={CI[id]["fit"]}
+              />
+            </td>
+            <td>
+              <Checkbox
+                onChange={(e) =>
+                  setCI((prev) => {
+                    return {
+                      ...prev,
+                      [id]: { ...prev[id], obs: e.target.checked },
+                    };
+                  })
+                }
+                checked={CI[id]["obs"]}
+              />
+            </td>
+            <td>
+              <SetAlphaLevel id={id} alpha={alpha} setAlpha={setAlpha} />
+            </td>
+          </React.Fragment>
+        )}
+      </tr>
+    );
+  }
+  return (
+    <div style={{ paddingLeft: "5px" }}>
+      <table style={{ width: "100%" }}>
+        <tbody>
+          <tr>
+            <td style={{ width: "175px" }} />
+            <td
+              colSpan={2}
+              style={{ width: "100px", textDecoration: "underline" }}
+            >
+              Confid Regions
+            </td>
+            <td style={{ width: "100px" }} />
+          </tr>
+          <tr style={{ height: "10px" }}></tr>
+          <tr style={{ textAlign: "center" }}>
+            <td>Line of Fit</td>
+            <td>Fit</td>
+            <td>Indiv</td>
+            <td>p</td>
+          </tr>
+          <tr style={{ height: "10px" }}></tr>
+          {chartOptions.linearRegressionLine && (
+            <ChartOption
+              showCIOptions={true}
+              conf
+              id="linearRegressionLine"
+              title={"Linear"}
+              color={"steelblue"}
+            />
+          )}
+          {chartOptions.degree2Poly && (
+            <ChartOption
+              showCIOptions={true}
+              conf
+              id="degree2Poly"
+              title={"Quadratic"}
+              color={"green"}
+            />
+          )}
+          {chartOptions.degree3Poly && (
+            <ChartOption
+              showCIOptions={true}
+              conf
+              id="degree3Poly"
+              title={"Cubic"}
+              color={"darkmagenta"}
+            />
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default function LineOfFitD3Chart({
   colX,
   colY,
   coordinates,
@@ -20,6 +173,7 @@ export default function D3Container({
   x,
   y,
 }) {
+  const mainChartContainer = useRef(null);
   const {
     normalPointSize,
     clickedBarPointSize,
@@ -80,6 +234,11 @@ export default function D3Container({
     .line()
     .x((d) => x(d[0]))
     .y((d) => y(d[1]));
+
+  useEffect(() => {
+    makeXYAxes(mainChartContainer, { x, y, colX, colY });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const {
@@ -279,17 +438,9 @@ export default function D3Container({
     degree3Poly,
   } = selectDegreeOptions;
 
-  return (
-    <div style={{ display: "flex", margin: "1em" }}>
-      <XYAxes
-        mainChartContainer={mainChartContainer}
-        colX={colX}
-        colY={colY}
-        x={x}
-        y={y}
-      />
+  function SideBar() {
+    return (
       <div style={{ width: "250px" }}>
-        {/* <DotsButton dotsEnabled={dotsEnabled} setDotsEnabled={setDotsEnabled} /> */}
         <div
           style={{
             display: "flex",
@@ -330,160 +481,13 @@ export default function D3Container({
           />
         )}
       </div>
-    </div>
-  );
-}
-
-function SetAlphaLevel({ alpha, setAlpha, id }) {
-  const { Option } = Select;
-  function translateConf(conf) {
-    switch (conf) {
-      case "conf90":
-        return 0.1;
-      case "conf95":
-        return 0.05;
-      case "conf99":
-        return 0.01;
-      default:
-        return 0.05;
-    }
-  }
-  return (
-    <Select
-      getPopupContainer={(triggerNode) => triggerNode.parentNode}
-      value={translateConf(alpha[id])}
-      style={{ width: 80 }}
-      onChange={(val) => {
-        return setAlpha((prev) => {
-          return { ...prev, [id]: val };
-        });
-      }}
-    >
-      <Option value="conf90">0.1</Option>
-      <Option value="conf95">0.05</Option>
-      <Option value="conf99">0.01</Option>
-    </Select>
-  );
-}
-
-function ChartOptionsSelect({ defaultValue, handleChartOptions }) {
-  const { Option } = Select;
-  return (
-    <Select
-      getPopupContainer={(triggerNode) => triggerNode.parentNode}
-      mode="multiple"
-      style={{ width: "100px", textAlign: "left", marginBottom: "10px" }}
-      size={"small"}
-      placeholder=""
-      defaultValue={defaultValue}
-      onChange={handleChartOptions}
-      tagRender={() => null}
-      showArrow={true}
-    >
-      <Option key={"Linear"}>Linear</Option>
-      <Option key={"Quadratic"}>Quadratic</Option>
-      <Option key={"Cubic"}>Cubic</Option>
-    </Select>
-  );
-}
-
-function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
-  function ChartOption({ title, color, id, showCIOptions }) {
-    return (
-      <tr>
-        <td>
-          <MinusOutlined
-            style={{ cursor: "pointer", fontSize: "20px", color }}
-          />
-          {title}
-        </td>
-        {showCIOptions && (
-          <React.Fragment>
-            <td>
-              <Checkbox
-                onChange={(e) =>
-                  setCI((prev) => {
-                    return {
-                      ...prev,
-                      [id]: { ...prev[id], fit: e.target.checked },
-                    };
-                  })
-                }
-                checked={CI[id]["fit"]}
-              />
-            </td>
-            <td>
-              <Checkbox
-                onChange={(e) =>
-                  setCI((prev) => {
-                    return {
-                      ...prev,
-                      [id]: { ...prev[id], obs: e.target.checked },
-                    };
-                  })
-                }
-                checked={CI[id]["obs"]}
-              />
-            </td>
-            <td>
-              <SetAlphaLevel id={id} alpha={alpha} setAlpha={setAlpha} />
-            </td>
-          </React.Fragment>
-        )}
-      </tr>
     );
   }
+
   return (
-    <div style={{ paddingLeft: "5px" }}>
-      <table style={{ width: "100%" }}>
-        <tbody>
-          <tr>
-            <td style={{ width: "175px" }} />
-            <td
-              colSpan={2}
-              style={{ width: "100px", textDecoration: "underline" }}
-            >
-              Confid Regions
-            </td>
-            <td style={{ width: "100px" }} />
-          </tr>
-          <tr style={{ height: "10px" }}></tr>
-          <tr style={{ textAlign: "center" }}>
-            <td>Line of Fit</td>
-            <td>Fit</td>
-            <td>Indiv</td>
-            <td>p</td>
-          </tr>
-          <tr style={{ height: "10px" }}></tr>
-          {chartOptions.linearRegressionLine && (
-            <ChartOption
-              showCIOptions={true}
-              conf
-              id="linearRegressionLine"
-              title={"Linear"}
-              color={"steelblue"}
-            />
-          )}
-          {chartOptions.degree2Poly && (
-            <ChartOption
-              showCIOptions={true}
-              conf
-              id="degree2Poly"
-              title={"Quadratic"}
-              color={"green"}
-            />
-          )}
-          {chartOptions.degree3Poly && (
-            <ChartOption
-              showCIOptions={true}
-              conf
-              id="degree3Poly"
-              title={"Cubic"}
-              color={"darkmagenta"}
-            />
-          )}
-        </tbody>
-      </table>
+    <div style={{ display: "flex", margin: "1em" }}>
+      <SideBar />
+      <div ref={mainChartContainer} />
     </div>
   );
 }
