@@ -191,6 +191,18 @@ body {
   pointer-events: none;
 }
 
+.toolbar-icon {
+  width: 30px;
+  font-size: 2em;
+  margin: 0 40px;
+}
+
+.graph-builder-icon {
+  font-size: 1.3em;
+  margin: 0 5px;
+  opacity: 0.3;
+}
+
 .histogram-border {
   text-align: center;
   background: lightyellow;
@@ -204,6 +216,12 @@ body {
 .point {
   text-align: left;
   height: 45px;
+  background: lightyellow;
+}
+
+.pieslice {
+  text-align: left;
+  height: 60px;
   background: lightyellow;
 }
 

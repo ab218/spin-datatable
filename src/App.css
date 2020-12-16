@@ -40,12 +40,6 @@
   opacity: 1;
 }
 
-.toolbar-icon {
-  width: 30px;
-  font-size: 2em;
-  margin: 0 40px;
-}
-
 .hamburger {
   position: relative;
   display: inline-block;

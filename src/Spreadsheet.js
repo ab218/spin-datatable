@@ -10,7 +10,7 @@ import {
 } from "./context/SpreadsheetProvider";
 import ContextMenu from "./ContextMenu";
 import Analysis from "./analysis-output/Analysis";
-import BarChartModal from "./Modals/ModalBarChart";
+import BarChartModal from "./Modals/ModalGraphBuilder";
 import ColumnTypeModal from "./Modals/ModalColumnType";
 import DistributionModal from "./Modals/ModalDistribution";
 import FilterModal from "./Modals/ModalFilter";

@@ -5,124 +5,40 @@ import {
   useRowsState,
 } from "../context/SpreadsheetProvider";
 import { REMOVE_SELECTED_CELLS, SELECT_CELLS_BY_IDS } from "../constants";
-const normalPointSize = 2;
-const highlightedPointColor = "red";
-const highlightedPointSize = normalPointSize * 2.5;
-const clickedBarPointSize = normalPointSize * 2;
-const normalBarFill = "#69b3a2";
-const clickedBarFill = "red";
-const normalPointFill = "black";
+import {
+  chartStyles,
+  drawBasicPath,
+  createPoints,
+  updateConfCurves,
+  removeChartElement,
+} from "./sharedAnalysisComponents";
+
 const margin = { top: 100, right: 70, bottom: 70, left: 70 };
 const width = 300;
 const height = 300;
 const svgWidth = width + margin.left + margin.right;
 const svgHeight = height + margin.top + margin.bottom;
+const {
+  normalPointSize,
+  normalPointFill,
+  normalBarFill,
+  clickedBarFill,
+  clickedBarPointSize,
+  highlightedPointSize,
+  highlightedPointColor,
+} = chartStyles;
+
 const x = d3.scaleLinear().range([0, width]);
 const y = d3.scaleLinear().range([height, 0]);
+
 // define the line
 const xAxis = d3.axisBottom().scale(x).ticks(10, "s");
 const yAxis = d3.axisLeft().scale(y).ticks(10, "s");
+
 const reversedLine = d3
   .line()
   .x((d) => x(d[0]))
   .y((d) => y(d[1]));
-
-//generate n (step) points given some range and equation (ie: y = ax^2+bx+c)
-function createPoints(rangeX, step, equation) {
-  return Array.from(
-    { length: Math.round((rangeX[1] - rangeX[0]) / step) || 1 },
-    function (_, i) {
-      const x = rangeX[0] + i * step;
-      return [x, equation(x)];
-    },
-  );
-}
-
-const drawAreaBetweenCurves = (
-  pointsy0,
-  pointsy1,
-  name,
-  title,
-  svg,
-  pathTooltip,
-  animate,
-  backgroundColor,
-) => {
-  console.log(pointsy0);
-  const area = d3
-    .area()
-    .x((d) => {
-      return x(pointsy0[d][0]);
-    })
-    .y0((d) => y(pointsy0[d][1]))
-    .y1((d) => y(pointsy1[d][1]));
-
-  const indecies = d3.range(pointsy0.length);
-
-  svg
-    .append("path")
-    .datum(indecies)
-    .attr("clip-path", "url(#clip)")
-    .attr("class", name)
-    .attr("fill-opacity", 0.3)
-    .attr("d", area);
-};
-
-const drawBasicPath = (
-  points,
-  name,
-  title,
-  svg,
-  pathTooltip,
-  animate,
-  backgroundColor,
-) => {
-  const path = svg
-    .append("path")
-    .data([points])
-    .style("fill", "none")
-    .attr("clip-path", "url(#clip)")
-    .attr("class", name)
-    .attr("d", reversedLine);
-  //find total length of all points of the line chart line
-  const totalLength = path.node().getTotalLength();
-
-  //animate the line chart line drawing using path information
-  if (animate) {
-    path
-      .attr("stroke-dasharray", totalLength + " " + totalLength)
-      .attr("stroke-dashoffset", totalLength)
-      .transition()
-      .duration(500)
-      .ease(d3.easeLinear)
-      .attr("stroke-dashoffset", 0);
-  }
-
-  // invisible hitbox
-  svg
-    .append("path")
-    .data([points])
-    .style("fill", "none")
-    .attr("clip-path", "url(#clip)")
-    .attr("class", `${name}-hitbox`)
-    .attr("d", reversedLine)
-    .on(`mouseenter`, function () {
-      if (!pathTooltip) return;
-      pathTooltip
-        .transition()
-        .duration(200)
-        .style("opacity", 0.9)
-        .style("background-color", backgroundColor);
-      pathTooltip
-        .html(title)
-        .style("left", d3.event.pageX + "px")
-        .style("top", d3.event.pageY - 28 + "px");
-    })
-    .on(`mouseleave`, function () {
-      if (!pathTooltip) return;
-      pathTooltip.transition().duration(500).style("opacity", 0);
-    });
-};
 
 function drawHistogramBorders(
   svg,
@@ -274,15 +190,6 @@ function drawHistogramBorders(
     .attr("fill", normalBarFill);
 }
 
-function mapPoints(arr1, arr2) {
-  const output = [];
-  for (let i = 0; i < arr1.length; i++) {
-    output.push([arr1[i], arr2[i]]);
-  }
-  const sortedOutput = output.sort((a, b) => b[0] - a[0]);
-  return sortedOutput;
-}
-
 function onMouseEnterPoint(
   d,
   thisPoint,
@@ -425,8 +332,6 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
   const chartContainer = d3.select(d3Container.current);
   const svg = chartContainer.select("g");
   const pathTooltip = chartContainer.select("#regression-line-tooltip");
-  const removeChartElement = (className) =>
-    chartContainer.selectAll(className).remove();
 
   const removeClickedHistogramBars = (e) => {
     if (e.metaKey) return;
@@ -529,8 +434,6 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
       const histogramBinTooltip = chartContainer.select(
         "#histogram-border-tooltip",
       );
-      const removeChartElement = (className) =>
-        chartContainer.selectAll(className).remove();
       if (histogramBorders) {
         drawHistogramBorders(
           svg,
@@ -545,7 +448,7 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
           colX,
         );
       } else {
-        removeChartElement(`.histogramBorders`);
+        removeChartElement(`.histogramBorders`, chartContainer);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -563,10 +466,11 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
           pathTooltip,
           true,
           "#56b4e9",
+          reversedLine,
         );
       } else {
-        removeChartElement(".linearRegressionLine");
-        removeChartElement(`.linearRegressionLine-hitbox`);
+        removeChartElement(".linearRegressionLine", chartContainer);
+        removeChartElement(`.linearRegressionLine-hitbox`, chartContainer);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -585,10 +489,11 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             pathTooltip,
             true,
             "#e69f00",
+            reversedLine,
           );
         } else {
-          removeChartElement(`.degree2PolyLine`);
-          removeChartElement(`.degree2PolyLine-hitbox`);
+          removeChartElement(`.degree2PolyLine`, chartContainer);
+          removeChartElement(`.degree2PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -608,10 +513,11 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             pathTooltip,
             true,
             "#009e73",
+            reversedLine,
           );
         } else {
-          removeChartElement(`.degree3PolyLine`);
-          removeChartElement(`.degree3PolyLine-hitbox`);
+          removeChartElement(`.degree3PolyLine`, chartContainer);
+          removeChartElement(`.degree3PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -631,10 +537,11 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             pathTooltip,
             true,
             "#f0e442",
+            reversedLine,
           );
         } else {
-          removeChartElement(`.degree4PolyLine`);
-          removeChartElement(`.degree4PolyLine-hitbox`);
+          removeChartElement(`.degree4PolyLine`, chartContainer);
+          removeChartElement(`.degree4PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -654,10 +561,11 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             pathTooltip,
             true,
             "#0072b2",
+            reversedLine,
           );
         } else {
-          removeChartElement(`.degree5PolyLine`);
-          removeChartElement(`.degree5PolyLine-hitbox`);
+          removeChartElement(`.degree5PolyLine`, chartContainer);
+          removeChartElement(`.degree5PolyLine-hitbox`, chartContainer);
         }
       }
     },
@@ -677,88 +585,17 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
             pathTooltip,
             true,
             "#d55e00",
+            reversedLine,
           );
         } else {
-          removeChartElement(`.degree6PolyLine`);
-          removeChartElement(`.degree6PolyLine-hitbox`);
+          removeChartElement(`.degree6PolyLine`, chartContainer);
+          removeChartElement(`.degree6PolyLine-hitbox`, chartContainer);
         }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [degree6Poly],
   );
-
-  function updateConfCurves(degree, data, curveClass, title) {
-    const chartContainer = d3.select(d3Container.current);
-    const svg = chartContainer.select("g");
-    const curveClassFit = `${curveClass}Fit`;
-    const curveClassObs = `${curveClass}Obs`;
-    const dotCurveClassFit = `.${curveClass}Fit`;
-    const dotCurveClassObs = `.${curveClass}Obs`;
-    const hitboxClassFit = `.${curveClass}Fit-hitbox`;
-    const hitboxClassObs = `.${curveClass}Obs-hitbox`;
-    const removeChartElement = (className) =>
-      chartContainer.selectAll(className).remove();
-    const coordinatesX = coordinates.map((coord) => coord[0]);
-    if (CI && CI[degree].fit) {
-      removeChartElement(dotCurveClassFit);
-      removeChartElement(hitboxClassFit);
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_upper),
-        curveClassFit,
-        title,
-        svg,
-        null,
-      );
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_lower),
-        curveClassFit,
-        title,
-        svg,
-        null,
-      );
-      drawAreaBetweenCurves(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_lower),
-        mapPoints(coordinatesX, data.ci[alpha[degree]].mean_ci_upper),
-        curveClassFit,
-        title,
-        svg,
-        null,
-      );
-    } else {
-      removeChartElement(dotCurveClassFit);
-      removeChartElement(hitboxClassFit);
-    }
-    if (CI && CI[degree].obs) {
-      removeChartElement(dotCurveClassObs);
-      removeChartElement(hitboxClassObs);
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_upper),
-        curveClassObs,
-        title,
-        svg,
-        null,
-      );
-      drawBasicPath(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_lower),
-        curveClassObs,
-        title,
-        svg,
-        null,
-      );
-      drawAreaBetweenCurves(
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_lower),
-        mapPoints(coordinatesX, data.ci[alpha[degree]].obs_ci_upper),
-        curveClassFit,
-        title,
-        svg,
-        null,
-      );
-    } else {
-      removeChartElement(dotCurveClassObs);
-      removeChartElement(hitboxClassObs);
-    }
-  }
 
   useEffect(
     () => {
@@ -767,6 +604,13 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
         reg1,
         "linearRegressionLineCI",
         "Linear Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord[0]),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -780,6 +624,13 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
         reg2,
         "degree2PolyLineCI",
         "Quadratic Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord[0]),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -793,6 +644,13 @@ export default function D3Container({ data, chartOptions, CI, alpha }) {
         reg3,
         "degree3PolyLineCI",
         "Cubic Regression CI",
+        d3Container.current,
+        coordinates.map((coord) => coord[0]),
+        alpha,
+        CI,
+        reversedLine,
+        x,
+        y,
       );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
