@@ -129,7 +129,7 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
             <td>Line of Fit</td>
             <td>Fit</td>
             <td>Indiv</td>
-            <td>p</td>
+            <td>Alpha</td>
           </tr>
           <tr style={{ height: "10px" }}></tr>
           {chartOptions.linearRegressionLine && (

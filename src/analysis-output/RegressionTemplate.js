@@ -53,8 +53,8 @@ const paramEstimateTable = (
         <td className="table-header large">Term</td>
         <td className="table-header small right">Estimate</td>
         <td className="table-header small right">Std Error</td>
-        <td className="table-header small right">t Value</td>
-        <td className="table-header small right">p Value</td>
+        <td className="table-header small right">t-value</td>
+        <td className="table-header small right">p-value</td>
       </tr>
       <tr>
         <td className="header-background large">Intercept</td>
@@ -167,7 +167,7 @@ export default function GenerateRegressionTemplate({
             <td className="table-header small right">Sum Of Squares</td>
             <td className="table-header small right">Mean Square</td>
             <td className="table-header small right">F Ratio</td>
-            <td className="table-header small right">F p Value</td>
+            <td className="table-header small right">F p-value</td>
           </tr>
           <tr>
             <td className="header-background small">Model</td>

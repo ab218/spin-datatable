@@ -178,7 +178,7 @@ const SummaryOfFit = ({ summary_table, colX, anova, means_std }) => {
             <td className="table-header right">Sum of Squares</td>
             <td className="table-header right">Mean Square</td>
             <td className="table-header right">F Ratio</td>
-            <td className="table-header right">Prob > F</td>
+            <td className="table-header right">F p-value</td>
           </tr>
           <tr>
             <td className="header-background">{colX.label}</td>
@@ -373,8 +373,8 @@ const OrderedDifferencesReport = ({ ordered_differences_report }) => (
           <td className="table-header">Level - Level</td>
           <td className="table-header right">Difference</td>
           <td className="table-header right">Std Err Diff</td>
-          <td className="table-header right">t</td>
-          <td className="table-header right">p-Value</td>
+          <td className="table-header right">t-value</td>
+          <td className="table-header right">p-value</td>
         </tr>
         {renderOrderedDifferencesReportTable(ordered_differences_report)}
       </tbody>
@@ -410,7 +410,7 @@ const EqualVarianceReport = ({ levene, means_std }) => (
             Test
           </td>
           <td className="table-header right">F Ratio</td>
-          <td className="table-header right">Prob > F</td>
+          <td className="table-header right">F p-value</td>
         </tr>
         <tr>
           <td className="header-background">Levene</td>

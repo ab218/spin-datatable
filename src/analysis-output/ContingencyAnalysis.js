@@ -409,11 +409,11 @@ const Tests = ({
             </td>
           </tr>
           <tr>
-            <td className="table-header small">N</td>
+            <td className="table-header small">Count</td>
             <td className="right small">{n}</td>
           </tr>
           <tr>
-            <td className="table-header small">df</td>
+            <td className="table-header small">DF</td>
             <td className="right small">{dof}</td>
           </tr>
         </tbody>
@@ -424,7 +424,7 @@ const Tests = ({
           <tr>
             <td className="table-header medium">Test</td>
             <td className="table-header small right">ChiSquare</td>
-            <td className="table-header small right">p</td>
+            <td className="table-header small right">p-value</td>
           </tr>
           <tr>
             <td className="header-background medium">Likelihood Ratio</td>
