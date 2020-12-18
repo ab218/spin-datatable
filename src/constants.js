@@ -67,10 +67,11 @@ const NOMINAL = "Nominal";
 const NUMBER = "Number";
 const TEXT = "Text";
 const FORMULA = "Formula";
-const BIVARIATE = "Bivariate";
+const REGRESSION = "Regression";
 const LOGISTIC = "Logistic";
 const ONEWAY = "Oneway";
 const CONTINGENCY = "Contingency";
+const DISTRIBUTION = "Distribution";
 
 export {
   ACTIVATE_CELL,
@@ -135,10 +136,11 @@ export {
   ORDINAL,
   CONTINUOUS,
   NOMINAL,
-  BIVARIATE,
+  REGRESSION,
   LOGISTIC,
   ONEWAY,
   CONTINGENCY,
+  DISTRIBUTION,
   NUMBER,
   TEXT,
   FORMULA,

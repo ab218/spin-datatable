@@ -342,14 +342,14 @@ export default function RegressionAnalysis({ data, setPopup }) {
               paddingLeft: "10px",
             }}
           >
-            <div>Select Chart Options</div>
-            <ChartOptionsSelect handleChartOptions={handleChartOptions} />
             <RegressionD3Chart
               CI={CI}
               data={data}
               chartOptions={chartOptions}
               alpha={alpha}
             />
+            <div>Select Chart Options</div>
+            <ChartOptionsSelect handleChartOptions={handleChartOptions} />
             {(linearRegressionLine ||
               degree2Poly ||
               degree3Poly ||

@@ -5,18 +5,19 @@ import {
   useSpreadsheetState,
   useSpreadsheetDispatch,
   useRowsState,
+  useRowsDispatch,
 } from "../context/SpreadsheetProvider";
-import { TOGGLE_DISTRIBUTION_MODAL } from "../constants";
-import { performDistributionAnalysis } from "../analysis-output/Analysis";
+import { TOGGLE_DISTRIBUTION_MODAL, DISTRIBUTION } from "../constants";
+import { analyzeData } from "../analysis-output/Analysis";
 import { SelectMultipleColumns, styles } from "./ModalShared";
 import ErrorMessage from "./ErrorMessage";
-import { createRandomID } from "../context/helpers";
 import DraggableModal from "./DraggableModal";
 
 export default function DistributionModal({ setPopup }) {
   const { distributionModalOpen } = useSpreadsheetState();
   const { columns, rows, excludedRows } = useRowsState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const dispatchRowsAction = useRowsDispatch();
   const [error, setError] = useState("");
   const [numberOfBins, setNumberOfBins] = useState(10);
   const [yColData, setYColData] = useState([]);
@@ -74,11 +75,20 @@ export default function DistributionModal({ setPopup }) {
     });
     // TODO: Better error handling here
     setPerformingAnalysis(true);
-    const results = await performDistributionAnalysis(
+    await analyzeData(
+      {
+        analysisType: DISTRIBUTION,
+        selectedColumns,
+        numberOfBins,
+      },
+      setPopup,
+    );
+    dispatchRowsAction({
+      type: "SAVE_ANALYSIS",
+      analysisType: DISTRIBUTION,
       selectedColumns,
       numberOfBins,
-    );
-    setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+    });
     setPerformingAnalysis(false);
     dispatchSpreadsheetAction({
       type: TOGGLE_DISTRIBUTION_MODAL,

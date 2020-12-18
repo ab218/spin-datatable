@@ -3,22 +3,19 @@ import { Button, Modal } from "antd";
 import {
   useSpreadsheetState,
   useSpreadsheetDispatch,
+  useRowsDispatch,
   useRowsState,
 } from "../context/SpreadsheetProvider";
-import {
-  performLinearRegressionAnalysis,
-  performOnewayAnalysis,
-  performContingencyAnalysis,
-} from "../analysis-output/Analysis";
+import { analyzeData } from "../analysis-output/Analysis";
 import ErrorMessage from "./ErrorMessage";
 import { TOGGLE_ANALYSIS_MODAL } from "../constants";
 import { SelectColumn, styles, VariableSelector } from "./ModalShared";
-import { createRandomID, filterExcludedRows } from "../context/helpers";
+import { filterExcludedRows } from "../context/helpers";
 import {
   ORDINAL,
   CONTINUOUS,
   NOMINAL,
-  BIVARIATE,
+  REGRESSION,
   LOGISTIC,
   ONEWAY,
   CONTINGENCY,
@@ -36,6 +33,7 @@ export default function AnalysisModal({ setPopup }) {
   const { analysisModalOpen } = useSpreadsheetState();
   const { columns, rows, excludedRows } = useRowsState();
   const dispatchSpreadsheetAction = useSpreadsheetDispatch();
+  const dispatchRowsAction = useRowsDispatch();
 
   function handleModalClose() {
     dispatchSpreadsheetAction({
@@ -70,43 +68,29 @@ export default function AnalysisModal({ setPopup }) {
     const colXArr = XYCols.map((a) => a[0]);
     const colYArr = XYCols.map((a) => a[1]);
 
-    async function linearRegression() {
-      if (colXArr.length >= 10 && colYArr.length >= 10) {
-        try {
-          setPerformingAnalysis(true);
-          const results = await performLinearRegressionAnalysis(
+    if (colXArr.length >= 10 && colYArr.length >= 10) {
+      try {
+        setPerformingAnalysis(true);
+        await analyzeData(
+          {
+            analysisType,
             colXArr,
             colYArr,
             colX,
             colY,
             XYCols,
-          );
-          setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
-          setPerformingAnalysis(false);
-          handleModalClose();
-        } catch (e) {
-          console.log(e);
-          setPerformingAnalysis(false);
-          setError("Something went wrong while performing analysis");
-        }
-      } else {
-        setError(
-          "Columns must each contain at least 10 values to perform this analysis.",
+          },
+          setPopup,
         );
-        return;
-      }
-    }
-    async function oneway() {
-      try {
-        setPerformingAnalysis(true);
-        const results = await performOnewayAnalysis(
+        dispatchRowsAction({
+          type: "SAVE_ANALYSIS",
+          analysisType,
           colXArr,
           colYArr,
           colX,
           colY,
           XYCols,
-        );
-        setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
+        });
         setPerformingAnalysis(false);
         handleModalClose();
       } catch (e) {
@@ -114,40 +98,11 @@ export default function AnalysisModal({ setPopup }) {
         setPerformingAnalysis(false);
         setError("Something went wrong while performing analysis");
       }
-    }
-
-    async function contingency() {
-      try {
-        setPerformingAnalysis(true);
-        const results = await performContingencyAnalysis(
-          colXArr,
-          colYArr,
-          colX,
-          colY,
-          XYCols,
-        );
-        setPopup((prev) => prev.concat({ ...results, id: createRandomID() }));
-        setPerformingAnalysis(false);
-        handleModalClose();
-      } catch (e) {
-        console.log(e);
-        setPerformingAnalysis(false);
-        setError("Something went wrong while performing analysis");
-      }
-    }
-
-    switch (analysisType) {
-      case BIVARIATE: {
-        return linearRegression();
-      }
-      case ONEWAY: {
-        return oneway();
-      }
-      case CONTINGENCY: {
-        return contingency();
-      }
-      default:
-        return null;
+    } else {
+      setError(
+        "Columns must each contain at least 10 values to perform this analysis.",
+      );
+      return;
     }
   }
 
@@ -157,7 +112,7 @@ export default function AnalysisModal({ setPopup }) {
 
   function determineAnalysisType(yData, xData) {
     if (yData === CONTINUOUS && xData === CONTINUOUS) {
-      return BIVARIATE;
+      return REGRESSION;
     } else if (
       yData === CONTINUOUS &&
       (xData === ORDINAL || xData === NOMINAL)

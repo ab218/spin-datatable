@@ -24,6 +24,7 @@ import {
 } from "./context/SpreadsheetProvider";
 import { flattenCellSelectionRanges } from "./context/helpers.js";
 import { createModelingTypeIcon } from "./Modals/ModalShared";
+import { analyzeData } from "./analysis-output/Analysis";
 
 const SelectedRowsCounter = React.memo(function () {
   const { cellSelectionRanges, currentCellSelectionRange } = useSelectState();
@@ -91,6 +92,47 @@ const ExcludedRowsCounter = React.memo(function () {
       <td style={{ width: "80%" }}>Excluded</td>
       <td style={{ width: "20%" }}>{excludedRows.length}</td>
     </tr>
+  );
+});
+
+const SidebarAnalyses = React.memo(function ({ setPopup }) {
+  const { savedAnalyses } = useRowsState();
+  return (
+    savedAnalyses.length > 0 && (
+      <React.Fragment>
+        <table
+          style={{ userSelect: "none", marginLeft: "10px", width: "100%" }}
+        >
+          <tbody>
+            <tr>
+              <td style={{ width: "80%", fontWeight: "bold" }}>
+                Saved Analyses
+              </td>
+              <td style={{ width: "20%", fontWeight: "bold" }} />
+            </tr>
+            {savedAnalyses.map((savedAnalysis) => (
+              <SidebarAnalysis
+                setPopup={setPopup}
+                key={savedAnalysis.id}
+                savedAnalysis={savedAnalysis}
+              />
+            ))}
+          </tbody>
+        </table>
+        <Divider />
+      </React.Fragment>
+    )
+  );
+});
+
+const SidebarAnalysis = React.memo(function ({ savedAnalysis, setPopup }) {
+  return (
+    <React.Fragment>
+      <tr onClick={() => analyzeData(savedAnalysis, setPopup)}>
+        <td>{savedAnalysis.title || "Analysis"}</td>
+      </tr>
+      <tr style={{ height: "10px" }} />
+    </React.Fragment>
   );
 });
 
@@ -299,7 +341,7 @@ const SidebarTableName = React.memo(function () {
   );
 });
 
-export default function Sidebar() {
+export default function Sidebar({ setPopup }) {
   return (
     <div
       style={{
@@ -313,6 +355,7 @@ export default function Sidebar() {
       <SidebarRows />
       <Divider />
       <SidebarFilters />
+      <SidebarAnalyses setPopup={setPopup} />
     </div>
   );
 }

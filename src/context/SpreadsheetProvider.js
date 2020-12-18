@@ -130,6 +130,7 @@ export function SpreadsheetProvider({ children }) {
     modalError: null,
     history: [],
     redoHistory: [],
+    savedAnalyses: [],
     savedFilters: [],
     valuesColumnsCounter: 0,
     filters: {
