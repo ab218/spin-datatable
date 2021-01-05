@@ -467,6 +467,20 @@ export function rowsReducer(state, action) {
     case REMOVE_HIGHLIGHTED_FILTERED_ROWS: {
       return { ...state, filteredRowIDs: [] };
     }
+    case "SAVE_ANALYSIS": {
+      const { colX, colY, analysisType } = action;
+      const title = `${analysisType}: ${colY.label} vs ${colX.label}`;
+      const newAnalysis = {
+        ...action,
+        analysisType,
+        title,
+        id: createRandomID(),
+      };
+      return {
+        ...state,
+        savedAnalyses: state.savedAnalyses.concat(newAnalysis),
+      };
+    }
     case SAVE_FILTER: {
       const { filters, filterName, script, selectedColumns } = action;
       const { id } = filters;
@@ -538,6 +552,7 @@ export function rowsReducer(state, action) {
         valuesColumnsCounter,
       };
     }
+
     case SET_TABLE_NAME: {
       return {
         ...state,

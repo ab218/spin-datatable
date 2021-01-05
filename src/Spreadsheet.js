@@ -294,7 +294,7 @@ export default function Spreadsheet() {
             left: 0,
           }}
         >
-          <Sidebar />
+          <Sidebar setPopup={setPopup} />
         </div>
         <div style={{ width: "80vw" }}>
           <TableView />
