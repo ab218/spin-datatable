@@ -94,8 +94,6 @@ export default function Spreadsheet() {
       width: copiedValues2dArray[0].length,
     };
     const { top, left } = cellSelectionRanges[0];
-    // quick patch to prevent major bug
-    // if (top === rows.length) return;
     const { height, width } = copiedValues2dArrayDimensions;
     const numberOfColumnsRequired = left + width - columns.length;
     const numberOfRowsRequired = top + height - rows.length;
@@ -108,14 +106,6 @@ export default function Spreadsheet() {
         columnCount: numberOfColumnsRequired,
       });
     }
-    // const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
-    // 	top,
-    // 	left,
-    // 	top + height - 1,
-    // 	left + width - 1,
-    // 	columns,
-    // 	rows,
-    // );
 
     dispatchRowsAction({
       type: PASTE_VALUES,
@@ -323,11 +313,16 @@ export const cursorKeyToRowColMapper = {
     return { row: Math.min(row + 1, numberOfRows), column };
   },
   Tab: function (row, column, numberOfRows, numberOfColumns, shiftKey) {
+    const isFirstColumn = column === 0;
+    const isFirstRow = row === 0;
+    // shiftKey -> shift active cell in the opposite direction (left)
     if (shiftKey) {
-      if (column !== 0) return { row, column: column - 1 };
-      else if (column === 0 && row === 0)
+      if (!isFirstColumn) return { row, column: column - 1 };
+      else if (isFirstColumn && isFirstRow)
+        // shift active cell to last row, last column
         return { row: numberOfRows - 1, column: numberOfColumns - 1 };
-      else if (column === 0 && row !== 0)
+      else if (isFirstColumn && !isFirstRow)
+        // shift active cell up one and to the last column
         return { row: row - 1, column: numberOfColumns - 1 };
     } else {
       if (column < numberOfColumns - 1) return { row, column: column + 1 };

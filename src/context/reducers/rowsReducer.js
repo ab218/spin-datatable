@@ -13,6 +13,7 @@ import {
 } from "../helpers";
 
 import {
+  CLEAR_ERROR,
   COPY_VALUES,
   CREATE_COLUMNS,
   CREATE_ROWS,
@@ -30,6 +31,7 @@ import {
   REMOVE_FILTERED_ROWS,
   REMOVE_HIGHLIGHTED_FILTERED_ROWS,
   REMOVE_SIDEBAR_FILTER,
+  SAVE_ANALYSIS,
   SAVE_FILTER,
   SAVE_NEW_FILTER,
   SAVE_VALUES_TO_COLUMN,
@@ -65,7 +67,7 @@ export function rowsReducer(state, action) {
   // state.eventBus.fire(type, event);
   // console.log('dispatched:', type, 'with action:', action, 'state: ', state);
   switch (type) {
-    case "CLEAR_ERROR": {
+    case CLEAR_ERROR: {
       return { ...state, modalError: null };
     }
     case COPY_VALUES: {
@@ -75,43 +77,6 @@ export function rowsReducer(state, action) {
       const { cellSelectionRanges } = action;
       // Fixes crash if cell from non existant column is selected
       if (!cellSelectionRanges.length) return { ...state };
-      // const copyEl = (elToBeCopied) => {
-      // 	let range, sel;
-      // 	// Ensure that range and selection are supported by the browsers
-      // 	if (document.createRange && window.getSelection) {
-      // 		range = document.createRange();
-      // 		sel = window.getSelection();
-      // 		// unselect any element in the page
-      // 		sel.removeAllRanges();
-      // 		try {
-      // 			range.selectNodeContents(elToBeCopied);
-      // 			sel.addRange(range);
-      // 		} catch (e) {
-      // 			console.log(e);
-      // 		}
-      // 		document.execCommand('copy');
-      // 	}
-      // 	sel.removeAllRanges();
-      // 	console.log('Element Copied!');
-      // };
-
-      // function createTable(tableData) {
-      // 	const table = document.createElement('table');
-      // 	table.setAttribute('id', 'copy-table');
-      // 	let row = {};
-      // 	let cell = {};
-      // 	tableData.forEach((rowData) => {
-      // 		row = table.insertRow(-1); // -1 is for safari
-      // 		rowData.forEach((cellData) => {
-      // 			cell = row.insertCell();
-      // 			cell.textContent = cellData;
-      // 		});
-      // 	});
-      // 	document.body.appendChild(table);
-      // 	copyEl(table);
-      // 	document.body.removeChild(table);
-      // }
-
       // In case there are multiple selection ranges, we only want the first selection made
       const { top, left, bottom, right } = cellSelectionRanges[0];
       const { selectedColumnIDs, selectedRowIDs } = selectRowAndColumnIDs(
@@ -467,13 +432,24 @@ export function rowsReducer(state, action) {
     case REMOVE_HIGHLIGHTED_FILTERED_ROWS: {
       return { ...state, filteredRowIDs: [] };
     }
-    case "SAVE_ANALYSIS": {
+    case SAVE_ANALYSIS: {
       const { colX, colY, analysisType } = action;
-      const title = `${analysisType}: ${colY.label} vs ${colX.label}`;
+      console.log(action);
+      function makeTitle() {
+        if (colY && colX) {
+          return `${analysisType}: ${colY.label} vs ${colX.label}`;
+        } else if (colY) {
+          return `${analysisType}: ${colY.label}`;
+        } else if (colX) {
+          return `${analysisType}: ${colX.label}`;
+        } else {
+          return analysisType;
+        }
+      }
       const newAnalysis = {
         ...action,
         analysisType,
-        title,
+        title: makeTitle(),
         id: createRandomID(),
       };
       return {
@@ -627,7 +603,7 @@ export function rowsReducer(state, action) {
     case UPDATE_CELL: {
       const { rows, columns } = state;
       // TODO: If active cell, use that, if selected cells, use top left corner of it
-      // row from action or last row from state
+      // row from action or last row from stateP
       const column = columns[columnIndex];
       const row = rows[rowIndex] || rows[rows.length - 1];
       const newRows = rows.slice();

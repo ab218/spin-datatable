@@ -7,6 +7,10 @@ import GraphBuilder from "./GraphBuilder";
 import ContingencyAnalysis from "./ContingencyAnalysis";
 import { REGRESSION, ONEWAY, CONTINGENCY, DISTRIBUTION } from "../constants";
 import { createRandomID } from "../context/helpers";
+const DISTRIBUTION_URL = process.env.REACT_APP_DISTRIBUTION_URL;
+const REGRESSION_URL = process.env.REACT_APP_REGRESSION_URL;
+const ONEWAY_URL = process.env.REACT_APP_ONEWAY_URL;
+const CONTINGENCY_URL = process.env.REACT_APP_CONTINGENCY_URL;
 
 export async function analyzeData(analysisProps, setPopup) {
   switch (analysisProps.analysisType) {
@@ -68,18 +72,10 @@ export default function AnalysisContainer({ popup, setPopup }) {
 
 export async function pingCloudFunctions() {
   try {
-    const linearRegression =
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/regression";
-    const distribution =
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution";
-    const oneway =
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway";
-    const contingency =
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/contingency";
-    axios.post(linearRegression, { ping: "ping" }, { crossDomain: true });
-    axios.post(oneway, { ping: "ping" }, { crossDomain: true });
-    axios.post(distribution, { ping: "ping" }, { crossDomain: true });
-    axios.post(contingency, { ping: "ping" }, { crossDomain: true });
+    axios.post(REGRESSION_URL, { ping: "ping" }, { crossDomain: true });
+    axios.post(ONEWAY_URL, { ping: "ping" }, { crossDomain: true });
+    axios.post(DISTRIBUTION_URL, { ping: "ping" }, { crossDomain: true });
+    axios.post(CONTINGENCY_URL, { ping: "ping" }, { crossDomain: true });
   } catch (e) {
     console.log(e);
   }
@@ -95,10 +91,8 @@ export async function performOnewayAnalysis({
   XYCols,
 }) {
   try {
-    const gcloud =
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/oneway";
     const result = await axios.post(
-      gcloud,
+      ONEWAY_URL,
       {
         x: colXArr,
         y: colYArr,
@@ -146,18 +140,13 @@ export async function performLinearRegressionAnalysis({
   XYCols,
 }) {
   try {
-    // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
     const result = await axios.post(
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/regression",
+      REGRESSION_URL,
       { x: colXArr, y: colYArr },
       {
         crossDomain: true,
       },
     );
-    // console.log(result.data) // gcloud
-    // console.log(result.data.body); // Lambda
-
-    console.log(result.data);
 
     const mean = (numbers) =>
       numbers.reduce((acc, val) => acc + Number(val), 0) / numbers.length;
@@ -185,14 +174,12 @@ export async function performContingencyAnalysis({
 }) {
   try {
     const result = await axios.post(
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/contingency",
+      CONTINGENCY_URL,
       { x: colXArr, y: colYArr },
       {
         crossDomain: true,
       },
     );
-
-    console.log(result.data);
     return {
       analysisType,
       ...result.data,
@@ -211,11 +198,8 @@ export async function performDistributionAnalysis({
   numberOfBins,
 }) {
   try {
-    // const lambda = 'https://8gf5s84idd.execute-api.us-east-2.amazonaws.com/test/scipytest';
-    const gcloud =
-      "https://us-central1-optimum-essence-210921.cloudfunctions.net/distribution-1";
     const result = await axios.post(
-      gcloud,
+      DISTRIBUTION_URL,
       {
         y: selectedColumns,
       },
@@ -223,8 +207,6 @@ export async function performDistributionAnalysis({
         crossDomain: true,
       },
     );
-    console.log(result.data); // gcloud
-    // console.log(result.data.body); // Lambda
     return {
       analysisType,
       numberOfBins,
@@ -240,7 +222,7 @@ export async function createGraph(colX, colY, colZ, XYZCols, analysisType) {
     let cloudData;
     if (analysisType === "fit") {
       cloudData = await axios.post(
-        "https://us-central1-optimum-essence-210921.cloudfunctions.net/regression",
+        REGRESSION_URL,
         { x: XYZCols.map((row) => row.x), y: XYZCols.map((row) => row.y) },
         {
           crossDomain: true,

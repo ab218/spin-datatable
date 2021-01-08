@@ -63,9 +63,6 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates }) {
         .attr("width", 25)
         .attr("height", 25)
         .attr("fill", color)
-        // .on('click', function(groupLabel) {
-        // 	onClickSelectGroupBarChart(groupLabel, colZ);
-        // })
         .on(`mouseover`, function (d) {
           d3.select(this).transition().duration(50).attr("opacity", 0.6);
         })
@@ -115,7 +112,6 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates }) {
     }, []);
 
     // for numerical & ordinal data
-    // const duplicatesChangedCopySorted = duplicatesChanged.slice().sort((a, b) => Number(b.x) - Number(a.x));
     const x =
       colXScale === "Continuous"
         ? d3
@@ -150,9 +146,6 @@ export default function BarChartD3Chart({ colX, colY, colZ, coordinates }) {
       .selectAll("rect")
       .data(colXScale === "Continuous" ? data : duplicatesChanged)
       .join("rect")
-      // .on('click', function(d) {
-      // 	onClickBarSelectCellsBarChart(d3.select(this), d, colXId, colYId, colZId);
-      // })
       .on(`mouseover`, function (d) {
         onMouseOverBars(d, this);
       })

@@ -1,31 +1,58 @@
-import { CONTINUOUS, NOMINAL, TEXT, FORMULA, NUMBER } from './../constants';
+import { CONTINUOUS, NOMINAL, TEXT, FORMULA, NUMBER } from "./../constants";
 
-// dummy data
 export const statsColumns = [
-	{ id: '_abc1_', modelingType: CONTINUOUS, type: NUMBER, units: 'ml', label: 'Volume Displaced', description: '' },
-	{ id: '_abc2_', modelingType: CONTINUOUS, type: NUMBER, units: 'sec', label: 'Time', description: '' },
-	{
-		id: '_abc3_',
-		modelingType: CONTINUOUS,
-		formula: { expression: '_abc1_/_abc2_', IDs: [ '_abc1_, _abc2_' ] },
-		type: FORMULA,
-		units: 'ml/sec',
-		label: 'Rate',
-		description: '',
-	},
-	{ id: '_abc4_', modelingType: NOMINAL, type: TEXT, units: '', label: 'Catalase Solution', description: '' },
-	{ id: '_abc5_', modelingType: NOMINAL, type: TEXT, units: '', label: 'Animal', description: '' },
+  {
+    id: "_abc1_",
+    modelingType: CONTINUOUS,
+    type: NUMBER,
+    units: "ml",
+    label: "Volume Displaced",
+    description: "",
+  },
+  {
+    id: "_abc2_",
+    modelingType: CONTINUOUS,
+    type: NUMBER,
+    units: "sec",
+    label: "Time",
+    description: "",
+  },
+  {
+    id: "_abc3_",
+    modelingType: CONTINUOUS,
+    formula: { expression: "_abc1_/_abc2_", IDs: ["_abc1_, _abc2_"] },
+    type: FORMULA,
+    units: "ml/sec",
+    label: "Rate",
+    description: "",
+  },
+  {
+    id: "_abc4_",
+    modelingType: NOMINAL,
+    type: TEXT,
+    units: "",
+    label: "Catalase Solution",
+    description: "",
+  },
+  {
+    id: "_abc5_",
+    modelingType: NOMINAL,
+    type: TEXT,
+    units: "",
+    label: "Animal",
+    description: "",
+  },
 ];
 
 export const startingColumn = [
-	{
-		id: '_abc1_',
-		modelingType: CONTINUOUS,
-		type: NUMBER,
-		units: '',
-		label: 'Column 1',
-		description: '',
-	},
+  {
+    id: "_abc1_",
+    modelingType: CONTINUOUS,
+    type: NUMBER,
+    units: "",
+    label: "Column 1",
+    description: "",
+  },
 ];
 
 export const potatoLiverData = `35	3	11.66667	Liver	dog

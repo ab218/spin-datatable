@@ -157,9 +157,6 @@ const FilterModal = React.memo(function AntModal() {
     if (filterName === "" && script === "") {
       return setError("Filter name cannot be blank.");
     }
-    // if (script !== '' && savedFilters.findIndex((filter) => script === filter.script) !== -1) {
-    // 	return setError('Identical filter already exists. Please edit conditions and try again.');
-    // }
     if (
       filterName !== "" &&
       savedFilters.findIndex((filter) => filterName === filter.filterName) !==
@@ -191,7 +188,6 @@ const FilterModal = React.memo(function AntModal() {
   function removeColumn(columnID) {
     function deleteFilter() {
       const filtersCopy = { ...filters };
-      console.log(filtersCopy);
       const newNumberFilters = filtersCopy.numberFilters.filter(
         (numFilter) => columnID !== numFilter.id,
       );

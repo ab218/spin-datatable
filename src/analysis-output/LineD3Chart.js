@@ -66,7 +66,6 @@ export default function LineD3Chart({ colX, colY, coordinates, x, y }) {
         reversedLine,
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -126,7 +125,6 @@ export default function LineD3Chart({ colX, colY, coordinates, x, y }) {
     } else {
       svg.selectAll(".point").remove();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dotsEnabled]);
 
   return (

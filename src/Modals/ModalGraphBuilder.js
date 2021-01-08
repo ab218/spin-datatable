@@ -51,7 +51,6 @@ export default function AnalysisModal({ setPopup }) {
     const colA = colX && filterExcludedRows(rows, excludedRows, colX);
     const colB = colY && filterExcludedRows(rows, excludedRows, colY);
     const colC = colZ ? filterExcludedRows(rows, excludedRows, colZ) : [];
-    // const maxColLength = Math.max(colA.length, colB.length, colC.length);
     function makeXYZCols(colA, colB, colC) {
       return rows
         .map((row, i) => {

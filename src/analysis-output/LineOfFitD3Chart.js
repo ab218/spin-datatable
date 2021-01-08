@@ -43,7 +43,7 @@ function SetAlphaLevel({ alpha, setAlpha, id }) {
   );
 }
 
-function ChartOptionsSelect({ defaultValue, handleChartOptions }) {
+function ChartOptionsSelect({ handleChartOptions }) {
   const { Option } = Select;
   return (
     <Select
@@ -52,14 +52,14 @@ function ChartOptionsSelect({ defaultValue, handleChartOptions }) {
       style={{ width: "100px", textAlign: "left", marginBottom: "10px" }}
       size={"small"}
       placeholder=""
-      defaultValue={defaultValue}
+      defaultValue={["Linear Fit"]}
       onChange={handleChartOptions}
       tagRender={() => null}
       showArrow={true}
     >
-      <Option key={"Linear"}>Linear</Option>
-      <Option key={"Quadratic"}>Quadratic</Option>
-      <Option key={"Cubic"}>Cubic</Option>
+      <Option key={"Linear Fit"}>Linear</Option>
+      <Option key={"Quadratic Fit"}>Quadratic</Option>
+      <Option key={"Cubic Fit"}>Cubic</Option>
     </Select>
   );
 }
@@ -135,7 +135,6 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
           {chartOptions.linearRegressionLine && (
             <ChartOption
               showCIOptions={true}
-              conf
               id="linearRegressionLine"
               title={"Linear"}
               color={"steelblue"}
@@ -144,7 +143,6 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
           {chartOptions.degree2Poly && (
             <ChartOption
               showCIOptions={true}
-              conf
               id="degree2Poly"
               title={"Quadratic"}
               color={"green"}
@@ -153,7 +151,6 @@ function ChartOptionsLegend({ chartOptions, setCI, CI, alpha, setAlpha }) {
           {chartOptions.degree3Poly && (
             <ChartOption
               showCIOptions={true}
-              conf
               id="degree3Poly"
               title={"Cubic"}
               color={"darkmagenta"}
@@ -421,9 +418,10 @@ export default function LineOfFitD3Chart({
   }, [dotsEnabled]);
 
   function handleChartOptions(value, setSelectOptions) {
-    const linearRegressionLine = value.includes("Linear");
-    const degree2Poly = value.includes("Quadratic");
-    const degree3Poly = value.includes("Cubic");
+    const linearRegressionLine = value.includes("Linear Fit");
+    const degree2Poly = value.includes("Quadratic Fit");
+    const degree3Poly = value.includes("Cubic Fit");
+    console.log(value);
     const options = {
       linearRegressionLine,
       degree2Poly,
@@ -432,62 +430,81 @@ export default function LineOfFitD3Chart({
     setSelectOptions(options);
   }
 
+  return (
+    <div style={{ display: "flex", margin: "1em" }}>
+      <SideBar
+        dotsEnabled={dotsEnabled}
+        setDotsEnabled={setDotsEnabled}
+        handleChartOptions={handleChartOptions}
+        setSelectDegreeOptions={setSelectDegreeOptions}
+        selectDegreeOptions={selectDegreeOptions}
+        setCI={setCI}
+        CI={CI}
+        setAlpha={setAlpha}
+        alpha={alpha}
+      />
+      <div ref={mainChartContainer} />
+    </div>
+  );
+}
+
+function SideBar({
+  dotsEnabled,
+  setDotsEnabled,
+  handleChartOptions,
+  setSelectDegreeOptions,
+  selectDegreeOptions,
+  setCI,
+  CI,
+  setAlpha,
+  alpha,
+}) {
   const {
     linearRegressionLine,
     degree2Poly,
     degree3Poly,
   } = selectDegreeOptions;
 
-  function SideBar() {
-    return (
-      <div style={{ width: "250px" }}>
-        <div
-          style={{
-            display: "flex",
-            width: "230px",
-            justifyContent: "space-between",
-          }}
-        >
-          <span>Show Points</span>
-          <span style={{ alignSelf: "left" }}>
-            <Checkbox
-              onChange={(e) => setDotsEnabled((prev) => !prev)}
-              checked={dotsEnabled}
-            />
-          </span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            width: "230px",
-            justifyContent: "space-between",
-          }}
-        >
-          <span style={{ width: "60px" }}>Degree</span>
-          <ChartOptionsSelect
-            defaultValue={["Linear"]}
-            handleChartOptions={(value) =>
-              handleChartOptions(value, setSelectDegreeOptions)
-            }
-          />
-        </div>
-        {(linearRegressionLine || degree2Poly || degree3Poly) && (
-          <ChartOptionsLegend
-            chartOptions={selectDegreeOptions}
-            setCI={setCI}
-            CI={CI}
-            setAlpha={setAlpha}
-            alpha={alpha}
-          />
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div style={{ display: "flex", margin: "1em" }}>
-      <SideBar />
-      <div ref={mainChartContainer} />
+    <div style={{ width: "250px" }}>
+      <div
+        style={{
+          display: "flex",
+          width: "230px",
+          justifyContent: "space-between",
+        }}
+      >
+        <span>Show Points</span>
+        <span style={{ alignSelf: "left" }}>
+          <Checkbox
+            onChange={(e) => setDotsEnabled((prev) => !prev)}
+            checked={dotsEnabled}
+          />
+        </span>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          width: "230px",
+          justifyContent: "space-between",
+        }}
+      >
+        <span style={{ width: "60px" }}>Degree</span>
+        <ChartOptionsSelect
+          handleChartOptions={(value) =>
+            handleChartOptions(value, setSelectDegreeOptions)
+          }
+        />
+      </div>
+      {(linearRegressionLine || degree2Poly || degree3Poly) && (
+        <ChartOptionsLegend
+          chartOptions={selectDegreeOptions}
+          setCI={setCI}
+          CI={CI}
+          setAlpha={setAlpha}
+          alpha={alpha}
+        />
+      )}
     </div>
   );
 }

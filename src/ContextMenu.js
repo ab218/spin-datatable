@@ -38,7 +38,6 @@ export default function ContextMenu({ paste }) {
     contextMenuPosition,
     contextMenuRowIndex,
     contextMenuData,
-    // layout,
   } = useSpreadsheetState();
   const { cellSelectionRanges } = useSelectState();
   const { appliedFilterExclude, rows, columns } = useRowsState();
@@ -86,15 +85,6 @@ export default function ContextMenu({ paste }) {
           >
             Delete Column
           </Menu.Item>
-          {/* <Menu.Item key="2" onClick={setGroupedColumns}>
-						Split by <span style={{ fontWeight: 'bold' }}>{colName}</span>
-						<span style={{ fontStyle: 'italic' }}> (experimental)</span>
-					</Menu.Item>
-					{layout || (
-						<Menu.Item key="3" onClick={() => dispatchSpreadsheetAction({ type: TOGGLE_LAYOUT, layout: true })}>
-							Return to normal view
-						</Menu.Item>
-					)} */}
           <SubMenu key="sub1" title="Sort">
             <Menu.Item
               key="4"

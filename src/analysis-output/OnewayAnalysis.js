@@ -336,9 +336,6 @@ function renderOrderedDifferencesReportTable(ordered_differences_report) {
     coef,
     "std err": std_err,
     t,
-    // 'P>|t|': p_t,
-    // 'Conf. Int. Low': ci_low,
-    // 'Conf. Int. Upp.': ci_upp,
     "pvalue-hs": p,
   } = ordered_differences_report;
   const numberOfRows = Object.keys(index).length;
@@ -419,6 +416,7 @@ const EqualVarianceReport = ({ levene, means_std }) => (
         </tr>
         <tr>
           <td className="header-background">Bartlett</td>
+          {/* Currently a bug with Bartlett */}
           {/* <td className="right small">{bartlett[0].toFixed(4) / 1}</td> */}
           {/* <td className="right small">{evaluatePValue(bartlett[1])}</td> */}
         </tr>

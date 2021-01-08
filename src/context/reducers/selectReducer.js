@@ -39,11 +39,7 @@ export function selectReducer(state, action) {
     metaKeyPressed,
     shiftKeyPressed,
   } = action;
-
-  // const { type, ...event } = action;
   const { type } = action;
-  // state.eventBus.fire(type, event);
-  // console.log('dispatched:', type, 'with action:', action, 'state: ', state);
   switch (type) {
     case ACTIVATE_CELL: {
       const activeCell = { row, column, columnID };
@@ -283,7 +279,6 @@ export function selectReducer(state, action) {
         activeCell: null,
         currentCellSelectionRange: null,
         cellSelectionRanges: [allCells],
-        // cellSelectionObject: rowsObject,
       };
     }
 
